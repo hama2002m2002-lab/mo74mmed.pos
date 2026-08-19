@@ -1,0 +1,215 @@
+﻿<UserControl x:Class="HamoPos.Views.StockAuditView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200"
+             FlowDirection="RightToLeft">
+
+    <Grid Margin="20,16">
+        <Grid.RowDefinitions>
+            <!-- 0: Header & Barcode/Search -->
+            <RowDefinition Height="Auto" />
+            <!-- 1: Financial & Inventory Audit KPI Stats -->
+            <RowDefinition Height="Auto" />
+            <!-- 2: Audit DataGrid Workspace -->
+            <RowDefinition Height="*" />
+            <!-- 3: Actions Bottom Bar -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ======================================================== -->
+        <!-- 0: TOP HEADER & SEARCH / BARCODE SCANNER -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="📋 " FontSize="22" />
+                <TextBlock Text="{Binding Loc[Audit_Title]}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Quick Barcode / Name Search Box -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Border Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5" Padding="4" Width="440">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding Loc[Audit_SearchBarcodeName]}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center" Margin="8,0" />
+                        <TextBox Grid.Column="1" Style="{StaticResource ModernDarkTextBox}" Text="{Binding SearchOrBarcode, UpdateSourceTrigger=PropertyChanged}" 
+                                 Padding="6,4" FontSize="13" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding ScanOrSearchCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <Button Grid.Column="2" Style="{StaticResource PrimaryAccentButton}" Command="{Binding ScanOrSearchCommand}" Padding="12,6" FontSize="11">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔍 " FontSize="11" />
+                                <TextBlock Text="إضافة / جرد" FontWeight="Bold" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- ======================================================== -->
+        <!-- 1: FINANCIAL & INVENTORY AUDIT KPI STATS BAR (6 CARDS) -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="1" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1.2*" />
+                <ColumnDefinition Width="1.2*" />
+                <ColumnDefinition Width="1.2*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Card 1: Total Items Audited -->
+            <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12,10" Margin="0,0,6,0">
+                <StackPanel>
+                    <TextBlock Text="المواد المفحوصة" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Text="{Binding AuditList.Count, StringFormat='{}{0:N0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" Margin="0,3,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Card 2: Matched -->
+            <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12,10" Margin="3,0">
+                <StackPanel>
+                    <TextBlock Text="المطابقة تماماً" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Text="{Binding MatchedCount, StringFormat='{}{0:N0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="0,3,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Card 3: Discrepancies -->
+            <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12,10" Margin="3,0">
+                <StackPanel>
+                    <TextBlock Text="مواد بها فارق" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Text="{Binding DiscrepanciesCount, StringFormat='{}{0:N0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" Margin="0,3,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Card 4: Total Shortage Cost (Loss) -->
+            <Border Grid.Column="3" Background="#1E131D" CornerRadius="12" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" Padding="12,10" Margin="3,0">
+                <StackPanel>
+                    <TextBlock Text="{Binding Loc[Audit_ShortageValue]}" FontSize="11" FontWeight="Bold" Foreground="#FCA5A5" />
+                    <TextBlock Text="{Binding TotalShortageValue, StringFormat='{}{0:N0} د.ع'}" FontSize="16" FontWeight="Black" Foreground="{DynamicResource DangerBrush}" Margin="0,3,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Card 5: Total Surplus Value -->
+            <Border Grid.Column="4" Background="#0C251B" CornerRadius="12" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1" Padding="12,10" Margin="3,0">
+                <StackPanel>
+                    <TextBlock Text="{Binding Loc[Audit_SurplusValue]}" FontSize="11" FontWeight="Bold" Foreground="#86EFAC" />
+                    <TextBlock Text="{Binding TotalSurplusValue, StringFormat='{}{0:N0} د.ع'}" FontSize="16" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="0,3,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Card 6: Net Financial Difference -->
+            <Border Grid.Column="5" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1" Padding="12,10" Margin="6,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="{Binding Loc[Audit_NetDifference]}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
+                    <TextBlock Text="{Binding NetDifferenceValue, StringFormat='{}{0:N0} د.ع'}" FontSize="16" FontWeight="Black" Foreground="#38BDF8" Margin="0,3,0,0" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ======================================================== -->
+        <!-- 2: AUDIT DATAGRID TABLE (NO SUPPLIER COLUMN, CLEAR NUMBERS) -->
+        <!-- ======================================================== -->
+        <Border Grid.Row="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12">
+            <DataGrid ItemsSource="{Binding AuditList}" AutoGenerateColumns="False" 
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                      Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                      CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                      HorizontalGridLinesBrush="{DynamicResource BorderDark}"
+                      RowHeight="46">
+                <DataGrid.Columns>
+                    <!-- 1. Barcode -->
+                    <DataGridTextColumn Header="الباركود" Binding="{Binding Barcode}" IsReadOnly="True" Width="140" Foreground="{DynamicResource PrimaryAccent}" FontWeight="SemiBold" FontSize="13" />
+                    
+                    <!-- 2. Product Name -->
+                    <DataGridTextColumn Header="اسم المادة" Binding="{Binding ProductName}" IsReadOnly="True" Width="2*" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" FontSize="14" />
+                    
+                    <!-- 3. System Stock (Read-Only) -->
+                    <DataGridTextColumn Header="الموجود في المخزن (الرصيد بالنظام)" Binding="{Binding SystemQuantity, StringFormat='{}{0:N0}'}" IsReadOnly="True" Width="190" Foreground="#FBBF24" FontWeight="Black" FontSize="15" />
+                    
+                    <!-- 4. Actual Physical Count (Editable Number Field) -->
+                    <DataGridTemplateColumn Header="العدد الفعلي (الجرد)" Width="170">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Style="{StaticResource ModernDarkTextBox}" 
+                                         Text="{Binding ActualQuantity, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
+                                         Width="130" Height="34" TextAlignment="Center" FontWeight="Black" FontSize="15" Foreground="#F8FAFC"
+                                         Background="#0F172A" BorderBrush="{DynamicResource PrimaryAccent}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- 5. Difference Status Badge -->
+                    <DataGridTemplateColumn Header="الفارق (الكمية)" Width="150">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="6" Padding="10,4" HorizontalAlignment="Center">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#064E3B" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Difference}" Value="0">
+                                                    <Setter Property="Background" Value="#1E293B" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Difference, Converter={x:Null}}" Value="null">
+                                                    <Setter Property="Background" Value="#1E293B" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding DifferenceStatus}" FontSize="13" FontWeight="Bold" HorizontalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#34D399" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Difference}" Value="0">
+                                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- 6. Unit Cost (On the Left Side) -->
+                    <DataGridTextColumn Header="تكلفة المادة (د.ع)" Binding="{Binding Cost, StringFormat='{}{0:N0} د.ع'}" IsReadOnly="True" Width="140" Foreground="{DynamicResource TextSecondary}" FontWeight="Bold" FontSize="13" />
+
+                    <!-- 7. Total Line Financial Difference (On the Left Side) -->
+                    <DataGridTextColumn Header="قيمة الفارق المالي" Binding="{Binding DifferenceValueFormatted}" IsReadOnly="True" Width="150" Foreground="#38BDF8" FontWeight="Bold" FontSize="13" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- ======================================================== -->
+        <!-- 3: ACTIONS BOTTOM BAR -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="3" Margin="0,16,0,0">
+            <Button Style="{StaticResource ActionButton}" Command="{Binding ReloadCommand}" Padding="16,10" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🔄 " FontSize="13" />
+                    <TextBlock Text="{Binding Loc[Inv_Refresh]}" FontWeight="Bold" />
+                </StackPanel>
+            </Button>
+
+            <Button Style="{StaticResource PrimarySuccessButton}" Command="{Binding ApplyAuditAdjustmentsCommand}" Padding="24,12" HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="💾 " FontSize="16" />
+                    <TextBlock Text="{Binding Loc[Audit_Apply]}" FontSize="14" FontWeight="Bold" />
+                </StackPanel>
+            </Button>
+        </Grid>
+    </Grid>
+</UserControl>

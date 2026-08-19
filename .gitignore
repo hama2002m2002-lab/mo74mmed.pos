@@ -1,0 +1,23 @@
+## Build & Output Folders
+bin/
+obj/
+publish/
+app_payload/
+installer_output/
+installer_project/bin/
+installer_project/obj/
+*.zip
+
+## Visual Studio & IDE
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Database & Local Data (Never upload customer database to public GitHub!)
+*.db
+*.db-shm
+*.db-wal
+Backups/
+logs/

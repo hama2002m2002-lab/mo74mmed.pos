@@ -1,0 +1,228 @@
+<Window x:Class="HamoPos.Views.NetworkSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:HamoPos.ViewModels"
+        mc:Ignorable="d"
+        Title="🌐 إعدادات الشبكة وربط الأجهزة المتعددة (Multi-POS)" 
+        Height="540" Width="680"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgDarkSecondary}"
+        Foreground="{DynamicResource TextPrimary}"
+        FlowDirection="RightToLeft"
+        ResizeMode="NoResize"
+        FontFamily="Segoe UI, Tahoma, Arial">
+
+    <Window.DataContext>
+        <vm:NetworkSettingsViewModel />
+    </Window.DataContext>
+
+    <Border Padding="22" Background="{DynamicResource BgDarkSecondary}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- 0: Header -->
+                <RowDefinition Height="Auto" />
+                <!-- 1: Mode Selector (Master vs Client) -->
+                <RowDefinition Height="Auto" />
+                <!-- 2: Connection Details -->
+                <RowDefinition Height="*" />
+                <!-- 3: Test Connection & Status -->
+                <RowDefinition Height="Auto" />
+                <!-- 4: Action Footer Buttons -->
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- 0: Header Bar -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="40" Height="40" Background="#0C2548" CornerRadius="10" Margin="0,0,12,0">
+                        <TextBlock Text="🌐" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="إعدادات الشبكة ومزامنة الأجهزة المتعددة" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="تشغيل البرنامج على عدة لابتوبات معاً (مدير وكاشير) على نفس المخزن والبيانات" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Update Check Button on Top Left -->
+                <Button HorizontalAlignment="Right" Style="{DynamicResource ActionButton}" Command="{Binding CheckUpdatesCommand}" Padding="10,6" Cursor="Hand">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🚀 " FontSize="12" />
+                        <TextBlock Text="فحص التحديثات" FontSize="11.5" FontWeight="Bold" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- 1: Mode Selector Cards -->
+            <Border Grid.Row="1" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="حدد دور هذا اللابتوب في شبكة المحل:" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,10" />
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Radio 1: Server Mode -->
+                        <RadioButton Grid.Column="0" IsChecked="{Binding IsServerMode}" GroupName="DeviceRole" Cursor="Hand" Margin="0,0,8,0">
+                            <RadioButton.Template>
+                                <ControlTemplate TargetType="RadioButton">
+                                    <Border CornerRadius="10" Padding="12,10" BorderThickness="1.5">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#0F172A" />
+                                                <Setter Property="BorderBrush" Value="#334155" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
+                                                        <Setter Property="Background" Value="#064E3B" />
+                                                        <Setter Property="BorderBrush" Value="#10B981" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="🖥️ " FontSize="14" />
+                                                <TextBlock Text="جهاز رئيسي (سيرفر / مدير)" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" />
+                                            </StackPanel>
+                                            <TextBlock Text="يستضيف قاعدة البيانات الأصلية ويدير المخزن والمشتريات" FontSize="10.5" Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+                                </ControlTemplate>
+                            </RadioButton.Template>
+                        </RadioButton>
+
+                        <!-- Radio 2: Client Mode -->
+                        <RadioButton Grid.Column="1" IsChecked="{Binding IsClientMode}" GroupName="DeviceRole" Cursor="Hand" Margin="8,0,0,0">
+                            <RadioButton.Template>
+                                <ControlTemplate TargetType="RadioButton">
+                                    <Border CornerRadius="10" Padding="12,10" BorderThickness="1.5">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#0F172A" />
+                                                <Setter Property="BorderBrush" Value="#334155" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
+                                                        <Setter Property="Background" Value="#1E3A8A" />
+                                                        <Setter Property="BorderBrush" Value="#3B82F6" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="💻 " FontSize="14" />
+                                                <TextBlock Text="جهاز فرعي (كاشير للبيع)" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" />
+                                            </StackPanel>
+                                            <TextBlock Text="يتصل عبر الواي فاي بسيرفر المدير للبيع والخصم المباشر" FontSize="10.5" Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+                                </ControlTemplate>
+                            </RadioButton.Template>
+                        </RadioButton>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- 2: Dynamic Connection Configuration Panel -->
+            <Border Grid.Row="2" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="0,0,0,14">
+                <StackPanel VerticalAlignment="Center">
+                    <!-- SERVER MODE VIEW -->
+                    <StackPanel Visibility="{Binding IsServerMode, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="📍 معلومات شبكة هذا الجهاز (السيرفر):" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" Margin="0,0,0,8" />
+                        
+                        <Border Background="#0C152B" CornerRadius="8" Padding="10,8" BorderBrush="#1E293B" BorderThickness="1" Margin="0,0,0,8">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="عنوان IP المحلي لهذا اللابتوب: " FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="{Binding LocalIp}" FontSize="14" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="8,0,0,0" />
+                                </StackPanel>
+                                <Button HorizontalAlignment="Right" Style="{DynamicResource ActionButton}" Command="{Binding CopyIpCommand}" Padding="8,3" FontSize="11">
+                                    <TextBlock Text="📋 نسخ الـ IP" />
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Text="💡 لمشاركة قاعدة البيانات مع لابتوب الكاشير:" FontSize="11.5" FontWeight="Bold" Foreground="#E2E8F0" Margin="0,4,0,2" />
+                        <TextBlock Text="قم بمشاركة مجلد البرنامج عبر الشبكة (Sharing) أو ضع قاعدة البيانات في مجلد مشترك على شبكة الواي فاي." FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <!-- CLIENT MODE VIEW -->
+                    <StackPanel Visibility="{Binding IsClientMode, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="🔗 مسار قاعدة بيانات السيرفر الرئيسي المشترك (pos_data.db):" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" Margin="0,0,0,6" />
+                        
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Style="{DynamicResource ModernDarkTextBox}" 
+                                     Text="{Binding SharedDatabasePath, UpdateSourceTrigger=PropertyChanged}" 
+                                     FontSize="13" Padding="8,6" Margin="0,0,6,0" 
+                                     ToolTip="مثال: \\192.168.1.15\HamoPos\pos_data.db أو المسار المحلي" />
+                            <Button Grid.Column="1" Style="{DynamicResource ActionButton}" Command="{Binding BrowseDatabasePathCommand}" Padding="12,6">
+                                <TextBlock Text="📁 استعراض..." FontWeight="Bold" />
+                            </Button>
+                        </Grid>
+
+                        <TextBlock Text="💡 مثال للمسار: \\192.168.1.50\HamoPosData\pos_data.db" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 3: Test Connection Bar -->
+            <Grid Grid.Row="3" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Style="{DynamicResource PrimaryAccentButton}" Command="{Binding TestConnectionCommand}" Padding="14,8" Cursor="Hand">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔍 " FontSize="13" />
+                        <TextBlock Text="فحص الاتصال بقاعدة البيانات" FontWeight="Bold" FontSize="12" />
+                    </StackPanel>
+                </Button>
+
+                <TextBlock Grid.Column="1" Text="{Binding TestStatusMessage}" 
+                           FontSize="12" FontWeight="Bold" 
+                           VerticalAlignment="Center" Margin="12,0,0,0" TextWrapping="Wrap">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsConnectionSuccessful}" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsConnectionSuccessful}" Value="False">
+                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+
+            <!-- 4: Footer Buttons -->
+            <Grid Grid.Row="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="120" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Style="{DynamicResource PrimarySuccessButton}" Command="{Binding SaveSettingsCommand}" Height="42" Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="💾 " FontSize="14" />
+                        <TextBlock Text="حفظ إعدادات الشبكة وتطبيقها" FontWeight="Bold" FontSize="13" />
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="1" Style="{DynamicResource ActionButton}" Click="CloseButton_Click" Height="42">
+                    <TextBlock Text="إلغاء" FontWeight="SemiBold" />
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

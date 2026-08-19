@@ -1,0 +1,409 @@
+<UserControl x:Class="HamoPos.Views.SupplierOrdersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:HamoPos.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200"
+             Background="{DynamicResource BgDarkPrimary}"
+             Foreground="{DynamicResource TextPrimary}"
+             FlowDirection="RightToLeft"
+             FontFamily="Segoe UI, Tahoma, Arial">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <!-- 0: Page Header & KPI Cards -->
+            <RowDefinition Height="Auto" />
+            <!-- 1: Filters & Search Toolbar -->
+            <RowDefinition Height="Auto" />
+            <!-- 2: Orders List & Details Grid -->
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ======================================================== -->
+        <!-- 0: HEADER & KPI SUMMARY CARDS -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Page Title Bar -->
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="44" Height="44" Background="#0C2548" CornerRadius="12" Margin="0,0,14,0">
+                        <TextBlock Text="📦" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="سجل طلبيات المناديب والمحلات" FontSize="18" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="استقبال ومتابعة طلبيات البضائع من الماركتات وتجهيزها وتحويلها لفواتير شراء وتوريد" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Actions Top Right -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Style="{DynamicResource ActionButton}" Command="{Binding SyncCloudNowCommand}" Padding="12,7" Margin="0,0,8,0" Cursor="Hand" ToolTip="مزامنة فورية مع السحابة 24/7">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="☁️ " FontSize="13" />
+                            <TextBlock Text="مزامنة السحابة 24/7" FontWeight="Bold" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{DynamicResource ActionButton}" Command="{Binding OpenMobilePortalCommand}" Padding="12,7" Margin="0,0,8,0" Cursor="Hand" ToolTip="فتح صفحة المندوب في المتصفح">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📱 " FontSize="13" />
+                            <TextBlock Text="بوابة المندوب" FontWeight="Bold" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{DynamicResource ActionButton}" Command="{Binding CopyMobilePortalUrlCommand}" Padding="10,7" Margin="0,0,8,0" Cursor="Hand" ToolTip="نسخ رابط الموبايل للمندوب">
+                        <TextBlock Text="📋 نسخ الرابط" FontSize="11.5" FontWeight="Bold" />
+                    </Button>
+                    <Button Style="{DynamicResource ActionButton}" Command="{Binding LoadOrdersCommand}" Padding="12,7" Margin="0,0,8,0" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔄 " FontSize="13" />
+                            <TextBlock Text="تحديث" FontWeight="Bold" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{DynamicResource PrimaryAccentButton}" Command="{Binding AddNewOrderCommand}" Padding="16,8" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="➕ " FontSize="14" />
+                            <TextBlock Text="تسجيل طلبية جديدة" FontWeight="Bold" FontSize="13" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- KPI Cards Strip -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="1.2*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Card 1: Total Orders -->
+                <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="14,10" Margin="0,0,8,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="إجمالي الطلبيات" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" />
+                        <TextBlock Text="{Binding TotalOrdersCount}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 2: Pending Orders -->
+                <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="14,10" Margin="0,0,8,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource WarningBrush}" Margin="0,0,6,0" />
+                            <TextBlock Text="قيد الانتظار" FontSize="11.5" Foreground="{DynamicResource WarningBrush}" FontWeight="Bold" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding PendingOrdersCount}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 3: In Preparation -->
+                <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="14,10" Margin="0,0,8,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource PrimaryAccent}" Margin="0,0,6,0" />
+                            <TextBlock Text="جاري التجهيز" FontSize="11.5" Foreground="{DynamicResource PrimaryAccent}" FontWeight="Bold" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding InPrepOrdersCount}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 4: Delivered -->
+                <Border Grid.Column="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="14,10" Margin="0,0,8,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource SuccessBrush}" Margin="0,0,6,0" />
+                            <TextBlock Text="تم التوصيل والتوريد" FontSize="11.5" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding DeliveredOrdersCount}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 5: Total Value -->
+                <Border Grid.Column="4" Background="#0C1B33" CornerRadius="12" Padding="14,10" BorderBrush="#1E3A8A" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="إجمالي قيمة الطلبيات" FontSize="11.5" Foreground="#93C5FD" />
+                        <TextBlock Text="{Binding TotalOrdersValue, StringFormat='{}{0:N0} د.ع'}" FontSize="18" FontWeight="Black" Foreground="#60A5FA" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ======================================================== -->
+        <!-- 1: SEARCH & STATUS FILTER TOOLBAR -->
+        <!-- ======================================================== -->
+        <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="12" Margin="0,0,0,14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Search Input -->
+                <Grid Grid.Column="0" Margin="0,0,16,0">
+                    <TextBox Style="{DynamicResource ModernDarkTextBox}" 
+                             Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                             FontSize="13" Padding="10,7" ToolTip="ابحث برقم الطلبية، اسم الماركت، المندوب، أو الهاتف" />
+                </Grid>
+
+                <!-- Status Filter Pills -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Command="{Binding SetFilterCommand}" CommandParameter="All" Padding="12,6" Margin="0,0,6,0" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsFilterAll}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource PrimaryAccent}" />
+                                        <Setter Property="Foreground" Value="White" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="جميع الطلبيات" />
+                    </Button>
+
+                    <Button Command="{Binding SetFilterCommand}" CommandParameter="Pending" Padding="12,6" Margin="0,0,6,0" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsFilterPending}" Value="True">
+                                        <Setter Property="Background" Value="#854D0E" />
+                                        <Setter Property="Foreground" Value="#FEF08A" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="⏳ قيد الانتظار" />
+                    </Button>
+
+                    <Button Command="{Binding SetFilterCommand}" CommandParameter="InPreparation" Padding="12,6" Margin="0,0,6,0" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsFilterInPrep}" Value="True">
+                                        <Setter Property="Background" Value="#1E40AF" />
+                                        <Setter Property="Foreground" Value="#93C5FD" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="📦 جاري التجهيز" />
+                    </Button>
+
+                    <Button Command="{Binding SetFilterCommand}" CommandParameter="Delivered" Padding="12,6" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsFilterDelivered}" Value="True">
+                                        <Setter Property="Background" Value="#065F46" />
+                                        <Setter Property="Foreground" Value="#6EE7B7" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="✔ تم التوصيل" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ======================================================== -->
+        <!-- 2: ORDERS TABLE & DETAILS SPLIT VIEW -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <!-- Orders Table List -->
+                <ColumnDefinition Width="1.4*" />
+                <!-- Selected Order Details Panel -->
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Orders Table List -->
+            <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Margin="0,0,10,0">
+                <DataGrid ItemsSource="{Binding FilteredOrders}" SelectedItem="{Binding SelectedOrder}" 
+                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                          Background="Transparent" Foreground="{DynamicResource TextPrimary}" 
+                          BorderThickness="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#1E293B"
+                          RowHeight="44" HeadersVisibility="Column" SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <!-- Order Number -->
+                        <DataGridTextColumn Header="رقم الطلبية" Binding="{Binding OrderNumber}" Width="125" FontWeight="Bold" />
+                        
+                        <!-- Market Name -->
+                        <DataGridTextColumn Header="الماركت / العميل" Binding="{Binding MarketName}" Width="*" FontWeight="Bold" />
+
+                        <!-- Representative / Supplier -->
+                        <DataGridTemplateColumn Header="المندوب / المورد" Width="130">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding RepresentativeName}" FontWeight="Bold" FontSize="12" />
+                                        <TextBlock Text="{Binding SupplierName}" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Date -->
+                        <DataGridTextColumn Header="التاريخ" Binding="{Binding OrderDate, StringFormat='{}{0:yyyy/MM/dd HH:mm}'}" Width="120" FontSize="11.5" />
+
+                        <!-- Amount -->
+                        <DataGridTextColumn Header="المبلغ" Binding="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" Width="110" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" />
+
+                        <!-- Status Badge -->
+                        <DataGridTemplateColumn Header="الحالة" Width="115">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="8" Padding="8,3" HorizontalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#334155" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Pending">
+                                                        <Setter Property="Background" Value="#854D0E" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Status}" Value="InPreparation">
+                                                        <Setter Property="Background" Value="#1E40AF" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Delivered">
+                                                        <Setter Property="Background" Value="#065F46" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                                                        <Setter Property="Background" Value="#991B1B" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="Bold" Foreground="White" />
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <!-- Selected Order Details Panel -->
+            <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="16">
+                <Grid>
+                    <!-- EMPTY STATE -->
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding HasSelectedOrder, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
+                        <TextBlock Text="📋" FontSize="44" HorizontalAlignment="Center" Margin="0,0,0,10" Foreground="{DynamicResource TextSecondary}" />
+                        <TextBlock Text="اختر طلبية من الجدول لعرض تفاصيلها" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- ORDER DETAILS VIEW -->
+                    <Grid Visibility="{Binding HasSelectedOrder, Converter={StaticResource BoolToVis}}">
+                        <Grid.RowDefinitions>
+                            <!-- Order Info Header -->
+                            <RowDefinition Height="Auto" />
+                            <!-- Items List -->
+                            <RowDefinition Height="*" />
+                            <!-- Order Actions & Status Buttons -->
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Order Info Header -->
+                        <Border Grid.Row="0" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" Padding="12" Margin="0,0,0,10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock Text="{Binding SelectedOrder.MarketName, StringFormat='{}ماركت: {0}'}" FontSize="15" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" />
+                                    <TextBlock HorizontalAlignment="Right" Text="{Binding SelectedOrder.OrderNumber}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" />
+                                </Grid>
+
+                                <Grid Margin="0,0,0,4">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="📞 الهاتف: " FontSize="11.5" Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Text="{Binding SelectedOrder.MarketPhone}" FontSize="11.5" FontWeight="Bold" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <TextBlock Text="👤 المندوب: " FontSize="11.5" Foreground="{DynamicResource TextSecondary}" />
+                                        <TextBlock Text="{Binding SelectedOrder.RepresentativeName}" FontSize="11.5" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Text="📍 العنوان: " FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="{Binding SelectedOrder.MarketAddress}" FontSize="11" Foreground="{DynamicResource TextPrimary}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Order Items List -->
+                        <Border Grid.Row="1" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" Padding="8" Margin="0,0,0,10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                            <DataGrid ItemsSource="{Binding SelectedOrderItems}" 
+                                      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                                      Background="Transparent" Foreground="{DynamicResource TextPrimary}" 
+                                      BorderThickness="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#1E293B"
+                                      RowHeight="32" HeadersVisibility="Column">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="المادة" Binding="{Binding ProductName}" Width="*" FontWeight="Bold" />
+                                    <DataGridTextColumn Header="الكمية" Binding="{Binding Quantity}" Width="55" FontWeight="Bold" />
+                                    <DataGridTextColumn Header="الوحدة" Binding="{Binding UnitType}" Width="65" />
+                                    <DataGridTextColumn Header="الإجمالي" Binding="{Binding TotalPrice, StringFormat='{}{0:N0}'}" Width="80" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+
+                        <!-- Actions Footer -->
+                        <StackPanel Grid.Row="2">
+                            <!-- Status Modifier Buttons -->
+                            <TextBlock Text="تغيير حالة الطلبية:" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Command="{Binding SetPendingStatusCommand}" Padding="4,5" Margin="0,0,4,0" Background="#854D0E" Foreground="White" BorderThickness="0" Cursor="Hand">
+                                    <TextBlock Text="⏳ انتظار" FontSize="11" FontWeight="Bold" />
+                                </Button>
+                                <Button Grid.Column="1" Command="{Binding SetInPrepStatusCommand}" Padding="4,5" Margin="2,0" Background="#1E40AF" Foreground="White" BorderThickness="0" Cursor="Hand">
+                                    <TextBlock Text="📦 تجهيز" FontSize="11" FontWeight="Bold" />
+                                </Button>
+                                <Button Grid.Column="2" Command="{Binding SetDeliveredStatusCommand}" Padding="4,5" Margin="4,0,0,0" Background="#065F46" Foreground="White" BorderThickness="0" Cursor="Hand">
+                                    <TextBlock Text="✔ توصيل" FontSize="11" FontWeight="Bold" />
+                                </Button>
+                            </Grid>
+
+                            <!-- Convert to Purchase Invoice Button (Major Action) -->
+                            <Button Command="{Binding ConvertToInvoiceCommand}" Style="{DynamicResource PrimarySuccessButton}" Height="38" Margin="0,0,0,6" Cursor="Hand">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🛒 " FontSize="13" />
+                                    <TextBlock Text="تحويل الطلبية لفاتورة شراء وتوريد بالمخزن" FontWeight="Bold" FontSize="11.5" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Print & Delete Buttons -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Command="{Binding PrintOrderCommand}" Style="{DynamicResource ActionButton}" Height="34" Margin="0,0,6,0" Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="🖨️ " FontSize="12" />
+                                        <TextBlock Text="طباعة كشف تجهيز الطلبية" FontSize="11" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="1" Command="{Binding DeleteOrderCommand}" Style="{DynamicResource ActionButton}" Height="34" Padding="12,0" Cursor="Hand" ToolTip="حذف الطلبية">
+                                    <TextBlock Text="🗑️" FontSize="13" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

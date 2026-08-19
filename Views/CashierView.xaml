@@ -1,0 +1,1708 @@
+<UserControl x:Class="HamoPos.Views.CashierView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" 
+             d:DesignHeight="850" d:DesignWidth="1400"
+             FlowDirection="RightToLeft"
+             Loaded="UserControl_Loaded"
+             PreviewKeyDown="UserControl_PreviewKeyDown"
+             FontFamily="Times New Roman, Segoe UI, Tahoma, Arial">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid Margin="18,10">
+        <Grid.RowDefinitions>
+            <!-- 0: Top Header & Invoices Multi-Tabs Bar -->
+            <RowDefinition Height="Auto" />
+            <!-- 1: Main Spacious Workspace (Left: Big Elevated Summary Box, Right: Short Barcode + Cart Table) -->
+            <RowDefinition Height="*" />
+            <!-- 2: Bottom Status Bar -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ======================================================== -->
+        <!-- 0: TOP HEADER & INVOICES MULTI-TABS BAR -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <!-- Navigation Return, Multi-Invoice Tabs & Action Buttons -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Style="{DynamicResource ActionButton}" Command="{Binding BackToMainCommand}" Padding="14,8" Margin="0,0,10,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔙 " FontSize="14" />
+                        <TextBlock Text="{Binding Loc[Nav_BackToMain]}" FontWeight="Bold" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Tabs & Action Buttons Container -->
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ItemsControl ItemsSource="{Binding InvoiceTabs}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,6,0" CornerRadius="10" Padding="10,6" BorderThickness="1.5">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource BgDarkSecondary}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="Background" Value="#1E293B" />
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryAccent}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Command="{Binding DataContext.SelectInvoiceTabCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                    CommandParameter="{Binding}"
+                                                    Background="Transparent" BorderThickness="0" Cursor="Hand">
+                                                <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                            </Button>
+
+                                            <!-- Distinct Items Count Badge -->
+                                            <Border Background="{DynamicResource PrimaryAccent}" CornerRadius="8" Padding="6,1" Margin="8,0,6,0">
+                                                <TextBlock Text="{Binding CartItems.Count}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                                            </Border>
+
+                                            <!-- Close Tab Button -->
+                                            <Button Command="{Binding DataContext.CloseInvoiceTabCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                    CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="4,0,0,0"
+                                                    ToolTip="إغلاق أو مسح هذه الفاتورة">
+                                                <TextBlock Text="✕" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Add New Invoice Tab Button -->
+                        <Button Style="{DynamicResource ActionButton}" Command="{Binding AddNewInvoiceTabCommand}" Padding="14,7" ToolTip="فتح نافذة بيع جديدة" Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="➕ " FontSize="14" />
+                                <TextBlock Text="{Binding Loc[Pos_AddInvoice]}" FontWeight="Bold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Invoices Archive / Returns Button (سجل الوصلات والورديات) -->
+                        <Button Style="{DynamicResource ActionButton}" Command="{Binding OpenSalesHistoryModalCommand}" Padding="14,7" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🧾 " FontSize="15" />
+                                <TextBlock Text="{Binding Loc[Pos_HoldInvoices]}" FontWeight="Bold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Warehouse Modal Trigger Button (المخزن / تصفح المواد) -->
+                        <Button Style="{DynamicResource PrimaryAccentButton}" Command="{Binding OpenWarehouseModalCommand}" Padding="15,7">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📦 " FontSize="15" />
+                                <TextBlock Text="{Binding Loc[Pos_BrowseInventory]}" FontWeight="Bold" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </StackPanel>
+        </Grid>
+
+        <!-- ======================================================== -->
+        <!-- 1: MAIN WORKSPACE (LEFT: BIG SUMMARY BOX, RIGHT: SHORT BARCODE + CART TABLE) -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <!-- LEFT COLUMN: LARGE ELEVATED SUMMARY BOX (360px) -->
+                <ColumnDefinition Width="360" />
+                <!-- RIGHT COLUMN: SHORT BARCODE STRIP + CART ITEMS (Fills rest of screen) -->
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ======================================================== -->
+            <!-- LEFT: BIG ELEVATED FINANCIAL SUMMARY & CHECKOUT ACTIONS -->
+            <!-- ======================================================== -->
+            <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="16" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" Padding="14" Margin="0,0,14,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- 0: Huge Grand Total Display at the Top -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 1: Calculations & Stats Card -->
+                        <RowDefinition Height="*" />
+                        <!-- 2: Action Payment & Clear Cart Buttons -->
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 0: HUGE GRAND TOTAL DISPLAY (المبلغ المطلوب دفعه في الأعلى) -->
+                    <Border Grid.Row="0" Background="{DynamicResource BgDarkPrimary}" CornerRadius="14" BorderThickness="2" Padding="14,12" Margin="0,0,0,10">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsReturnModeActive}" Value="True">
+                                        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+                                        <Setter Property="Background" Value="#2D0E0E" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding CartGrandTotalTitle}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" Margin="0,0,0,4" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding SelectedTab.CartGrandTotal, StringFormat='{}{0:N0}'}" FontSize="32" FontWeight="Black">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsReturnModeActive}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="{Binding Loc[App_Currency_Short], StringFormat=' {0}'}" FontSize="14" FontWeight="Bold" VerticalAlignment="Bottom" Margin="4,0,0,4">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsReturnModeActive}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 1: Calculation Card & Summary Info -->
+                    <Border Grid.Row="1" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12" Margin="0,0,0,10">
+                        <StackPanel VerticalAlignment="Center">
+                            <!-- Summary Title -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="💳 " FontSize="14" />
+                                <TextBlock Text="{Binding Loc[Pos_SummaryPayment]}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                            </StackPanel>
+
+                            <!-- Items & Pieces Count Info -->
+                            <Grid Margin="0,0,0,6">
+                                <TextBlock Text="{Binding Loc[Cart_ItemsCount]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding SelectedTab.DistinctItemsCount, StringFormat='{}{0} أصناف'}" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" HorizontalAlignment="Right" />
+                            </Grid>
+                            <Grid Margin="0,0,0,6">
+                                <TextBlock Text="{Binding Loc[Cart_TotalUnits]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding SelectedTab.TotalPiecesCount, StringFormat='{}{0:0} قطعة'}" FontSize="12.5" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Right" />
+                            </Grid>
+
+                            <Separator Background="{DynamicResource BorderDark}" Margin="0,0,0,6" />
+
+                            <!-- Subtotal -->
+                            <Grid Margin="0,0,0,6">
+                                <TextBlock Text="{Binding Loc[Pos_SubTotal]}" FontSize="12.5" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding SelectedTab.CartSubTotal, StringFormat='{}{0:N0} د.ع'}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right" />
+                            </Grid>
+
+                            <!-- Discount Input Field -->
+                            <Grid>
+                                <TextBlock Text="{Binding Loc[Cart_ExtraDiscount]}" FontSize="12.5" Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBox x:Name="TxtDiscount" Style="{DynamicResource ModernDarkTextBox}" 
+                                         Text="{Binding SelectedTab.DiscountInputText, UpdateSourceTrigger=PropertyChanged}" 
+                                         HorizontalAlignment="Right" Width="110" Height="32" FontSize="13" FontWeight="Bold" Padding="6,2" TextAlignment="Right" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 2: ACTION PAYMENT & CLEAR CART BUTTONS -->
+                    <StackPanel Grid.Row="2">
+                        <!-- 1. Cash / Refund Button (F1) -->
+                        <Button Command="{Binding CheckoutCashCommand}" Height="48" Margin="0,0,0,6">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource PrimarySuccessButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsReturnModeActive}" Value="True">
+                                            <Setter Property="Background" Value="#DC2626" />
+                                            <Setter Property="BorderBrush" Value="#EF4444" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <TextBlock Text="{Binding CheckoutCashButtonText}" FontSize="14.5" FontWeight="Bold" VerticalAlignment="Center" />
+                        </Button>
+
+                        <!-- 2. Card / Refund Button (F2) -->
+                        <Button Command="{Binding CheckoutCardCommand}" Height="42" Margin="0,0,0,6">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource PrimaryAccentButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsReturnModeActive}" Value="True">
+                                            <Setter Property="Background" Value="#991B1B" />
+                                            <Setter Property="BorderBrush" Value="#DC2626" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <TextBlock Text="{Binding CheckoutCardButtonText}" FontSize="13.5" FontWeight="Bold" VerticalAlignment="Center" />
+                        </Button>
+
+                        <!-- 3. Clear / Erase Cart Button (مسح / تفريغ الفاتورة) -->
+                        <Button Command="{Binding ClearCartCommand}" Height="36" Cursor="Hand">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                    <Setter Property="BorderBrush" Value="#334155" />
+                                    <Setter Property="Background" Value="#111B2E" />
+                                    <Setter Property="Foreground" Value="#EF4444" />
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#450A0A" />
+                                            <Setter Property="BorderBrush" Value="#EF4444" />
+                                            <Setter Property="Foreground" Value="#FFFFFF" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="🧹 " FontSize="12" />
+                                <TextBlock Text="{Binding Loc[Pos_ClearCartBtn]}" FontWeight="Bold" FontSize="11.5" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ======================================================== -->
+            <!-- RIGHT: SHORT BARCODE STRIP + EXPANDED CART ITEMS TABLE -->
+            <!-- ======================================================== -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <!-- Short Barcode Input Strip directly above cart -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Cart Items Table Container -->
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- 0: SHORT PROMINENT BARCODE SCANNER INPUT BAR -->
+                <Border Grid.Row="0" 
+                        Background="{Binding BarcodeBackgroundBrush}" 
+                        CornerRadius="12" 
+                        BorderBrush="{Binding BarcodeBorderBrush}" 
+                        BorderThickness="2.5" 
+                        Padding="8,4" 
+                        Margin="0,0,0,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,14,0">
+                            <TextBlock Text="{Binding BarcodeScannerIcon}" FontSize="20" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding BarcodeScannerTitle}" FontSize="14" FontWeight="Bold" Foreground="{Binding BarcodeScannerIconColor}" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <TextBox Grid.Column="1" x:Name="TxtBarcodeScan" 
+                                 Style="{DynamicResource ModernDarkTextBox}" 
+                                 Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                 Padding="12,8" 
+                                 FontSize="17" 
+                                 FontWeight="Bold" 
+                                 BorderThickness="0" 
+                                 Background="Transparent" 
+                                 KeyDown="TxtBarcodeScan_KeyDown" 
+                                 ToolTip="امسح الباركود مباشرة بالليزر أو اكتب واضغط Enter" />
+
+                        <!-- Return Mode Toggle Button (مقابل حقل الباركود) -->
+                        <Button Grid.Column="2" 
+                                Command="{Binding ToggleReturnModeCommand}"
+                                Padding="14,7" Margin="4,2" VerticalAlignment="Center">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                    <Setter Property="Background" Value="#2D1515" />
+                                    <Setter Property="BorderBrush" Value="#EF4444" />
+                                    <Setter Property="Foreground" Value="#FCA5A5" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsReturnModeActive}" Value="True">
+                                            <Setter Property="Background" Value="#DC2626" />
+                                            <Setter Property="Foreground" Value="White" />
+                                            <Setter Property="BorderBrush" Value="#F87171" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔄 " FontSize="13" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding Loc[Pos_ReturnModeBtn]}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- 1: LARGE EXPANDED CART ITEMS TABLE -->
+                <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <!-- Cart Columns Header -->
+                            <RowDefinition Height="Auto" />
+                            <!-- Cart Items List -->
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Cart Columns Header -->
+                        <Border Grid.Row="0" Background="{DynamicResource BgDarkPrimary}" CornerRadius="8" Padding="12,8" Margin="0,0,0,8" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="30" />
+                                    <ColumnDefinition Width="2.2*" />
+                                    <ColumnDefinition Width="1.3*" />
+                                    <ColumnDefinition Width="2.3*" />
+                                    <ColumnDefinition Width="1.2*" />
+                                    <ColumnDefinition Width="1.2*" />
+                                    <ColumnDefinition Width="35" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="#" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding Loc[Pos_ItemNameBarcode]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Grid.Column="2" Text="{Binding Loc[Pos_UnitPrice]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Grid.Column="3" Text="{Binding Loc[Pos_SaleType]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="4" Text="{Binding Loc[Gen_Quantity]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="5" Text="{Binding Loc[Gen_Total]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Right" Margin="0,0,10,0" />
+                                <TextBlock Grid.Column="6" Text="{Binding Loc[en_Dele]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" HorizontalAlignment="Center" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Cart Items ListView -->
+                        <Border Grid.Row="1" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding SelectedTab.CartItems}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="10,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="30" />
+                                                        <ColumnDefinition Width="2.2*" />
+                                                        <ColumnDefinition Width="1.3*" />
+                                                        <ColumnDefinition Width="2.3*" />
+                                                        <ColumnDefinition Width="1.2*" />
+                                                        <ColumnDefinition Width="1.2*" />
+                                                        <ColumnDefinition Width="35" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <TextBlock Grid.Column="0" Text="{Binding ItemIndex}" FontSize="12" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding ProductName}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding Barcode}" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0" />
+                                                    </StackPanel>
+
+                                                    <!-- Unit Price + Purchase Cost (سعر البيع والشراء) -->
+                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding UnitPrice, StringFormat='{}{0:N0} د.ع'}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                            <TextBlock Text="شراء: " FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                                                            <TextBlock Text="{Binding EffectiveCost, StringFormat='{}{0:N0} د.ع'}" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                    <!-- Unit Switcher (مفرد / جملة / كرتون / إرجاع) -->
+                                                    <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <!-- Retail / مفرد -->
+                                                        <Button Command="{Binding SetRetailCommand}" Padding="6,3" Margin="2,0" FontSize="11" Cursor="Hand">
+                                                            <Button.Style>
+                                                                <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                                                    <Setter Property="Background" Value="#1E293B" />
+                                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                                                    <Setter Property="BorderThickness" Value="1" />
+                                                                    <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsRetail}" Value="True">
+                                                                            <Setter Property="Background" Value="#065F46" />
+                                                                            <Setter Property="Foreground" Value="#34D399" />
+                                                                            <Setter Property="BorderBrush" Value="#10B981" />
+                                                                            <Setter Property="FontWeight" Value="Bold" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                            <TextBlock Text="{Binding DataContext.Loc[Pos_SaleTypeRetail], RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                                        </Button>
+
+                                                        <!-- Wholesale / جملة -->
+                                                        <Button Command="{Binding SetWholesaleCommand}" Padding="6,3" Margin="2,0" FontSize="11" Cursor="Hand">
+                                                            <Button.Style>
+                                                                <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                                                    <Setter Property="Background" Value="#1E293B" />
+                                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                                                    <Setter Property="BorderThickness" Value="1" />
+                                                                    <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsWholesale}" Value="True">
+                                                                            <Setter Property="Background" Value="#1E40AF" />
+                                                                            <Setter Property="Foreground" Value="#60A5FA" />
+                                                                            <Setter Property="BorderBrush" Value="#3B82F6" />
+                                                                            <Setter Property="FontWeight" Value="Bold" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                            <TextBlock Text="{Binding DataContext.Loc[Pos_SaleTypeWholesale], RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                                        </Button>
+
+                                                        <!-- Carton / كرتون -->
+                                                        <Button Command="{Binding SetCartonCommand}" Padding="6,3" Margin="2,0" FontSize="11" Cursor="Hand">
+                                                            <Button.Style>
+                                                                <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                                                    <Setter Property="Background" Value="#1E293B" />
+                                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                                                    <Setter Property="BorderThickness" Value="1" />
+                                                                    <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsCarton}" Value="True">
+                                                                            <Setter Property="Background" Value="#9A3412" />
+                                                                            <Setter Property="Foreground" Value="#FB923C" />
+                                                                            <Setter Property="BorderBrush" Value="#F97316" />
+                                                                            <Setter Property="FontWeight" Value="Bold" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                            <TextBlock Text="{Binding DataContext.Loc[Pos_SaleTypeCarton], RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                                        </Button>
+                                                    </StackPanel>
+
+                                                    <!-- Quantity Modifier (- QTY +) -->
+                                                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                        <Button Style="{DynamicResource ActionButton}" 
+                                                                Command="{Binding DataContext.DecreaseQuantityCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}"
+                                                                Width="28" Height="28" Padding="0">
+                                                            <TextBlock Text="-" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Button>
+                                                        <Border Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" CornerRadius="4" Margin="4,0" MinWidth="38" Height="28">
+                                                            <TextBlock Text="{Binding Quantity, StringFormat='{}{0:0}'}" FontSize="13" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                        <Button Style="{DynamicResource ActionButton}" 
+                                                                Command="{Binding DataContext.IncreaseQuantityCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}"
+                                                                Width="28" Height="28" Padding="0">
+                                                            <TextBlock Text="+" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Button>
+                                                    </StackPanel>
+
+                                                    <!-- Total Price -->
+                                                    <StackPanel Grid.Column="5" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,0">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding TotalPrice, StringFormat='{}{0:N0}'}" FontSize="15" FontWeight="Black">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsReturn}" Value="True">
+                                                                                <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                            <TextBlock Text=" د.ع" FontSize="10" VerticalAlignment="Bottom" Margin="2,0,0,2">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsReturn}" Value="True">
+                                                                                <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                    <!-- Delete Button -->
+                                                    <Button Grid.Column="6" 
+                                                            Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Width="26" Height="26" Background="#450A0A" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1"
+                                                            Cursor="Hand" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                        <TextBlock Text="🗑" FontSize="11" Foreground="{DynamicResource DangerBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ======================================================== -->
+        <!-- 2: BOTTOM STATISTICS STATUS BAR -->
+        <!-- ======================================================== -->
+        <Border Grid.Row="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14,8" Margin="0,10,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="ℹ️ " FontSize="12" />
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="مبيعات الوردية اليوم: " FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Text="{Binding TodayRevenue, StringFormat='{}{0:N0} د.ع'}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" Margin="0,0,16,0" />
+                    <TextBlock Text="عدد الفواتير: " FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Text="{Binding TodaySalesCount, StringFormat='{}{0} فاتورة'}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <TextBlock Text="💰 المجموع الإجمالي للسلة: " FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Text="{Binding SelectedTab.CartGrandTotal, StringFormat='{}{0:N0} د.ع'}" FontSize="15" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ======================================================== -->
+        <!-- POPUP MODAL 1: WAREHOUSE / PRODUCTS CATALOG (ALWAYS RESETS) -->
+        <!-- ======================================================== -->
+        <Border Grid.RowSpan="3" Background="#DD000000" 
+                Visibility="{Binding IsWarehouseModalOpen, Converter={StaticResource BoolToVis}}" 
+                Margin="-18,-10">
+            <Border Width="920" MaxHeight="640" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="22" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="📦 " FontSize="22" />
+                            <TextBlock Text="{Binding Loc[Pos_BrowseInventory]}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Command="{Binding CloseWarehouseModalCommand}" Cursor="Hand" Padding="6">
+                            <TextBlock Text="✕" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" />
+                        </Button>
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,0,0,12">
+                        <TextBox x:Name="TxtWarehouseSearch" 
+                                 Style="{DynamicResource ModernDarkTextBox}" 
+                                 Text="{Binding WarehouseSearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                 Padding="12,8" FontSize="14" 
+                                 ToolTip="ابحث بالاسم أو الباركود" />
+                    </Grid>
+
+                    <Border Grid.Row="2" Background="{DynamicResource BgDarkPrimary}" CornerRadius="8" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="6" Height="390">
+                        <DataGrid ItemsSource="{Binding WarehouseProductsList}" AutoGenerateColumns="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                  HorizontalGridLinesBrush="{DynamicResource BorderDark}"
+                                  RowHeight="40">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="الباركود" Binding="{Binding Barcode}" Width="120" Foreground="{DynamicResource PrimaryAccent}" />
+                                <DataGridTextColumn Header="اسم المادة" Binding="{Binding Name}" Width="2*" Foreground="{DynamicResource TextPrimary}" />
+                                <DataGridTextColumn Header="سعر المفرد" Binding="{Binding Price, StringFormat='{}{0:N0} د.ع'}" Width="100" Foreground="{DynamicResource SuccessBrush}" />
+                                <DataGridTextColumn Header="سعر الجملة" Binding="{Binding WholesalePrice, StringFormat='{}{0:N0} د.ع'}" Width="100" Foreground="{DynamicResource PrimaryAccent}" />
+                                <DataGridTextColumn Header="سعر الكرتون" Binding="{Binding CartonSellingPrice, StringFormat='{}{0:N0} د.ع'}" Width="100" Foreground="{DynamicResource WarningBrush}" />
+                                <DataGridTextColumn Header="المخزون" Binding="{Binding StockQuantity, StringFormat='{}{0:N0}'}" Width="80" Foreground="{DynamicResource TextSecondary}" />
+                                
+                                <DataGridTemplateColumn Header="خيارات الإضافة للسلة" Width="230">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Style="{DynamicResource PrimarySuccessButton}" 
+                                                        Command="{Binding DataContext.AddRetailProductCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding}" Padding="8,4" FontSize="11" Margin="0,0,4,0">
+                                                    <TextBlock Text="+ مفرد" />
+                                                </Button>
+                                                <Button Style="{DynamicResource PrimaryAccentButton}" 
+                                                        Command="{Binding DataContext.AddWholesaleProductCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding}" Padding="8,4" FontSize="11" Margin="0,0,4,0">
+                                                    <TextBlock Text="+ جملة" />
+                                                </Button>
+                                                <Button Style="{DynamicResource ActionButton}" 
+                                                        Command="{Binding DataContext.AddCartonProductCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding}" Padding="8,4" FontSize="11">
+                                                    <TextBlock Text="+ كرتون" />
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <Button Grid.Row="3" Style="{DynamicResource ActionButton}" Command="{Binding CloseWarehouseModalCommand}" Height="40" Margin="0,14,0,0">
+                        <TextBlock Text="إغلاق نافذة المخزن" FontWeight="SemiBold" />
+                    </Button>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- ======================================================== -->
+        <!-- POPUP MODAL 2: CASH DRAWER & LIVE VAULT (سندوقی پاره و خەزینە) -->
+        <!-- ======================================================== -->
+        <Border Grid.RowSpan="3" Background="#EE050A18" 
+                Visibility="{Binding IsDrawerModalOpen, Converter={StaticResource BoolToVis}}" 
+                Margin="-18,-10">
+            <Border Width="1040" MaxHeight="680" Background="#0A1020" CornerRadius="18" BorderBrush="#0D9488" BorderThickness="1.5" Padding="22" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="35" Color="#000000" Opacity="0.9" ShadowDepth="12" />
+                </Border.Effect>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- 0: Header -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 1: 4 Summary Cards Grid -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 2: Section Title -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 3: Live Transactions Activity List -->
+                        <RowDefinition Height="*" />
+                        <!-- 4: Bottom Footer Bar -->
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 0: TOP HEADER BAR -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <!-- Right (in RTL): Vault Icon + Title + LIVE VAULT Badge + Subtitle -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Border Background="#022C22" BorderBrush="#10B981" BorderThickness="1" CornerRadius="10" Padding="8,2" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <TextBlock Text="LIVE VAULT" FontSize="10" FontWeight="Black" Foreground="#34D399" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Loc[Drawer_Title]}" FontSize="19" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="چاودێریکردنی باڵانسی ڕاستەقینەی خەزێنە، فرۆشتنی نەقد و بڕە گەڕێنراوەکان" FontSize="11" Foreground="#94A3B8" Margin="0,3,0,0" HorizontalAlignment="Right" />
+                            </StackPanel>
+
+                            <Border Width="44" Height="44" Background="#064E3B" BorderBrush="#059669" BorderThickness="1.5" CornerRadius="12" Margin="12,0,0,0">
+                                <TextBlock Text="🗄️" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Left (in RTL): Direct Deposit / Take Button + Print Shift Button + Close Button -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <Button Background="#1E293B" BorderThickness="0" Command="{Binding CloseDrawerModalCommand}" Cursor="Hand" Width="36" Height="36" Margin="0,0,10,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                            <TextBlock Text="✕" FontSize="16" FontWeight="Bold" Foreground="#EF4444" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <Button Command="{Binding OpenAddCashPopupCommand}" Cursor="Hand" Height="38" Padding="14,0" Margin="0,0,8,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#0D9488" BorderBrush="#14B8A6" BorderThickness="1" CornerRadius="19" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="➕ " FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" />
+                                                <TextBlock Text="دانان / ڕاکێشانی ڕاستەوخۆ" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <Button Command="{Binding PrintShiftReportCommand}" Cursor="Hand" Height="38" Padding="14,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#0284C7" BorderBrush="#38BDF8" BorderThickness="1" CornerRadius="19" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="🖨️ " FontSize="13" Foreground="#FFFFFF" Margin="0,0,4,0" />
+                                                <TextBlock Text="چاپکردنی ڕاپۆرتی نۆبەت" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 1: 4 TOP SUMMARY CARDS -->
+                    <Grid Grid.Row="1" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Card 4: Initial Balance & Movements (Teal Card) -->
+                        <Border Grid.Column="0" Background="#0B1A24" BorderBrush="#0891B2" BorderThickness="1.5" CornerRadius="14" Padding="14,12" Margin="0,0,6,0">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <TextBlock Text="💲" FontSize="14" Foreground="#38BDF8" HorizontalAlignment="Left" />
+                                    <TextBlock Text="باڵانسی سەرەتایی و دەستکارییەکان" FontSize="11" FontWeight="Bold" Foreground="#94A3B8" HorizontalAlignment="Right" />
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6">
+                                    <TextBlock Text="{Binding DrawerOpeningBalance, StringFormat='{}{0:N0}'}" FontSize="22" FontWeight="Black" Foreground="#38BDF8" />
+                                    <TextBlock Text=" د.ع" FontSize="12" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Bottom" Margin="3,0,0,2" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding DrawerMovements.Count, StringFormat='سەرەتایی: د.ع {0} | دەستکاری: چاودێریکراو'}" FontSize="9.5" Foreground="#64748B" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 3: Returns from Vault (Red Card) -->
+                        <Border Grid.Column="1" Background="#240B10" BorderBrush="#DC2626" BorderThickness="1.5" CornerRadius="14" Padding="14,12" Margin="3,0">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <TextBlock Text="🔄" FontSize="13" Foreground="#F87171" HorizontalAlignment="Left" />
+                                    <TextBlock Text="بڕی گەڕێندراوە لە خەزێنە (-)" FontSize="11" FontWeight="Bold" Foreground="#F87171" HorizontalAlignment="Right" />
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6">
+                                    <TextBlock Text="-" FontSize="20" FontWeight="Black" Foreground="#EF4444" Margin="0,0,3,0" />
+                                    <TextBlock Text="{Binding DrawerReturnsAmount, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="Black" Foreground="#EF4444" />
+                                    <TextBlock Text=" د.ع" FontSize="12" FontWeight="Bold" Foreground="#EF4444" VerticalAlignment="Bottom" Margin="3,0,0,2" />
+                                </StackPanel>
+                                <TextBlock Text="بڕی پارەی گەڕێندراوە لە سندوق" FontSize="9.5" Foreground="#991B1B" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 2: Cash Gross Sales (Blue Card) -->
+                        <Border Grid.Column="2" Background="#0A1628" BorderBrush="#2563EB" BorderThickness="1.5" CornerRadius="14" Padding="14,12" Margin="3,0">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <TextBlock Text="📈" FontSize="13" Foreground="#60A5FA" HorizontalAlignment="Left" />
+                                    <TextBlock Text="کۆی فرۆشتنی نەقد (+)" FontSize="11" FontWeight="Bold" Foreground="#93C5FD" HorizontalAlignment="Right" />
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6">
+                                    <TextBlock Text="+" FontSize="20" FontWeight="Black" Foreground="#60A5FA" Margin="0,0,3,0" />
+                                    <TextBlock Text="{Binding DrawerGrossSales, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="Black" Foreground="#60A5FA" />
+                                    <TextBlock Text=" د.ع" FontSize="12" FontWeight="Bold" Foreground="#60A5FA" VerticalAlignment="Bottom" Margin="3,0,0,2" />
+                                </StackPanel>
+                                <TextBlock Text="بڕە پارەی کۆکراوە لە پسوولە فرۆشراوەکانەوە" FontSize="9.5" Foreground="#1E3A8A" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 1: Vault Current Live Balance (Emerald Card) -->
+                        <Border Grid.Column="3" Background="#051B13" BorderBrush="#059669" BorderThickness="1.5" CornerRadius="14" Padding="14,12" Margin="6,0,0,0">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <TextBlock Text="💵" FontSize="13" Foreground="#34D399" HorizontalAlignment="Left" />
+                                    <TextBlock Text="باڵانسی ماوەی ناو خەزینە" FontSize="11" FontWeight="Bold" Foreground="#34D399" HorizontalAlignment="Right" />
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,6">
+                                    <TextBlock Text="{Binding DrawerCurrentCash, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="Black" Foreground="#10B981" />
+                                    <TextBlock Text=" د.ع" FontSize="12" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Bottom" Margin="3,0,0,2" />
+                                </StackPanel>
+                                <TextBlock Text="بڕی پارەی ڕاستەقینەی بەردەست لە دەستی کاشێردا" FontSize="9.5" Foreground="#047857" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- 2: SECTION TITLE & FILTER SWITCHER BUTTONS (مبيعات / مرجوعات / الكل) -->
+                    <Grid Grid.Row="2" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="🕒 " FontSize="14" Foreground="#38BDF8" />
+                            <TextBlock Text="تۆماری جووڵە نەقدییەکان:" FontSize="12" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <!-- Filter Switcher Buttons Toolbar -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <!-- All Filter -->
+                            <Button Command="{Binding SetTransactionFilterCommand}" CommandParameter="All" Cursor="Hand" Height="30" Padding="12,0" Margin="0,0,6,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="15" Padding="{TemplateBinding Padding}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#1E293B" />
+                                                    <Setter Property="BorderBrush" Value="#334155" />
+                                                    <Setter Property="BorderThickness" Value="1" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsAllFilterActive}" Value="True">
+                                                            <Setter Property="Background" Value="#0D9488" />
+                                                            <Setter Property="BorderBrush" Value="#14B8A6" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="🌟 هەموو (الكل)" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Sales Filter -->
+                            <Button Command="{Binding SetTransactionFilterCommand}" CommandParameter="Sales" Cursor="Hand" Height="30" Padding="12,0" Margin="0,0,6,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="15" Padding="{TemplateBinding Padding}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#1E293B" />
+                                                    <Setter Property="BorderBrush" Value="#334155" />
+                                                    <Setter Property="BorderThickness" Value="1" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSalesFilterActive}" Value="True">
+                                                            <Setter Property="Background" Value="#2563EB" />
+                                                            <Setter Property="BorderBrush" Value="#3B82F6" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="📈 فرۆشتن (المبيعات)" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Returns Filter -->
+                            <Button Command="{Binding SetTransactionFilterCommand}" CommandParameter="Returns" Cursor="Hand" Height="30" Padding="12,0" Margin="0,0,6,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="15" Padding="{TemplateBinding Padding}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#1E293B" />
+                                                    <Setter Property="BorderBrush" Value="#334155" />
+                                                    <Setter Property="BorderThickness" Value="1" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsReturnsFilterActive}" Value="True">
+                                                            <Setter Property="Background" Value="#DC2626" />
+                                                            <Setter Property="BorderBrush" Value="#EF4444" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="🔄 گەڕێنراوە (المرتجعات)" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Adjustments Filter -->
+                            <Button Command="{Binding SetTransactionFilterCommand}" CommandParameter="Adjustments" Cursor="Hand" Height="30" Padding="12,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="15" Padding="{TemplateBinding Padding}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#1E293B" />
+                                                    <Setter Property="BorderBrush" Value="#334155" />
+                                                    <Setter Property="BorderThickness" Value="1" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsAdjustmentsFilterActive}" Value="True">
+                                                            <Setter Property="Background" Value="#0891B2" />
+                                                            <Setter Property="BorderBrush" Value="#06B6D4" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="💵 دەستکاری سندوق" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 3: TRANSACTIONS LIST CONTAINER -->
+                    <Border Grid.Row="3" Background="#060C18" CornerRadius="12" BorderBrush="#1E293B" BorderThickness="1" Padding="8" MaxHeight="310">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding LiveTransactionsList}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{Binding CardBackground}" BorderBrush="{Binding CardBorder}" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,6">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Amount on Left (in RTL) -->
+                                                <TextBlock Grid.Column="0" Text="{Binding FormattedAmount}" FontSize="14" FontWeight="Black" Foreground="{Binding AmountColor}" VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                                                <!-- Inspect Invoice Details Button (Only for Sales and Returns) -->
+                                                <Button Grid.Column="1" Command="{Binding DataContext.OpenInvoiceDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding AssociatedSale}" 
+                                                        Cursor="Hand" Height="28" Padding="10,0" Margin="0,0,10,0" VerticalAlignment="Center">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding AssociatedSale}" Value="{x:Null}">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="#1E3A8A" BorderBrush="#3B82F6" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="👁️ " FontSize="11" />
+                                                                    <TextBlock Text="معاينة الوصل" FontSize="10.5" FontWeight="Bold" Foreground="#93C5FD" />
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+
+                                                <!-- Details in Center -->
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                        <Border Background="{Binding BadgeBackground}" CornerRadius="6" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding BadgeText}" FontSize="9.5" FontWeight="Bold" Foreground="{Binding BadgeForeground}" />
+                                                        </Border>
+                                                        <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding CashierAndDate}" FontSize="10" Foreground="#64748B" Margin="0,3,0,0" HorizontalAlignment="Right" />
+                                                </StackPanel>
+
+                                                <!-- Icon Box on Right (in RTL) -->
+                                                <Border Grid.Column="3" Width="32" Height="32" Background="{Binding IconBackground}" CornerRadius="8" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding IconText}" FontSize="13" Foreground="{Binding IconForeground}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- 4: BOTTOM ACTION FOOTER BAR -->
+                    <Grid Grid.Row="4" Margin="0,14,0,0">
+                        <!-- Right (in RTL): System Info Text -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="سیستەمی پاراستن و بەڕێوەبردنی ئەلیکترۆنی خەزێنەی نەقد" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <Border Width="28" Height="28" Background="#064E3B" CornerRadius="6">
+                                <TextBlock Text="🗄️" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Left (in RTL): Print Report + Close Drawer Buttons -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <Button Command="{Binding CloseDrawerModalCommand}" Cursor="Hand" Height="36" Padding="18,0" Margin="0,0,8,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                            <TextBlock Text="داخستنی خەزێنە" FontSize="12" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <Button Command="{Binding PrintShiftReportCommand}" Cursor="Hand" Height="36" Padding="16,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#0284C7" BorderBrush="#38BDF8" BorderThickness="1" CornerRadius="18" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="🖨️ " FontSize="13" Foreground="#FFFFFF" Margin="0,0,4,0" />
+                                                <TextBlock Text="چاپکردنی ڕاپۆرتی نۆبەت" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- ======================================================== -->
+        <!-- POPUP MODAL 4: INVOICES ARCHIVE & RETURNS (سجل الوصلات والورديات) -->
+        <!-- ======================================================== -->
+        <Border Grid.RowSpan="3" Background="#DF050A18" 
+                Visibility="{Binding IsSalesHistoryModalOpen, Converter={StaticResource BoolToVis}}" 
+                Margin="-18,-10">
+            <Border Width="990" MaxHeight="610" Background="{DynamicResource BgDarkSecondary}" CornerRadius="18" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5" Padding="18,16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" Color="#000000" Opacity="0.85" ShadowDepth="10" />
+                </Border.Effect>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- 0: Header & Quick Actions -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 1: 5 Financial Real-time Metrics Summary Cards -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 2: Filter Tabs (المبيعات / المرتجعات / كافة الفواتير) -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 3: Invoices DataGrid List -->
+                        <RowDefinition Height="*" />
+                        <!-- 4: Action Buttons (Print Shift, End Shift, Close) -->
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 0: Header & Drawer Quick Adjustments -->
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="38" Height="38" Background="#0F284E" CornerRadius="10" Margin="0,0,10,0">
+                                <TextBlock Text="🧾" FontSize="19" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Loc[Shift_Title]}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Text="استعراض فواتير الوردية الحالية، احتساب المرتجعات، حركة نقد الدرج، وطباعة كشف الوردية" FontSize="10.5" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Quick Cash Adjustment Buttons + Close -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Quick Deposit / Add Opening Cash Button -->
+                            <Button Command="{Binding OpenAddCashPopupCommand}" Cursor="Hand" Height="34" Margin="0,0,6,0" Padding="10,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#064E3B" BorderBrush="#10B981" BorderThickness="1" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="📥 " FontSize="12" Foreground="#34D399" />
+                                                <TextBlock Text="إيداع / زيادة مال (+)" FontSize="11" FontWeight="Bold" Foreground="#34D399" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Quick Take Cash from Drawer Button -->
+                            <Button Command="{Binding OpenTakeCashPopupCommand}" Cursor="Hand" Height="34" Margin="0,0,10,0" Padding="10,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#450A0A" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="📤 " FontSize="12" Foreground="#F87171" />
+                                                <TextBlock Text="سحب مال من الدرج (-)" FontSize="11" FontWeight="Bold" Foreground="#F87171" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Close Button -->
+                            <Button Background="Transparent" BorderThickness="0" Command="{Binding CloseSalesHistoryModalCommand}" Cursor="Hand" Padding="6">
+                                <TextBlock Text="✕" FontSize="20" FontWeight="Black" Foreground="{DynamicResource DangerBrush}" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 1: 5 Financial Real-time Metrics Summary Cards -->
+                    <Grid Grid.Row="1" Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="1.15*" />
+                            <ColumnDefinition Width="0.85*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 1: Gross Sales (إجمالي المبيعات) -->
+                        <Border Grid.Column="0" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,8" Margin="0,0,3,0">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[Shift_GrossSales]}" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding ShiftGrossSales, StringFormat='{}{0:N0} د.ع'}" FontSize="15" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 2: Returns Amount (إجمالي المرجوعات) -->
+                        <Border Grid.Column="1" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,8" Margin="2,0">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[Shift_Returns]}" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding ShiftReturnsAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="15" FontWeight="Black" Foreground="{DynamicResource DangerBrush}" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 3: Net Sales (صافي المبيعات) -->
+                        <Border Grid.Column="2" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,8" Margin="2,0">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[Shift_NetSales]}" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding ShiftNetSales, StringFormat='{}{0:N0} د.ع'}" FontSize="15" FontWeight="Black" Foreground="#34D399" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 4: Actual Cash in Drawer (نقد الدرج والخزنة الفعلي) -->
+                        <Border Grid.Column="3" Background="#0C1F17" CornerRadius="12" BorderBrush="#059669" BorderThickness="1.2" Padding="10,8" Margin="2,0">
+                            <StackPanel>
+                                <TextBlock Text="💰 نقد الدرج والخزنة" FontSize="10.5" FontWeight="Bold" Foreground="#6EE7B7" />
+                                <TextBlock Text="{Binding DrawerCurrentCash, StringFormat='{}{0:N0} د.ع'}" FontSize="15" FontWeight="Black" Foreground="#10B981" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 5: Invoices Count (عدد الفواتير) -->
+                        <Border Grid.Column="4" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,8" Margin="3,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[Shift_InvoicesCount]}" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding ShiftInvoicesCount, StringFormat='{}{0:N0} فاتورة'}" FontSize="15" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- 2: Filter Switcher Bar (أزرار عرض المبيعات والمرتجعات والكل) -->
+                    <Border Grid.Row="2" Background="#0C152B" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="12" Padding="5" Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Button 1: All Invoices (کافة الفواتير) -->
+                            <Button Grid.Column="0" Command="{Binding SetSalesHistoryFilterCommand}" CommandParameter="All" Cursor="Hand" Height="34" Margin="0,0,4,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="8" Padding="10,0">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Setter Property="BorderThickness" Value="0" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsAllSalesHistoryFilterActive}" Value="True">
+                                                            <Setter Property="Background" Value="#0284C7" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="🌟 " FontSize="12" />
+                                                <TextBlock Text="هەموو پسوولەکان (كافة الفواتير)" FontSize="11.5" FontWeight="Bold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="#94A3B8" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsAllSalesHistoryFilterActive}" Value="True">
+                                                                    <Setter Property="Foreground" Value="#FFFFFF" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Button 2: Sales Only (فواتير المبيعات) -->
+                            <Button Grid.Column="1" Command="{Binding SetSalesHistoryFilterCommand}" CommandParameter="Sales" Cursor="Hand" Height="34" Margin="2,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="8" Padding="10,0">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Setter Property="BorderThickness" Value="0" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSalesOnlyFilterActive}" Value="True">
+                                                            <Setter Property="Background" Value="#059669" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="📈 " FontSize="12" />
+                                                <TextBlock Text="پسوولەکانی فرۆشتن (المبيعات)" FontSize="11.5" FontWeight="Bold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="#94A3B8" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsSalesOnlyFilterActive}" Value="True">
+                                                                    <Setter Property="Foreground" Value="#FFFFFF" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Button 3: Returns Only (فواتير المرتجعات) -->
+                            <Button Grid.Column="2" Command="{Binding SetSalesHistoryFilterCommand}" CommandParameter="Returns" Cursor="Hand" Height="34" Margin="4,0,0,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="8" Padding="10,0">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Setter Property="BorderThickness" Value="0" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsReturnsOnlyFilterActive}" Value="True">
+                                                            <Setter Property="Background" Value="#DC2626" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="🔄 " FontSize="12" />
+                                                <TextBlock Text="پسوولە گەڕێنراوەکان (المرتجعات)" FontSize="11.5" FontWeight="Bold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="#94A3B8" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsReturnsOnlyFilterActive}" Value="True">
+                                                                    <Setter Property="Foreground" Value="#FFFFFF" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- 3: DataGrid Table with Smooth Scrolling and Solid Red Return Rows -->
+                    <Border Grid.Row="3" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="4" Height="285">
+                        <DataGrid ItemsSource="{Binding SalesHistoryList}" AutoGenerateColumns="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                  HorizontalGridLinesBrush="#1E293B"
+                                  ScrollViewer.CanContentScroll="False"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ScrollViewer.PanningMode="Both"
+                                  VirtualizingPanel.ScrollUnit="Pixel"
+                                  VirtualizingPanel.IsVirtualizing="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling"
+                                  RowHeight="40">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                    <Setter Property="BorderBrush" Value="#1E293B" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                            <Setter Property="Background" Value="#3D0B14" />
+                                            <Setter Property="Foreground" Value="#FECACA" />
+                                            <Setter Property="BorderBrush" Value="#7F1D1D" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding DataContext.IsReturnsOnlyFilterActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                            <Setter Property="Background" Value="#3D0B14" />
+                                            <Setter Property="Foreground" Value="#FECACA" />
+                                            <Setter Property="BorderBrush" Value="#7F1D1D" />
+                                        </DataTrigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#16223B" />
+                                        </Trigger>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding Status}" Value="Returned" />
+                                                <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Background" Value="#52101C" />
+                                        </MultiDataTrigger>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding DataContext.IsReturnsOnlyFilterActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True" />
+                                                <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Background" Value="#52101C" />
+                                        </MultiDataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <!-- رقم الوصل -->
+                                <DataGridTemplateColumn Header="رقم الوصل" Width="155">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding InvoiceNumber}" FontWeight="Bold" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{DynamicResource PrimaryAccent}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                                <Setter Property="Foreground" Value="#F87171" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding DataContext.IsReturnsOnlyFilterActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                                                <Setter Property="Foreground" Value="#F87171" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- التاريخ والوقت -->
+                                <DataGridTextColumn Header="التاريخ والوقت" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" Width="160" Foreground="{DynamicResource TextSecondary}" />
+                                
+                                <!-- المواد -->
+                                <DataGridTextColumn Header="المواد" Binding="{Binding Items.Count, StringFormat='{}{0} أصناف'}" Width="85" Foreground="{DynamicResource TextSecondary}" />
+                                
+                                <!-- المجموع مع لون أحمر ثابت للمرتجعات وأخضر للمبيعات -->
+                                <DataGridTemplateColumn Header="المجموع" Width="135">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontWeight="Black" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                                <Setter Property="Foreground" Value="#EF4444" />
+                                                                <Setter Property="Text" Value="{Binding TotalAmount, StringFormat='- {0:N0} د.ع'}" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding DataContext.IsReturnsOnlyFilterActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                                                <Setter Property="Foreground" Value="#EF4444" />
+                                                                <Setter Property="Text" Value="{Binding TotalAmount, StringFormat='- {0:N0} د.ع'}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- طريقة الدفع -->
+                                <DataGridTextColumn Header="طريقة الدفع" Binding="{Binding PaymentMethod}" Width="95" Foreground="{DynamicResource TextPrimary}" />
+                                
+                                <!-- الحالة (Badge ثابت) -->
+                                <DataGridTemplateColumn Header="الحالة" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="6" Padding="8,2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#064E3B" />
+                                                        <Setter Property="BorderBrush" Value="#10B981" />
+                                                        <Setter Property="BorderThickness" Value="1" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                                <Setter Property="Background" Value="#7F1D1D" />
+                                                                <Setter Property="BorderBrush" Value="#EF4444" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding DataContext.IsReturnsOnlyFilterActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                                                <Setter Property="Background" Value="#7F1D1D" />
+                                                                <Setter Property="BorderBrush" Value="#EF4444" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock FontSize="10.5" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="مكتمل ✔" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                                    <Setter Property="Text" Value="مسترجع 🔄" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding DataContext.IsReturnsOnlyFilterActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                                                    <Setter Property="Text" Value="مسترجع 🔄" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- إجراءات -->
+                                <DataGridTemplateColumn Header="إجراءات" Width="185">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Style="{DynamicResource PrimaryAccentButton}" 
+                                                        Command="{Binding DataContext.OpenInvoiceDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding}" Padding="8,4" FontSize="11" Margin="0,0,6,0">
+                                                    <TextBlock Text="معاينة" />
+                                                </Button>
+                                                <Button Style="{DynamicResource DangerButton}" 
+                                                        Command="{Binding DataContext.ReturnSaleInvoiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding}" Padding="8,4" FontSize="11">
+                                                    <TextBlock Text="استرجاع" />
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- 4: Action Toolbar (طباعة وردية + إنهاء وقت الكاشير + إغلاق) -->
+                    <Grid Grid.Row="4" Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="140" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Print Shift Report Button -->
+                        <Button Grid.Column="0" Style="{DynamicResource PrimarySuccessButton}" Command="{Binding PrintShiftReportCommand}" Height="40" Margin="0,0,6,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Loc[Shift_PrintReport]}" FontSize="12" FontWeight="Bold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- End Shift Button -->
+                        <Button Grid.Column="1" Style="{DynamicResource DangerButton}" Command="{Binding EndCashierShiftCommand}" Height="40" Margin="6,0,6,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Loc[Shift_EndShift]}" FontSize="12" FontWeight="Bold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Close Modal Button -->
+                        <Button Grid.Column="2" Style="{DynamicResource ActionButton}" Command="{Binding CloseSalesHistoryModalCommand}" Height="40" Margin="6,0,0,0">
+                            <TextBlock Text="إغلاق" FontWeight="SemiBold" />
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- ======================================================== -->
+        <!-- POPUP MODAL 5: DETAILED INVOICE PREVIEW (معاينة تفاصيل الوصل والمواد) -->
+        <!-- ======================================================== -->
+        <Border Grid.RowSpan="3" Background="#EE020617" 
+                Visibility="{Binding IsInvoiceDetailsModalOpen, Converter={StaticResource BoolToVis}}" 
+                Margin="-18,-10">
+            <Border Width="820" MaxHeight="640" Background="#0B132B" CornerRadius="18" BorderBrush="#0EA5E9" BorderThickness="1.5" Padding="22" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="40" Color="#000000" Opacity="0.95" ShadowDepth="12" />
+                </Border.Effect>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- 0: Header -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 1: Invoice Meta Info Cards -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 2: Items Table -->
+                        <RowDefinition Height="*" />
+                        <!-- 3: Financial Summary & Actions Bar -->
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 0: Header Bar -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Border CornerRadius="8" Padding="8,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#064E3B" />
+                                                <Setter Property="BorderBrush" Value="#10B981" />
+                                                <Setter Property="BorderThickness" Value="1" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedInvoiceForDetails.Status}" Value="Returned">
+                                                        <Setter Property="Background" Value="#7F1D1D" />
+                                                        <Setter Property="BorderBrush" Value="#EF4444" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding SelectedInvoiceForDetails.Status}" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" />
+                                    </Border>
+                                    <TextBlock Text="وردەکاری و ناوەڕۆکی پسوولە" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding SelectedInvoiceForDetails.InvoiceNumber, StringFormat='ژمارەی پسوولە: {0}'}" FontSize="12" Foreground="#38BDF8" FontWeight="Bold" Margin="0,3,0,0" HorizontalAlignment="Right" />
+                            </StackPanel>
+
+                            <Border Width="44" Height="44" Background="#0C4A6E" BorderBrush="#0284C7" BorderThickness="1.5" CornerRadius="12" Margin="12,0,0,0">
+                                <TextBlock Text="🧾" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Close Button on Left -->
+                        <Button HorizontalAlignment="Left" Background="#1E293B" BorderThickness="0" Command="{Binding CloseInvoiceDetailsCommand}" Cursor="Hand" Width="36" Height="36">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                        <TextBlock Text="✕" FontSize="16" FontWeight="Bold" Foreground="#EF4444" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+
+                    <!-- 1: Meta Information Strip -->
+                    <Border Grid.Row="1" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="کاشێر:" FontSize="10.5" Foreground="#64748B" />
+                                <TextBlock Text="{Binding SelectedInvoiceForDetails.User.FullName, FallbackValue='كاشير عام'}" FontSize="12" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,2,0,0" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="شێوازی پارەدان:" FontSize="10.5" Foreground="#64748B" />
+                                <TextBlock Text="{Binding SelectedInvoiceForDetails.PaymentMethod}" FontSize="12" FontWeight="Bold" Foreground="#38BDF8" Margin="0,2,0,0" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="بەروار و کات:" FontSize="10.5" Foreground="#64748B" />
+                                <TextBlock Text="{Binding SelectedInvoiceForDetails.CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" FontSize="11.5" FontWeight="Bold" Foreground="#F8FAFC" Margin="0,2,0,0" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="3">
+                                <TextBlock Text="ژمارەی کاڵاکان:" FontSize="10.5" Foreground="#64748B" />
+                                <TextBlock Text="{Binding SelectedInvoiceForDetails.Items.Count, StringFormat='{}{0} بابەت'}" FontSize="12" FontWeight="Bold" Foreground="#34D399" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- 2: Items Table -->
+                    <Border Grid.Row="2" Background="#060C18" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="10" Padding="6" MaxHeight="250">
+                        <DataGrid ItemsSource="{Binding SelectedInvoiceForDetails.Items}" AutoGenerateColumns="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                  HorizontalGridLinesBrush="#1E293B" RowHeight="36">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ناوی کاڵا (المادة)" Binding="{Binding ProductName}" Width="2*" Foreground="#F8FAFC" FontWeight="Bold" />
+                                <DataGridTextColumn Header="بارکۆد" Binding="{Binding Product.Barcode}" Width="1.2*" Foreground="#64748B" />
+                                <DataGridTextColumn Header="جۆری فرۆشتن" Binding="{Binding SaleType}" Width="*" Foreground="#38BDF8" FontWeight="SemiBold" />
+                                <DataGridTextColumn Header="ژمارە (الكمية)" Binding="{Binding Quantity, StringFormat='{}{0:N0}'}" Width="0.9*" Foreground="#F8FAFC" FontWeight="Bold" />
+                                <DataGridTextColumn Header="نرخی تاک" Binding="{Binding UnitPrice, StringFormat='{}{0:N0} د.ع'}" Width="1.2*" Foreground="#94A3B8" />
+                                <DataGridTextColumn Header="کۆی گشتی" Binding="{Binding TotalPrice, StringFormat='{}{0:N0} د.ع'}" Width="1.3*" Foreground="#10B981" FontWeight="Black" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- 3: Financial Summary & Actions Bar -->
+                    <Grid Grid.Row="3" Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Action Buttons on Left -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <!-- Reprint Invoice Button -->
+                            <Button Command="{Binding PrintSelectedInvoiceCommand}" Cursor="Hand" Height="40" Padding="16,0" Margin="0,0,8,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#0284C7" BorderBrush="#38BDF8" BorderThickness="1" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="🖨️ " FontSize="13" Foreground="#FFFFFF" Margin="0,0,4,0" />
+                                                <TextBlock Text="چاپکردنەوەی ئەم پسوولەیە" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Return Entire Invoice Button -->
+                            <Button Command="{Binding ReturnSaleInvoiceCommand}" CommandParameter="{Binding SelectedInvoiceForDetails}" Cursor="Hand" Height="40" Padding="16,0" Margin="0,0,8,0">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedInvoiceForDetails.Status}" Value="Returned">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#991B1B" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="🔄 " FontSize="13" Foreground="#FFFFFF" Margin="0,0,4,0" />
+                                                <TextBlock Text="گەڕاندنەوەی ئەم پسوولەیە" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Close Button -->
+                            <Button Command="{Binding CloseInvoiceDetailsCommand}" Cursor="Hand" Height="40" Padding="18,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                            <TextBlock Text="داخستن" FontSize="12" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Totals Box on Right -->
+                        <Border Grid.Column="1" Background="#061A28" BorderBrush="#0284C7" BorderThickness="1.5" CornerRadius="12" Padding="16,8">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="کۆی گشتی پسوولە:" FontSize="13" FontWeight="Bold" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <TextBlock Text="{Binding SelectedInvoiceForDetails.TotalAmount, StringFormat='{}{0:N0}'}" FontSize="22" FontWeight="Black" Foreground="#38BDF8" VerticalAlignment="Center" />
+                                <TextBlock Text=" د.ع" FontSize="12" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Bottom" Margin="4,0,0,3" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- ======================================================== -->
+        <!-- POPUP MODAL 3: CASH DRAWER ACTION (INPUT AMOUNT & REASON) -->
+        <!-- ======================================================== -->
+        <Border Grid.RowSpan="3" Background="#EE000000" 
+                Visibility="{Binding IsDrawerActionPopupOpen, Converter={StaticResource BoolToVis}}" 
+                Margin="-18,-10">
+            <Border Width="420" Background="{DynamicResource BgDarkSecondary}" CornerRadius="16" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="2" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="{Binding DrawerActionTitle}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,16" />
+
+                    <!-- Input Amount -->
+                    <TextBlock Text="{Binding Loc[Drawer_Amount]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                    <TextBox Style="{DynamicResource ModernDarkTextBox}" Text="{Binding DrawerInputAmount, UpdateSourceTrigger=PropertyChanged}" 
+                             FontSize="16" FontWeight="Bold" Padding="10,6" Margin="0,0,0,12" />
+
+                    <!-- Input Reason -->
+                    <TextBlock Text="{Binding Loc[Drawer_Reason]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                    <TextBox Style="{DynamicResource ModernDarkTextBox}" Text="{Binding DrawerInputReason, UpdateSourceTrigger=PropertyChanged}" 
+                             FontSize="13" Padding="10,6" Margin="0,0,0,18" />
+
+                    <!-- Actions -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Style="{DynamicResource PrimarySuccessButton}" Command="{Binding ConfirmDrawerActionCommand}" Height="40" Margin="0,0,6,0">
+                            <TextBlock Text="{Binding Loc[Drawer_Confirm]}" FontWeight="Bold" />
+                        </Button>
+                        <Button Grid.Column="1" Style="{DynamicResource ActionButton}" Command="{Binding CloseDrawerActionPopupCommand}" Height="40" Margin="6,0,0,0">
+                            <TextBlock Text="{Binding Loc[Drawer_Cancel]}" />
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,7 @@
+{
+  "IsServerMode": true,
+  "ServerIpOrPath": "",
+  "SharedDatabasePath": "",
+  "DeviceName": "HamoPos",
+  "UpdateServerUrl": "https://raw.githubusercontent.com/hama2002m2002-lab/mo74mmed.pos/main/update.xml"
+}

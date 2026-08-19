@@ -1,0 +1,122 @@
+﻿<Window x:Class="HamoPos.Views.AddEditProductWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="إضافة / تعديل مادة" 
+        Height="560" Width="520"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="{DynamicResource BgDarkPrimary}"
+        FlowDirection="RightToLeft"
+        FontFamily="Segoe UI, Tahoma, Arial">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <!-- Title -->
+            <RowDefinition Height="Auto" />
+            <!-- Error Message -->
+            <RowDefinition Height="Auto" />
+            <!-- Form Fields -->
+            <RowDefinition Height="*" />
+            <!-- Buttons -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="{Binding DialogTitle}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,16" />
+
+        <!-- Error Alert -->
+        <Border Grid.Row="1" Background="#7F1D1D" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,12"
+                Visibility="{Binding ErrorMessage, Converter={x:Null}}">
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="#FECACA" FontSize="12" />
+        </Border>
+
+        <!-- Form Fields -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Barcode -->
+                <TextBlock Text="الباركود:" FontSize="13" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Grid.Column="1" Style="{StaticResource ActionButton}" Command="{Binding GenerateBarcodeCommand}" Margin="8,0,0,0" Padding="12,6" FontSize="12">
+                        <TextBlock Text="🎲 توليد" />
+                    </Button>
+                </Grid>
+
+                <!-- Product Name -->
+                <TextBlock Text="اسم المادة:" FontSize="13" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+
+                <!-- Category -->
+                <TextBlock Text="التصنيف:" FontSize="13" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name" 
+                          Height="42" VerticalContentAlignment="Center" Background="{DynamicResource BgDarkSecondary}" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,12" />
+
+                <!-- Prices: Cost & Selling Price -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="سعر البيع (د.ع):" FontSize="13" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" Margin="0,0,0,4" />
+                        <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding Price, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="سعر الشراء / التكلفة (د.ع):" FontSize="13" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                        <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding Cost, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Stock Quantity & Unit -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="الكمية المتوفرة بالمخزن:" FontSize="13" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                        <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding StockQuantity, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="الوحدة (قطعة، علبة، كغم...):" FontSize="13" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                        <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding Unit, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Min Stock Alert -->
+                <TextBlock Text="حد التنبيه عند النقص (Min Stock):" FontSize="13" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding MinStockAlert, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <Grid Grid.Row="3" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Style="{StaticResource PrimarySuccessButton}" Command="{Binding SaveCommand}" Height="44">
+                <TextBlock Text="💾 حفظ المادة" FontSize="14" FontWeight="Bold" />
+            </Button>
+
+            <Button Grid.Column="2" Style="{StaticResource ActionButton}" Click="OnCancelClicked" Height="44">
+                <TextBlock Text="إلغاء" FontSize="14" />
+            </Button>
+        </Grid>
+    </Grid>
+</Window>

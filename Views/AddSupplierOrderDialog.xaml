@@ -1,0 +1,205 @@
+<Window x:Class="HamoPos.Views.AddSupplierOrderDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="📝 تسجيل طلبية جديدة من مندوب / ماركت" 
+        Height="620" Width="820"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgDarkSecondary}"
+        Foreground="{DynamicResource TextPrimary}"
+        FlowDirection="RightToLeft"
+        FontFamily="Segoe UI, Tahoma, Arial">
+
+    <Border Background="{DynamicResource BgDarkSecondary}" Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- 0: Header -->
+                <RowDefinition Height="Auto" />
+                <!-- 1: Market & Representative Info -->
+                <RowDefinition Height="Auto" />
+                <!-- 2: Add Item Bar -->
+                <RowDefinition Height="Auto" />
+                <!-- 3: Items Table List -->
+                <RowDefinition Height="*" />
+                <!-- 4: Footer / Save Bar -->
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- 0: Header -->
+            <Border Grid.Row="0" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" Padding="14" Margin="0,0,0,14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="40" Height="40" Background="#0C2548" CornerRadius="10" Margin="0,0,12,0">
+                            <TextBlock Text="📦" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="تسجيل طلبية بضاعة واردة من ماركت" FontSize="16" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" />
+                            <TextBlock Text="أدخل بيانات الماركت والمندوب والمواد المطلوبة ليتم إدراجها فوراً في سجل الطلبيات" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Order Number Badge -->
+                    <Border HorizontalAlignment="Right" Background="#064E3B" CornerRadius="8" Padding="10,5">
+                        <TextBlock x:Name="TxtOrderNumber" Text="ORD-2026-001" FontSize="12" FontWeight="Bold" Foreground="#34D399" />
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- 1: Market & Rep Info Form -->
+            <Border Grid.Row="1" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" Padding="14" Margin="0,0,0,12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Market Name -->
+                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,10">
+                        <TextBlock Text="🏪 اسم الماركت / العميل: *" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                        <TextBox x:Name="TxtMarketName" Style="{DynamicResource ModernDarkTextBox}" FontSize="13" Padding="8,6" />
+                    </StackPanel>
+
+                    <!-- Market Phone -->
+                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="4,0,4,10">
+                        <TextBlock Text="📞 هاتف الماركت:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                        <TextBox x:Name="TxtMarketPhone" Style="{DynamicResource ModernDarkTextBox}" FontSize="13" Padding="8,6" />
+                    </StackPanel>
+
+                    <!-- Market Address -->
+                    <StackPanel Grid.Row="0" Grid.Column="2" Margin="8,0,0,10">
+                        <TextBlock Text="📍 العنوان / المنطقة:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                        <TextBox x:Name="TxtMarketAddress" Style="{DynamicResource ModernDarkTextBox}" FontSize="13" Padding="8,6" />
+                    </StackPanel>
+
+                    <!-- Representative Name -->
+                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,0">
+                        <TextBlock Text="👤 اسم المندوب:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                        <TextBox x:Name="TxtRepName" Style="{DynamicResource ModernDarkTextBox}" FontSize="13" Padding="8,6" />
+                    </StackPanel>
+
+                    <!-- Supplier Selector -->
+                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="4,0,4,0">
+                        <TextBlock Text="🏢 المورد / الشركة التابعة:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                        <ComboBox x:Name="CmbSuppliers" Style="{DynamicResource ModernDarkComboBox}" Height="38" DisplayMemberPath="Name" SelectedValuePath="Id" />
+                    </StackPanel>
+
+                    <!-- Order Notes -->
+                    <StackPanel Grid.Row="1" Grid.Column="2" Margin="8,0,0,0">
+                        <TextBlock Text="📝 ملاحظات التوصيل:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                        <TextBox x:Name="TxtNotes" Style="{DynamicResource ModernDarkTextBox}" FontSize="13" Padding="8,6" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 2: Add Item Bar -->
+            <Border Grid.Row="2" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" Padding="12" Margin="0,0,0,10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Product Name / Search -->
+                    <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                        <TextBlock Text="المادة / الصنف:" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,3" />
+                        <ComboBox x:Name="CmbProducts" Style="{DynamicResource ModernDarkComboBox}" IsEditable="True" Height="36" DisplayMemberPath="Name" SelectionChanged="CmbProducts_SelectionChanged" />
+                    </StackPanel>
+
+                    <!-- Quantity -->
+                    <StackPanel Grid.Column="1" Margin="0,0,6,0">
+                        <TextBlock Text="الكمية:" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,3" />
+                        <TextBox x:Name="TxtItemQty" Style="{DynamicResource ModernDarkTextBox}" Text="1" FontSize="13" FontWeight="Bold" HorizontalContentAlignment="Center" Padding="4,6" />
+                    </StackPanel>
+
+                    <!-- Unit Type -->
+                    <StackPanel Grid.Column="2" Margin="0,0,6,0">
+                        <TextBlock Text="الوحدة:" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,3" />
+                        <ComboBox x:Name="CmbUnitType" Style="{DynamicResource ModernDarkComboBox}" Height="36" SelectedIndex="0">
+                            <ComboBoxItem Content="مفرد (قطعة)" Tag="Retail" />
+                            <ComboBoxItem Content="كرتون" Tag="Carton" />
+                            <ComboBoxItem Content="جملة" Tag="Wholesale" />
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Unit Price -->
+                    <StackPanel Grid.Column="3" Margin="0,0,8,0">
+                        <TextBlock Text="السعر التقديري:" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,3" />
+                        <TextBox x:Name="TxtItemPrice" Style="{DynamicResource ModernDarkTextBox}" Text="0" FontSize="13" FontWeight="Bold" Padding="6,6" />
+                    </StackPanel>
+
+                    <!-- Add Item Button -->
+                    <Button Grid.Column="4" Click="BtnAddItem_Click" Style="{DynamicResource PrimaryAccentButton}" Height="36" Padding="14,0" VerticalAlignment="Bottom" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="➕ " FontSize="12" />
+                            <TextBlock Text="إضافة للطلبية" FontWeight="Bold" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- 3: Items Table List -->
+            <Border Grid.Row="3" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Margin="0,0,0,12">
+                <DataGrid x:Name="DgOrderItems" AutoGenerateColumns="False" CanUserAddRows="False" 
+                          Background="Transparent" Foreground="{DynamicResource TextPrimary}" 
+                          BorderThickness="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#1E293B"
+                          RowHeight="36" HeadersVisibility="Column" SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="المادة / الصنف" Binding="{Binding ProductName}" Width="*" FontWeight="Bold" />
+                        <DataGridTextColumn Header="الباركود" Binding="{Binding Barcode}" Width="120" />
+                        <DataGridTextColumn Header="الكمية" Binding="{Binding Quantity}" Width="70" FontWeight="Bold" />
+                        <DataGridTextColumn Header="نوع الوحدة" Binding="{Binding UnitType}" Width="80" />
+                        <DataGridTextColumn Header="السعر" Binding="{Binding UnitPrice, StringFormat='{}{0:N0} د.ع'}" Width="100" />
+                        <DataGridTextColumn Header="الإجمالي" Binding="{Binding TotalPrice, StringFormat='{}{0:N0} د.ع'}" Width="110" FontWeight="Bold" />
+                        <DataGridTemplateColumn Header="إجراء" Width="60">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Click="BtnDeleteItem_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="حذف المادة">
+                                        <TextBlock Text="🗑️" FontSize="13" />
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <!-- 4: Footer Bar -->
+            <Grid Grid.Row="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="100" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Total Amount Summary -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="إجمالي قيمة الطلبية: " FontSize="14" Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock x:Name="TxtGrandTotal" Text="0 د.ع" FontSize="18" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="8,0,0,0" />
+                </StackPanel>
+
+                <!-- Save Button -->
+                <Button Grid.Column="1" Click="BtnSaveOrder_Click" Style="{DynamicResource PrimarySuccessButton}" Height="42" Padding="24,0" Margin="0,0,10,0" Cursor="Hand">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="💾 " FontSize="14" />
+                        <TextBlock Text="حفظ وتأكيد الطلبية" FontWeight="Black" FontSize="13.5" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Cancel Button -->
+                <Button Grid.Column="2" Click="BtnCancel_Click" Style="{DynamicResource ActionButton}" Height="42" Cursor="Hand">
+                    <TextBlock Text="إلغاء" FontWeight="SemiBold" FontSize="13" />
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

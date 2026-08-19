@@ -1,0 +1,329 @@
+<UserControl x:Class="HamoPos.Views.PrintingView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" 
+             d:DesignHeight="850" d:DesignWidth="1200"
+             FlowDirection="RightToLeft"
+             FontFamily="Times New Roman, Segoe UI, Tahoma, Arial">
+
+    <Grid Margin="20,16">
+        <Grid.RowDefinitions>
+            <!-- 0: Header & Tabs Selector -->
+            <RowDefinition Height="Auto" />
+            <!-- 1: Main Content (Tables & Live Preview) -->
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ======================================================== -->
+        <!-- 0: HEADER & NAVIGATION TABS -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="44" Height="44" Background="#1E3A8A" CornerRadius="12" Margin="0,0,12,0" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5">
+                    <TextBlock Text="🖨️" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Loc[Nav_Printing]}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Text="طباعة أسعار المواد، ملصقات الرفوف، وتوليد وطباعة الباركود للمواد غير المعرفة" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Dual Tabs Selector Switch -->
+            <Border HorizontalAlignment="Right" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="4">
+                <StackPanel Orientation="Horizontal">
+                    <!-- Tab 1: طباعة أسعار المواد -->
+                    <Button Command="{Binding SwitchToPriceLabelsCommand}" Padding="16,8" Margin="0,0,4,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsPriceLabelsTabActive}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource PrimaryAccent}" />
+                                        <Setter Property="Foreground" Value="#FFFFFF" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🏷️ " FontSize="14" />
+                            <TextBlock Text="طباعة أسعار المواد (ملصقات الرف)" FontWeight="Bold" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Tab 2: طباعة باركود للمواد بدون باركود -->
+                    <Button Command="{Binding SwitchToNoBarcodeCommand}" Padding="16,8">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsNoBarcodeTabActive}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource WarningBrush}" />
+                                        <Setter Property="Foreground" Value="#0F172A" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔢 " FontSize="14" />
+                            <TextBlock Text="طباعة باركود للمواد بدون باركود" FontWeight="Bold" />
+                            <Border Background="#EF4444" CornerRadius="8" Padding="6,1" Margin="6,0,0,0" Visibility="{Binding TotalUnlabeledCount, Converter={StaticResource BoolToVis}, FallbackValue=Visible}">
+                                <TextBlock Text="{Binding TotalUnlabeledCount}" FontSize="11" FontWeight="Black" Foreground="White" />
+                            </Border>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ======================================================== -->
+        <!-- 1: MAIN CONTENT SPLIT (TABLE + LIVE PREVIEW CUSTOMIZER) -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <!-- Left/Center: Products DataGrid & Filter (Width: *) -->
+                <ColumnDefinition Width="*" />
+                <!-- Right: Label Customizer & Live Preview (Width: 360) -->
+                <ColumnDefinition Width="360" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ======================================================== -->
+            <!-- LEFT PANEL: FILTERS & PRODUCTS DATAGRID -->
+            <!-- ======================================================== -->
+            <Grid Grid.Column="0" Margin="0,0,14,0">
+                <Grid.RowDefinitions>
+                    <!-- Search & Action Toolbar -->
+                    <RowDefinition Height="Auto" />
+                    <!-- DataGrid -->
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Toolbar & Filters -->
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="180" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Search Input -->
+                    <TextBox Style="{DynamicResource ModernDarkTextBox}" 
+                             Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                             Padding="12,8" FontSize="13" Margin="0,0,10,0" VerticalAlignment="Center" 
+                             ToolTip="بحث باسم المادة، الباركود..." />
+
+                    <!-- Category Filter -->
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name" 
+                              Height="40" Margin="0,0,10,0" VerticalContentAlignment="Center" Background="{DynamicResource BgDarkSecondary}" Foreground="{DynamicResource TextPrimary}" FontSize="12" />
+
+                    <!-- Batch Selection & Auto-Gen Buttons -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <Button Style="{DynamicResource ActionButton}" Command="{Binding SelectAllCommand}" Padding="10,8" Margin="0,0,6,0" ToolTip="تحديد كافة المواد">
+                            <TextBlock Text="☑️ تحديد الكل" FontWeight="Bold" FontSize="12" />
+                        </Button>
+                        <Button Style="{DynamicResource ActionButton}" Command="{Binding UnselectAllCommand}" Padding="10,8" Margin="0,0,6,0" ToolTip="إلغاء تحديد كافة المواد">
+                            <TextBlock Text="⏹️ إلغاء الكل" FontSize="12" />
+                        </Button>
+                        
+                        <!-- Auto-Generate All Missing Barcodes (Visible in NoBarcode Tab) -->
+                        <Button Style="{DynamicResource PrimaryAccentButton}" Command="{Binding GenerateAllMissingBarcodesCommand}" Padding="12,8"
+                                Visibility="{Binding IsNoBarcodeTabActive, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚡ " FontSize="13" />
+                                <TextBlock Text="توليد باركود للكل وحفظ" FontWeight="Bold" FontSize="12" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Products Table -->
+                <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10">
+                    <DataGrid ItemsSource="{Binding DisplayedProducts}" SelectedItem="{Binding SelectedPreviewItem}" AutoGenerateColumns="False" 
+                              IsReadOnly="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                              HorizontalGridLinesBrush="{DynamicResource BorderDark}"
+                              RowHeight="46">
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="Cursor" Value="Hand" />
+                                <Setter Property="Background" Value="Transparent" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource BgDarkHover}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.Columns>
+                            <!-- Selection Checkbox -->
+                            <DataGridCheckBoxColumn Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="50">
+                                <DataGridCheckBoxColumn.ElementStyle>
+                                    <Style TargetType="CheckBox">
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                    </Style>
+                                </DataGridCheckBoxColumn.ElementStyle>
+                            </DataGridCheckBoxColumn>
+
+                            <!-- Barcode -->
+                            <DataGridTextColumn Header="الباركود" Binding="{Binding Barcode}" Width="130" IsReadOnly="True" Foreground="{DynamicResource PrimaryAccent}" FontWeight="Bold" FontSize="13" />
+
+                            <!-- Product Name -->
+                            <DataGridTextColumn Header="اسم المادة" Binding="{Binding Name}" Width="2*" IsReadOnly="True" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" FontSize="13" />
+
+                            <!-- Category -->
+                            <DataGridTextColumn Header="التصنيف" Binding="{Binding CategoryName}" Width="100" IsReadOnly="True" Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+
+                            <!-- Selling Price -->
+                            <DataGridTextColumn Header="سعر البيع" Binding="{Binding Price, StringFormat='{}{0:N0} د.ع'}" Width="110" IsReadOnly="True" Foreground="{DynamicResource SuccessBrush}" FontWeight="Black" FontSize="13" />
+
+                            <!-- Stock Pieces -->
+                            <DataGridTextColumn Header="المخزون" Binding="{Binding StockQuantity, StringFormat='{}{0:N0}'}" Width="80" IsReadOnly="True" Foreground="{DynamicResource WarningBrush}" FontWeight="Bold" FontSize="13" />
+
+                            <!-- Copies Count -->
+                            <DataGridTemplateColumn Header="النسخ" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding CopiesCount, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Width="50" Height="28" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                                 Background="{DynamicResource BgDarkInput}" Foreground="{DynamicResource TextPrimary}" BorderBrush="{DynamicResource BorderDark}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Single Barcode Generator Button (In NoBarcode Mode) -->
+                            <DataGridTemplateColumn Header="توليد باركود" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{DynamicResource ActionButton}" 
+                                                Command="{Binding DataContext.GenerateSingleBarcodeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}" Padding="8,4" Margin="0" FontSize="11">
+                                            <TextBlock Text="⚡ توليد باركود" FontWeight="Bold" />
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+
+            <!-- ======================================================== -->
+            <!-- RIGHT PANEL: LABEL CUSTOMIZER & LIVE PREVIEW -->
+            <!-- ======================================================== -->
+            <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="16" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" Padding="16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- Header -->
+                        <RowDefinition Height="Auto" />
+                        <!-- Options & Settings -->
+                        <RowDefinition Height="Auto" />
+                        <!-- Real-time Live Label Preview -->
+                        <RowDefinition Height="*" />
+                        <!-- Print Big Action Button -->
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Title -->
+                    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                        <TextBlock Text="⚙️ تخصيص ومعاينة الملصق" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text="معاينة حية للملصق كما ستتم طباعته على الطابعة" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0" />
+                        <Separator Background="{DynamicResource BorderDark}" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <!-- Customization Options -->
+                    <StackPanel Grid.Row="1" Margin="0,0,0,12">
+                        <!-- Store Name Input -->
+                        <TextBlock Text="اسم المتجر / المحل بالملصق:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                        <TextBox Style="{DynamicResource ModernDarkTextBox}" Text="{Binding StoreName, UpdateSourceTrigger=PropertyChanged}" Padding="10,6" FontSize="12" Margin="0,0,0,8" />
+
+                        <!-- Label Size Preset -->
+                        <TextBlock Text="قياس الورق والملصق:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                        <ComboBox SelectedValue="{Binding SelectedLabelSize}" SelectedValuePath="Tag" Height="36" Margin="0,0,0,8">
+                            <ComboBoxItem Content="50 × 30 mm (ملصق رف قياسي)" Tag="50x30mm" IsSelected="True" />
+                            <ComboBoxItem Content="40 × 25 mm (ملصق صغير)" Tag="40x25mm" />
+                            <ComboBoxItem Content="80 × 50 mm (ملصق عريض وكبير)" Tag="80x50mm" />
+                            <ComboBoxItem Content="ورق حراري رول 80mm" Tag="Roll_80mm" />
+                        </ComboBox>
+
+                        <!-- Display Toggles -->
+                        <TextBlock Text="خيارات العرض على الملصق:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,6" />
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <CheckBox Grid.Column="0" Content="إظهار السعر" IsChecked="{Binding ShowPrice}" Foreground="{DynamicResource TextPrimary}" FontSize="12" Margin="0,0,0,4" />
+                            <CheckBox Grid.Column="1" Content="إظهار الباركود" IsChecked="{Binding ShowBarcode}" Foreground="{DynamicResource TextPrimary}" FontSize="12" Margin="0,0,0,4" />
+                        </Grid>
+                        <CheckBox Content="إظهار اسم المحل / المتجر" IsChecked="{Binding ShowStoreName}" Foreground="{DynamicResource TextPrimary}" FontSize="12" Margin="0,0,0,8" />
+
+                        <!-- Global Copies Selector -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="عدد النسخ الموحد للكل:" FontSize="12" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBox Style="{DynamicResource ModernDarkTextBox}" Text="{Binding GlobalCopiesCount, UpdateSourceTrigger=PropertyChanged}" Width="60" Height="32" Padding="6,2" HorizontalContentAlignment="Center" FontSize="13" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Live Real-Time Preview Container -->
+                    <Border Grid.Row="2" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" Padding="14" Margin="0,0,0,14">
+                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Text="👁️ معاينة الملصق المباشرة (Live Preview):" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,8" HorizontalAlignment="Center" />
+
+                            <!-- The Rendered White Label -->
+                            <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderBrush="#000000" BorderThickness="1.5" Padding="12,10" Width="240" MinHeight="140" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <!-- Store Name -->
+                                    <TextBlock Text="{Binding StoreName}" FontSize="11" FontWeight="Bold" Foreground="#475569" HorizontalAlignment="Center" Margin="0,0,0,2"
+                                               Visibility="{Binding ShowStoreName, Converter={StaticResource BoolToVis}}" />
+
+                                    <!-- Product Name -->
+                                    <TextBlock Text="{Binding SelectedPreviewItem.Name, FallbackValue='اسم المادة التجريبية'}" 
+                                               FontSize="14" FontWeight="Bold" Foreground="#000000" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,4" />
+
+                                    <!-- Price -->
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,4"
+                                                Visibility="{Binding ShowPrice, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="{Binding SelectedPreviewItem.Price, StringFormat='{}{0:N0}', FallbackValue='25,000'}" FontSize="20" FontWeight="Black" Foreground="#000000" />
+                                        <TextBlock Text=" د.ع" FontSize="12" FontWeight="Bold" Foreground="#475569" VerticalAlignment="Bottom" Margin="3,0,0,2" />
+                                    </StackPanel>
+
+                                    <!-- Visual Barcode Lines -->
+                                    <StackPanel Visibility="{Binding ShowBarcode, Converter={StaticResource BoolToVis}}">
+                                        <ItemsControl ItemsSource="{Binding SelectedPreviewItem.VisualBarcodeBars}" HorizontalAlignment="Center" Height="28" Margin="0,2,0,2">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Width="{Binding Width}" Background="{Binding Brush}" Margin="0" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <TextBlock Text="{Binding SelectedPreviewItem.Barcode, FallbackValue='200245000189'}" 
+                                                   FontSize="11" FontWeight="Bold" Foreground="#000000" HorizontalAlignment="Center" Margin="0,1,0,0" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Big Print Button -->
+                    <Button Grid.Row="3" Style="{DynamicResource PrimarySuccessButton}" Command="{Binding PrintLabelsCommand}" Height="48" Padding="14,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="🖨️ " FontSize="18" VerticalAlignment="Center" />
+                            <TextBlock Text="إرسال أمر الطباعة للملصقات" FontWeight="Black" FontSize="14" VerticalAlignment="Center" Margin="4,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,998 @@
+<UserControl x:Class="HamoPos.Views.ReportsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="1300"
+             FlowDirection="RightToLeft">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid Margin="20,16">
+        <Grid.RowDefinitions>
+            <!-- 0: Header & Filter Bar -->
+            <RowDefinition Height="Auto" />
+            <!-- 1: Hub 9-Reports Grid or Full-Screen Report View -->
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ======================================================== -->
+        <!-- 0: TOP HEADER & DATE CONTROLS -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Navigation Button: Back to Main in Hub View, OR Back to Reports Hub in Detail View -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Back to Main (When in Hub Mode) -->
+                <Button Style="{StaticResource ActionButton}" Command="{Binding BackToMainCommand}" 
+                        Visibility="{Binding IsHubViewActive, Converter={StaticResource BoolToVis}}"
+                        Padding="14,8" Margin="0,0,14,0" ToolTip="العودة للرئيسية">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔙 " FontSize="14" />
+                        <TextBlock Text="{Binding Loc[Nav_BackToMain]}" FontWeight="Bold" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Back to Reports Hub (When in Report Detail Full-Screen Mode) -->
+                <Button Style="{StaticResource PrimaryAccentButton}" Command="{Binding BackToHubCommand}" 
+                        Visibility="{Binding IsReportDetailActive, Converter={StaticResource BoolToVis}}"
+                        Padding="16,8" Margin="0,0,14,0" ToolTip="العودة لقائمة التقارير">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔙 " FontSize="14" />
+                        <TextBlock Text="{Binding Loc[Rep_BackToHub]}" FontWeight="Bold" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- Title & Subtitle -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Loc[Rep_Title]}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" />
+                <TextBlock Text="{Binding Loc[Rep_Subtitle]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0" />
+            </StackPanel>
+
+            <!-- Period Preset Buttons & Custom DatePickers -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Style="{StaticResource ActionButton}" Command="{Binding FilterTodayCommand}" Padding="10,6" Margin="0,0,6,0">
+                    <TextBlock Text="{Binding Loc[Rep_Today]}" FontWeight="Bold" />
+                </Button>
+                <Button Style="{StaticResource ActionButton}" Command="{Binding FilterThisMonthCommand}" Padding="10,6" Margin="0,0,12,0">
+                    <TextBlock Text="{Binding Loc[Rep_ThisMonth]}" FontWeight="Bold" />
+                </Button>
+
+                <TextBlock Text="{Binding Loc[Rep_From]}" FontSize="13" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <DatePicker SelectedDate="{Binding FromDate, Mode=TwoWay}" Width="130" Height="36" VerticalContentAlignment="Center" Margin="0,0,10,0" />
+
+                <TextBlock Text="{Binding Loc[Rep_To]}" FontSize="13" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <DatePicker SelectedDate="{Binding ToDate, Mode=TwoWay}" Width="130" Height="36" VerticalContentAlignment="Center" Margin="0,0,12,0" />
+
+                <Button Style="{StaticResource PrimaryAccentButton}" Command="{Binding RefreshCommand}" Padding="14,8">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔍 " FontSize="12" />
+                        <TextBlock Text="{Binding Loc[Rep_Refresh]}" FontWeight="Bold" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- ======================================================== -->
+        <!-- 1: HUB VIEW (9 COMPACT INTERACTIVE REPORT BUTTONS/CARDS) -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="1" Visibility="{Binding IsHubViewActive, Converter={StaticResource BoolToVis}}" VerticalAlignment="Top" Margin="0,10,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Card 1: Sales & Net Profits -->
+            <Button Grid.Row="0" Grid.Column="0" Command="{Binding SwitchReportTabCommand}" CommandParameter="Sales" 
+                    Height="80" Margin="0,0,10,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#10B981" BorderThickness="1.5" Cursor="Hand" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12" Padding="14,10">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="44" Height="44" Background="#064E3B" CornerRadius="10" Margin="0,0,14,0">
+                                    <TextBlock Text="📊" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Tab_Sales]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Card 2: Damaged Items -->
+            <Button Grid.Row="0" Grid.Column="1" Command="{Binding SwitchReportTabCommand}" CommandParameter="Damaged" 
+                    Height="80" Margin="5,0,5,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1.5" Cursor="Hand" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12" Padding="14,10">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="44" Height="44" Background="#450A0A" CornerRadius="10" Margin="0,0,14,0">
+                                    <TextBlock Text="⚠️" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Tab_Damaged]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Card 3: Returns & Refunds -->
+            <Button Grid.Row="0" Grid.Column="2" Command="{Binding SwitchReportTabCommand}" CommandParameter="Returns" 
+                    Height="80" Margin="10,0,0,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1.5" Cursor="Hand" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12" Padding="14,10">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="44" Height="44" Background="#78350F" CornerRadius="10" Margin="0,0,14,0">
+                                    <TextBlock Text="🔄" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Tab_Returns]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Card 4: Purchases & Supplier Invoices -->
+            <Button Grid.Row="1" Grid.Column="0" Command="{Binding SwitchReportTabCommand}" CommandParameter="Purchases" 
+                    Height="80" Margin="0,0,10,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5" Cursor="Hand" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12" Padding="14,10">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="44" Height="44" Background="#1E3A8A" CornerRadius="10" Margin="0,0,14,0">
+                                    <TextBlock Text="📦" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Tab_Purchases]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Card 5: Inventory Valuation -->
+            <Button Grid.Row="1" Grid.Column="1" Command="{Binding SwitchReportTabCommand}" CommandParameter="Inventory" 
+                    Height="80" Margin="5,0,5,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#059669" BorderThickness="1.5" Cursor="Hand" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12" Padding="14,10">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="44" Height="44" Background="#064E3B" CornerRadius="10" Margin="0,0,14,0">
+                                    <TextBlock Text="🏢" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Tab_Inventory]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Card 6: Customer Debts -->
+            <Button Grid.Row="1" Grid.Column="2" Command="{Binding SwitchReportTabCommand}" CommandParameter="Debts" 
+                    Height="80" Margin="10,0,0,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#D97706" BorderThickness="1.5" Cursor="Hand" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12" Padding="14,10">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="44" Height="44" Background="#78350F" CornerRadius="10" Margin="0,0,14,0">
+                                    <TextBlock Text="👥" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Tab_Debts]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Card 7: Shift Cash Audit & Handover -->
+            <Button Grid.Row="2" Grid.Column="0" Command="{Binding SwitchReportTabCommand}" CommandParameter="ShiftAudit" 
+                    Height="80" Margin="0,0,10,0" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#F59E0B" BorderThickness="1.5" Cursor="Hand" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12" Padding="14,10">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="44" Height="44" Background="#78350F" CornerRadius="10" Margin="0,0,14,0">
+                                    <TextBlock Text="🔒" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Tab_ShiftAudit]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Card 8: Cashier Performance & Peak Hours -->
+            <Button Grid.Row="2" Grid.Column="1" Command="{Binding SwitchReportTabCommand}" CommandParameter="Performance" 
+                    Height="80" Margin="5,0,5,0" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#8B5CF6" BorderThickness="1.5" Cursor="Hand" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12" Padding="14,10">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="44" Height="44" Background="#4C1D95" CornerRadius="10" Margin="0,0,14,0">
+                                    <TextBlock Text="⚡" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Tab_Performance]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!-- Card 9: Product Velocity & Movement -->
+            <Button Grid.Row="2" Grid.Column="2" Command="{Binding SwitchReportTabCommand}" CommandParameter="StockMovement" 
+                    Height="80" Margin="10,0,0,0" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#10B981" BorderThickness="1.5" Cursor="Hand" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12" Padding="14,10">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="44" Height="44" Background="#064E3B" CornerRadius="10" Margin="0,0,14,0">
+                                    <TextBlock Text="📈" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Tab_StockMovement]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
+
+        <!-- ======================================================== -->
+        <!-- 2: FULL SCREEN DEDICATED REPORT WORKSPACE (SHOWN WHEN REPORT IS CLICKED) -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="1" Visibility="{Binding IsReportDetailActive, Converter={StaticResource BoolToVis}}">
+
+            <!-- ======================================================== -->
+            <!-- TAB 1: SALES & NET PROFITS REPORT -->
+            <!-- ======================================================== -->
+            <Grid Visibility="{Binding IsSalesTabActive, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <!-- Profit Type Breakdown Cards -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Net Profit Summary Bar -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Full Width Invoices Table -->
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Profit Types Cards -->
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="#10B981" BorderThickness="1.5" Padding="14" Margin="0,0,8,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Background="#064E3B" CornerRadius="6" Padding="6,2" Margin="0,0,8,0">
+                                    <TextBlock Text="{Binding Loc[Rep_Sales_SingleTag]}" FontSize="11" FontWeight="Bold" Foreground="#34D399" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Sales_SingleProfit]}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding RetailGrossProfit, StringFormat='{}{0:N0} د.ع'}" FontSize="20" FontWeight="Black" Foreground="#34D399" Margin="0,6,0,2" />
+                            <TextBlock Text="{Binding Loc[Rep_Sales_SingleFormula]}" FontSize="10" Foreground="{DynamicResource TextMuted}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="#3B82F6" BorderThickness="1.5" Padding="14" Margin="4,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Background="#1E3A8A" CornerRadius="6" Padding="6,2" Margin="0,0,8,0">
+                                    <TextBlock Text="{Binding Loc[Rep_Sales_WholesaleTag]}" FontSize="11" FontWeight="Bold" Foreground="#60A5FA" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Sales_WholesaleProfit]}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding WholesaleGrossProfit, StringFormat='{}{0:N0} د.ع'}" FontSize="20" FontWeight="Black" Foreground="#60A5FA" Margin="0,6,0,2" />
+                            <TextBlock Text="{Binding Loc[Rep_Sales_WholesaleFormula]}" FontSize="10" Foreground="{DynamicResource TextMuted}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="#F59E0B" BorderThickness="1.5" Padding="14" Margin="8,0,0,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Background="#78350F" CornerRadius="6" Padding="6,2" Margin="0,0,8,0">
+                                    <TextBlock Text="{Binding Loc[Rep_Sales_CartonTag]}" FontSize="11" FontWeight="Bold" Foreground="#FBBF24" />
+                                </Border>
+                                <TextBlock Text="{Binding Loc[Rep_Sales_CartonProfit]}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding CartonGrossProfit, StringFormat='{}{0:N0} د.ع'}" FontSize="20" FontWeight="Black" Foreground="#FBBF24" Margin="0,6,0,2" />
+                            <TextBlock Text="{Binding Loc[Rep_Sales_CartonFormula]}" FontSize="10" Foreground="{DynamicResource TextMuted}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Net Profit Bar -->
+                <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14,10" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="1.3*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{Binding Loc[Rep_TotalSales]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalSalesRevenue, StringFormat='{}{0:N0} د.ع'}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <Separator Grid.Column="1" Background="{DynamicResource BorderDark}" Margin="12,0" />
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="{Binding Loc[Rep_Sales_TotalGrossProfit]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalGrossSalesProfit, StringFormat='{}{0:N0} د.ع'}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="3">
+                            <TextBlock Text="{Binding Loc[Rep_Sales_Discounts]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalDiscountsGranted, StringFormat='- {0:N0} د.ع'}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <Border Grid.Column="4" Background="#064E3B" CornerRadius="10" BorderBrush="#10B981" BorderThickness="1" Padding="12,6">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Loc[Rep_Sales_NetProfit]}" FontSize="11" FontWeight="Bold" Foreground="#A7F3D0" />
+                                <TextBlock Text="{Binding FinalNetProfit, StringFormat='{}{0:N0} د.ع'}" FontSize="19" FontWeight="Black" Foreground="#34D399" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Invoices Table -->
+                <Border Grid.Row="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12">
+                    <DataGrid ItemsSource="{Binding Invoices}" AutoGenerateColumns="False" 
+                              IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                              CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                              HorizontalGridLinesBrush="{DynamicResource BorderDark}"
+                              RowHeight="44">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="{Binding Loc[Rep_InvoiceNo]}" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource ActionButton}" 
+                                                Command="{Binding DataContext.OpenInvoiceDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}" 
+                                                Padding="10,4" HorizontalAlignment="Left" Cursor="Hand">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="🧾 " FontSize="13" />
+                                                <TextBlock Text="{Binding InvoiceNumber}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="{Binding Loc[Rep_DateTime]}" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" Width="170" Foreground="{DynamicResource TextSecondary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_SubTotal]}" Binding="{Binding SubTotal, StringFormat='{}{0:N0} د.ع'}" Width="130" Foreground="{DynamicResource TextSecondary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Discount]}" Binding="{Binding DiscountAmount, StringFormat='{}{0:N0} د.ع'}" Width="110" Foreground="{DynamicResource WarningBrush}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_GrandTotal]}" Binding="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" Width="140" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" />
+                            
+                            <DataGridTemplateColumn Header="{Binding Loc[Rep_InvoiceNetProfit]}" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="8" Background="#1A10B981" BorderBrush="#10B981" BorderThickness="1" Padding="10,4" HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding InvoiceNetProfit, StringFormat='{}{0:N0} د.ع'}" FontSize="13" FontWeight="Black" Foreground="#34D399" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="{Binding Loc[Rep_Action]}" Width="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource PrimaryAccentButton}" 
+                                                Command="{Binding DataContext.OpenInvoiceDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}" 
+                                                Padding="12,5" FontSize="12">
+                                            <TextBlock Text="{Binding Loc[Rep_ViewInvoice]}" />
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+
+            <!-- ======================================================== -->
+            <!-- TAB 2: DAMAGED ITEMS REPORT -->
+            <!-- ======================================================== -->
+            <Grid Visibility="{Binding IsDamagedTabActive, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="0,0,8,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Damaged_TotalQty]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalDamagedItemsCount, StringFormat='{}{0:N0}'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource DangerBrush}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="8,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Damaged_TotalLoss]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalDamagedLoss, StringFormat='{}{0:N0} د.ع'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12">
+                    <DataGrid ItemsSource="{Binding DamagedItemsList}" AutoGenerateColumns="False" 
+                              IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                              CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                              HorizontalGridLinesBrush="{DynamicResource BorderDark}" RowHeight="44">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Damaged_Date]}" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" Width="160" Foreground="{DynamicResource TextSecondary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Barcode]}" Binding="{Binding Barcode}" Width="130" Foreground="{DynamicResource PrimaryAccent}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_ProductName]}" Binding="{Binding ProductName}" Width="2*" Foreground="{DynamicResource TextPrimary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Quantity]}" Binding="{Binding Quantity, StringFormat='{}{0:N0}'}" Width="80" Foreground="{DynamicResource DangerBrush}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_UnitCost]}" Binding="{Binding UnitCost, StringFormat='{}{0:N0} د.ع'}" Width="110" Foreground="{DynamicResource TextSecondary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_LossValue]}" Binding="{Binding TotalLossAmount, StringFormat='{}{0:N0} د.ع'}" Width="120" Foreground="{DynamicResource WarningBrush}" FontWeight="Bold" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Reason]}" Binding="{Binding Reason}" Width="*" Foreground="{DynamicResource TextPrimary}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+
+            <!-- ======================================================== -->
+            <!-- TAB 3: RETURNS & REFUNDS REPORT -->
+            <!-- ======================================================== -->
+            <Grid Visibility="{Binding IsReturnsTabActive, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="0,0,8,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Returns_Count]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalReturnedCount, StringFormat='{}{0:N0}'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="8,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Returns_TotalAmount]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalReturnsAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource DangerBrush}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12">
+                    <DataGrid ItemsSource="{Binding ReturnedInvoicesList}" AutoGenerateColumns="False" 
+                              IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                              CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                              HorizontalGridLinesBrush="{DynamicResource BorderDark}" RowHeight="44">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Returns_InvoiceNo]}" Binding="{Binding InvoiceNumber}" Width="180" Foreground="{DynamicResource PrimaryAccent}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Returns_Date]}" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" Width="180" Foreground="{DynamicResource TextSecondary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Returns_Amount]}" Binding="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" Width="150" Foreground="{DynamicResource DangerBrush}" FontWeight="Bold" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Returns_OrigMethod]}" Binding="{Binding PaymentMethod}" Width="130" Foreground="{DynamicResource TextPrimary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Status]}" Binding="{Binding Status}" Width="*" Foreground="{DynamicResource WarningBrush}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+
+            <!-- ======================================================== -->
+            <!-- TAB 4: PURCHASES & SUPPLIER INVOICES REPORT -->
+            <!-- ======================================================== -->
+            <Grid Visibility="{Binding IsPurchasesTabActive, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="0,0,8,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Pur_TotalInvoices]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalPurchasesAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="4,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Pur_TotalPaid]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalPurchasesPaid, StringFormat='{}{0:N0} د.ع'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="8,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Pur_TotalDebt]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalPurchasesDebtRemaining, StringFormat='{}{0:N0} د.ع'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12">
+                    <DataGrid ItemsSource="{Binding PurchasesList}" AutoGenerateColumns="False" 
+                              IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                              CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                              HorizontalGridLinesBrush="{DynamicResource BorderDark}" RowHeight="44">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Pur_InvoiceNo]}" Binding="{Binding InvoiceNumber}" Width="170" Foreground="{DynamicResource PrimaryAccent}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Pur_Supplier]}" Binding="{Binding SupplierName}" Width="170" Foreground="{DynamicResource TextPrimary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Pur_Date]}" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" Width="160" Foreground="{DynamicResource TextSecondary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Pur_TotalAmount]}" Binding="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" Width="140" Foreground="{DynamicResource PrimaryAccent}" FontWeight="Bold" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Pur_PaidCash]}" Binding="{Binding PaidAmount, StringFormat='{}{0:N0} د.ع'}" Width="130" Foreground="{DynamicResource SuccessBrush}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Pur_RemainingDebt]}" Binding="{Binding RemainingAmount, StringFormat='{}{0:N0} د.ع'}" Width="130" Foreground="{DynamicResource WarningBrush}" FontWeight="Bold" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Notes]}" Binding="{Binding Notes}" Width="*" Foreground="{DynamicResource TextSecondary}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+
+            <!-- ======================================================== -->
+            <!-- TAB 5: INVENTORY VALUATION REPORT -->
+            <!-- ======================================================== -->
+            <Grid Visibility="{Binding IsInventoryTabActive, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="0,0,6,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Inv_CostValue]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalInventoryCostValue, StringFormat='{}{0:N0} د.ع'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="3,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Inv_SellingValue]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalInventorySellingValue, StringFormat='{}{0:N0} د.ع'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="3,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Inv_ExpectedProfit]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding ExpectedInventoryProfit, StringFormat='{}{0:N0} د.ع'}" FontSize="18" FontWeight="Black" Foreground="#34D399" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="6,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Inv_OutOfStock]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding OutOfStockCount, StringFormat='{}{0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource DangerBrush}" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12">
+                    <DataGrid ItemsSource="{Binding InventoryValuationList}" AutoGenerateColumns="False" 
+                              IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                              CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                              HorizontalGridLinesBrush="{DynamicResource BorderDark}" RowHeight="44">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Barcode]}" Binding="{Binding Barcode}" Width="130" Foreground="{DynamicResource PrimaryAccent}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_ProductName]}" Binding="{Binding ProductName}" Width="2*" Foreground="{DynamicResource TextPrimary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Inv_StockBalance]}" Binding="{Binding StockQuantity, StringFormat='{}{0:N0}'}" Width="110" Foreground="{DynamicResource WarningBrush}" FontWeight="Bold" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Inv_CostPrice]}" Binding="{Binding UnitCost, StringFormat='{}{0:N0} د.ع'}" Width="120" Foreground="{DynamicResource TextSecondary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Inv_SellingPrice]}" Binding="{Binding UnitPrice, StringFormat='{}{0:N0} د.ع'}" Width="120" Foreground="{DynamicResource SuccessBrush}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Inv_TotalCost]}" Binding="{Binding TotalCostValue, StringFormat='{}{0:N0} د.ع'}" Width="140" Foreground="{DynamicResource PrimaryAccent}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Inv_TotalSelling]}" Binding="{Binding TotalSellingValue, StringFormat='{}{0:N0} د.ع'}" Width="140" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Inv_StockStatus]}" Binding="{Binding StockStatus}" Width="140" Foreground="{DynamicResource PrimaryAccent}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+
+            <!-- ======================================================== -->
+            <!-- TAB 6: CUSTOMER DEBTS REPORT -->
+            <!-- ======================================================== -->
+            <Grid Visibility="{Binding IsDebtsTabActive, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="0,0,8,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Debts_TotalDue]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalCustomerDebtsDue, StringFormat='{}{0:N0} د.ع'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource DangerBrush}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="4,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Debts_TotalCollected]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalCustomerDebtsCollected, StringFormat='{}{0:N0} د.ع'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="8,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Debts_NetRemaining]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding NetOutstandingCustomerDebts, StringFormat='{}{0:N0} د.ع'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Debts Grid + Quick Entry -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3.5*" />
+                        <ColumnDefinition Width="6.5*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="18" Margin="0,0,16,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Debts_NewTitle]}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" Margin="0,0,0,12" />
+
+                            <TextBlock Text="{Binding Loc[Rep_Debts_CustomerName]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding NewCustomerName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+
+                            <TextBlock Text="{Binding Loc[Rep_Debts_Phone]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding NewCustomerPhone, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+
+                            <TextBlock Text="{Binding Loc[Rep_Debts_Amount]}" FontSize="12" Foreground="{DynamicResource DangerBrush}" FontWeight="Bold" Margin="0,0,0,4" />
+                            <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding NewCustomerDebtAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
+                                     FontSize="16" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" Margin="0,0,0,10" />
+
+                            <TextBlock Text="{Binding Loc[Rep_Debts_Statement]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding NewCustomerNotes, UpdateSourceTrigger=PropertyChanged}" Height="50" Margin="0,0,0,16" />
+
+                            <Button Style="{StaticResource PrimarySuccessButton}" Command="{Binding SaveCustomerDebtCommand}" Height="40">
+                                <TextBlock Text="{Binding Loc[Rep_Debts_SaveBtn]}" FontWeight="Bold" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12">
+                        <DataGrid ItemsSource="{Binding CustomerDebtsList}" AutoGenerateColumns="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                  CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                                  HorizontalGridLinesBrush="{DynamicResource BorderDark}" RowHeight="44">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Debts_CustomerName]}" Binding="{Binding CustomerName}" Width="160" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Debts_Phone]}" Binding="{Binding PhoneNumber}" Width="120" Foreground="{DynamicResource TextSecondary}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Debts_TotalDebtCol]}" Binding="{Binding TotalDebt, StringFormat='{}{0:N0} د.ع'}" Width="120" Foreground="{DynamicResource DangerBrush}" FontWeight="Bold" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Debts_PaidCol]}" Binding="{Binding TotalPaid, StringFormat='{}{0:N0} د.ع'}" Width="110" Foreground="{DynamicResource SuccessBrush}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Debts_RemainingCol]}" Binding="{Binding RemainingBalance, StringFormat='{}{0:N0} د.ع'}" Width="120" Foreground="{DynamicResource WarningBrush}" FontWeight="Bold" />
+                                <DataGridTemplateColumn Header="{Binding Loc[Rep_Action]}" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Style="{StaticResource PrimarySuccessButton}" 
+                                                        Command="{Binding DataContext.PayCustomerDebtCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding}" Padding="6,3" FontSize="11" Margin="0,0,4,0">
+                                                    <TextBlock Text="{Binding DataContext.Loc[Rep_Debts_PayBtn], RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                                </Button>
+                                                <Button Style="{StaticResource DangerButton}" 
+                                                        Command="{Binding DataContext.DeleteCustomerDebtCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding}" Padding="6,3" FontSize="11">
+                                                    <TextBlock Text="🗑" />
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <!-- ======================================================== -->
+            <!-- TAB 7: SHIFT END CASH AUDIT & HANDOVER (Z-REPORT) -->
+            <!-- ======================================================== -->
+            <Grid Visibility="{Binding IsShiftAuditTabActive, Converter={StaticResource BoolToVis}}">
+                <Grid.ColumnDefinitions>
+                    <!-- Form (40%) -->
+                    <ColumnDefinition Width="4*" />
+                    <!-- Shift Log Table (60%) -->
+                    <ColumnDefinition Width="6*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="18" Margin="0,0,16,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Loc[Rep_Shift_Title]}" FontSize="15" FontWeight="Bold" Foreground="#FBBF24" Margin="0,0,0,12" />
+
+                            <TextBlock Text="{Binding Loc[Rep_Shift_OpeningFloat]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding ShiftOpeningBalance, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" Margin="0,0,0,10" />
+
+                            <TextBlock Text="{Binding Loc[Rep_Shift_SystemSales]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,2" />
+                            <TextBlock Text="{Binding TotalSalesRevenue, StringFormat='{}{0:N0} د.ع'}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" Margin="0,0,0,10" />
+
+                            <TextBlock Text="{Binding Loc[Rep_Shift_CountedCash]}" FontSize="12" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" Margin="0,0,0,4" />
+                            <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding ShiftActualCashCount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
+                                     FontSize="18" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="0,0,0,12" />
+
+                            <!-- Discrepancy Box -->
+                            <Border Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Loc[Rep_Shift_MatchResult]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="{Binding ShiftDiscrepancyStatus}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" Margin="0,4,0,0" />
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="{Binding Loc[Rep_Shift_ReceiverName]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding ShiftSupervisorName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+
+                            <TextBlock Text="{Binding Loc[Rep_Shift_HandoverNotes]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding ShiftHandoverNotes, UpdateSourceTrigger=PropertyChanged}" Height="40" Margin="0,0,0,16" />
+
+                            <Button Style="{StaticResource PrimarySuccessButton}" Command="{Binding SaveShiftAuditCommand}" Height="44">
+                                <TextBlock Text="{Binding Loc[Rep_Shift_SubmitBtn]}" FontWeight="Bold" />
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12">
+                    <DataGrid ItemsSource="{Binding ShiftAuditsList}" AutoGenerateColumns="False" 
+                              IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                              CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                              HorizontalGridLinesBrush="{DynamicResource BorderDark}" RowHeight="44">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Shift_CloseTime]}" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" Width="160" Foreground="{DynamicResource TextSecondary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Shift_Cashier]}" Binding="{Binding CashierName}" Width="120" Foreground="{DynamicResource TextPrimary}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Shift_Expected]}" Binding="{Binding ExpectedCashInDrawer, StringFormat='{}{0:N0} د.ع'}" Width="130" Foreground="{DynamicResource PrimaryAccent}" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Shift_Counted]}" Binding="{Binding ActualCountedCash, StringFormat='{}{0:N0} د.ع'}" Width="130" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Shift_Diff]}" Binding="{Binding DiscrepancyStatus}" Width="140" Foreground="{DynamicResource WarningBrush}" FontWeight="Bold" />
+                            <DataGridTextColumn Header="{Binding Loc[Rep_Shift_Receiver]}" Binding="{Binding SupervisorName}" Width="*" Foreground="{DynamicResource TextSecondary}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+
+            <!-- ======================================================== -->
+            <!-- TAB 8: CASHIER PERFORMANCE & PEAK HOURS REPORT -->
+            <!-- ======================================================== -->
+            <Grid Visibility="{Binding IsPerformanceTabActive, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <!-- KPI Peak Bar -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Split: Peak Hours Table + Cashier Performance -->
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="0,0,0,12">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Loc[Rep_Perf_PeakBanner]}" FontSize="14" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding BusiestHourText}" FontSize="16" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <!-- Peak Hours Intensity (50%) -->
+                        <ColumnDefinition Width="*" />
+                        <!-- Cashier Stats (50%) -->
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12" Margin="0,0,8,0">
+                        <DataGrid ItemsSource="{Binding HourlyPeakList}" AutoGenerateColumns="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                  CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                                  HorizontalGridLinesBrush="{DynamicResource BorderDark}" RowHeight="44">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Perf_HourSlot]}" Binding="{Binding HourLabel}" Width="150" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Perf_InvoicesCount]}" Binding="{Binding InvoicesCount, StringFormat='{}{0:N0}'}" Width="110" Foreground="{DynamicResource PrimaryAccent}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Perf_TotalSales]}" Binding="{Binding TotalSales, StringFormat='{}{0:N0} د.ع'}" Width="130" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Perf_PeakLevel]}" Binding="{Binding PeakBadge}" Width="*" Foreground="{DynamicResource WarningBrush}" FontWeight="Bold" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12" Margin="8,0,0,0">
+                        <DataGrid ItemsSource="{Binding CashierPerformanceList}" AutoGenerateColumns="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                  CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                                  HorizontalGridLinesBrush="{DynamicResource BorderDark}" RowHeight="44">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Perf_CashierName]}" Binding="{Binding CashierName}" Width="170" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Perf_CompletedInvoices]}" Binding="{Binding InvoicesCount, StringFormat='{}{0:N0}'}" Width="120" Foreground="{DynamicResource PrimaryAccent}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Perf_TotalRevenue]}" Binding="{Binding TotalSalesAmount, StringFormat='{}{0:N0} د.ع'}" Width="130" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Perf_AvgSpeed]}" Binding="{Binding AvgSpeedText}" Width="*" Foreground="{DynamicResource SuccessBrush}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <!-- ======================================================== -->
+            <!-- TAB 9: PRODUCT VELOCITY & STOCK MOVEMENT REPORT -->
+            <!-- ======================================================== -->
+            <Grid Visibility="{Binding IsStockMovementTabActive, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <!-- Fast Moving -->
+                    <RowDefinition Height="*" />
+                    <!-- Dead Stock -->
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Fast Moving (🔥 الأكثر مبيعاً) -->
+                <Border Grid.Row="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12" Margin="0,0,0,10">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="{Binding Loc[Rep_Mov_FastTitle]}" FontSize="14" FontWeight="Bold" Foreground="#34D399" Margin="4,0,0,8" />
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding FastMovingProducts}" AutoGenerateColumns="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                  CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                                  HorizontalGridLinesBrush="{DynamicResource BorderDark}" RowHeight="40">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Barcode]}" Binding="{Binding Barcode}" Width="130" Foreground="{DynamicResource PrimaryAccent}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_ProductName]}" Binding="{Binding ProductName}" Width="2*" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Mov_QtySold]}" Binding="{Binding QuantitySold, StringFormat='{}{0:N0}'}" Width="120" Foreground="{DynamicResource SuccessBrush}" FontWeight="Black" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Mov_Revenue]}" Binding="{Binding TotalRevenue, StringFormat='{}{0:N0} د.ع'}" Width="140" Foreground="{DynamicResource SuccessBrush}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Mov_Remaining]}" Binding="{Binding CurrentStock, StringFormat='{}{0:N0}'}" Width="130" Foreground="{DynamicResource WarningBrush}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Mov_Category]}" Binding="{Binding MovementCategory}" Width="*" Foreground="#34D399" FontWeight="Bold" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+
+                <!-- Dead Stock (❄️ البضائع الراكدة) -->
+                <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="{Binding Loc[Rep_Mov_DeadTitle]}" FontSize="14" FontWeight="Bold" Foreground="#60A5FA" Margin="4,0,0,8" />
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding DeadStockProducts}" AutoGenerateColumns="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                  CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                                  HorizontalGridLinesBrush="{DynamicResource BorderDark}" RowHeight="40">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Barcode]}" Binding="{Binding Barcode}" Width="130" Foreground="{DynamicResource PrimaryAccent}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_ProductName]}" Binding="{Binding ProductName}" Width="2*" Foreground="{DynamicResource TextPrimary}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Mov_PeriodSales]}" Binding="{Binding QuantitySold, StringFormat='{}{0:N0}'}" Width="120" Foreground="{DynamicResource DangerBrush}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Mov_Remaining]}" Binding="{Binding CurrentStock, StringFormat='{}{0:N0}'}" Width="160" Foreground="{DynamicResource WarningBrush}" FontWeight="Bold" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Mov_Category]}" Binding="{Binding MovementCategory}" Width="*" Foreground="#60A5FA" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+            </Grid>
+
+        </Grid>
+
+        <!-- ======================================================== -->
+        <!-- POPUP MODAL: FULL INVOICE RECEIPT DETAILS MODAL -->
+        <!-- ======================================================== -->
+        <Border Grid.RowSpan="3" Background="#DD000000" 
+                Visibility="{Binding IsInvoiceDetailsModalOpen, Converter={StaticResource BoolToVis}}" 
+                Margin="-20,-16">
+            <Border Width="650" MaxHeight="700" Background="{DynamicResource BgDarkSecondary}" CornerRadius="16" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,14">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Loc[Rep_Modal_InvoiceDetails]}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Text="{Binding SelectedInvoiceForDetails.InvoiceNumber}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" Margin="8,0,0,0" />
+                        </StackPanel>
+                        <Button HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Command="{Binding CloseInvoiceDetailsCommand}" Cursor="Hand" Padding="4">
+                            <TextBlock Text="✕" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" />
+                        </Button>
+                    </Grid>
+
+                    <Border Grid.Row="1" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" Padding="12" Margin="0,0,0,14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="{Binding Loc[Rep_Modal_SaleDate]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding SelectedInvoiceForDetails.CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,2,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding Loc[Rep_Modal_PayMethod]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding SelectedInvoiceForDetails.PaymentMethod}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" Margin="0,2,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="{Binding Loc[Rep_Modal_InvoiceStatus]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding SelectedInvoiceForDetails.Status}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="2" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="4" MaxHeight="320">
+                        <DataGrid ItemsSource="{Binding SelectedInvoiceForDetails.Items}" AutoGenerateColumns="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                  CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
+                                  HorizontalGridLinesBrush="{DynamicResource BorderDark}"
+                                  RowHeight="40">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Modal_Item]}" Binding="{Binding ProductName}" Width="2*" Foreground="{DynamicResource TextPrimary}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Modal_UnitPrice]}" Binding="{Binding UnitPrice, StringFormat='{}{0:N0} د.ع'}" Width="120" Foreground="{DynamicResource TextSecondary}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Modal_Quantity]}" Binding="{Binding Quantity, StringFormat='{}{0:N0}'}" Width="70" Foreground="{DynamicResource WarningBrush}" />
+                                <DataGridTextColumn Header="{Binding Loc[Rep_Modal_Total]}" Binding="{Binding TotalPrice, StringFormat='{}{0:N0} د.ع'}" Width="120" Foreground="{DynamicResource SuccessBrush}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <Grid Grid.Row="3" Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Loc[Rep_Modal_PaidTotal]}" FontSize="14" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding SelectedInvoiceForDetails.TotalAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="6,0,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <TextBlock Text="{Binding Loc[Rep_Modal_Discount]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding SelectedInvoiceForDetails.DiscountAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" Margin="4,0,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Button Grid.Column="1" Style="{StaticResource ActionButton}" Command="{Binding CloseInvoiceDetailsCommand}" Padding="20,10" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Loc[Rep_Modal_Close]}" FontWeight="Bold" />
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

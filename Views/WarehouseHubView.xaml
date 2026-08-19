@@ -1,0 +1,364 @@
+﻿<UserControl x:Class="HamoPos.Views.WarehouseHubView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" 
+             d:DesignHeight="850" d:DesignWidth="1200"
+             FlowDirection="RightToLeft"
+             FontFamily="Times New Roman, Segoe UI, Tahoma, Arial">
+
+    <Grid Margin="24,20">
+        <Grid.RowDefinitions>
+            <!-- 0: Header & Refresh -->
+            <RowDefinition Height="Auto" />
+            <!-- 1: Top KPI Summary Stats -->
+            <RowDefinition Height="Auto" />
+            <!-- 2: Hero Action Cards Grid -->
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ======================================================== -->
+        <!-- 0: HEADER -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="0" Margin="0,0,0,18">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="48" Height="48" Background="#1E3A8A" CornerRadius="14" Margin="0,0,14,0" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5">
+                    <TextBlock Text="📦" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Loc[Inv_Title]}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Text="{Binding Loc[Inv_Subtitle]}" FontSize="13" Foreground="{DynamicResource TextSecondary}" Margin="0,3,0,0" />
+                </StackPanel>
+            </StackPanel>
+
+            <Button HorizontalAlignment="Right" Style="{StaticResource ActionButton}" Command="{Binding RefreshCommand}" Padding="16,10" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🔄 " FontSize="14" />
+                    <TextBlock Text="{Binding Loc[Inv_Refresh]}" FontWeight="Bold" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- ======================================================== -->
+        <!-- 1: TOP KPI STATS SUMMARY (قيمة الشراء، الكراتين، المفرد، الأصناف) -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="1" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <!-- 1: Total Stock Purchase Cost Value -->
+                <ColumnDefinition Width="1.2*" />
+                <!-- 2: Total Cartons Count -->
+                <ColumnDefinition Width="*" />
+                <!-- 3: Total Pieces Count (Single) -->
+                <ColumnDefinition Width="*" />
+                <!-- 4: Total Registered Product Items -->
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 1: Total Purchase Value in Stock -->
+            <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5" Padding="14,10" Margin="0,0,10,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="{Binding Loc[Inv_TotalCostValue]}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,3,0,0">
+                        <TextBlock Text="{Binding TotalStockPurchaseCost, StringFormat='{}{0:N0}'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" />
+                        <TextBlock Text=" د.ع" FontSize="11" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Bottom" Margin="4,0,0,2" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 2: Total Cartons -->
+            <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1.5" Padding="14,10" Margin="5,0,10,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="{Binding Loc[Inv_TotalCartons]}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,3,0,0">
+                        <TextBlock Text="{Binding TotalRemainingCartons, StringFormat='{}{0:N0}'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" />
+                        <TextBlock Text=" " FontSize="11" />
+                        <TextBlock Text="{Binding Loc[Inv_UnitCartons]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Bottom" Margin="2,0,0,2" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 3: Total Single Pieces -->
+            <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1.5" Padding="14,10" Margin="5,0,10,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="{Binding Loc[Inv_TotalPieces]}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,3,0,0">
+                        <TextBlock Text="{Binding TotalRemainingPieces, StringFormat='{}{0:N0}'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" />
+                        <TextBlock Text=" " FontSize="11" />
+                        <TextBlock Text="{Binding Loc[Inv_UnitPieces]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Bottom" Margin="2,0,0,2" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 4: Total Registered Products -->
+            <Border Grid.Column="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" Padding="14,10" Margin="5,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="{Binding Loc[Inv_RegisteredProducts]}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,3,0,0">
+                        <TextBlock Text="{Binding TotalProductsCount, StringFormat='{}{0:N0}'}" FontSize="20" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text=" " FontSize="11" />
+                        <TextBlock Text="{Binding Loc[Inv_UnitTypes]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Bottom" Margin="2,0,0,2" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ======================================================== -->
+        <!-- 2: HERO ACTION CARDS GRID -->
+        <!-- ======================================================== -->
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <!-- Row 0: Full Inventory Details + Add Product -->
+                <RowDefinition Height="*" />
+                <!-- Row 1: Remaining Stock + Stock Audit + Damaged -->
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.2*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ======================================================== -->
+            <!-- CARD 1: 📦 مخزن (تفاصيل المواد الكاملة) - Row 0 Col 0..1 -->
+            <!-- ======================================================== -->
+            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="18" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="2" Padding="20" Margin="0,0,12,12" Cursor="Hand">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding OpenInventoryCommand}" />
+                </Border.InputBindings>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1E293B" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Border Width="48" Height="48" Background="#1E3A8A" CornerRadius="14" Margin="0,0,12,0" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5">
+                            <TextBlock Text="📦" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="مخزن (تفاصيل المواد الكاملة)" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                <Border Background="#1E3A8A" CornerRadius="6" Padding="8,2" Margin="10,0,0,0">
+                                    <TextBlock Text="تفاصيل شاملة" FontSize="11" Foreground="#93C5FD" FontWeight="Bold" />
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Loc[Inv_Subtitle]}" FontSize="12" Foreground="{DynamicResource PrimaryAccent}" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="1" Text="جدول تفصيلي متكامل يعرض: الباركود، اسم المادة، التصنيف، المندوب المورد، سعر البيع المفرد، سعر الشراء والتكلفة، رصيد القطع، رصيد الكراتين، مع إمكانية التعديل والحذف المباشر." FontSize="13" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" LineHeight="20" Margin="0,2,0,12" />
+
+                    <Button Grid.Row="2" Style="{StaticResource PrimaryAccentButton}" Command="{Binding OpenInventoryCommand}" Height="42">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📦 " FontSize="14" />
+                            <TextBlock Text="فتح تفاصيل المواد الكاملة في المخزن" FontWeight="Bold" FontSize="13" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- ======================================================== -->
+            <!-- CARD 2: ➕ إضافة مادة جديدة - Row 0 Col 2 -->
+            <!-- ======================================================== -->
+            <Border Grid.Row="0" Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="18" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="2" Padding="20" Margin="0,0,0,12" Cursor="Hand">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding OpenAddProductCommand}" />
+                </Border.InputBindings>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1E293B" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Border Width="48" Height="48" Background="#064E3B" CornerRadius="14" Margin="0,0,12,0" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1.5">
+                            <TextBlock Text="➕" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#34D399" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Loc[Inv_AddProduct]}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Text="تسجيل وتعريف الأصناف" FontSize="12" Foreground="{DynamicResource SuccessBrush}" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="1" Text="إدخال مادة جديدة، قراءة أو توليد الباركود، تحديد سعر البيع (مفرد/جملة/كرتون)، وتكاليف الشراء والكراتين." FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" LineHeight="18" Margin="0,2,0,12" />
+
+                    <Button Grid.Row="2" Style="{StaticResource PrimarySuccessButton}" Command="{Binding OpenAddProductCommand}" Height="42">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="➕ " FontSize="13" />
+                            <TextBlock Text="{Binding Loc[Inv_AddProduct]}" FontWeight="Bold" FontSize="13" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- ======================================================== -->
+            <!-- CARD 3: 📊 المتبقي في المخزن - Row 1 Col 0 -->
+            <!-- ======================================================== -->
+            <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="18" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5" Padding="20" Margin="0,0,12,0" Cursor="Hand">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding OpenStockCommand}" />
+                </Border.InputBindings>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1E293B" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Border Width="46" Height="46" Background="#1E3A8A" CornerRadius="12" Margin="0,0,12,0">
+                            <TextBlock Text="📊" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Loc[Nav_RemainingStock]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Text="رصيد القطع والكراتين المتوفرة" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="1" Text="مراقبة رصيد المخزون المتوفر، تنبيهات نفاد المواد، وحالات التوفر في المخزن." FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" LineHeight="18" Margin="0,2,0,12" />
+
+                    <Button Grid.Row="2" Style="{StaticResource ActionButton}" Command="{Binding OpenStockCommand}" Height="40">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📊 " FontSize="13" />
+                            <TextBlock Text="{Binding Loc[Nav_RemainingStock]}" FontWeight="Bold" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- ======================================================== -->
+            <!-- CARD 4: 📋 جرد المخزن - Row 1 Col 1 -->
+            <!-- ======================================================== -->
+            <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="18" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1.5" Padding="20" Margin="0,0,12,0" Cursor="Hand">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding OpenStockAuditCommand}" />
+                </Border.InputBindings>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1E293B" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Border Width="46" Height="46" Background="#78350F" CornerRadius="12" Margin="0,0,12,0">
+                            <TextBlock Text="📋" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FBBF24" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Loc[Nav_StockAudit]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Text="مطابقة الجرد وحساب الفروقات" FontSize="11" Foreground="{DynamicResource WarningBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="1" Text="جرد المخزن بالباركود، حساب العجز والزيادة المالية، وتحديث المخزون بنقرة زر." FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" LineHeight="18" Margin="0,2,0,12" />
+
+                    <Button Grid.Row="2" Style="{StaticResource ActionButton}" Command="{Binding OpenStockAuditCommand}" Height="40" BorderBrush="{DynamicResource WarningBrush}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📋 " FontSize="13" />
+                            <TextBlock Text="{Binding Loc[Nav_StockAudit]}" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource WarningBrush}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- ======================================================== -->
+            <!-- CARD 5: ⚠️ المواد التالفة والهالك - Row 1 Col 2 -->
+            <!-- ======================================================== -->
+            <Border Grid.Row="1" Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="18" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1.5" Padding="20" Margin="0,0,0,0" Cursor="Hand">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding OpenDamagedItemsCommand}" />
+                </Border.InputBindings>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1E293B" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Border Width="46" Height="46" Background="#450A0A" CornerRadius="12" Margin="0,0,12,0">
+                            <TextBlock Text="⚠️" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F87171" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Loc[Nav_DamagedItems]}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock Text="إتلاف وتوثيق الهالك والخسائر" FontSize="11" Foreground="{DynamicResource DangerBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="1" Text="تسجيل المواد المكسورة والمنتهية الصلاحية مع خصمها التلقائي وحساب الخسارة." FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" LineHeight="18" Margin="0,2,0,12" />
+
+                    <Button Grid.Row="2" Style="{StaticResource DangerButton}" Command="{Binding OpenDamagedItemsCommand}" Height="40">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚠️ " FontSize="13" />
+                            <TextBlock Text="{Binding Loc[Nav_DamagedItems]}" FontWeight="Bold" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
