@@ -29,7 +29,7 @@
                 <Button Style="{StaticResource ActionButton}" Command="{Binding BackToNavigationCommand}" Padding="14,8" Margin="0,0,14,0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="🔙 " FontSize="14" />
-                        <TextBlock Text="العودة للقائمة الرئيسية" FontWeight="Bold" />
+                        <TextBlock Text="{Binding Loc[Add_BackToMain]}" FontWeight="Bold" />
                     </StackPanel>
                 </Button>
                 <TextBlock Text="{Binding FormHeaderTitle}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
@@ -41,7 +41,7 @@
                 <Button Style="{StaticResource ActionButton}" Command="{Binding OpenInventoryLookupCommand}" Padding="14,9" Margin="0,0,10,0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="📦 " FontSize="15" />
-                        <TextBlock Text="استعراض مواد المخزن للتعديل" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Loc[Add_BrowseInventory]}" FontWeight="SemiBold" />
                     </StackPanel>
                 </Button>
 
@@ -49,7 +49,7 @@
                 <Button Style="{StaticResource ActionButton}" Command="{Binding ClearFormCommand}" Padding="14,9" Margin="0,0,10,0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="🧹 " FontSize="15" />
-                        <TextBlock Text="تفريغ جميع الحقول" />
+                        <TextBlock Text="{Binding Loc[Add_ClearFields]}" />
                     </StackPanel>
                 </Button>
 
@@ -57,7 +57,7 @@
                 <Button Style="{StaticResource PrimarySuccessButton}" Command="{Binding SaveProductCommand}" Padding="20,9">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="💾 " FontSize="16" />
-                        <TextBlock Text="حفظ المادة (Save)" FontWeight="Bold" FontSize="14" />
+                        <TextBlock Text="{Binding Loc[Add_SaveButton]}" FontWeight="Bold" FontSize="14" />
                     </StackPanel>
                 </Button>
             </StackPanel>
@@ -78,10 +78,10 @@
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Expiry Date Label -->
-                    <TextBlock Text="📅 تاريخ انتهاء الصلاحية:" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <TextBlock Text="{Binding Loc[Add_ExpiryDate]}" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" Margin="0,0,8,0" />
                     
-                    <!-- Date Input (Manual Left-To-Right + Calendar Picker) -->
-                    <Border Background="#0B132B" BorderBrush="#1E3A8A" BorderThickness="1.5" CornerRadius="8" Height="36" Margin="0,0,16,0" Padding="4,2" VerticalAlignment="Center">
+                    <!-- Date Input (Manual Left-To-Right + Calendar Picker, dynamic for light/dark theme) -->
+                    <Border Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" CornerRadius="8" Height="36" Margin="0,0,16,0" Padding="4,2" VerticalAlignment="Center">
                         <Grid FlowDirection="LeftToRight">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="110" />
@@ -90,7 +90,7 @@
                             <!-- Manual Text Box (LTR) -->
                             <TextBox Grid.Column="0" 
                                      Text="{Binding ExpiryDateManualString, UpdateSourceTrigger=PropertyChanged}" 
-                                     Background="Transparent" Foreground="#38BDF8" BorderThickness="0" 
+                                     Background="Transparent" Foreground="{DynamicResource PrimaryAccent}" BorderThickness="0" 
                                      FontSize="13.5" FontWeight="Bold" FontFamily="Segoe UI, Tahoma, Consolas"
                                      VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
                                      ToolTip="اكتب التاريخ يدوياً من اليسار لليمين (مثال: 2026/12/31)" />
@@ -104,13 +104,13 @@
                     </Border>
 
                     <!-- Alert Days Label -->
-                    <TextBlock Text="أيام التحذير المسبق:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBlock Text="{Binding Loc[Add_AlertDays]}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,6,0" />
                     
-                    <!-- Alert Days Input (Clean, Bright, Centered, LTR) -->
-                    <Border Background="#0B132B" BorderBrush="#1E3A8A" BorderThickness="1.5" CornerRadius="8" Width="70" Height="36" Margin="0,0,16,0" VerticalAlignment="Center">
+                    <!-- Alert Days Input (Dynamic light/dark theme, LTR) -->
+                    <Border Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" CornerRadius="8" Width="70" Height="36" Margin="0,0,16,0" VerticalAlignment="Center">
                         <TextBox Text="{Binding ExpiryAlertDays, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
                                  GotFocus="NumberTextBox_GotFocus"
-                                 Background="Transparent" Foreground="#38BDF8" BorderThickness="0"
+                                 Background="Transparent" Foreground="{DynamicResource PrimaryAccent}" BorderThickness="0"
                                  FontSize="15" FontWeight="Black" FontFamily="Segoe UI, Tahoma, Arial" FlowDirection="LeftToRight"
                                  TextAlignment="Center" VerticalContentAlignment="Center" />
                     </Border>
@@ -127,14 +127,14 @@
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Background="{DynamicResource BgDarkPrimary}" CornerRadius="8" Padding="12,6" Margin="0,0,10,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="أول إضافة: " FontSize="11" Foreground="{DynamicResource TextMuted}" />
+                            <TextBlock Text="{Binding Loc[Add_FirstAdded]}" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="0,0,4,0" />
                             <TextBlock Text="{Binding CreatedAtString}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" />
                         </StackPanel>
                     </Border>
 
                     <Border Background="{DynamicResource BgDarkPrimary}" CornerRadius="8" Padding="12,6" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="آخر تعديل: " FontSize="11" Foreground="{DynamicResource TextMuted}" />
+                            <TextBlock Text="{Binding Loc[Add_LastUpdated]}" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="0,0,4,0" />
                             <TextBlock Text="{Binding UpdatedAtString}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
                         </StackPanel>
                     </Border>
@@ -167,13 +167,14 @@
                         <!-- Barcode Field -->
                         <StackPanel Grid.Column="0">
                             <Grid Margin="0,0,0,4">
-                                <TextBlock Text="الباركود (نقر مرتين للتوليد):" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
-                                <TextBlock Text="بادئة 200245" FontSize="10" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Right" />
+                                <TextBlock Text="{Binding Loc[Add_Barcode]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
+                                <TextBlock Text="{Binding Loc[Add_BarcodePrefix]}" FontSize="10" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Right" />
                             </Grid>
                             <TextBox x:Name="TxtBarcode" Style="{StaticResource ModernDarkTextBox}" 
                                      Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged}" 
                                      TextAlignment="Center" FontSize="14" FontWeight="Bold"
                                      GotFocus="NumberTextBox_GotFocus"
+                                     PreviewMouseDoubleClick="TxtBarcode_PreviewMouseDoubleClick"
                                      MouseDoubleClick="TxtBarcode_MouseDoubleClick"
                                      KeyDown="TxtBarcode_KeyDown"
                                      ToolTip="انقر مرتين لتوليد باركود فريد يبدأ بـ 200245 أو اضغط Enter للانتقال لاسم المادة" />
@@ -181,11 +182,11 @@
 
                         <!-- Product Name Field -->
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="اسم المادة:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,4" />
+                            <TextBlock Text="{Binding Loc[Add_ProductName]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,4" />
                             <TextBox x:Name="TxtName" Style="{StaticResource ModernDarkTextBox}" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontSize="14" FontWeight="Bold" />
                         </StackPanel>
 
-                        <!-- Category Field (Dark High-Contrast Theme with Add Category Button) -->
+                        <!-- Category Field (Dark/Light High-Contrast Theme with Add Category Button) -->
                         <StackPanel Grid.Column="4">
                             <Grid Margin="0,0,0,4">
                                 <TextBlock Text="{Binding Loc[Inv_Category]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
@@ -196,16 +197,16 @@
                                 </Button>
                             </Grid>
                             <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name" 
-                                      Height="42" VerticalContentAlignment="Center" Background="#1E293B" Foreground="#F8FAFC" FontSize="13" />
+                                      Height="42" VerticalContentAlignment="Center" Background="{DynamicResource BgDarkPrimary}" Foreground="{DynamicResource TextPrimary}" FontSize="13" />
                         </StackPanel>
 
                         <!-- Supplier / Rep Field with Small Add/Details Button -->
                         <StackPanel Grid.Column="6">
                             <Grid Margin="0,0,0,4">
-                                <TextBlock Text="اسم المندوب:" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding Loc[Add_SupplierName]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
                                 <Button Command="{Binding OpenSupplierModalCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="➕ تفاصيل المندوب" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
+                                        <TextBlock Text="{Binding Loc[Add_SupplierDetails]}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
                                     </StackPanel>
                                 </Button>
                             </Grid>
@@ -216,7 +217,7 @@
                     <Separator Background="{DynamicResource BorderDark}" Margin="0,4,0,18" />
 
                     <!-- SECTION 2: CARTONS, ITEMS PER CARTON, EXTRA PIECES, TOTAL ITEMS, & PURCHASE PRICES -->
-                    <TextBlock Text="📦 تفاصيل الكرتون والكميات وسعر الشراء والتكلفة:" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,10" />
+                    <TextBlock Text="{Binding Loc[Add_CartonDetailsHeader]}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,10" />
 
                     <Grid Margin="0,0,0,18">
                         <Grid.ColumnDefinitions>
@@ -241,14 +242,14 @@
 
                         <!-- 1. Cartons Count -->
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="عدد الكراتين:" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <TextBlock Text="{Binding Loc[Add_CartonsCount]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
                             <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding CartonsCount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
                                      GotFocus="NumberTextBox_GotFocus" TextAlignment="Center" FontSize="15" FontWeight="Bold" />
                         </StackPanel>
 
                         <!-- 2. Items per Carton -->
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="المواد داخل الكرتون:" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <TextBlock Text="{Binding Loc[Add_ItemsInCarton]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
                             <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding ItemsPerCarton, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
                                      GotFocus="NumberTextBox_GotFocus" TextAlignment="Center" FontSize="15" FontWeight="Bold" />
                         </StackPanel>
@@ -257,32 +258,32 @@
                         <StackPanel Grid.Column="4">
                             <TextBlock Text="{Binding Loc[Add_ExtraPieces]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
                             <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding ExtraPiecesCount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
-                                     GotFocus="NumberTextBox_GotFocus" TextAlignment="Center" FontSize="15" FontWeight="Bold" Foreground="#38BDF8"
+                                     GotFocus="NumberTextBox_GotFocus" TextAlignment="Center" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}"
                                      ToolTip="قطع مفردة إضافية تضاف إلى مجموع المواد الكلي (اختياري)" />
                         </StackPanel>
 
                         <!-- 4. Total Items (Calculated / Read-Only) -->
                         <StackPanel Grid.Column="6">
-                            <TextBlock Text="{Binding Loc[Add_TotalCalculated]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" Margin="0,0,0,4" />
+                            <TextBlock Text="{Binding Loc[Add_TotalStock]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" Margin="0,0,0,4" />
                             <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding StockQuantity, Mode=OneWay, StringFormat='{}{0:0}'}" 
                                      IsReadOnly="True" IsTabStop="False"
-                                     TextAlignment="Center" FontSize="15" Background="#0F172A" BorderBrush="{DynamicResource PrimaryAccent}" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}"
+                                     TextAlignment="Center" FontSize="15" Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource PrimaryAccent}" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}"
                                      ToolTip="يتم حسابه تلقائياً: (الكراتين × المواد داخل الكرتون) + القطع الإضافية" />
                         </StackPanel>
 
                         <!-- 5. Carton Purchase Price -->
                         <StackPanel Grid.Column="8">
-                            <TextBlock Text="سعر شراء الكرتون (د.ع):" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <TextBlock Text="{Binding Loc[Add_CartonBuyPrice]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
                             <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding CartonPurchasePrice, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
                                      GotFocus="NumberTextBox_GotFocus" TextAlignment="Center" FontSize="15" FontWeight="Bold" />
                         </StackPanel>
 
                         <!-- 6. Single Item Cost (Auto Calculated / Read-Only) -->
                         <StackPanel Grid.Column="10">
-                            <TextBlock Text="{Binding Loc[Add_CostCalculated]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" Margin="0,0,0,4" />
+                            <TextBlock Text="{Binding Loc[Add_PieceCost]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" Margin="0,0,0,4" />
                             <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding Cost, Mode=OneWay, StringFormat='{}{0:0}'}" 
                                      IsReadOnly="True" IsTabStop="False"
-                                     TextAlignment="Center" FontSize="15" Background="#0F172A" BorderBrush="{DynamicResource WarningBrush}" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}"
+                                     TextAlignment="Center" FontSize="15" Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource WarningBrush}" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}"
                                      ToolTip="يتم حسابه تلقائياً من سعر شراء الكرتون مقسوماً على عدد المواد" />
                         </StackPanel>
                     </Grid>
@@ -290,7 +291,7 @@
                     <Separator Background="{DynamicResource BorderDark}" Margin="0,4,0,18" />
 
                     <!-- SECTION 3: SELLING PRICES & PROFIT CALCULATIONS (3 SETS FULL WIDTH) -->
-                    <TextBlock Text="💰 أسعار البيع وحساب الأرباح التلقائية (مفرد، جملة، كرتون):" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,10" />
+                    <TextBlock Text="{Binding Loc[Add_SellingPricingHeader]}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,10" />
 
                     <Grid Margin="0,0,0,24">
                         <Grid.ColumnDefinitions>
@@ -307,16 +308,23 @@
                         <!-- 1. Retail Selling Price & Profit -->
                         <Border Grid.Column="0" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14">
                             <StackPanel>
-                                <TextBlock Text="سعر بيع المفرد (د.ع):" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,6" />
+                                <TextBlock Text="{Binding Loc[Add_RetailPrice]}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,6" />
                                 <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding Price, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
                                          GotFocus="NumberTextBox_GotFocus" TextAlignment="Center" FontSize="16" FontWeight="Black" Margin="0,0,0,10" />
 
                                 <Grid Margin="0,0,0,4">
-                                    <TextBlock Text="ربح بيع المفرد للقطعة:" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="{Binding Loc[Add_RetailProfitPiece]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
                                     <TextBlock Text="{Binding RetailProfitAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Right" />
                                 </Grid>
+                                
+                                <!-- NEW: Total Carton Profit Sold at Retail Piece Price -->
+                                <Grid Margin="0,0,0,4">
+                                    <TextBlock Text="{Binding Loc[Add_RetailCartonProfit]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="{Binding RetailCartonProfitAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Right" />
+                                </Grid>
+
                                 <Grid>
-                                    <TextBlock Text="نسبة الربح (هامش المفرد):" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="{Binding Loc[Add_RetailMargin]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
                                     <TextBlock Text="{Binding RetailProfitPercent, StringFormat='{}{0:N1}%'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" HorizontalAlignment="Right" />
                                 </Grid>
                             </StackPanel>
@@ -325,16 +333,16 @@
                         <!-- 2. Wholesale Selling Price & Profit -->
                         <Border Grid.Column="2" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14">
                             <StackPanel>
-                                <TextBlock Text="سعر بيع الجملة (د.ع):" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,6" />
+                                <TextBlock Text="{Binding Loc[Add_WholesalePrice]}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,6" />
                                 <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding WholesalePrice, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
                                          GotFocus="NumberTextBox_GotFocus" TextAlignment="Center" FontSize="16" FontWeight="Black" Margin="0,0,0,10" />
 
                                 <Grid Margin="0,0,0,4">
-                                    <TextBlock Text="ربح بيع الجملة للقطعة:" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="{Binding Loc[Add_WholesaleProfitPiece]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
                                     <TextBlock Text="{Binding WholesaleProfitAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Right" />
                                 </Grid>
                                 <Grid>
-                                    <TextBlock Text="نسبة الربح (هامش الجملة):" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="{Binding Loc[Add_WholesaleMargin]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
                                     <TextBlock Text="{Binding WholesaleProfitPercent, StringFormat='{}{0:N1}%'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" HorizontalAlignment="Right" />
                                 </Grid>
                             </StackPanel>
@@ -343,16 +351,16 @@
                         <!-- 3. Carton Selling Price & Profit -->
                         <Border Grid.Column="4" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14">
                             <StackPanel>
-                                <TextBlock Text="سعر بيع بالكرتون (د.ع):" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,6" />
+                                <TextBlock Text="{Binding Loc[Add_CartonSellPrice]}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,6" />
                                 <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding CartonSellingPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
                                          GotFocus="NumberTextBox_GotFocus" TextAlignment="Center" FontSize="16" FontWeight="Black" Margin="0,0,0,10" />
 
                                 <Grid Margin="0,0,0,4">
-                                    <TextBlock Text="ربح بيع الكرتون بالكامل:" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="{Binding Loc[Add_CartonProfitWhole]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
                                     <TextBlock Text="{Binding CartonProfitAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Right" />
                                 </Grid>
                                 <Grid>
-                                    <TextBlock Text="نسبة الربح (هامش الكرتون):" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                                    <TextBlock Text="{Binding Loc[Add_CartonMargin]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
                                     <TextBlock Text="{Binding CartonProfitPercent, StringFormat='{}{0:N1}%'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" HorizontalAlignment="Right" />
                                 </Grid>
                             </StackPanel>

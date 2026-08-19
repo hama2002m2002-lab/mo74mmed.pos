@@ -12,15 +12,21 @@ public partial class AddProductFullView : UserControl
         InitializeComponent();
     }
 
-    private void TxtBarcode_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    private void TxtBarcode_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (DataContext is AddProductFullViewModel vm)
         {
             if (vm.GenerateBarcodeCommand.CanExecute(null))
             {
                 vm.GenerateBarcodeCommand.Execute(null);
+                e.Handled = true;
             }
         }
+    }
+
+    private void TxtBarcode_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        TxtBarcode_PreviewMouseDoubleClick(sender, e);
     }
 
     private void TxtBarcode_KeyDown(object sender, KeyEventArgs e)

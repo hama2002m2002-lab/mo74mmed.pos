@@ -234,6 +234,10 @@ public class AddProductFullViewModel : BaseViewModel
     public decimal RetailProfitAmount => Math.Max(0, Price - Cost);
     public decimal RetailProfitPercent => Cost > 0 ? Math.Round(((Price - Cost) / Cost) * 100, 1) : 0;
 
+    // ربح بيع الكرتون بالكامل بالمفرد (سعر بيع المفرد × عدد القطع - سعر شراء الكرتون)
+    public decimal RetailCartonProfitAmount => (ItemsPerCarton > 0 && Price > 0) ? Math.Max(0, (Price * ItemsPerCarton) - CartonPurchasePrice) : 0;
+    public decimal RetailCartonProfitPercent => CartonPurchasePrice > 0 ? Math.Round((RetailCartonProfitAmount / CartonPurchasePrice) * 100, 1) : 0;
+
     public decimal WholesaleProfitAmount => Math.Max(0, WholesalePrice - Cost);
     public decimal WholesaleProfitPercent => Cost > 0 ? Math.Round(((WholesalePrice - Cost) / Cost) * 100, 1) : 0;
 
@@ -264,20 +268,37 @@ public class AddProductFullViewModel : BaseViewModel
         {
             if (SetProperty(ref _expiryDateManualString, value))
             {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    _expiryDate = null;
-                    OnPropertyChanged(nameof(ExpiryDate));
-                    RecalculateExpiry();
-                }
-                else if (DateTime.TryParse(value, out DateTime dt))
-                {
-                    _expiryDate = dt;
-                    OnPropertyChanged(nameof(ExpiryDate));
-                    RecalculateExpiry();
-                }
+                ParseManualExpiryDate(value);
             }
         }
+    }
+
+    private void ParseManualExpiryDate(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _expiryDate = null;
+            OnPropertyChanged(nameof(ExpiryDate));
+            RecalculateExpiry();
+            return;
+        }
+
+        string cleaned = text.Trim().Replace("-", "/").Replace(".", "/");
+        string[] formats = { "yyyy/MM/dd", "yyyy/M/d", "yyyy/MM/d", "yyyy/M/dd", "dd/MM/yyyy", "d/M/yyyy", "dd/M/yyyy", "d/MM/yyyy", "yyyyMMdd" };
+
+        if (DateTime.TryParseExact(cleaned, formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime parsed) ||
+            DateTime.TryParse(cleaned, out parsed))
+        {
+            if (parsed.Year >= 2000 && parsed.Year <= 2100)
+            {
+                _expiryDate = parsed;
+                OnPropertyChanged(nameof(ExpiryDate));
+                RecalculateExpiry();
+                return;
+            }
+        }
+
+        ExpiryStatusMessage = "جارٍ كتابة التاريخ...";
     }
 
     private int _daysRemainingUntilExpiry;
@@ -291,7 +312,13 @@ public class AddProductFullViewModel : BaseViewModel
     public int ExpiryAlertDays
     {
         get => _expiryAlertDays;
-        set => SetProperty(ref _expiryAlertDays, value);
+        set
+        {
+            if (SetProperty(ref _expiryAlertDays, value))
+            {
+                RecalculateExpiry();
+            }
+        }
     }
 
     private string _expiryStatusMessage = "لم يتم تحديد تاريخ صلاحية";
@@ -529,6 +556,8 @@ public class AddProductFullViewModel : BaseViewModel
     {
         OnPropertyChanged(nameof(RetailProfitAmount));
         OnPropertyChanged(nameof(RetailProfitPercent));
+        OnPropertyChanged(nameof(RetailCartonProfitAmount));
+        OnPropertyChanged(nameof(RetailCartonProfitPercent));
         OnPropertyChanged(nameof(WholesaleProfitAmount));
         OnPropertyChanged(nameof(WholesaleProfitPercent));
         OnPropertyChanged(nameof(CartonProfitAmount));
@@ -601,6 +630,7 @@ public class AddProductFullViewModel : BaseViewModel
         IsAddCategoryModalOpen = false;
 
         ProductId = Guid.Empty;
+        Barcode = string.Empty; // لا ينشئ باركود تلقائياً بل يترك الحقل فارغاً
         Name = string.Empty;
         SupplierName = string.Empty;
         SupplierPhone = string.Empty;
@@ -625,11 +655,6 @@ public class AddProductFullViewModel : BaseViewModel
         ExpiryAlertDays = 30;
         CreatedAtString = "--";
         UpdatedAtString = "--";
-
-        _ = Task.Run(async () =>
-        {
-            Barcode = await _productService.GenerateUniqueBarcodeAsync("200245");
-        });
 
         RecalculateTotals();
         RecalculateExpiry();
