@@ -22,19 +22,9 @@ public class UpdateService
         try
         {
             string updateUrl = NetworkConfigService.Instance.Config.UpdateServerUrl;
-
-            // 1. If it's the default unhosted placeholder URL, notify user gently that this is the latest release
-            if (string.IsNullOrWhiteSpace(updateUrl) || updateUrl.Contains("githubusercontent.com/HamoPos/Releases"))
+            if (string.IsNullOrWhiteSpace(updateUrl) || updateUrl.Contains("HamoPos/Releases"))
             {
-                if (isManual)
-                {
-                    MessageBox.Show(
-                        "✔ أنت تستخدم أحدث إصدار حالياً من نظام 7amo POS (الإصدار v1.0.0)!\n\n💡 ملاحظة: لتحديث أي لابتوب كاشير إضافي، يمكنك استخدام ملف (تثبيت برنامج 7amo POS.exe) الجديد مباشرة.",
-                        "فحص التحديثات",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
-                return;
+                updateUrl = "https://raw.githubusercontent.com/hama2002m2002-lab/mo74mmed.pos/main/update.xml";
             }
 
             // 2. Check URL or Local File availability
