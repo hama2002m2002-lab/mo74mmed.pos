@@ -249,7 +249,33 @@ public class AddProductFullViewModel : BaseViewModel
         {
             if (SetProperty(ref _expiryDate, value))
             {
+                _expiryDateManualString = value.HasValue ? value.Value.ToString("yyyy/MM/dd") : string.Empty;
+                OnPropertyChanged(nameof(ExpiryDateManualString));
                 RecalculateExpiry();
+            }
+        }
+    }
+
+    private string _expiryDateManualString = string.Empty;
+    public string ExpiryDateManualString
+    {
+        get => _expiryDateManualString;
+        set
+        {
+            if (SetProperty(ref _expiryDateManualString, value))
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    _expiryDate = null;
+                    OnPropertyChanged(nameof(ExpiryDate));
+                    RecalculateExpiry();
+                }
+                else if (DateTime.TryParse(value, out DateTime dt))
+                {
+                    _expiryDate = dt;
+                    OnPropertyChanged(nameof(ExpiryDate));
+                    RecalculateExpiry();
+                }
             }
         }
     }
