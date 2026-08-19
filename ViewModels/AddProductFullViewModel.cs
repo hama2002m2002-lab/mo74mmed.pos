@@ -411,9 +411,11 @@ public class AddProductFullViewModel : BaseViewModel
         _productService = new ProductService(_context);
         _supplierService = new SupplierService(_context);
 
-        GenerateBarcodeCommand = new AsyncRelayCommand(async () =>
+        GenerateBarcodeCommand = new RelayCommand(() =>
         {
-            Barcode = await _productService.GenerateUniqueBarcodeAsync("200245");
+            var random = new Random();
+            int suffix = random.Next(1000000, 9999999);
+            Barcode = $"200245{suffix}";
             StatusMessage = $"تم توليد باركود فريد: {Barcode}";
             RequestFocusNameField?.Invoke();
         });

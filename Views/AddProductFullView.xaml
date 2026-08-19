@@ -168,7 +168,7 @@
                         <StackPanel Grid.Column="0">
                             <Grid Margin="0,0,0,4">
                                 <TextBlock Text="{Binding Loc[Add_Barcode]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
-                                <Button Command="{Binding GenerateBarcodeCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right"
+                                <Button Click="BtnGenerateBarcode_Click" Command="{Binding GenerateBarcodeCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right"
                                         ToolTip="اضغط هنا أو انقر مرتين على الحقل لتوليد باركود تلقائي">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="⚡ توليد باركود" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" />
@@ -179,8 +179,8 @@
                                      Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged}" 
                                      TextAlignment="Center" FontSize="14" FontWeight="Bold"
                                      GotFocus="NumberTextBox_GotFocus"
+                                     PreviewMouseLeftButtonDown="TxtBarcode_PreviewMouseLeftButtonDown"
                                      PreviewMouseDown="TxtBarcode_PreviewMouseDown"
-                                     PreviewMouseDoubleClick="TxtBarcode_PreviewMouseDoubleClick"
                                      MouseDoubleClick="TxtBarcode_MouseDoubleClick"
                                      KeyDown="TxtBarcode_KeyDown"
                                      ToolTip="انقر مرتين لتوليد باركود فريد يبدأ بـ 200245 أو اضغط Enter للانتقال لاسم المادة" />

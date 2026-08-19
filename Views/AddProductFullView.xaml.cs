@@ -50,6 +50,15 @@ public partial class AddProductFullView : UserControl
         });
     }
 
+    private void TxtBarcode_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount >= 2)
+        {
+            TriggerGenerateBarcode();
+            e.Handled = true;
+        }
+    }
+
     private void TxtBarcode_PreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ClickCount >= 2)
@@ -59,27 +68,35 @@ public partial class AddProductFullView : UserControl
         }
     }
 
-    private void TxtBarcode_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        TriggerGenerateBarcode();
-        e.Handled = true;
-    }
-
     private void TxtBarcode_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         TriggerGenerateBarcode();
         e.Handled = true;
     }
 
+    private void BtnGenerateBarcode_Click(object sender, RoutedEventArgs e)
+    {
+        TriggerGenerateBarcode();
+    }
+
     private void TriggerGenerateBarcode()
     {
+        var random = new Random();
+        int suffix = random.Next(1000000, 9999999);
+        string newCode = $"200245{suffix}";
+
         if (DataContext is AddProductFullViewModel vm)
         {
-            if (vm.GenerateBarcodeCommand.CanExecute(null))
-            {
-                vm.GenerateBarcodeCommand.Execute(null);
-            }
+            vm.Barcode = newCode;
         }
+
+        TxtBarcode.Text = newCode;
+
+        Dispatcher.InvokeAsync(() =>
+        {
+            TxtName?.Focus();
+            TxtName?.SelectAll();
+        });
     }
 
     private void TxtBarcode_KeyDown(object sender, KeyEventArgs e)
