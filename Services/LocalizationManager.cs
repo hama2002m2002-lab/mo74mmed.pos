@@ -101,6 +101,10 @@ public class LocalizationManager : INotifyPropertyChanged
         _ar["App_Offline_Mode"] = "محلي (Offline Mode)";
         _ar["App_Active_Cashier"] = "كاشير نشط";
         _ar["Nav_BackToMain"] = "العودة للرئيسية";
+        _ar["Gen_Save"] = "حفظ";
+        _ar["Gen_Cancel"] = "إلغاء";
+        _ar["Add_EnableExpiry"] = "تفعيل تاريخ الصلاحية";
+        _ar["Add_NoExpirySet"] = "بدون تاريخ صلاحية";
 
         // Sidebar Navigation
         _ar["Nav_Dashboard"] = "لوحة التحكم";
@@ -560,6 +564,10 @@ public class LocalizationManager : INotifyPropertyChanged
         _ku["App_Offline_Mode"] = "لۆکاڵ (بێ ئینتەرنێت)";
         _ku["App_Active_Cashier"] = "کاشێری چالاک";
         _ku["Nav_BackToMain"] = "گەڕانەوە بۆ سەرەکی";
+        _ku["Gen_Save"] = "پاشەکەوتکردن";
+        _ku["Gen_Cancel"] = "پاشگەزبوونەوە";
+        _ku["Add_EnableExpiry"] = "چالاککردنی بەرواری بەسەرچوون";
+        _ku["Add_NoExpirySet"] = "بەبێ بەرواری بەسەرچوون";
 
         // Sidebar Navigation
         _ku["Nav_Dashboard"] = "تابلۆی سەرەکی (داشبۆرد)";

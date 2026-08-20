@@ -21,7 +21,7 @@ public class AddProductFullViewModel : BaseViewModel
     public Guid ProductId { get; set; } = Guid.Empty;
 
     public bool IsEditMode => ProductId != Guid.Empty;
-    public string FormHeaderTitle => IsEditMode ? "✏️ تعديل بيانات المادة" : "➕ إضافة مادة جديدة للمخزن";
+    public string FormHeaderTitle => IsEditMode ? Loc["Add_EditTitle"] : Loc["Add_Title"];
 
     // 1. الباركود
     private string _barcode = string.Empty;
@@ -276,6 +276,30 @@ public class AddProductFullViewModel : BaseViewModel
     public decimal CartonProfitPercent => CartonPurchasePrice > 0 ? Math.Round(((CartonSellingPrice - CartonPurchasePrice) / CartonPurchasePrice) * 100, 1) : 0;
 
     // 9. الصلاحية والتحذيرات
+    private bool _hasExpiryDate = false;
+    public bool HasExpiryDate
+    {
+        get => _hasExpiryDate;
+        set
+        {
+            if (SetProperty(ref _hasExpiryDate, value))
+            {
+                if (!value)
+                {
+                    _expiryDate = null;
+                    _expiryDateManualString = string.Empty;
+                    OnPropertyChanged(nameof(ExpiryDate));
+                    OnPropertyChanged(nameof(ExpiryDateManualString));
+                    ExpiryStatusMessage = Loc["Add_NoExpirySet"];
+                }
+                else
+                {
+                    RecalculateExpiry();
+                }
+            }
+        }
+    }
+
     private DateTime? _expiryDate;
     public DateTime? ExpiryDate
     {
@@ -329,7 +353,7 @@ public class AddProductFullViewModel : BaseViewModel
             }
         }
 
-        ExpiryStatusMessage = "جارٍ كتابة التاريخ...";
+        ExpiryStatusMessage = Loc.IsKurdish ? "نووسینی بەروار..." : "جارٍ كتابة التاريخ...";
     }
 
     private int _daysRemainingUntilExpiry;
@@ -352,7 +376,7 @@ public class AddProductFullViewModel : BaseViewModel
         }
     }
 
-    private string _expiryStatusMessage = "لم يتم تحديد تاريخ صلاحية";
+    private string _expiryStatusMessage = "بدون تاريخ صلاحية";
     public string ExpiryStatusMessage
     {
         get => _expiryStatusMessage;
@@ -544,7 +568,21 @@ public class AddProductFullViewModel : BaseViewModel
         IsInventoryLookupOpen = false;
         IsAddCategoryModalOpen = false;
 
-        var cats = await _productService.GetCategoriesAsync();
+        using var db = new AppDbContext();
+        var cats = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+            db.Categories.Where(c => !c.IsDeleted).OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name));
+
+        if (cats.Count == 0)
+        {
+            var c1 = new Category { Id = Guid.NewGuid(), Name = Loc.IsKurdish ? "خۆراکی گشتی" : "مواد غذائية", ColorHex = "#10B981", DisplayOrder = 1 };
+            var c2 = new Category { Id = Guid.NewGuid(), Name = Loc.IsKurdish ? "خواردنەوە و شەربەت" : "مشروبات", ColorHex = "#3B82F6", DisplayOrder = 2 };
+            var c3 = new Category { Id = Guid.NewGuid(), Name = Loc.IsKurdish ? "پاكکەرەوەکان" : "منظفات", ColorHex = "#F59E0B", DisplayOrder = 3 };
+            var c4 = new Category { Id = Guid.NewGuid(), Name = Loc.IsKurdish ? "کاڵای تر" : "أخرى", ColorHex = "#8B5CF6", DisplayOrder = 4 };
+            await db.Categories.AddRangeAsync(c1, c2, c3, c4);
+            await db.SaveChangesAsync();
+            cats = new List<Category> { c1, c2, c3, c4 };
+        }
+
         Categories.Clear();
         foreach (var c in cats) Categories.Add(c);
         if (SelectedCategory == null && Categories.Count > 0)
@@ -553,7 +591,8 @@ public class AddProductFullViewModel : BaseViewModel
             CategoryText = Categories[0].Name;
         }
 
-        var sups = await _supplierService.GetSuppliersAsync();
+        var sups = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+            db.Suppliers.Where(s => !s.IsDeleted).OrderBy(s => s.Name));
         SuppliersList.Clear();
         foreach (var s in sups) SuppliersList.Add(s);
 
@@ -603,20 +642,27 @@ public class AddProductFullViewModel : BaseViewModel
 
     private void RecalculateExpiry()
     {
+        if (!HasExpiryDate)
+        {
+            DaysRemainingUntilExpiry = 0;
+            ExpiryStatusMessage = Loc["Add_NoExpirySet"];
+            return;
+        }
+
         if (ExpiryDate.HasValue)
         {
             DaysRemainingUntilExpiry = (ExpiryDate.Value.Date - DateTime.Today).Days;
             if (DaysRemainingUntilExpiry < 0)
-                ExpiryStatusMessage = $"❌ منتهي الصلاحية منذ {Math.Abs(DaysRemainingUntilExpiry)} يوم!";
+                ExpiryStatusMessage = Loc.IsKurdish ? $"❌ بەسەرچووە لە پێش {Math.Abs(DaysRemainingUntilExpiry)} ڕۆژ!" : $"❌ منتهي الصلاحية منذ {Math.Abs(DaysRemainingUntilExpiry)} يوم!";
             else if (DaysRemainingUntilExpiry <= ExpiryAlertDays)
-                ExpiryStatusMessage = $"⚠️ يوشك على الانتهاء خلال {DaysRemainingUntilExpiry} يوم!";
+                ExpiryStatusMessage = Loc.IsKurdish ? $"⚠️ کەمتر لە {DaysRemainingUntilExpiry} ڕۆژی ماوە!" : $"⚠️ يوشك على الانتهاء خلال {DaysRemainingUntilExpiry} يوم!";
             else
-                ExpiryStatusMessage = $"✅ صالح (متبقي {DaysRemainingUntilExpiry} يوم)";
+                ExpiryStatusMessage = Loc.IsKurdish ? $"✅ شیاوە ({DaysRemainingUntilExpiry} ڕۆژی ماوە)" : $"✅ صالح (متبقي {DaysRemainingUntilExpiry} يوم)";
         }
         else
         {
             DaysRemainingUntilExpiry = 0;
-            ExpiryStatusMessage = "لم يتم تحديد تاريخ صلاحية";
+            ExpiryStatusMessage = Loc.IsKurdish ? "بەرواری بەسەرچوون دیاری نەکراوە" : "لم يتم تحديد تاريخ صلاحية";
         }
     }
 
@@ -648,6 +694,7 @@ public class AddProductFullViewModel : BaseViewModel
         WholesalePrice = p.WholesalePrice;
         CartonSellingPrice = p.CartonSellingPrice;
 
+        HasExpiryDate = p.ExpiryDate.HasValue;
         ExpiryDate = p.ExpiryDate;
         ExpiryAlertDays = p.ExpiryAlertDays;
 
@@ -693,6 +740,7 @@ public class AddProductFullViewModel : BaseViewModel
         WholesalePrice = 0;
         CartonSellingPrice = 0;
 
+        HasExpiryDate = false;
         ExpiryDate = null;
         ExpiryAlertDays = 30;
         CreatedAtString = "--";
@@ -724,6 +772,44 @@ public class AddProductFullViewModel : BaseViewModel
         if (Price <= 0 && CartonSellingPrice <= 0)
         {
             MessageBox.Show(Loc.IsKurdish ? "تکایە نرخی فرۆشتنی تاک یان کارتۆن بنووسە" : "يرجى إدخال سعر بيع المفرد أو سعر بيع الكرتون.", Loc.IsKurdish ? "ئاگاداری" : "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        // فحص ومنع البيع بخسارة إذا كان سعر البيع أقل من سعر الشراء أو التكلفة
+        if (Price > 0 && Cost > 0 && Price < Cost)
+        {
+            string msg = Loc.IsKurdish
+                ? $"ناتوانرێت کاڵاکە پاشەکەوت بکرێت چونکە نرخی فرۆشتنی تاک ({Price:N0} د.ع) کەمترە لە تێچووی کڕین ({Cost:N0} د.ع)!\nتکایە نرخەکە چاک بکە بۆ ڕێگریکردن لە زەرەر."
+                : $"لا يمكن حفظ المادة لأن سعر بيع المفرد ({Price:N0} د.ع) أقل من تكلفة شراء القطعة ({Cost:N0} د.ع)!\nيرجى تصحيح السعر لمنع الخسارة.";
+            MessageBox.Show(msg, Loc.IsKurdish ? "ئاگاداری نرخی فرۆشتن" : "تحذير سعر البيع", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (CartonSellingPrice > 0 && CartonPurchasePrice > 0 && CartonSellingPrice < CartonPurchasePrice)
+        {
+            string msg = Loc.IsKurdish
+                ? $"ناتوانرێت کاڵاکە پاشەکەوت بکرێت چونکە نرخی فرۆشتنی کارتۆن ({CartonSellingPrice:N0} د.ع) کەمترە لە نرخی کڕینی کارتۆن ({CartonPurchasePrice:N0} د.ع)!\nتکایە نرخەکە چاک بکە."
+                : $"لا يمكن حفظ المادة لأن سعر بيع الكرتون ({CartonSellingPrice:N0} د.ع) أقل من سعر شراء الكرتون ({CartonPurchasePrice:N0} د.ع)!\nيرجى تصحيح سعر بيع الكرتون لمنع الخسارة.";
+            MessageBox.Show(msg, Loc.IsKurdish ? "ئاگاداری نرخی کارتۆن" : "تحذير سعر الكرتون", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (WholesalePrice > 0 && Cost > 0 && WholesalePrice < Cost)
+        {
+            string msg = Loc.IsKurdish
+                ? $"ناتوانرێت کاڵاکە پاشەکەوت بکرێت چونکە نرخی فرۆشتنی کۆ ({WholesalePrice:N0} د.ع) کەمترە لە تێچووی کڕین ({Cost:N0} د.ع)!\nتکایە نرخەکە چاک بکە."
+                : $"لا يمكن حفظ المادة لأن سعر بيع الجملة ({WholesalePrice:N0} د.ع) أقل من تكلفة شراء القطعة ({Cost:N0} د.ع)!\nيرجى تصحيح السعر لمنع الخسارة.";
+            MessageBox.Show(msg, Loc.IsKurdish ? "ئاگاداری نرخی جملە" : "تحذير سعر الجملة", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        // فحص تاريخ الصلاحية عند تفعيله
+        if (HasExpiryDate && !ExpiryDate.HasValue)
+        {
+            string msg = Loc.IsKurdish
+                ? "بەرواری بەسەرچوونت چالاک کردووە، تکایە بەرواری بەسەرچوونی دروست دیاری بکە یان بنووسە پێش پاشەکەوتکردن."
+                : "لقد قمت بتفعيل تاريخ الصلاحية، يرجى إدخال تاريخ انتهاء الصلاحية للمادة قبل الحفظ.";
+            MessageBox.Show(msg, Loc.IsKurdish ? "ئاگاداری بەروار" : "تنبيه الصلاحية", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -779,7 +865,7 @@ public class AddProductFullViewModel : BaseViewModel
             WholesalePrice = WholesalePrice,
             CartonSellingPrice = CartonSellingPrice,
 
-            ExpiryDate = ExpiryDate,
+            ExpiryDate = HasExpiryDate ? ExpiryDate : null,
             ExpiryAlertDays = ExpiryAlertDays,
             TaxRate = 0.0m,
             IsActive = true

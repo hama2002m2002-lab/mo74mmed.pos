@@ -77,11 +77,14 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Expiry Date Label -->
-                    <TextBlock Text="{Binding Loc[Add_ExpiryDate]}" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <!-- Enable Expiry Date Checkbox -->
+                    <CheckBox IsChecked="{Binding HasExpiryDate, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,12,0" Cursor="Hand">
+                        <TextBlock Text="{Binding Loc[Add_EnableExpiry]}" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                    </CheckBox>
                     
                     <!-- Date Input (Manual Left-To-Right + Calendar Picker, dynamic for light/dark theme) -->
-                    <Border Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" CornerRadius="8" Height="36" Margin="0,0,16,0" Padding="4,2" VerticalAlignment="Center">
+                    <Border Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" CornerRadius="8" Height="36" Margin="0,0,16,0" Padding="4,2" VerticalAlignment="Center"
+                            IsEnabled="{Binding HasExpiryDate}" Opacity="{Binding HasExpiryDate, Converter={StaticResource BoolToVis}, FallbackValue=1.0}">
                         <Grid FlowDirection="LeftToRight">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="110" />
@@ -107,7 +110,8 @@
                     <TextBlock Text="{Binding Loc[Add_AlertDays]}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,6,0" />
                     
                     <!-- Alert Days Input (Dynamic light/dark theme, LTR) -->
-                    <Border Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" CornerRadius="8" Width="70" Height="36" Margin="0,0,16,0" VerticalAlignment="Center">
+                    <Border Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" CornerRadius="8" Width="70" Height="36" Margin="0,0,16,0" VerticalAlignment="Center"
+                            IsEnabled="{Binding HasExpiryDate}">
                         <TextBox Text="{Binding ExpiryAlertDays, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}'}" 
                                  GotFocus="NumberTextBox_GotFocus"
                                  Background="Transparent" Foreground="{DynamicResource PrimaryAccent}" BorderThickness="0"
@@ -211,7 +215,13 @@
                                       Height="42" VerticalContentAlignment="Center" 
                                       Background="{DynamicResource BgDarkPrimary}" 
                                       Foreground="{DynamicResource TextPrimary}" 
-                                      FontSize="13" />
+                                      FontSize="13">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}" FontSize="13" Padding="4,2" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                         </StackPanel>
 
                         <!-- Supplier / Rep Field with Small Add/Details Button -->
