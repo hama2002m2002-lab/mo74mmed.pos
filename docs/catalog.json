@@ -1,5 +1,17 @@
 {
-  "updatedAt": "2026-08-20T22:45:05.8267150Z",
-  "productsCount": 0,
-  "products": []
+  "updatedAt": "2026-08-20T22:45:35.8489737Z",
+  "productsCount": 1,
+  "products": [
+    {
+      "id": "4b4ac806-d2f6-4638-aa15-63b98fd730be",
+      "name": "\u0644\u0644",
+      "barcode": "2002455656496",
+      "price": 500.0,
+      "wholesalePrice": 0.0,
+      "cartonPrice": 12000.0,
+      "stock": 53568.0,
+      "unit": "\u0642\u0637\u0639\u0629",
+      "itemsPerCarton": 24.0
+    }
+  ]
 }
