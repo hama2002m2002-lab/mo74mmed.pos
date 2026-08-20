@@ -362,6 +362,21 @@
                               CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
                               HorizontalGridLinesBrush="{DynamicResource BorderDark}"
                               RowHeight="44">
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="Cursor" Value="Hand" />
+                                <Setter Property="Background" Value="Transparent" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource BgDarkHover}" />
+                                    </Trigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                        <Setter Property="Background" Value="#2D0B0B" />
+                                        <Setter Property="Foreground" Value="#F87171" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Header="{Binding Loc[Rep_InvoiceNo]}" Width="180">
                                 <DataGridTemplateColumn.CellTemplate>
