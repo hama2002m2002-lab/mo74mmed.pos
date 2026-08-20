@@ -172,6 +172,15 @@ public class LocalizationManager : INotifyPropertyChanged
         _ar["Drawer_Reason"] = "السبب / البيان";
         _ar["Drawer_Confirm"] = "تأكيد العملية";
         _ar["Drawer_Cancel"] = "إلغاء";
+        _ar["Drawer_MovementVoucher"] = "سند حركة نقدية بالصندوق";
+        _ar["Drawer_PrintVoucher"] = "🖨️ طباعة السند";
+        _ar["Drawer_VoucherNumber"] = "رقم السند:";
+        _ar["Drawer_MovementType"] = "نوع الحركة:";
+        _ar["Drawer_Cashier"] = "الكاشير:";
+        _ar["Drawer_Date"] = "التاريخ والوقت:";
+        _ar["Drawer_AmountLabel"] = "المبلغ المالي:";
+        _ar["Drawer_ReasonLabel"] = "السبب / البيان:";
+        _ar["Drawer_Close"] = "إغلاق";
 
         // Cashier POS
         _ar["Pos_Title"] = "نقطة البيع والكاشير السريع";
@@ -622,6 +631,15 @@ public class LocalizationManager : INotifyPropertyChanged
         _ku["Drawer_Reason"] = "هۆکار / تێبینی";
         _ku["Drawer_Confirm"] = "تەئکیدکردنەوە";
         _ku["Drawer_Cancel"] = "پاشگەزبوونەوە";
+        _ku["Drawer_MovementVoucher"] = "سەندی جوڵەی پارەی سندووق";
+        _ku["Drawer_PrintVoucher"] = "🖨️ چاپی سەند";
+        _ku["Drawer_VoucherNumber"] = "ژمارەی سەند:";
+        _ku["Drawer_MovementType"] = "جۆری جوڵە:";
+        _ku["Drawer_Cashier"] = "کاشێر:";
+        _ku["Drawer_Date"] = "بەروار و کات:";
+        _ku["Drawer_AmountLabel"] = "بڕی پارە:";
+        _ku["Drawer_ReasonLabel"] = "هۆکار و تێبینی:";
+        _ku["Drawer_Close"] = "داخستن";
 
         // Cashier POS
         _ku["Pos_Title"] = "خاڵی فرۆشتن و کاشێری خێرا";

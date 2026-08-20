@@ -571,6 +571,43 @@ public class MainCashierViewModel : BaseViewModel
         set => SetProperty(ref _drawerInputReason, value);
     }
 
+    #region Cash Movement Voucher (سند حركة الصندوق - قبض وصرف)
+
+    private CashDrawerMovement? _selectedCashMovementVoucher;
+    public CashDrawerMovement? SelectedCashMovementVoucher
+    {
+        get => _selectedCashMovementVoucher;
+        set
+        {
+            if (SetProperty(ref _selectedCashMovementVoucher, value))
+            {
+                OnPropertyChanged(nameof(CashMovementVoucherTitle));
+                OnPropertyChanged(nameof(CashMovementVoucherBadgeBg));
+                OnPropertyChanged(nameof(CashMovementVoucherBadgeFg));
+            }
+        }
+    }
+
+    private bool _isCashMovementVoucherOpen;
+    public bool IsCashMovementVoucherOpen
+    {
+        get => _isCashMovementVoucherOpen;
+        set => SetProperty(ref _isCashMovementVoucherOpen, value);
+    }
+
+    public string CashMovementVoucherTitle => SelectedCashMovementVoucher?.MovementType == "Withdrawal"
+        ? (Loc.IsKurdish ? "📤 سەنەدی راکێشانی نەقد لە سندووق (سند صرف)" : "📤 سند سحب نقد من الصندوق (سند صرف)")
+        : (Loc.IsKurdish ? "📥 سەنەدی دانانی نەقد لە سندووق (سند قبض)" : "📥 سند إيداع نقد في الصندوق (سند قبض)");
+
+    public string CashMovementVoucherBadgeBg => SelectedCashMovementVoucher?.MovementType == "Withdrawal" ? "#7F1D1D" : "#064E3B";
+    public string CashMovementVoucherBadgeFg => SelectedCashMovementVoucher?.MovementType == "Withdrawal" ? "#FECACA" : "#34D399";
+
+    public ICommand CloseCashMovementVoucherCommand { get; }
+    public ICommand PrintCashMovementVoucherCommand { get; }
+    public ICommand OpenMovementVoucherFromItemCommand { get; }
+
+    #endregion
+
     #region Direct Item Return Modal Properties & Collections
 
     private bool _isDirectReturnModalOpen;
@@ -871,14 +908,22 @@ public class MainCashierViewModel : BaseViewModel
 
         ConfirmDrawerActionCommand = new AsyncRelayCommand(async () =>
         {
-            if (decimal.TryParse(DrawerInputAmount, out var amt) && amt > 0)
+            decimal amt = ParseDecimalSafe(DrawerInputAmount);
+            if (amt > 0)
             {
+                var user = _context.Users.FirstOrDefault();
+                string cName = user?.FullName ?? (Loc.IsKurdish ? "محەمەد کاشێر" : "محمد الكاشير");
+                string defaultReason = DrawerActionType == "Withdrawal"
+                    ? (Loc.IsKurdish ? "راکێشانی پارە لە سندووق" : "سحب نقدي من الدرج")
+                    : (Loc.IsKurdish ? "دانانی پارە لە سندووق" : "إيداع نقدي في الدرج");
+
                 var mov = new CashDrawerMovement
                 {
-                    CashierName = "محمد الكاشير",
+                    Id = Guid.NewGuid(),
+                    CashierName = cName,
                     MovementType = DrawerActionType,
                     Amount = amt,
-                    Reason = string.IsNullOrWhiteSpace(DrawerInputReason) ? (DrawerActionType == "Withdrawal" ? "سحب نقدي من الدرج" : "إيداع نقدي في الدرج") : DrawerInputReason,
+                    Reason = string.IsNullOrWhiteSpace(DrawerInputReason) ? defaultReason : DrawerInputReason.Trim(),
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -886,17 +931,46 @@ public class MainCashierViewModel : BaseViewModel
                 await _context.SaveChangesAsync();
 
                 IsDrawerActionPopupOpen = false;
-                await LoadDrawerCashDataAsync();
+                DrawerInputAmount = string.Empty;
+                DrawerInputReason = string.Empty;
 
-                string msg = DrawerActionType == "Withdrawal" 
-                    ? (Loc.IsKurdish ? $"بە سەرکەوتوویی بڕی {amt:N0} د.ع لە سندووق راکێشرا" : $"تم سحب مبلغ {amt:N0} د.ع من الدرج بنجاح")
-                    : (Loc.IsKurdish ? $"بە سەرکەوتوویی بڕی {amt:N0} د.ع خرایە سندووقەوە" : $"تم إيداع مبلغ {amt:N0} د.ع في الدرج بنجاح");
-                
-                MessageBox.Show(msg, Loc.IsKurdish ? "سندووق" : "درج الكاشير", MessageBoxButton.OK, MessageBoxImage.Information);
+                await LoadDrawerCashDataAsync();
+                await LoadSalesHistoryArchiveAsync();
+
+                // فتح سند الحركة النقدية فوراً لرؤية التفاصيل وطباعة الوصل
+                SelectedCashMovementVoucher = mov;
+                IsCashMovementVoucherOpen = true;
             }
             else
             {
                 MessageBox.Show(Loc.IsKurdish ? "تکایە بڕی پارەی دروست بنووسە" : "يرجى كتابة مبلغ صحيح أكبر من الصفر", Loc.IsKurdish ? "هەڵە" : "خطأ", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        });
+
+        CloseCashMovementVoucherCommand = new RelayCommand(() =>
+        {
+            IsCashMovementVoucherOpen = false;
+        });
+
+        PrintCashMovementVoucherCommand = new RelayCommand(() =>
+        {
+            if (SelectedCashMovementVoucher != null)
+            {
+                PrintCashMovementVoucher(SelectedCashMovementVoucher);
+            }
+        });
+
+        OpenMovementVoucherFromItemCommand = new RelayCommand((param) =>
+        {
+            if (param is CashierLiveTransactionItem item && item.AssociatedMovement != null)
+            {
+                SelectedCashMovementVoucher = item.AssociatedMovement;
+                IsCashMovementVoucherOpen = true;
+            }
+            else if (param is CashDrawerMovement mov)
+            {
+                SelectedCashMovementVoucher = mov;
+                IsCashMovementVoucherOpen = true;
             }
         });
 
@@ -908,11 +982,13 @@ public class MainCashierViewModel : BaseViewModel
 
         SaveOpeningBalanceCommand = new RelayCommand(() =>
         {
-            if (decimal.TryParse(OpeningBalanceInputText, out var bal) && bal >= 0)
+            decimal bal = ParseDecimalSafe(OpeningBalanceInputText);
+            if (bal >= 0)
             {
                 DrawerOpeningBalance = bal;
                 IsEditingOpeningBalance = false;
                 StatusMessage = Loc.IsKurdish ? $"پارەی دەستپێک دیاریکرا: {bal:N0} د.ع" : $"تم تعيين الرصيد الافتتاحي: {bal:N0} د.ع";
+                _ = LoadDrawerCashDataAsync();
             }
             else
             {
@@ -1682,6 +1758,7 @@ public class MainCashierViewModel : BaseViewModel
                 BadgeForeground = isDeposit ? "#34D399" : "#FECACA",
                 CashierAndDate = $"{dateStr} • " + (_context.Users.FirstOrDefault()?.FullName ?? "كاشير عام"),
                 Amount = isDeposit ? m.Amount : -m.Amount,
+                AssociatedMovement = m,
                 CreatedAt = m.CreatedAt
             });
         }
@@ -1954,6 +2031,71 @@ public class MainCashierViewModel : BaseViewModel
         }
     }
 
+    private void PrintCashMovementVoucher(CashDrawerMovement movement)
+    {
+        try
+        {
+            PrintDialog printDialog = new PrintDialog();
+            if (printDialog.ShowDialog() == true)
+            {
+                FlowDocument doc = CreateCashMovementFlowDocument(movement, printDialog.PrintableAreaWidth);
+                IDocumentPaginatorSource idpSource = doc;
+                printDialog.PrintDocument(idpSource.DocumentPaginator, $"سند حركة صندوق {movement.Id.ToString().Substring(0, 5)}");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"حدث خطأ أثناء طباعة السند: {ex.Message}", "خطأ في الطباعة", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private FlowDocument CreateCashMovementFlowDocument(CashDrawerMovement movement, double printableWidth)
+    {
+        FlowDocument doc = new FlowDocument
+        {
+            PageWidth = printableWidth > 0 ? Math.Min(printableWidth, 320) : 300,
+            PagePadding = new Thickness(10),
+            FontFamily = new FontFamily("Segoe UI, Tahoma, Arial"),
+            FlowDirection = FlowDirection.RightToLeft
+        };
+
+        bool isKu = Loc.IsKurdish;
+        bool isWithdrawal = movement.MovementType == "Withdrawal";
+        string docTitle = isWithdrawal 
+            ? (isKu ? "سەندی راکێشانی پارە لە سندووق (صرف)" : "سند سحب نقد من الصندوق (سند صرف)")
+            : (isKu ? "سەندی دانانی پارە لە سندووق (قبض)" : "سند إيداع نقد في الصندوق (سند قبض)");
+
+        Paragraph p = new Paragraph { TextAlignment = TextAlignment.Center, Margin = new Thickness(0, 0, 0, 8) };
+        p.Inlines.Add(new Bold(new Run("⚡ 7AMO POS SYSTEM\n")) { FontSize = 15 });
+        p.Inlines.Add(new Bold(new Run($"{docTitle}\n")) { FontSize = 12, Foreground = isWithdrawal ? Brushes.DarkRed : Brushes.DarkGreen });
+        p.Inlines.Add(new Run("-------------------------------------------\n") { Foreground = Brushes.Gray });
+        p.Inlines.Add(new Run($"{(isKu ? "ژمارەی سەند:" : "رقم السند:")} MOV-{movement.CreatedAt.ToLocalTime():yyyyMMdd}-{movement.Id.ToString().Substring(0, 5).ToUpper()}\n") { FontSize = 9.5 });
+        p.Inlines.Add(new Run($"{(isKu ? "بەروار و کات:" : "التاريخ والوقت:")} {movement.CreatedAt.ToLocalTime():yyyy-MM-dd hh:mm tt}\n") { FontSize = 9.5 });
+        p.Inlines.Add(new Run($"{(isKu ? "کاشێر:" : "الكاشير:")} {movement.CashierName}\n") { FontSize = 9.5, FontWeight = FontWeights.Bold });
+        p.Inlines.Add(new Run("-------------------------------------------\n") { Foreground = Brushes.Gray });
+
+        p.Inlines.Add(new Bold(new Run($"{(isKu ? "بڕی پارە:" : "المبلغ:")} {movement.Amount:N0} د.ع\n")) { FontSize = 16, Foreground = isWithdrawal ? Brushes.DarkRed : Brushes.DarkGreen });
+        p.Inlines.Add(new Run("-------------------------------------------\n") { Foreground = Brushes.Gray });
+        p.Inlines.Add(new Run($"{(isKu ? "هۆکار و تێبینی:" : "السبب / البيان:")}\n") { FontSize = 10, FontWeight = FontWeights.Bold });
+        p.Inlines.Add(new Run($"{movement.Reason}\n\n") { FontSize = 10.5 });
+        p.Inlines.Add(new Run("===========================================\n") { Foreground = Brushes.Gray });
+        p.Inlines.Add(new Run(isKu ? "واژۆی وەرگر / کاشێر: ........................\n" : "توقيع المستلم / الكاشير: ........................\n") { FontSize = 9 });
+        p.Inlines.Add(new Run("===========================================\n") { Foreground = Brushes.Gray });
+        doc.Blocks.Add(p);
+
+        return doc;
+    }
+
+    public static decimal ParseDecimalSafe(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return 0;
+        string cleaned = input.Trim()
+            .Replace("٠", "0").Replace("١", "1").Replace("٢", "2").Replace("٣", "3").Replace("٤", "4")
+            .Replace("٥", "5").Replace("٦", "6").Replace("٧", "7").Replace("٨", "8").Replace("٩", "9")
+            .Replace(",", "").Replace(" ", "");
+        return decimal.TryParse(cleaned, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var val) ? val : 0;
+    }
+
     #endregion
 }
 
@@ -2005,5 +2147,6 @@ public class CashierLiveTransactionItem
     public string IconBackground => Amount >= 0 ? "#064E3B" : "#450A0A";
     public string IconForeground => Amount >= 0 ? "#34D399" : "#F87171";
     public Sale? AssociatedSale { get; set; }
+    public CashDrawerMovement? AssociatedMovement { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -964,15 +964,41 @@
                                                     </Button.Template>
                                                 </Button>
 
+                                                <!-- Inspect Cash Movement Voucher Button (Only for Deposits and Withdrawals) -->
+                                                <Button Grid.Column="1" Command="{Binding DataContext.OpenMovementVoucherFromItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding AssociatedMovement}" 
+                                                        Cursor="Hand" Height="28" Padding="10,0" Margin="0,0,10,0" VerticalAlignment="Center">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding AssociatedMovement}" Value="{x:Null}">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="#064E3B" BorderBrush="#10B981" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="📄 " FontSize="11" />
+                                                                    <TextBlock Text="{Binding DataContext.Loc[Drawer_MovementVoucher], RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="10.5" FontWeight="Bold" Foreground="#34D399" />
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+
                                                 <!-- Details in Center -->
                                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                                         <Border Background="{Binding BadgeBackground}" CornerRadius="6" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding BadgeText}" FontSize="9.5" FontWeight="Bold" Foreground="{Binding BadgeForeground}" />
                                                         </Border>
-                                                        <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
                                                     </StackPanel>
-                                                    <TextBlock Text="{Binding CashierAndDate}" FontSize="10" Foreground="#64748B" Margin="0,3,0,0" HorizontalAlignment="Right" />
+                                                    <TextBlock Text="{Binding CashierAndDate}" FontSize="10" Foreground="{DynamicResource TextSecondary}" Margin="0,3,0,0" HorizontalAlignment="Right" />
                                                 </StackPanel>
 
                                                 <!-- Icon Box on Right (in RTL) -->
@@ -1671,22 +1697,25 @@
         <!-- ======================================================== -->
         <!-- POPUP MODAL 3: CASH DRAWER ACTION (INPUT AMOUNT & REASON) -->
         <!-- ======================================================== -->
-        <Border Grid.RowSpan="3" Background="#EE000000" 
+        <Border Grid.RowSpan="3" Background="#70000000" 
                 Visibility="{Binding IsDrawerActionPopupOpen, Converter={StaticResource BoolToVis}}" 
                 Margin="-18,-10">
-            <Border Width="420" Background="{DynamicResource BgDarkSecondary}" CornerRadius="16" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="2" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Border Width="420" Background="{DynamicResource BgDarkSecondary}" CornerRadius="18" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5" Padding="22" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" Color="#000000" Opacity="0.85" ShadowDepth="10" />
+                </Border.Effect>
                 <StackPanel>
                     <TextBlock Text="{Binding DrawerActionTitle}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,16" />
 
                     <!-- Input Amount -->
                     <TextBlock Text="{Binding Loc[Drawer_Amount]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
                     <TextBox Style="{DynamicResource ModernDarkTextBox}" Text="{Binding DrawerInputAmount, UpdateSourceTrigger=PropertyChanged}" 
-                             FontSize="16" FontWeight="Bold" Padding="10,6" Margin="0,0,0,12" />
+                             FontSize="16" FontWeight="Bold" Padding="10,6" Margin="0,0,0,12" Background="{DynamicResource BgDarkPrimary}" Foreground="{DynamicResource TextPrimary}" BorderBrush="{DynamicResource BorderDark}" />
 
                     <!-- Input Reason -->
                     <TextBlock Text="{Binding Loc[Drawer_Reason]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
                     <TextBox Style="{DynamicResource ModernDarkTextBox}" Text="{Binding DrawerInputReason, UpdateSourceTrigger=PropertyChanged}" 
-                             FontSize="13" Padding="10,6" Margin="0,0,0,18" />
+                             FontSize="13" Padding="10,6" Margin="0,0,0,18" Background="{DynamicResource BgDarkPrimary}" Foreground="{DynamicResource TextPrimary}" BorderBrush="{DynamicResource BorderDark}" />
 
                     <!-- Actions -->
                     <Grid>
@@ -1699,6 +1728,83 @@
                         </Button>
                         <Button Grid.Column="1" Style="{DynamicResource ActionButton}" Command="{Binding CloseDrawerActionPopupCommand}" Height="40" Margin="6,0,0,0">
                             <TextBlock Text="{Binding Loc[Drawer_Cancel]}" />
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- ======================================================== -->
+        <!-- POPUP MODAL 5: CASH MOVEMENT VOUCHER (سند إيداع / سحب نقد) -->
+        <!-- ======================================================== -->
+        <Border Grid.RowSpan="3" Background="#70000000" 
+                Visibility="{Binding IsCashMovementVoucherOpen, Converter={StaticResource BoolToVis}}" 
+                Margin="-18,-10">
+            <Border Width="480" Background="{DynamicResource BgDarkSecondary}" CornerRadius="18" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" Color="#000000" Opacity="0.85" ShadowDepth="10" />
+                </Border.Effect>
+
+                <StackPanel>
+                    <!-- Header -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="{Binding CashMovementVoucherBadgeBg}" CornerRadius="8" Padding="8,4" Margin="0,0,8,0">
+                                <TextBlock Text="{Binding CashMovementVoucherTitle}" FontSize="13" FontWeight="Bold" Foreground="{Binding CashMovementVoucherBadgeFg}" />
+                            </Border>
+                        </StackPanel>
+                        <Button Grid.Column="1" Background="Transparent" BorderThickness="0" Command="{Binding CloseCashMovementVoucherCommand}" Cursor="Hand" Padding="4">
+                            <TextBlock Text="✕" FontSize="18" FontWeight="Black" Foreground="{DynamicResource DangerBrush}" />
+                        </Button>
+                    </Grid>
+
+                    <!-- Voucher Content Box -->
+                    <Border Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="16" Margin="0,0,0,16">
+                        <StackPanel>
+                            <!-- Voucher Date & Cashier -->
+                            <Grid Margin="0,0,0,8">
+                                <TextBlock Text="{Binding Loc[Drawer_Date]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding SelectedCashMovementVoucher.CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right" />
+                            </Grid>
+
+                            <Grid Margin="0,0,0,8">
+                                <TextBlock Text="{Binding Loc[Drawer_Cashier]}" FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="{Binding SelectedCashMovementVoucher.CashierName}" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right" />
+                            </Grid>
+
+                            <Separator Background="{DynamicResource BorderDark}" Margin="0,0,0,10" />
+
+                            <!-- Big Amount Box -->
+                            <Border Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" Padding="12,10" Margin="0,0,0,12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="{Binding Loc[Drawer_AmountLabel]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" Margin="0,0,0,2" />
+                                    <TextBlock Text="{Binding SelectedCashMovementVoucher.FormattedAmount}" FontSize="24" FontWeight="Black" Foreground="{Binding CashMovementVoucherBadgeFg}" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Reason / Statement -->
+                            <TextBlock Text="{Binding Loc[Drawer_ReasonLabel]}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <Border Background="{DynamicResource BgDarkSecondary}" CornerRadius="8" Padding="10,8" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                                <TextBlock Text="{Binding SelectedCashMovementVoucher.Reason}" FontSize="13" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Actions -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Style="{DynamicResource PrimaryAccentButton}" Command="{Binding PrintCashMovementVoucherCommand}" Height="40" Margin="0,0,6,0">
+                            <TextBlock Text="{Binding Loc[Drawer_PrintVoucher]}" FontWeight="Bold" />
+                        </Button>
+                        <Button Grid.Column="1" Style="{DynamicResource ActionButton}" Command="{Binding CloseCashMovementVoucherCommand}" Height="40" Margin="6,0,0,0">
+                            <TextBlock Text="{Binding Loc[Drawer_Close]}" />
                         </Button>
                     </Grid>
                 </StackPanel>
