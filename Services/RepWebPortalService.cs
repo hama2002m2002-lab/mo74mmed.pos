@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -18,7 +19,7 @@ public class RepWebPortalService
     private static readonly Lazy<RepWebPortalService> _instance = new(() => new RepWebPortalService());
     public static RepWebPortalService Instance => _instance.Value;
 
-    private HttpListener? _listener;
+    private TcpListener? _tcpListener;
     private CancellationTokenSource? _cts;
     private bool _isRunning = false;
     public int Port { get; private set; } = 5000;
@@ -34,34 +35,17 @@ public class RepWebPortalService
         Port = port;
         try
         {
-            _listener = new HttpListener();
-            _listener.Prefixes.Add($"http://*:{Port}/");
-            _listener.Prefixes.Add($"http://localhost:{Port}/");
-            _listener.Start();
-
             _cts = new CancellationTokenSource();
+            _tcpListener = new TcpListener(IPAddress.Any, Port);
+            _tcpListener.Start();
             _isRunning = true;
 
             Task.Run(() => ListenLoopAsync(_cts.Token));
-            System.Diagnostics.Debug.WriteLine($"Rep Web Portal started at {PortalUrl}");
+            System.Diagnostics.Debug.WriteLine($"Rep Web Portal (TcpListener) started at {PortalUrl}");
         }
         catch (Exception ex)
         {
-            // Fallback to localhost prefix if wildcard requires elevated admin rights
-            try
-            {
-                _listener = new HttpListener();
-                _listener.Prefixes.Add($"http://localhost:{Port}/");
-                _listener.Prefixes.Add($"http://127.0.0.1:{Port}/");
-                _listener.Start();
-                _cts = new CancellationTokenSource();
-                _isRunning = true;
-                Task.Run(() => ListenLoopAsync(_cts.Token));
-            }
-            catch (Exception ex2)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to start Rep Web Portal: {ex2.Message}");
-            }
+            System.Diagnostics.Debug.WriteLine($"Failed to start Rep Web Portal: {ex.Message}");
         }
     }
 
@@ -72,8 +56,7 @@ public class RepWebPortalService
         try
         {
             _cts?.Cancel();
-            _listener?.Stop();
-            _listener?.Close();
+            _tcpListener?.Stop();
         }
         catch { }
     }
@@ -84,9 +67,9 @@ public class RepWebPortalService
         {
             try
             {
-                if (_listener == null || !_listener.IsListening) break;
-                var context = await _listener.GetContextAsync();
-                _ = Task.Run(() => ProcessRequestAsync(context));
+                if (_tcpListener == null) break;
+                var client = await _tcpListener.AcceptTcpClientAsync(token);
+                _ = Task.Run(() => HandleClientAsync(client));
             }
             catch
             {
@@ -95,64 +78,130 @@ public class RepWebPortalService
         }
     }
 
-    private async Task ProcessRequestAsync(HttpListenerContext context)
+    private async Task HandleClientAsync(TcpClient client)
     {
-        var request = context.Request;
-        var response = context.Response;
-
-        // CORS headers
-        response.Headers.Add("Access-Control-Allow-Origin", "*");
-        response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
-
-        if (request.HttpMethod == "OPTIONS")
-        {
-            response.StatusCode = 200;
-            response.Close();
-            return;
-        }
-
-        string rawUrl = request.Url?.AbsolutePath ?? "/";
-
-        try
-        {
-            if (rawUrl == "/" || rawUrl.EndsWith("/index.html", StringComparison.OrdinalIgnoreCase))
-            {
-                await ServeHtmlAppAsync(response);
-            }
-            else if (rawUrl.Equals("/api/products", StringComparison.OrdinalIgnoreCase) && request.HttpMethod == "GET")
-            {
-                await HandleGetProductsAsync(response);
-            }
-            else if (rawUrl.Equals("/api/orders", StringComparison.OrdinalIgnoreCase) && request.HttpMethod == "POST")
-            {
-                await HandlePostOrderAsync(request, response);
-            }
-            else if (rawUrl.Equals("/api/orders", StringComparison.OrdinalIgnoreCase) && request.HttpMethod == "GET")
-            {
-                await HandleGetOrdersAsync(request, response);
-            }
-            else
-            {
-                response.StatusCode = 404;
-                response.Close();
-            }
-        }
-        catch (Exception ex)
+        using (client)
+        using (var networkStream = client.GetStream())
         {
             try
             {
-                response.StatusCode = 500;
-                byte[] errBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { error = ex.Message }));
-                response.ContentType = "application/json; charset=utf-8";
-                await response.OutputStream.WriteAsync(errBytes, 0, errBytes.Length);
-                response.Close();
+                var buffer = new byte[8192];
+                int bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
+                if (bytesRead == 0) return;
+
+                string rawRequest = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                var lines = rawRequest.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+                if (lines.Length == 0) return;
+
+                var requestLine = lines[0].Split(' ');
+                if (requestLine.Length < 2) return;
+
+                string method = requestLine[0].ToUpperInvariant();
+                string fullUrl = requestLine[1];
+                string path = fullUrl.Contains('?') ? fullUrl.Substring(0, fullUrl.IndexOf('?')) : fullUrl;
+                string queryString = fullUrl.Contains('?') ? fullUrl.Substring(fullUrl.IndexOf('?') + 1) : "";
+
+                // CORS Preflight
+                if (method == "OPTIONS")
+                {
+                    await SendResponseAsync(networkStream, 200, "text/plain", Array.Empty<byte>());
+                    return;
+                }
+
+                if (path == "/" || path.EndsWith("/index.html", StringComparison.OrdinalIgnoreCase))
+                {
+                    string html = GetEmbeddedMobileAppHtml();
+                    byte[] body = Encoding.UTF8.GetBytes(html);
+                    await SendResponseAsync(networkStream, 200, "text/html; charset=utf-8", body);
+                }
+                else if (path.Equals("/api/products", StringComparison.OrdinalIgnoreCase) && method == "GET")
+                {
+                    byte[] body = await GetProductsJsonAsync();
+                    await SendResponseAsync(networkStream, 200, "application/json; charset=utf-8", body);
+                }
+                else if (path.Equals("/api/orders", StringComparison.OrdinalIgnoreCase) && method == "GET")
+                {
+                    string repName = ExtractQueryParam(queryString, "rep");
+                    byte[] body = await GetOrdersJsonAsync(repName);
+                    await SendResponseAsync(networkStream, 200, "application/json; charset=utf-8", body);
+                }
+                else if (path.Equals("/api/orders", StringComparison.OrdinalIgnoreCase) && method == "POST")
+                {
+                    // Extract JSON body
+                    int bodyIndex = rawRequest.IndexOf("\r\n\r\n");
+                    string reqBody = "";
+                    if (bodyIndex != -1)
+                    {
+                        reqBody = rawRequest.Substring(bodyIndex + 4);
+                    }
+
+                    byte[] body = await SaveOrderFromJsonAsync(reqBody);
+                    await SendResponseAsync(networkStream, 200, "application/json; charset=utf-8", body);
+                }
+                else
+                {
+                    byte[] body = Encoding.UTF8.GetBytes("Not Found");
+                    await SendResponseAsync(networkStream, 404, "text/plain", body);
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                try
+                {
+                    byte[] body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { error = ex.Message }));
+                    await SendResponseAsync(networkStream, 500, "application/json; charset=utf-8", body);
+                }
+                catch { }
+            }
         }
     }
 
-    private async Task HandleGetProductsAsync(HttpListenerResponse response)
+    private static string ExtractQueryParam(string queryString, string key)
+    {
+        if (string.IsNullOrWhiteSpace(queryString)) return "";
+        var pairs = queryString.Split('&');
+        foreach (var p in pairs)
+        {
+            var parts = p.Split('=');
+            if (parts.Length == 2 && parts[0].Equals(key, StringComparison.OrdinalIgnoreCase))
+            {
+                return Uri.UnescapeDataString(parts[1]);
+            }
+        }
+        return "";
+    }
+
+    private static async Task SendResponseAsync(NetworkStream stream, int statusCode, string contentType, byte[] body)
+    {
+        string statusText = statusCode switch
+        {
+            200 => "OK",
+            400 => "Bad Request",
+            404 => "Not Found",
+            500 => "Internal Server Error",
+            _ => "OK"
+        };
+
+        var header = new StringBuilder();
+        header.Append($"HTTP/1.1 {statusCode} {statusText}\r\n");
+        header.Append($"Content-Type: {contentType}\r\n");
+        header.Append($"Content-Length: {body.Length}\r\n");
+        header.Append("Access-Control-Allow-Origin: *\r\n");
+        header.Append("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n");
+        header.Append("Access-Control-Allow-Headers: Content-Type\r\n");
+        header.Append("Connection: close\r\n");
+        header.Append("\r\n");
+
+        byte[] headerBytes = Encoding.UTF8.GetBytes(header.ToString());
+        await stream.WriteAsync(headerBytes, 0, headerBytes.Length);
+        if (body.Length > 0)
+        {
+            await stream.WriteAsync(body, 0, body.Length);
+        }
+        await stream.FlushAsync();
+    }
+
+    private async Task<byte[]> GetProductsJsonAsync()
     {
         using var db = new AppDbContext();
         var products = await db.Products
@@ -173,17 +222,11 @@ public class RepWebPortalService
             .ToListAsync();
 
         string json = JsonSerializer.Serialize(products);
-        byte[] bytes = Encoding.UTF8.GetBytes(json);
-        response.ContentType = "application/json; charset=utf-8";
-        response.StatusCode = 200;
-        await response.OutputStream.WriteAsync(bytes, 0, bytes.Length);
-        response.Close();
+        return Encoding.UTF8.GetBytes(json);
     }
 
-    private async Task HandleGetOrdersAsync(HttpListenerRequest request, HttpListenerResponse response)
+    private async Task<byte[]> GetOrdersJsonAsync(string repName)
     {
-        string repName = request.QueryString["rep"] ?? "";
-
         using var db = new AppDbContext();
         var query = db.SupplierOrders.Include(o => o.Items).AsQueryable();
 
@@ -212,11 +255,7 @@ public class RepWebPortalService
             .ToListAsync();
 
         string json = JsonSerializer.Serialize(orders);
-        byte[] bytes = Encoding.UTF8.GetBytes(json);
-        response.ContentType = "application/json; charset=utf-8";
-        response.StatusCode = 200;
-        await response.OutputStream.WriteAsync(bytes, 0, bytes.Length);
-        response.Close();
+        return Encoding.UTF8.GetBytes(json);
     }
 
     public class CreateOrderDto
@@ -239,19 +278,12 @@ public class RepWebPortalService
         public decimal UnitPrice { get; set; }
     }
 
-    private async Task HandlePostOrderAsync(HttpListenerRequest request, HttpListenerResponse response)
+    private async Task<byte[]> SaveOrderFromJsonAsync(string body)
     {
-        using var reader = new StreamReader(request.InputStream, request.ContentEncoding);
-        string body = await reader.ReadToEndAsync();
-
         var dto = JsonSerializer.Deserialize<CreateOrderDto>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         if (dto == null || string.IsNullOrWhiteSpace(dto.MarketName) || !dto.Items.Any())
         {
-            response.StatusCode = 400;
-            byte[] err = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { error = "بيانات الطلبية غير مكتملة" }));
-            await response.OutputStream.WriteAsync(err, 0, err.Length);
-            response.Close();
-            return;
+            return Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { error = "بيانات الطلبية غير مكتملة" }));
         }
 
         using var db = new AppDbContext();
@@ -285,21 +317,7 @@ public class RepWebPortalService
 
         OrderReceived?.Invoke();
 
-        response.StatusCode = 200;
-        byte[] successBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { success = true, orderNumber = orderNum }));
-        response.ContentType = "application/json; charset=utf-8";
-        await response.OutputStream.WriteAsync(successBytes, 0, successBytes.Length);
-        response.Close();
-    }
-
-    private async Task ServeHtmlAppAsync(HttpListenerResponse response)
-    {
-        string html = GetEmbeddedMobileAppHtml();
-        byte[] bytes = Encoding.UTF8.GetBytes(html);
-        response.ContentType = "text/html; charset=utf-8";
-        response.StatusCode = 200;
-        await response.OutputStream.WriteAsync(bytes, 0, bytes.Length);
-        response.Close();
+        return Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { success = true, orderNumber = orderNum }));
     }
 
     private string GetEmbeddedMobileAppHtml()
@@ -476,7 +494,7 @@ public class RepWebPortalService
 
         function filterProducts(query, targetId = 'productsList') {
             let q = query.trim().toLowerCase();
-            let filtered = allProducts.filter(p => p.name.toLowerCase().includes(q) || p.barcode.includes(q));
+            let filtered = allProducts.filter(p => p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.includes(q)));
             renderProducts(filtered, targetId, targetId === 'productsList');
         }
 
