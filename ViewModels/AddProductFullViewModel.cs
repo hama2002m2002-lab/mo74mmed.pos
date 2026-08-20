@@ -80,7 +80,38 @@ public class AddProductFullViewModel : BaseViewModel
     public Category? SelectedCategory
     {
         get => _selectedCategory;
-        set => SetProperty(ref _selectedCategory, value);
+        set
+        {
+            if (SetProperty(ref _selectedCategory, value))
+            {
+                if (value != null)
+                {
+                    _categoryText = value.Name;
+                    OnPropertyChanged(nameof(CategoryText));
+                }
+            }
+        }
+    }
+
+    private string _categoryText = string.Empty;
+    public string CategoryText
+    {
+        get => _categoryText;
+        set
+        {
+            if (SetProperty(ref _categoryText, value))
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    var match = Categories.FirstOrDefault(c => c.Name.Equals(value.Trim(), StringComparison.OrdinalIgnoreCase));
+                    if (match != null && match != SelectedCategory)
+                    {
+                        _selectedCategory = match;
+                        OnPropertyChanged(nameof(SelectedCategory));
+                    }
+                }
+            }
+        }
     }
 
     public ObservableCollection<Category> Categories { get; } = new();
@@ -456,34 +487,32 @@ public class AddProductFullViewModel : BaseViewModel
         {
             if (string.IsNullOrWhiteSpace(NewCategoryName))
             {
-                MessageBox.Show("يرجى كتابة اسم الصنف الجديد.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.IsKurdish ? "تکایە ناوی پۆلێن بنووسە" : "يرجى كتابة اسم الصنف الجديد.", Loc.IsKurdish ? "ئاگاداری" : "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             string cleanName = NewCategoryName.Trim();
-            var existing = Categories.FirstOrDefault(c => c.Name.Equals(cleanName, StringComparison.OrdinalIgnoreCase));
-            if (existing != null)
+            using var db = new AppDbContext();
+            var existing = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(db.Categories, c => c.Name.ToLower() == cleanName.ToLower() && !c.IsDeleted);
+            if (existing == null)
             {
-                SelectedCategory = existing;
-                IsAddCategoryModalOpen = false;
-                return;
+                existing = new Category
+                {
+                    Id = Guid.NewGuid(),
+                    Name = cleanName,
+                    ColorHex = "#3B82F6",
+                    CreatedAt = DateTime.UtcNow,
+                    IsDeleted = false
+                };
+                await db.Categories.AddAsync(existing);
+                await db.SaveChangesAsync();
             }
 
-            var newCat = new Category
-            {
-                Id = Guid.NewGuid(),
-                Name = cleanName,
-                ColorHex = "#3B82F6",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _context.Categories.Add(newCat);
-            await _context.SaveChangesAsync();
-
-            Categories.Add(newCat);
-            SelectedCategory = newCat;
+            await InitializeAsync();
+            SelectedCategory = Categories.FirstOrDefault(c => c.Id == existing.Id) ?? existing;
+            CategoryText = existing.Name;
             IsAddCategoryModalOpen = false;
-            StatusMessage = $"تمت إضافة صنف '{newCat.Name}' بنجاح.";
+            StatusMessage = $"تمت إضافة صنف '{existing.Name}' بنجاح.";
         });
 
         OpenInventoryLookupCommand = new AsyncRelayCommand(async () =>
@@ -505,6 +534,8 @@ public class AddProductFullViewModel : BaseViewModel
         });
 
         BackToNavigationCommand = new RelayCommand(() => RequestBackToNavigation?.Invoke());
+
+        _ = InitializeAsync();
     }
 
     public async Task InitializeAsync()
@@ -516,7 +547,11 @@ public class AddProductFullViewModel : BaseViewModel
         var cats = await _productService.GetCategoriesAsync();
         Categories.Clear();
         foreach (var c in cats) Categories.Add(c);
-        if (SelectedCategory == null && Categories.Count > 0) SelectedCategory = Categories[0];
+        if (SelectedCategory == null && Categories.Count > 0)
+        {
+            SelectedCategory = Categories[0];
+            CategoryText = Categories[0].Name;
+        }
 
         var sups = await _supplierService.GetSuppliersAsync();
         SuppliersList.Clear();
@@ -591,6 +626,7 @@ public class AddProductFullViewModel : BaseViewModel
         Barcode = p.Barcode;
         Name = p.Name;
         SelectedCategory = Categories.FirstOrDefault(c => c.Id == p.CategoryId);
+        CategoryText = SelectedCategory?.Name ?? string.Empty;
 
         SupplierName = p.Supplier?.Name ?? p.SupplierName ?? string.Empty;
         SupplierPhone = p.Supplier?.Phone ?? string.Empty;
@@ -632,8 +668,12 @@ public class AddProductFullViewModel : BaseViewModel
         IsAddCategoryModalOpen = false;
 
         ProductId = Guid.Empty;
-        Barcode = string.Empty; // لا ينشئ باركود تلقائياً بل يترك الحقل فارغاً
+        Barcode = string.Empty;
         Name = string.Empty;
+        CategoryText = string.Empty;
+        SelectedCategory = Categories.FirstOrDefault();
+        if (SelectedCategory != null) CategoryText = SelectedCategory.Name;
+
         SupplierName = string.Empty;
         SupplierPhone = string.Empty;
         SupplierCompany = string.Empty;
@@ -671,23 +711,47 @@ public class AddProductFullViewModel : BaseViewModel
     {
         if (string.IsNullOrWhiteSpace(Barcode))
         {
-            MessageBox.Show("يرجى إدخال أو توليد الباركود.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(Loc.IsKurdish ? "تکایە بارکۆد بنووسە یان دروستی بکە" : "يرجى إدخال أو توليد الباركود.", Loc.IsKurdish ? "ئاگاداری" : "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(Name))
         {
-            MessageBox.Show("يرجى كتابة اسم المادة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(Loc.IsKurdish ? "تکایە ناوی کاڵا بنووسە" : "يرجى كتابة اسم المادة.", Loc.IsKurdish ? "ئاگاداری" : "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (Price <= 0 && CartonSellingPrice <= 0)
         {
-            MessageBox.Show("يرجى إدخال سعر بيع المفرد أو سعر بيع الكرتون.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(Loc.IsKurdish ? "تکایە نرخی فرۆشتنی تاک یان کارتۆن بنووسە" : "يرجى إدخال سعر بيع المفرد أو سعر بيع الكرتون.", Loc.IsKurdish ? "ئاگاداری" : "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        // ربط أو إنشاء المندوب تلقائياً إن وجد اسم
+        // 1. ربط أو إنشاء الصنف تلقائياً إن كان مختاراً أو مكتوباً يدوياً
+        Guid? resolvedCategoryId = null;
+        string catName = SelectedCategory?.Name ?? CategoryText;
+        if (!string.IsNullOrWhiteSpace(catName))
+        {
+            string cleanCat = catName.Trim();
+            using var dbCat = new AppDbContext();
+            var catObj = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(dbCat.Categories, c => c.Name.ToLower() == cleanCat.ToLower() && !c.IsDeleted);
+            if (catObj == null)
+            {
+                catObj = new Category
+                {
+                    Id = Guid.NewGuid(),
+                    Name = cleanCat,
+                    ColorHex = "#3B82F6",
+                    CreatedAt = DateTime.UtcNow,
+                    IsDeleted = false
+                };
+                await dbCat.Categories.AddAsync(catObj);
+                await dbCat.SaveChangesAsync();
+            }
+            resolvedCategoryId = catObj.Id;
+        }
+
+        // 2. ربط أو إنشاء المندوب تلقائياً إن وجد اسم
         Supplier? supplierObj = null;
         if (!string.IsNullOrWhiteSpace(SupplierName))
         {
@@ -699,7 +763,7 @@ public class AddProductFullViewModel : BaseViewModel
             Id = ProductId,
             Barcode = Barcode.Trim(),
             Name = Name.Trim(),
-            CategoryId = SelectedCategory?.Id,
+            CategoryId = resolvedCategoryId,
             SupplierId = supplierObj?.Id,
             SupplierName = supplierObj?.Name ?? (string.IsNullOrWhiteSpace(SupplierName) ? null : SupplierName.Trim()),
 
@@ -726,12 +790,12 @@ public class AddProductFullViewModel : BaseViewModel
         {
             StatusMessage = $"تم حفظ المادة '{product.Name}' بنجاح في قاعدة البيانات.";
             ProductSaved?.Invoke();
-            MessageBox.Show($"تم حفظ المادة '{product.Name}' بنجاح!", "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(Loc.IsKurdish ? $"کاڵای '{product.Name}' بە سەرکەوتوویی پاشەکەوت کرا!" : $"تم حفظ المادة '{product.Name}' بنجاح!", Loc.IsKurdish ? "سەرکەوتوو بوو" : "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
             ClearForm();
         }
         else
         {
-            MessageBox.Show("فشل حفظ المادة، يرجى التأكد من عدم تكرار الباركود.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(Loc.IsKurdish ? "پاشەکەوتکردنی کاڵا سەرکەوتوو نەبوو، تکایە دڵنیابەرەوە لە زانیارییەکان" : "فشل حفظ المادة، يرجى التأكد من البيانات ومحاولة الحفظ مجدداً.", Loc.IsKurdish ? "هەڵە" : "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

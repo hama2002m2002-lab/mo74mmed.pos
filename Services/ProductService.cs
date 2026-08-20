@@ -134,13 +134,15 @@ public class ProductService : IProductService
     {
         try
         {
+            using var db = new AppDbContext();
+            string cleanBarcode = product.Barcode?.Trim() ?? string.Empty;
+
             if (product.Id == Guid.Empty)
             {
-                // فحص إذا كان الباركود مسجل مسبقاً
-                var existing = await _context.Products.FirstOrDefaultAsync(p => p.Barcode == product.Barcode);
+                var existing = await db.Products.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Barcode == cleanBarcode);
                 if (existing != null)
                 {
-                    existing.Name = product.Name;
+                    existing.Name = product.Name?.Trim() ?? string.Empty;
                     existing.CategoryId = product.CategoryId;
                     existing.SupplierId = product.SupplierId;
                     existing.SupplierName = product.SupplierName;
@@ -148,7 +150,7 @@ public class ProductService : IProductService
                     existing.ItemsPerCarton = product.ItemsPerCarton;
                     existing.StockQuantity = product.StockQuantity;
                     existing.MinStockAlert = product.MinStockAlert;
-                    existing.Unit = product.Unit;
+                    existing.Unit = string.IsNullOrWhiteSpace(product.Unit) ? "قطعة" : product.Unit.Trim();
                     existing.CartonPurchasePrice = product.CartonPurchasePrice;
                     existing.Cost = product.Cost;
                     existing.Price = product.Price;
@@ -159,23 +161,25 @@ public class ProductService : IProductService
                     existing.IsActive = true;
                     existing.IsDeleted = false;
                     existing.UpdatedAt = DateTime.UtcNow;
+                    db.Products.Update(existing);
                 }
                 else
                 {
                     product.Id = Guid.NewGuid();
+                    product.Barcode = cleanBarcode;
                     product.CreatedAt = DateTime.UtcNow;
                     product.IsActive = true;
                     product.IsDeleted = false;
-                    await _context.Products.AddAsync(product);
+                    await db.Products.AddAsync(product);
                 }
             }
             else
             {
-                var existing = await _context.Products.FindAsync(product.Id);
+                var existing = await db.Products.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == product.Id);
                 if (existing != null)
                 {
-                    existing.Barcode = product.Barcode;
-                    existing.Name = product.Name;
+                    existing.Barcode = cleanBarcode;
+                    existing.Name = product.Name?.Trim() ?? string.Empty;
                     existing.CategoryId = product.CategoryId;
                     existing.SupplierId = product.SupplierId;
                     existing.SupplierName = product.SupplierName;
@@ -183,7 +187,7 @@ public class ProductService : IProductService
                     existing.ItemsPerCarton = product.ItemsPerCarton;
                     existing.StockQuantity = product.StockQuantity;
                     existing.MinStockAlert = product.MinStockAlert;
-                    existing.Unit = product.Unit;
+                    existing.Unit = string.IsNullOrWhiteSpace(product.Unit) ? "قطعة" : product.Unit.Trim();
                     existing.CartonPurchasePrice = product.CartonPurchasePrice;
                     existing.Cost = product.Cost;
                     existing.Price = product.Price;
@@ -194,21 +198,23 @@ public class ProductService : IProductService
                     existing.IsActive = true;
                     existing.IsDeleted = false;
                     existing.UpdatedAt = DateTime.UtcNow;
+                    db.Products.Update(existing);
                 }
                 else
                 {
                     product.CreatedAt = DateTime.UtcNow;
                     product.IsActive = true;
                     product.IsDeleted = false;
-                    await _context.Products.AddAsync(product);
+                    await db.Products.AddAsync(product);
                 }
             }
 
-            return await _context.SaveChangesAsync() > 0;
+            await db.SaveChangesAsync();
+            return true;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"SaveProductAsync error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"SaveProductAsync error: {ex}");
             return false;
         }
     }

@@ -202,8 +202,16 @@
                                     </StackPanel>
                                 </Button>
                             </Grid>
-                            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name" 
-                                      Height="42" VerticalContentAlignment="Center" Background="{DynamicResource BgDarkPrimary}" Foreground="{DynamicResource TextPrimary}" FontSize="13" />
+                            <ComboBox ItemsSource="{Binding Categories}" 
+                                      SelectedItem="{Binding SelectedCategory, Mode=TwoWay}" 
+                                      Text="{Binding CategoryText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      DisplayMemberPath="Name" 
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="True"
+                                      Height="42" VerticalContentAlignment="Center" 
+                                      Background="{DynamicResource BgDarkPrimary}" 
+                                      Foreground="{DynamicResource TextPrimary}" 
+                                      FontSize="13" />
                         </StackPanel>
 
                         <!-- Supplier / Rep Field with Small Add/Details Button -->
