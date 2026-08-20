@@ -67,7 +67,7 @@ public class CartItemViewModel : BaseViewModel
         {
             if (IsReturn) return false;
             decimal effectiveCost = EffectiveCost;
-            return effectiveCost > 0 && UnitPrice < effectiveCost;
+            return effectiveCost > 0 && UnitPrice > 0 && UnitPrice < effectiveCost;
         }
     }
 
@@ -164,8 +164,8 @@ public class CartItemViewModel : BaseViewModel
         Quantity = quantity;
 
         RetailPrice = product.Price;
-        WholesalePrice = product.WholesalePrice > 0 ? product.WholesalePrice : product.Price;
-        CartonPrice = product.CartonSellingPrice > 0 ? product.CartonSellingPrice : product.Price;
+        WholesalePrice = product.WholesalePrice;
+        CartonPrice = product.CartonSellingPrice;
 
         PieceCost = product.Cost;
         CartonCost = product.CartonPurchasePrice > 0 ? product.CartonPurchasePrice : (product.Cost * (product.ItemsPerCarton > 0 ? product.ItemsPerCarton : 1));

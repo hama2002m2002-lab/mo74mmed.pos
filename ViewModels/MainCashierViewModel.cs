@@ -1052,7 +1052,9 @@ public class MainCashierViewModel : BaseViewModel
                 AddProductToCart(p, targetType);
                 StatusMessage = IsReturnModeActive
                     ? (Loc.IsKurdish ? $"کاڵای گەڕاوە تۆمارکرا: '{p.Name}'" : $"تم تسجيل إرجاع مادة: '{p.Name}'")
-                    : $"تمت إضافة '{p.Name}' بسعر الكرتون ({p.CartonSellingPrice:N0} د.ع)";
+                    : (p.CartonSellingPrice > 0
+                        ? $"تمت إضافة '{p.Name}' بسعر الكرتون ({p.CartonSellingPrice:N0} د.ع)"
+                        : $"تمت إضافة '{p.Name}' بالكرتون (سعر الكرتون 0 د.ع - يرجى تحديد السعر)");
             }
         });
 
@@ -1546,7 +1548,19 @@ public class MainCashierViewModel : BaseViewModel
             return;
         }
 
-        // فحص ما إذا كان هناك مواد تباع بأقل من التكلفة وتنبيه الكاشير
+        // 1. فحص ما إذا كانت هناك مواد سعر بيعها 0 د.ع وتنبيه الكاشير لتعديل السعر
+        var zeroPriceItems = SelectedTab.CartItems.Where(i => !i.IsReturn && i.UnitPrice <= 0).ToList();
+        if (zeroPriceItems.Any())
+        {
+            string itemNames = string.Join("\n- ", zeroPriceItems.Select(x => $"{x.ProductName} ({x.SaleType})"));
+            string msg = Loc.IsKurdish
+                ? $"⚠️ ئاگاداری: کاڵاکانی خوارەوە لەناو سەبەتەدا نرخی فرۆشتنیان (0 د.ع) دانراوە:\n- {itemNames}\n\nتکایە پێش تەواوکردنی فرۆشتن نرخەکە چاک بکە."
+                : $"⚠️ تنبيه: هناك مواد داخل السلة سعر بيعها (0 د.ع):\n- {itemNames}\n\nيرجى تعديل سعر البيع للمواد قبل إتمام عملية البيع.";
+            MessageBox.Show(msg, Loc.IsKurdish ? "ئاگاداری نرخی 0" : "تنبيه سعر المادة 0", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        // 2. فحص ما إذا كان هناك مواد تباع بأقل من التكلفة وتنبيه الكاشير
         var lossItems = SelectedTab.CartItems.Where(i => i.IsBelowCost).ToList();
         if (lossItems.Any())
         {
