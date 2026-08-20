@@ -332,7 +332,7 @@
                     <!-- 2: Returns (Clickable) -->
                     <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,8" Margin="2,0" Cursor="Hand">
                         <Border.InputBindings>
-                            <MouseBinding MouseAction="LeftClick" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Sales" />
+                            <MouseBinding MouseAction="LeftClick" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Returns" />
                         </Border.InputBindings>
                         <StackPanel>
                             <TextBlock Text="🔄 المرجوعات" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
@@ -402,13 +402,14 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
                         <!-- Sub-Tab 1: Sales Invoices -->
-                        <Button Grid.Column="0" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Sales" Height="36" Cursor="Hand" Margin="0,0,4,0">
+                        <Button Grid.Column="0" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Sales" Height="36" Cursor="Hand" Margin="0,0,3,0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border CornerRadius="8" Padding="8,0">
+                                    <Border CornerRadius="8" Padding="6,0">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="Transparent" />
@@ -421,7 +422,7 @@
                                         </Border.Style>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock Text="💰 " FontSize="12" />
-                                            <TextBlock Text="سجل وفواتير المبيعات" FontSize="12" FontWeight="Bold">
+                                            <TextBlock Text="{Binding Loc[Rep_Master_Sales]}" FontSize="11.5" FontWeight="Bold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
@@ -439,11 +440,46 @@
                             </Button.Template>
                         </Button>
 
-                        <!-- Sub-Tab 2: Expenses Management -->
-                        <Button Grid.Column="1" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Expenses" Height="36" Cursor="Hand" Margin="2,0">
+                        <!-- Sub-Tab 2: Returns Invoices (المرتجعات) -->
+                        <Button Grid.Column="1" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Returns" Height="36" Cursor="Hand" Margin="2,0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border CornerRadius="8" Padding="8,0">
+                                    <Border CornerRadius="8" Padding="6,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="Transparent" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMasterReturnsSectionActive}" Value="True">
+                                                        <Setter Property="Background" Value="#B91C1C" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock Text="🔄 " FontSize="12" />
+                                            <TextBlock Text="{Binding Loc[Rep_Master_Returns]}" FontSize="11.5" FontWeight="Bold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsMasterReturnsSectionActive}" Value="True">
+                                                                <Setter Property="Foreground" Value="#FFFFFF" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <!-- Sub-Tab 3: Expenses Management -->
+                        <Button Grid.Column="2" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Expenses" Height="36" Cursor="Hand" Margin="2,0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border CornerRadius="8" Padding="6,0">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="Transparent" />
@@ -456,7 +492,7 @@
                                         </Border.Style>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock Text="💸 " FontSize="12" />
-                                            <TextBlock Text="إدارة وتسجيل المصروفات" FontSize="12" FontWeight="Bold">
+                                            <TextBlock Text="{Binding Loc[Rep_Master_Expenses]}" FontSize="11.5" FontWeight="Bold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
@@ -474,11 +510,11 @@
                             </Button.Template>
                         </Button>
 
-                        <!-- Sub-Tab 3: Damaged Items & Total Loss -->
-                        <Button Grid.Column="2" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Damaged" Height="36" Cursor="Hand" Margin="2,0">
+                        <!-- Sub-Tab 4: Damaged Items & Total Loss -->
+                        <Button Grid.Column="3" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Damaged" Height="36" Cursor="Hand" Margin="2,0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border CornerRadius="8" Padding="8,0">
+                                    <Border CornerRadius="8" Padding="6,0">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="Transparent" />
@@ -491,7 +527,7 @@
                                         </Border.Style>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock Text="⚠️ " FontSize="12" />
-                                            <TextBlock Text="المواد التالفة والهالكة والضرر" FontSize="12" FontWeight="Bold">
+                                            <TextBlock Text="{Binding Loc[Rep_Master_Damaged]}" FontSize="11.5" FontWeight="Bold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
@@ -509,11 +545,11 @@
                             </Button.Template>
                         </Button>
 
-                        <!-- Sub-Tab 4: Inventory & Stock Status -->
-                        <Button Grid.Column="3" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Inventory" Height="36" Cursor="Hand" Margin="2,0">
+                        <!-- Sub-Tab 5: Inventory & Stock Status -->
+                        <Button Grid.Column="4" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Inventory" Height="36" Cursor="Hand" Margin="2,0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border CornerRadius="8" Padding="8,0">
+                                    <Border CornerRadius="8" Padding="6,0">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="Transparent" />
@@ -526,7 +562,7 @@
                                         </Border.Style>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock Text="📦 " FontSize="12" />
-                                            <TextBlock Text="المخزون والتوفر والنفاد" FontSize="12" FontWeight="Bold">
+                                            <TextBlock Text="{Binding Loc[Rep_Master_Inventory]}" FontSize="11.5" FontWeight="Bold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
@@ -544,11 +580,11 @@
                             </Button.Template>
                         </Button>
 
-                        <!-- Sub-Tab 5: Customer Debts -->
-                        <Button Grid.Column="4" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Debts" Height="36" Cursor="Hand" Margin="4,0,0,0">
+                        <!-- Sub-Tab 6: Customer Debts -->
+                        <Button Grid.Column="5" Command="{Binding SetMasterSubSectionCommand}" CommandParameter="Debts" Height="36" Cursor="Hand" Margin="3,0,0,0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border CornerRadius="8" Padding="8,0">
+                                    <Border CornerRadius="8" Padding="6,0">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="Transparent" />
@@ -561,7 +597,7 @@
                                         </Border.Style>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock Text="👥 " FontSize="12" />
-                                            <TextBlock Text="ديون ومستحقات العملاء" FontSize="12" FontWeight="Bold">
+                                            <TextBlock Text="{Binding Loc[Rep_Master_Debts]}" FontSize="11.5" FontWeight="Bold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
@@ -593,16 +629,15 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <Grid Grid.Row="0" Margin="0,0,0,10">
-                                <TextBlock Text="📑 قائمة وسجل كافة فواتير المبيعات" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <Border Background="#064E3B" CornerRadius="6" Padding="8,3" Margin="0,0,6,0">
-                                        <TextBlock Text="{Binding Invoices.Count, StringFormat='{}إجمالي الفواتير: {0}'}" FontSize="11.5" FontWeight="Bold" Foreground="#34D399" />
-                                    </Border>
-                                    <Border Background="#450A0A" CornerRadius="6" Padding="8,3">
-                                        <TextBlock Text="{Binding TotalReturnsAmount, StringFormat='{}المرتجعات: {0:N0} د.ع'}" FontSize="11.5" FontWeight="Bold" Foreground="#FCA5A5" />
-                                    </Border>
-                                </StackPanel>
+                            <Grid Grid.Row="0" Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="📑 قائمة وسجل كافة فواتير المبيعات" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                                <Border Grid.Column="1" Background="#064E3B" CornerRadius="6" Padding="8,3">
+                                    <TextBlock Text="{Binding Invoices.Count, StringFormat='{}إجمالي الفواتير: {0}'}" FontSize="11.5" FontWeight="Bold" Foreground="#34D399" />
+                                </Border>
                             </Grid>
                             <DataGrid Grid.Row="1" ItemsSource="{Binding Invoices}" AutoGenerateColumns="False" 
                                       IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
@@ -630,9 +665,9 @@
                     </Border>
 
                     <!-- ============================================== -->
-                    <!-- SECTION 1: SALES INVOICES (قائمة وسجل المبيعات) -->
+                    <!-- SECTION 2: RETURNS INVOICES (سجل ووصولات المرجوعات) -->
                     <!-- ============================================== -->
-                    <Border Visibility="{Binding IsMasterSalesSectionActive, Converter={StaticResource BoolToVis}}" 
+                    <Border Visibility="{Binding IsMasterReturnsSectionActive, Converter={StaticResource BoolToVis}}" 
                             Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -644,32 +679,35 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="📑 قائمة وسجل كافة فواتير المبيعات" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="0" Text="🔄 سجل كافة وصولات وعمليات الاسترجاع" FontSize="14" FontWeight="Bold" Foreground="#F87171" VerticalAlignment="Center" />
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Border Background="#064E3B" CornerRadius="6" Padding="8,3" Margin="0,0,6,0">
-                                        <TextBlock Text="{Binding Invoices.Count, StringFormat='{}إجمالي الفواتير: {0}'}" FontSize="11.5" FontWeight="Bold" Foreground="#34D399" />
+                                    <Border Background="#450A0A" CornerRadius="6" Padding="10,4" Margin="0,0,8,0">
+                                        <TextBlock Text="{Binding TotalReturnsAmount, StringFormat='{}إجمالي المبالغ المسترجعة: {0:N0} د.ع'}" FontSize="12" FontWeight="Black" Foreground="#F87171" />
                                     </Border>
-                                    <Border Background="#450A0A" CornerRadius="6" Padding="8,3">
-                                        <TextBlock Text="{Binding TotalReturnsAmount, StringFormat='{}المرتجعات: {0:N0} د.ع'}" FontSize="11.5" FontWeight="Bold" Foreground="#FCA5A5" />
+                                    <Border Background="#78350F" CornerRadius="6" Padding="10,4">
+                                        <TextBlock Text="{Binding ReturnedInvoicesList.Count, StringFormat='{}عدد وصولات الإرجاع: {0}'}" FontSize="12" FontWeight="Bold" Foreground="#FCD34D" />
                                     </Border>
                                 </StackPanel>
                             </Grid>
-                            <DataGrid Grid.Row="1" ItemsSource="{Binding Invoices}" AutoGenerateColumns="False" 
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding ReturnedInvoicesList}" AutoGenerateColumns="False" 
                                       IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                                       Background="Transparent" RowBackground="Transparent" BorderThickness="0"
                                       HorizontalGridLinesBrush="{DynamicResource BorderDark}"
                                       ScrollViewer.VerticalScrollBarVisibility="Auto" RowHeight="38">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="رقم الوصل" Binding="{Binding InvoiceNumber}" Width="150" Foreground="{DynamicResource PrimaryAccent}" FontWeight="Bold" />
-                                    <DataGridTextColumn Header="التاريخ والوقت" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" Width="170" Foreground="{DynamicResource TextSecondary}" />
+                                    <DataGridTextColumn Header="رقم وصل الإرجاع" Binding="{Binding InvoiceNumber}" Width="160" Foreground="#F87171" FontWeight="Bold" />
+                                    <DataGridTextColumn Header="تاريخ ووقت الاسترجاع" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" Width="170" Foreground="{DynamicResource TextSecondary}" />
                                     <DataGridTextColumn Header="طريقة الدفع" Binding="{Binding PaymentMethod}" Width="110" Foreground="{DynamicResource TextPrimary}" />
-                                    <DataGridTextColumn Header="المجموع" Binding="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" Width="130" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" />
-                                    <DataGridTextColumn Header="المواد والأصناف" Binding="{Binding Items.Count, StringFormat='{}{0} أصناف'}" Width="110" Foreground="{DynamicResource TextSecondary}" />
-                                    <DataGridTemplateColumn Header="معاينة" Width="90">
+                                    <DataGridTextColumn Header="المبلغ المسترد" Binding="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" Width="130" Foreground="#F87171" FontWeight="Black" />
+                                    <DataGridTextColumn Header="المواد المسترجعة" Binding="{Binding Items.Count, StringFormat='{}{0} أصناف'}" Width="120" Foreground="{DynamicResource TextSecondary}" />
+                                    <DataGridTemplateColumn Header="معاينة الوصل" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Style="{DynamicResource ActionButton}" Command="{Binding DataContext.OpenInvoiceDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Padding="8,3" FontSize="11">
-                                                    <TextBlock Text="معاينة" />
+                                                <Button Style="{DynamicResource DangerButton}" Command="{Binding DataContext.OpenInvoiceDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Padding="8,3" FontSize="11">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="🔍 " FontSize="10" />
+                                                        <TextBlock Text="عرض الوصل" FontWeight="Bold" />
+                                                    </StackPanel>
                                                 </Button>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>

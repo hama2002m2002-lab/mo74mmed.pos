@@ -405,6 +405,7 @@ public class LocalizationManager : INotifyPropertyChanged
         _ar["Rep_TotalProfits"] = "صافي الأرباح";
         _ar["Rep_TotalExpenses"] = "المصروفات والخسائر";
         _ar["Rep_Master_Sales"] = "سجل وفواتير المبيعات";
+        _ar["Rep_Master_Returns"] = "سجل ووصولات المرجوعات";
         _ar["Rep_Master_Expenses"] = "إدارة وتسجيل المصروفات";
         _ar["Rep_Master_Damaged"] = "المواد التالفة والهالكة والضرر";
         _ar["Rep_Master_Inventory"] = "المخزون والتوفر والنفاد";
@@ -887,6 +888,7 @@ public class LocalizationManager : INotifyPropertyChanged
         _ku["Rep_TotalProfits"] = "پوختی قازانج";
         _ku["Rep_TotalExpenses"] = "خەرجی و زەرەرەکان";
         _ku["Rep_Master_Sales"] = "تۆماری پسوولەکانی فرۆشتن";
+        _ku["Rep_Master_Returns"] = "تۆماری پسوولەکانی گەڕاوە";
         _ku["Rep_Master_Expenses"] = "بەڕێوەبردن و تۆمارکردنی خەرجییەکان";
         _ku["Rep_Master_Damaged"] = "کاڵای تێکچوو و زەرەرەکان";
         _ku["Rep_Master_Inventory"] = "کۆگا، بەردەست و تەواوبوو";

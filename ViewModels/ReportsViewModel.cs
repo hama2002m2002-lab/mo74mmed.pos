@@ -126,6 +126,7 @@ public class ReportsViewModel : BaseViewModel
             if (SetProperty(ref _masterSubSection, value))
             {
                 OnPropertyChanged(nameof(IsMasterSalesSectionActive));
+                OnPropertyChanged(nameof(IsMasterReturnsSectionActive));
                 OnPropertyChanged(nameof(IsMasterExpensesSectionActive));
                 OnPropertyChanged(nameof(IsMasterDamagedSectionActive));
                 OnPropertyChanged(nameof(IsMasterInventorySectionActive));
@@ -135,6 +136,7 @@ public class ReportsViewModel : BaseViewModel
     }
 
     public bool IsMasterSalesSectionActive => MasterSubSection == "Sales";
+    public bool IsMasterReturnsSectionActive => MasterSubSection == "Returns";
     public bool IsMasterExpensesSectionActive => MasterSubSection == "Expenses";
     public bool IsMasterDamagedSectionActive => MasterSubSection == "Damaged";
     public bool IsMasterInventorySectionActive => MasterSubSection == "Inventory";
@@ -636,7 +638,7 @@ public class ReportsViewModel : BaseViewModel
 
         foreach (var sale in sales)
         {
-            bool isSaleReturned = sale.Status == "Returned";
+            bool isSaleReturned = sale.Status == "Returned" || (!string.IsNullOrEmpty(sale.InvoiceNumber) && sale.InvoiceNumber.StartsWith("RET-")) || sale.TotalAmount < 0;
             if (isSaleReturned)
             {
                 ReturnedInvoicesList.Add(sale);
