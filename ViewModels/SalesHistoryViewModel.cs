@@ -386,10 +386,12 @@ public class SalesHistoryViewModel : BaseViewModel
 
     private FlowDocument CreateReceiptFlowDocument(Sale sale, double printableWidth)
     {
+        bool isReturned = sale.Status == "Returned";
+
         FlowDocument doc = new FlowDocument
         {
             PageWidth = printableWidth > 0 ? Math.Min(printableWidth, 320) : 300,
-            PagePadding = new Thickness(10),
+            PagePadding = new Thickness(8),
             FontFamily = new FontFamily("Times New Roman, Arial"),
             FlowDirection = FlowDirection.RightToLeft
         };
@@ -398,19 +400,34 @@ public class SalesHistoryViewModel : BaseViewModel
         Paragraph pHeader = new Paragraph
         {
             TextAlignment = TextAlignment.Center,
-            Margin = new Thickness(0, 0, 0, 8)
+            Margin = new Thickness(0, 0, 0, 6)
         };
         pHeader.Inlines.Add(new Bold(new Run("⚡ 7amo.pos\n")) { FontSize = 16 });
-        pHeader.Inlines.Add(new Run("نظام نقاط البيع والمخازن المتكامل\n") { FontSize = 10, Foreground = Brushes.DimGray });
-        pHeader.Inlines.Add(new Run("-------------------------------------------\n") { Foreground = Brushes.Gray });
-        pHeader.Inlines.Add(new Run($"رقم الوصل: {sale.InvoiceNumber}\n") { FontSize = 11, FontWeight = FontWeights.Bold });
-        pHeader.Inlines.Add(new Run($"التاريخ: {sale.CreatedAt.ToLocalTime():yyyy-MM-dd hh:mm tt}\n") { FontSize = 10 });
-        pHeader.Inlines.Add(new Run($"الكاشير: {sale.User?.FullName ?? "كاشير عام"} | الدفع: {(sale.PaymentMethod == "Cash" ? "نقداً" : "بطاقة")}\n") { FontSize = 10 });
-        pHeader.Inlines.Add(new Run("-------------------------------------------") { Foreground = Brushes.Gray });
+
+        if (isReturned)
+        {
+            pHeader.Inlines.Add(new Bold(new Run("🛑 وصل إرجاع مواد مسترجعة 🛑\n")) { FontSize = 12, Foreground = Brushes.DarkRed });
+            pHeader.Inlines.Add(new Run("-------------------------------------------\n") { Foreground = Brushes.Red });
+            pHeader.Inlines.Add(new Run($"رقم وصل الإرجاع: {sale.InvoiceNumber}\n") { FontSize = 11, FontWeight = FontWeights.Bold, Foreground = Brushes.DarkRed });
+            pHeader.Inlines.Add(new Run($"تاريخ البيع الأصلي: {sale.CreatedAt.ToLocalTime():yyyy-MM-dd hh:mm tt}\n") { FontSize = 9.5 });
+            pHeader.Inlines.Add(new Run($"تاريخ ووقت الإرجاع: {(sale.UpdatedAt ?? sale.CreatedAt).ToLocalTime():yyyy-MM-dd hh:mm tt}\n") { FontSize = 10, FontWeight = FontWeights.Bold, Foreground = Brushes.DarkRed });
+            pHeader.Inlines.Add(new Run($"الحالة: 🔴 مسترجع (Returned)\n") { FontSize = 10, FontWeight = FontWeights.Bold, Foreground = Brushes.DarkRed });
+            pHeader.Inlines.Add(new Run($"الكاشير: {sale.User?.FullName ?? "كاشير عام"} | رد المبلغ: نقداً\n") { FontSize = 9.5 });
+        }
+        else
+        {
+            pHeader.Inlines.Add(new Run("نظام نقاط البيع والمخازن المتكامل\n") { FontSize = 10, Foreground = Brushes.DimGray });
+            pHeader.Inlines.Add(new Run("-------------------------------------------\n") { Foreground = Brushes.Gray });
+            pHeader.Inlines.Add(new Run($"رقم الوصل: {sale.InvoiceNumber}\n") { FontSize = 11, FontWeight = FontWeights.Bold });
+            pHeader.Inlines.Add(new Run($"التاريخ: {sale.CreatedAt.ToLocalTime():yyyy-MM-dd hh:mm tt}\n") { FontSize = 10 });
+            pHeader.Inlines.Add(new Run($"الكاشير: {sale.User?.FullName ?? "كاشير عام"} | الدفع: {(sale.PaymentMethod == "Cash" ? "نقداً" : "بطاقة")}\n") { FontSize = 10 });
+        }
+
+        pHeader.Inlines.Add(new Run("-------------------------------------------") { Foreground = isReturned ? Brushes.Red : Brushes.Gray });
         doc.Blocks.Add(pHeader);
 
         // Items Table
-        Table table = new Table { CellSpacing = 2, Margin = new Thickness(0, 0, 0, 8) };
+        Table table = new Table { CellSpacing = 2, Margin = new Thickness(0, 0, 0, 6) };
         table.Columns.Add(new TableColumn { Width = new GridLength(2, GridUnitType.Star) });
         table.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Star) });
         table.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Star) });
@@ -418,19 +435,22 @@ public class SalesHistoryViewModel : BaseViewModel
 
         TableRowGroup rowGroup = new TableRowGroup();
         TableRow headerRow = new TableRow { FontWeight = FontWeights.Bold };
-        headerRow.Cells.Add(new TableCell(new Paragraph(new Run("المادة"))));
-        headerRow.Cells.Add(new TableCell(new Paragraph(new Run("العدد"))));
+        headerRow.Cells.Add(new TableCell(new Paragraph(new Run(isReturned ? "المادة المسترجعة" : "المادة"))));
+        headerRow.Cells.Add(new TableCell(new Paragraph(new Run(isReturned ? "الكمية" : "العدد"))));
         headerRow.Cells.Add(new TableCell(new Paragraph(new Run("السعر"))));
-        headerRow.Cells.Add(new TableCell(new Paragraph(new Run("الإجمالي"))));
+        headerRow.Cells.Add(new TableCell(new Paragraph(new Run(isReturned ? "المسترد" : "الإجمالي"))));
         rowGroup.Rows.Add(headerRow);
 
         foreach (var item in sale.Items)
         {
-            TableRow row = new TableRow { FontSize = 10 };
+            decimal displayQty = Math.Abs(item.Quantity);
+            decimal displayTotal = Math.Abs(item.TotalPrice);
+
+            TableRow row = new TableRow { FontSize = 9.5 };
             row.Cells.Add(new TableCell(new Paragraph(new Run(item.ProductName))));
-            row.Cells.Add(new TableCell(new Paragraph(new Run(item.Quantity.ToString("N0")))));
+            row.Cells.Add(new TableCell(new Paragraph(new Run(displayQty.ToString("N0")))));
             row.Cells.Add(new TableCell(new Paragraph(new Run(item.UnitPrice.ToString("N0")))));
-            row.Cells.Add(new TableCell(new Paragraph(new Run(item.TotalPrice.ToString("N0")))));
+            row.Cells.Add(new TableCell(new Paragraph(new Run(isReturned ? $"-{displayTotal:N0}" : displayTotal.ToString("N0")))));
             rowGroup.Rows.Add(row);
         }
 
@@ -441,17 +461,28 @@ public class SalesHistoryViewModel : BaseViewModel
         Paragraph pTotals = new Paragraph
         {
             TextAlignment = TextAlignment.Right,
-            Margin = new Thickness(0, 0, 0, 8)
+            Margin = new Thickness(0, 0, 0, 6)
         };
-        pTotals.Inlines.Add(new Run("-------------------------------------------\n") { Foreground = Brushes.Gray });
-        pTotals.Inlines.Add(new Run($"المجموع الفرعي: {sale.SubTotal:N0} د.ع\n") { FontSize = 10 });
-        if (sale.DiscountAmount > 0)
+        pTotals.Inlines.Add(new Run("-------------------------------------------\n") { Foreground = isReturned ? Brushes.Red : Brushes.Gray });
+        
+        if (isReturned)
         {
-            pTotals.Inlines.Add(new Run($"الخصم الممنوح: {sale.DiscountAmount:N0} د.ع\n") { FontSize = 10, Foreground = Brushes.DarkRed });
+            pTotals.Inlines.Add(new Bold(new Run($"إجمالي المبلغ المسترد للزبون: - {Math.Abs(sale.TotalAmount):N0} د.ع\n")) { FontSize = 13, Foreground = Brushes.DarkRed });
+            pTotals.Inlines.Add(new Run("-------------------------------------------\n") { Foreground = Brushes.Red });
+            pTotals.Inlines.Add(new Run("✔ تم استرجاع المواد وإعادة المبلغ إلى العميل بنجاح\n") { FontSize = 9.5, FontWeight = FontWeights.Bold, Foreground = Brushes.DarkSlateGray });
         }
-        pTotals.Inlines.Add(new Bold(new Run($"المبلغ الإجمالي المطلوب: {sale.TotalAmount:N0} د.ع\n")) { FontSize = 14 });
-        pTotals.Inlines.Add(new Run("-------------------------------------------\n") { Foreground = Brushes.Gray });
-        pTotals.Inlines.Add(new Run("شكراً لزيارتكم ونتشرف بخدمتكم دائماً\n") { FontSize = 10 });
+        else
+        {
+            pTotals.Inlines.Add(new Run($"المجموع الفرعي: {sale.SubTotal:N0} د.ع\n") { FontSize = 10 });
+            if (sale.DiscountAmount > 0)
+            {
+                pTotals.Inlines.Add(new Run($"الخصم الممنوح: {sale.DiscountAmount:N0} د.ع\n") { FontSize = 10, Foreground = Brushes.DarkRed });
+            }
+            pTotals.Inlines.Add(new Bold(new Run($"المبلغ الإجمالي المطلوب: {sale.TotalAmount:N0} د.ع\n")) { FontSize = 14 });
+            pTotals.Inlines.Add(new Run("-------------------------------------------\n") { Foreground = Brushes.Gray });
+            pTotals.Inlines.Add(new Run("شكراً لزيارتكم ونتشرف بخدمتكم دائماً\n") { FontSize = 10 });
+        }
+
         doc.Blocks.Add(pTotals);
 
         return doc;

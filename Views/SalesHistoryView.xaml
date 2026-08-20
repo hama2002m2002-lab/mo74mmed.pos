@@ -8,7 +8,7 @@
              FlowDirection="RightToLeft"
              FontFamily="Times New Roman, Segoe UI, Tahoma, Arial">
 
-    <Grid Margin="20,16">
+    <Grid Margin="14,10">
         <Grid.RowDefinitions>
             <!-- 0: Header -->
             <RowDefinition Height="Auto" />
@@ -16,28 +16,28 @@
             <RowDefinition Height="Auto" />
             <!-- 2: Filter Toolbar & Presets -->
             <RowDefinition Height="Auto" />
-            <!-- 3: Invoices DataGrid -->
+            <!-- 3: Invoices DataGrid (Expanded Box) -->
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- ======================================================== -->
         <!-- 0: HEADER -->
         <!-- ======================================================== -->
-        <Grid Grid.Row="0" Margin="0,0,0,16">
+        <Grid Grid.Row="0" Margin="0,0,0,8">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Border Width="44" Height="44" Background="#1E3A8A" CornerRadius="12" Margin="0,0,12,0" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5">
-                    <TextBlock Text="💰" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+                <Border Width="36" Height="36" Background="#1E3A8A" CornerRadius="10" Margin="0,0,10,0" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5">
+                    <TextBlock Text="💰" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
                 </Border>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Loc[Nav_SalesHistory]}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                    <TextBlock Text="سجل المبيعات الشامل، استعراض تفاصيل الفواتير والوصلات، وإعادة طباعتها" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0" />
+                    <TextBlock Text="{Binding Loc[Nav_SalesHistory]}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock Text="سجل المبيعات الشامل، استعراض تفاصيل الفواتير والوصلات، وإعادة طباعتها" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,1,0,0" />
                 </StackPanel>
             </StackPanel>
 
-            <Button HorizontalAlignment="Right" Style="{DynamicResource ActionButton}" Command="{Binding RefreshCommand}" Padding="14,8" VerticalAlignment="Center">
+            <Button HorizontalAlignment="Right" Style="{DynamicResource ActionButton}" Command="{Binding RefreshCommand}" Padding="10,5" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="🔄 " FontSize="13" />
-                    <TextBlock Text="تحديث البيانات" FontWeight="Bold" />
+                    <TextBlock Text="🔄 " FontSize="11" />
+                    <TextBlock Text="تحديث البيانات" FontWeight="Bold" FontSize="11" />
                 </StackPanel>
             </Button>
         </Grid>
@@ -45,7 +45,7 @@
         <!-- ======================================================== -->
         <!-- 1: 4 FINANCIAL KPI SUMMARY CARDS -->
         <!-- ======================================================== -->
-        <Grid Grid.Row="1" Margin="0,0,0,16">
+        <Grid Grid.Row="1" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1.2*" />
                 <ColumnDefinition Width="*" />
@@ -54,70 +54,70 @@
             </Grid.ColumnDefinitions>
 
             <!-- Card 1: 💰 إجمالي المبيعات -->
-            <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5" Padding="14,10" Margin="0,0,10,0">
+            <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.2" Padding="10,6" Margin="0,0,6,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="💰 إجمالي المبيعات للفترة المحددة" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4,0,0">
-                        <TextBlock Text="{Binding TotalSalesAmount, StringFormat='{}{0:N0}'}" FontSize="22" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" />
-                        <TextBlock Text=" د.ع" FontSize="12" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Bottom" Margin="4,0,0,2" />
+                    <TextBlock Grid.Row="0" Text="💰 إجمالي المبيعات للفترة المحددة" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="{Binding TotalSalesAmount, StringFormat='{}{0:N0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" />
+                        <TextBlock Text=" د.ع" FontSize="10.5" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
                     </StackPanel>
                 </Grid>
             </Border>
 
             <!-- Card 2: 🧾 عدد الفواتير المنفذة -->
-            <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1.5" Padding="14,10" Margin="5,0,10,0">
+            <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1.2" Padding="10,6" Margin="3,0,6,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="🧾 عدد الفواتير والوصلات" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4,0,0">
-                        <TextBlock Text="{Binding TotalInvoicesCount, StringFormat='{}{0:N0}'}" FontSize="22" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" />
-                        <TextBlock Text=" فاتورة" FontSize="12" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Bottom" Margin="4,0,0,2" />
+                    <TextBlock Grid.Row="0" Text="🧾 عدد الفواتير والوصلات" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="{Binding TotalInvoicesCount, StringFormat='{}{0:N0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" />
+                        <TextBlock Text=" فاتورة" FontSize="10.5" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
                     </StackPanel>
                 </Grid>
             </Border>
 
             <!-- Card 3: 📈 صافي أرباح المبيعات -->
-            <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1.5" Padding="14,10" Margin="5,0,10,0">
+            <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1.2" Padding="10,6" Margin="3,0,6,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="📈 صافي الأرباح المحققة" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4,0,0">
-                        <TextBlock Text="{Binding TotalProfitAmount, StringFormat='{}{0:N0}'}" FontSize="22" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" />
-                        <TextBlock Text=" د.ع" FontSize="12" Foreground="{DynamicResource WarningBrush}" VerticalAlignment="Bottom" Margin="4,0,0,2" />
+                    <TextBlock Grid.Row="0" Text="📈 صافي الأرباح المحققة" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="{Binding TotalProfitAmount, StringFormat='{}{0:N0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" />
+                        <TextBlock Text=" د.ع" FontSize="10.5" Foreground="{DynamicResource WarningBrush}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
                     </StackPanel>
                 </Grid>
             </Border>
 
             <!-- Card 4: 💳 متوسط قيمة الفاتورة -->
-            <Border Grid.Column="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" Padding="14,10" Margin="5,0,0,0">
+            <Border Grid.Column="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.2" Padding="10,6" Margin="3,0,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="💳 متوسط قيمة الفاتورة" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4,0,0">
-                        <TextBlock Text="{Binding AverageInvoiceAmount, StringFormat='{}{0:N0}'}" FontSize="22" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" />
-                        <TextBlock Text=" د.ع" FontSize="12" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Bottom" Margin="4,0,0,2" />
+                    <TextBlock Grid.Row="0" Text="💳 متوسط قيمة الفاتورة" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="{Binding AverageInvoiceAmount, StringFormat='{}{0:N0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text=" د.ع" FontSize="10.5" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
                     </StackPanel>
                 </Grid>
             </Border>
         </Grid>
 
         <!-- ======================================================== -->
-        <!-- 2: FILTERS TOOLBAR & PRESETS -->
+        <!-- 2: FILTERS TOOLBAR & PRESETS (COMPACT & RAISED UP) -->
         <!-- ======================================================== -->
-        <Border Grid.Row="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14,10" Margin="0,0,0,14">
+        <Border Grid.Row="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,6" Margin="0,0,0,8">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -125,7 +125,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Row 0: Quick Date Presets & Custom Calendar Date Pickers -->
-                <Grid Grid.Row="0" Margin="0,0,0,12">
+                <Grid Grid.Row="0" Margin="0,0,0,6">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -133,53 +133,53 @@
 
                     <!-- Quick Date Presets -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="الفترة الزمنية:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,10,0" />
-                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterTodayCommand}" Padding="10,6" Margin="0,0,4,0">
-                            <TextBlock Text="📅 اليوم" FontWeight="Bold" FontSize="12" />
+                        <TextBlock Text="الفترة الزمنية:" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterTodayCommand}" Padding="8,4" Margin="0,0,3,0">
+                            <TextBlock Text="📅 اليوم" FontWeight="Bold" FontSize="11" />
                         </Button>
-                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterYesterdayCommand}" Padding="10,6" Margin="0,0,4,0">
-                            <TextBlock Text="أمس" FontSize="12" />
+                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterYesterdayCommand}" Padding="8,4" Margin="0,0,3,0">
+                            <TextBlock Text="أمس" FontSize="11" />
                         </Button>
-                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterWeekCommand}" Padding="10,6" Margin="0,0,4,0">
-                            <TextBlock Text="آخر 7 أيام" FontSize="12" />
+                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterWeekCommand}" Padding="8,4" Margin="0,0,3,0">
+                            <TextBlock Text="آخر 7 أيام" FontSize="11" />
                         </Button>
-                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterMonthCommand}" Padding="10,6" Margin="0,0,4,0">
-                            <TextBlock Text="هذا الشهر" FontSize="12" />
+                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterMonthCommand}" Padding="8,4" Margin="0,0,3,0">
+                            <TextBlock Text="هذا الشهر" FontSize="11" />
                         </Button>
-                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterAllCommand}" Padding="10,6">
-                            <TextBlock Text="كافة المبيعات" FontSize="12" />
+                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterAllCommand}" Padding="8,4">
+                            <TextBlock Text="كافة المبيعات" FontSize="11" />
                         </Button>
                     </StackPanel>
 
                     <!-- Custom Calendar Date Selector (من تاريخ / إلى تاريخ) -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="8,4">
+                        <Border Background="{DynamicResource BgDarkPrimary}" CornerRadius="8" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="6,2">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="📅 من:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <TextBlock Text="📅 من:" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center" Margin="0,0,4,0" />
                                 <DatePicker SelectedDate="{Binding CustomStartDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                            Height="32" Width="135" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            Height="26" Width="110" Margin="0,0,6,0" VerticalAlignment="Center" FontSize="10.5" />
 
-                                <TextBlock Text="إلى:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <TextBlock Text="إلى:" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center" Margin="0,0,4,0" />
                                 <DatePicker SelectedDate="{Binding CustomEndDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                            Height="32" Width="135" VerticalAlignment="Center" />
+                                            Height="26" Width="110" VerticalAlignment="Center" FontSize="10.5" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
                 </Grid>
 
-                <!-- Row 1: Search & Dropdown Filters -->
+                <!-- Row 1: Search & Dropdown Filters (COMPACT) -->
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <!-- Search Box (Supports Barcode, Product Name, Invoice Number, Cashier, Customer) -->
                         <ColumnDefinition Width="2.2*" />
                         <!-- Payment Method Filter -->
-                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="135" />
                         <!-- Cashier Filter -->
-                        <ColumnDefinition Width="170" />
+                        <ColumnDefinition Width="145" />
                     </Grid.ColumnDefinitions>
 
                     <!-- Modern Search Box with integrated icon & watermark -->
-                    <Border Grid.Column="0" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" Height="42" Margin="0,0,10,0" VerticalAlignment="Center">
+                    <Border Grid.Column="0" Background="{DynamicResource BgDarkPrimary}" CornerRadius="8" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.2" Height="32" Margin="0,0,8,0" VerticalAlignment="Center">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -187,22 +187,22 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0" Text="🔍" FontSize="14" VerticalAlignment="Center" Margin="10,0,6,0" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Grid.Column="0" Text="🔍" FontSize="12" VerticalAlignment="Center" Margin="8,0,4,0" Foreground="{DynamicResource TextSecondary}" />
 
                             <TextBox Grid.Column="1" 
                                      Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
-                                     FontSize="13" FontWeight="SemiBold"
+                                     FontSize="11.5" FontWeight="SemiBold"
                                      Foreground="{DynamicResource TextPrimary}"
                                      Background="Transparent"
                                      BorderThickness="0"
-                                     Padding="4,8"
+                                     Padding="4,4"
                                      VerticalContentAlignment="Center" />
 
                             <!-- Placeholder Watermark Text -->
                             <TextBlock Grid.Column="1" 
                                        Text="ابحث بالباركود، اسم المادة، رقم الوصل، الكاشير، أو العميل..." 
-                                       FontSize="12" Foreground="{DynamicResource TextMuted}"
-                                       VerticalAlignment="Center" Margin="6,0,0,0" IsHitTestVisible="False">
+                                       FontSize="11" Foreground="{DynamicResource TextMuted}"
+                                       VerticalAlignment="Center" Margin="4,0,0,0" IsHitTestVisible="False">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Visibility" Value="Collapsed" />
@@ -223,7 +223,7 @@
                                     Command="{Binding ClearSearchCommand}"
                                     Background="Transparent" BorderThickness="0"
                                     Foreground="{DynamicResource TextSecondary}"
-                                    Cursor="Hand" Margin="0,0,6,0" VerticalAlignment="Center" Padding="4">
+                                    Cursor="Hand" Margin="0,0,4,0" VerticalAlignment="Center" Padding="2">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Visibility" Value="Visible" />
@@ -237,33 +237,34 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
-                                <TextBlock Text="✕" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" />
+                                <TextBlock Text="✕" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" />
                             </Button>
                         </Grid>
                     </Border>
 
                     <!-- Payment Method Dropdown -->
-                    <ComboBox Grid.Column="1" SelectedValue="{Binding SelectedPaymentMethod}" SelectedValuePath="Tag" Height="42" Margin="0,0,10,0" VerticalContentAlignment="Center">
+                    <ComboBox Grid.Column="1" SelectedValue="{Binding SelectedPaymentMethod}" SelectedValuePath="Tag" Height="32" Margin="0,0,8,0" VerticalContentAlignment="Center" FontSize="11">
                         <ComboBoxItem Content="💳 طرق الدفع (الكل)" Tag="All" IsSelected="True" />
                         <ComboBoxItem Content="💵 نقداً (Cash)" Tag="Cash" />
                         <ComboBoxItem Content="💳 بطاقة (Card)" Tag="Card" />
                     </ComboBox>
 
                     <!-- Cashier Selector -->
-                    <ComboBox Grid.Column="2" ItemsSource="{Binding CashierNames}" SelectedItem="{Binding SelectedCashier}" Height="42" VerticalContentAlignment="Center" />
+                    <ComboBox Grid.Column="2" ItemsSource="{Binding CashierNames}" SelectedItem="{Binding SelectedCashier}" Height="32" VerticalContentAlignment="Center" FontSize="11" />
                 </Grid>
             </Grid>
         </Border>
 
         <!-- ======================================================== -->
-        <!-- 3: INVOICES MASTER DATAGRID -->
+        <!-- 3: INVOICES MASTER DATAGRID (EXPANDED TO MAXIMUM VIEW) -->
         <!-- ======================================================== -->
-        <Border Grid.Row="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="12">
+        <Border Grid.Row="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="6">
             <DataGrid ItemsSource="{Binding FilteredSales}" SelectedItem="{Binding SelectedSale}" AutoGenerateColumns="False" 
                       IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                       Background="Transparent" RowBackground="Transparent" BorderThickness="0"
                       HorizontalGridLinesBrush="{DynamicResource BorderDark}"
-                      RowHeight="48">
+                      CanUserResizeColumns="False" CanUserReorderColumns="False"
+                      RowHeight="40">
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
                         <Setter Property="Cursor" Value="Hand" />
@@ -281,11 +282,11 @@
                 </DataGrid.RowStyle>
                 <DataGrid.Columns>
                     <!-- رقم الفاتورة -->
-                    <DataGridTemplateColumn Header="رقم الوصل" Width="150">
+                    <DataGridTemplateColumn Header="رقم الوصل" Width="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding InvoiceNumber}" FontWeight="Bold" FontSize="13">
+                                    <TextBlock Text="{Binding InvoiceNumber}" FontWeight="Bold" FontSize="11.5">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="{DynamicResource PrimaryAccent}" />
@@ -303,15 +304,12 @@
                     </DataGridTemplateColumn>
 
                     <!-- التاريخ والوقت -->
-                    <DataGridTemplateColumn Header="التاريخ والوقت" Width="180">
+                    <DataGridTemplateColumn Header="التاريخ والوقت" Width="150">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="📅 " FontSize="10" />
-                                        <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd hh:mm tt}'}" FontSize="12" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" />
-                                    </StackPanel>
-                                    <Border Background="#450A0A" CornerRadius="4" Padding="4,1" Margin="0,2,0,0" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd hh:mm tt}'}" FontSize="11" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" />
+                                    <Border Background="#450A0A" CornerRadius="4" Padding="3,0" Margin="0,1,0,0" HorizontalAlignment="Left">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Visibility" Value="Collapsed" />
@@ -322,7 +320,7 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <TextBlock Text="{Binding UpdatedAt, StringFormat='{}إرجاع: {0:yyyy/MM/dd hh:mm tt}'}" FontSize="10.5" Foreground="#FCA5A5" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding UpdatedAt, StringFormat='{}إرجاع: {0:yyyy/MM/dd hh:mm tt}'}" FontSize="9.5" Foreground="#FCA5A5" FontWeight="Bold" />
                                     </Border>
                                 </StackPanel>
                             </DataTemplate>
@@ -330,22 +328,22 @@
                     </DataGridTemplateColumn>
 
                     <!-- الكاشير -->
-                    <DataGridTextColumn Header="الكاشير" Binding="{Binding User.FullName, TargetNullValue='كاشير عام'}" Width="130" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" FontSize="13" />
+                    <DataGridTextColumn Header="الكاشير" Binding="{Binding User.FullName, TargetNullValue='كاشير عام'}" Width="105" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" FontSize="11.5" />
 
                     <!-- عدد المواد -->
-                    <DataGridTextColumn Header="المواد" Binding="{Binding Items.Count, StringFormat='{}{0} أصناف'}" Width="90" Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                    <DataGridTextColumn Header="المواد" Binding="{Binding Items.Count, StringFormat='{}{0} أصناف'}" Width="65" Foreground="{DynamicResource TextSecondary}" FontSize="11" />
 
                     <!-- المجموع الفرعي -->
-                    <DataGridTextColumn Header="المجموع الفرعي" Binding="{Binding SubTotal, StringFormat='{}{0:N0} د.ع'}" Width="120" Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                    <DataGridTextColumn Header="المجموع الفرعي" Binding="{Binding SubTotal, StringFormat='{}{0:N0} د.ع'}" Width="95" Foreground="{DynamicResource TextSecondary}" FontSize="11" />
 
                     <!-- الخصم -->
-                    <DataGridTextColumn Header="الخصم" Binding="{Binding DiscountAmount, StringFormat='{}{0:N0} د.ع'}" Width="100" Foreground="{DynamicResource DangerBrush}" FontSize="12" />
+                    <DataGridTextColumn Header="الخصم" Binding="{Binding DiscountAmount, StringFormat='{}{0:N0} د.ع'}" Width="75" Foreground="{DynamicResource DangerBrush}" FontSize="11" />
 
                     <!-- المبلغ الإجمالي النهائي -->
-                    <DataGridTemplateColumn Header="المبلغ الإجمالي" Width="140">
+                    <DataGridTemplateColumn Header="المبلغ الإجمالي" Width="110">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" FontWeight="Black" FontSize="13.5" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" FontWeight="Black" FontSize="12.5" VerticalAlignment="Center">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
@@ -363,10 +361,10 @@
                     </DataGridTemplateColumn>
 
                     <!-- طريقة الدفع -->
-                    <DataGridTemplateColumn Header="طريقة الدفع" Width="100">
+                    <DataGridTemplateColumn Header="طريقة الدفع" Width="80">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border CornerRadius="6" Padding="8,3" HorizontalAlignment="Center">
+                                <Border CornerRadius="6" Padding="6,2" HorizontalAlignment="Center">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="#1E3A8A" />
@@ -377,7 +375,7 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <TextBlock Text="{Binding PaymentMethod}" FontSize="11" FontWeight="Bold">
+                                    <TextBlock Text="{Binding PaymentMethod}" FontSize="10.5" FontWeight="Bold">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="#93C5FD" />
@@ -399,10 +397,10 @@
                     </DataGridTemplateColumn>
 
                     <!-- الحالة -->
-                    <DataGridTemplateColumn Header="الحالة" Width="110">
+                    <DataGridTemplateColumn Header="الحالة" Width="85">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border CornerRadius="8" Padding="8,4" HorizontalAlignment="Center">
+                                <Border CornerRadius="6" Padding="6,2" HorizontalAlignment="Center">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="#064E3B" />
@@ -416,7 +414,7 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <TextBlock FontSize="11" FontWeight="Bold">
+                                    <TextBlock FontSize="10.5" FontWeight="Bold">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="#34D399" />
@@ -435,34 +433,34 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <!-- الإجراءات (عرض وطباعة واسترجاع) -->
-                    <DataGridTemplateColumn Header="إجراءات" Width="240">
+                    <!-- الإجراءات (عرض وطباعة واسترجاع متراصة ومدمجة) -->
+                    <DataGridTemplateColumn Header="إجراءات" Width="*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <!-- زر عرض تفاصيل الوصل -->
                                     <Button Style="{DynamicResource PrimaryAccentButton}" 
                                             Command="{Binding DataContext.ViewInvoiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                            CommandParameter="{Binding}" Padding="8,4" FontSize="11" Margin="0,0,4,0">
+                                            CommandParameter="{Binding}" Padding="6,3" FontSize="11" Margin="0,0,3,0">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="👁️ " FontSize="11" />
-                                            <TextBlock Text="معاينة" FontWeight="Bold" FontSize="11" />
+                                            <TextBlock Text="👁️ " FontSize="10" />
+                                            <TextBlock Text="معاينة" FontWeight="Bold" FontSize="10.5" />
                                         </StackPanel>
                                     </Button>
 
                                     <!-- زر طباعة الوصل المباشرة -->
                                     <Button Style="{DynamicResource ActionButton}" 
                                             Command="{Binding DataContext.PrintInvoiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                            CommandParameter="{Binding}" Padding="8,4" FontSize="11" Margin="0,0,4,0">
+                                            CommandParameter="{Binding}" Padding="6,3" FontSize="11" Margin="0,0,3,0">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="🖨️ " FontSize="11" />
-                                            <TextBlock Text="طباعة" FontWeight="Bold" FontSize="11" />
+                                            <TextBlock Text="🖨️ " FontSize="10" />
+                                            <TextBlock Text="طباعة" FontWeight="Bold" FontSize="10.5" />
                                         </StackPanel>
                                     </Button>
 
                                     <!-- زر استرجاع الوصل -->
                                     <Button Command="{Binding DataContext.ReturnSaleInvoiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                            CommandParameter="{Binding}" Padding="8,4" FontSize="11">
+                                            CommandParameter="{Binding}" Padding="6,3" FontSize="11">
                                         <Button.Style>
                                             <Style TargetType="Button" BasedOn="{StaticResource DangerButton}">
                                                 <Style.Triggers>
@@ -474,8 +472,8 @@
                                             </Style>
                                         </Button.Style>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="🔄 " FontSize="11" />
-                                            <TextBlock Text="استرجاع" FontWeight="Bold" FontSize="11" />
+                                            <TextBlock Text="🔄 " FontSize="10" />
+                                            <TextBlock Text="استرجاع" FontWeight="Bold" FontSize="10.5" />
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
@@ -515,18 +513,47 @@
 
                     <!-- Receipt Preview Box (Scrollable) -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,14">
-                        <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#000000" BorderThickness="1.5" Padding="18">
+                        <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#000000" BorderThickness="1.5" Padding="16">
                             <StackPanel>
                                 <!-- Receipt Store Header -->
-                                <StackPanel HorizontalAlignment="Center" Margin="0,0,0,10">
+                                <StackPanel HorizontalAlignment="Center" Margin="0,0,0,8">
                                     <TextBlock Text="⚡ 7amo.pos" FontSize="18" FontWeight="Black" Foreground="#000000" HorizontalAlignment="Center" />
-                                    <TextBlock Text="نظام نقاط البيع وإدارة المخازن المتكامل" FontSize="11" Foreground="#475569" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                                    
+                                    <!-- Sales Mode Header -->
+                                    <TextBlock Text="نظام نقاط البيع وإدارة المخازن المتكامل" FontSize="11" Foreground="#475569" HorizontalAlignment="Center" Margin="0,2,0,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedSale.Status}" Value="Returned">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <!-- Returned Mode Banner Header -->
+                                    <Border Background="#FEE2E2" BorderBrush="#EF4444" BorderThickness="1.2" CornerRadius="6" Padding="8,3" Margin="0,4,0,0" HorizontalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedSale.Status}" Value="Returned">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="🛑 وصل إرجاع مواد مسترجعة (RETURN RECEIPT) 🛑" FontSize="11" FontWeight="Black" Foreground="#B91C1C" />
+                                    </Border>
+
                                     <TextBlock Text="-----------------------------------------------------" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,4,0,0" />
                                 </StackPanel>
 
                                 <!-- Meta Info -->
                                 <Grid Margin="0,0,0,8">
                                     <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
@@ -537,10 +564,25 @@
                                     </Grid.ColumnDefinitions>
 
                                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding SelectedSale.InvoiceNumber, StringFormat='رقم الوصل: {0}'}" FontSize="12" FontWeight="Bold" Foreground="#000000" />
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSale.CreatedAt, StringFormat='التاريخ: {0:yyyy-MM-dd hh:mm tt}'}" FontSize="11" Foreground="#475569" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSale.CreatedAt, StringFormat='تاريخ البيع: {0:yyyy-MM-dd hh:mm tt}'}" FontSize="11" Foreground="#475569" HorizontalAlignment="Right" />
 
                                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding SelectedSale.User.FullName, TargetNullValue='كاشير عام', StringFormat='الكاشير: {0}'}" FontSize="11" Foreground="#475569" Margin="0,3,0,0" />
                                     <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSale.PaymentMethod, StringFormat='الدفع: {0}'}" FontSize="11" FontWeight="Bold" Foreground="#000000" HorizontalAlignment="Right" Margin="0,3,0,0" />
+
+                                    <!-- Return Timestamp (shown when returned) -->
+                                    <Border Grid.Row="2" Grid.ColumnSpan="2" Background="#FEF2F2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,4,0,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedSale.Status}" Value="Returned">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding SelectedSale.UpdatedAt, StringFormat='تاريخ ووقت الإرجاع: {0:yyyy-MM-dd hh:mm tt}'}" FontSize="11" FontWeight="Bold" Foreground="#DC2626" />
+                                    </Border>
                                 </Grid>
 
                                 <Separator Background="#000000" Margin="0,4,0,8" />
@@ -593,23 +635,84 @@
                                         <TextBlock Text="{Binding SelectedSale.DiscountAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="12" FontWeight="Bold" Foreground="#DC2626" />
                                     </StackPanel>
 
-                                    <Border Background="#F1F5F9" CornerRadius="6" Padding="10,6" Margin="0,4,0,0">
+                                    <Border CornerRadius="6" Padding="10,6" Margin="0,4,0,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#F1F5F9" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedSale.Status}" Value="Returned">
+                                                        <Setter Property="Background" Value="#FEF2F2" />
+                                                        <Setter Property="BorderBrush" Value="#EF4444" />
+                                                        <Setter Property="BorderThickness" Value="1.2" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                            <TextBlock Text="المبلغ الإجمالي المطلوب: " FontSize="13" FontWeight="Bold" Foreground="#000000" />
-                                            <TextBlock Text="{Binding SelectedSale.TotalAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="16" FontWeight="Black" Foreground="#059669" />
+                                            <TextBlock FontSize="13" FontWeight="Bold" Foreground="#000000">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="المبلغ الإجمالي المطلوب: " />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding SelectedSale.Status}" Value="Returned">
+                                                                <Setter Property="Text" Value="إجمالي المبلغ المسترد: " />
+                                                                <Setter Property="Foreground" Value="#B91C1C" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <TextBlock FontSize="16" FontWeight="Black">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="{Binding SelectedSale.TotalAmount, StringFormat='{}{0:N0} د.ع'}" />
+                                                        <Setter Property="Foreground" Value="#059669" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding SelectedSale.Status}" Value="Returned">
+                                                                <Setter Property="Text" Value="{Binding SelectedSale.TotalAmount, StringFormat='{}- {0:N0} د.ع'}" />
+                                                                <Setter Property="Foreground" Value="#DC2626" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
 
                                 <!-- Footer Message -->
-                                <TextBlock Text="شكراً لتعاملكم معنا ونتشرف بزيارتكم دائماً" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,6,0,0" />
+                                <TextBlock FontSize="10" HorizontalAlignment="Center" Margin="0,6,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="شكراً لتعاملكم معنا ونتشرف بزيارتكم دائماً" />
+                                            <Setter Property="Foreground" Value="#64748B" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedSale.Status}" Value="Returned">
+                                                    <Setter Property="Text" Value="✔ تم استرجاع المواد بنجاح وإعادة المبلغ إلى العميل" />
+                                                    <Setter Property="Foreground" Value="#B91C1C" />
+                                                    <Setter Property="FontWeight" Value="Bold" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
                         </Border>
                     </ScrollViewer>
 
                     <!-- Modal Actions -->
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Style="{DynamicResource DangerButton}" Command="{Binding ReturnSaleInvoiceCommand}" Padding="16,8" Margin="0,0,10,0">
+                        <Button Command="{Binding ReturnSaleInvoiceCommand}" Padding="16,8" Margin="0,0,10,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource DangerButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedSale.Status}" Value="Returned">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                            <Setter Property="Opacity" Value="0.4" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🔄 " FontSize="14" />
                                 <TextBlock Text="استرجاع هذا الوصل" FontWeight="Bold" FontSize="13" />
