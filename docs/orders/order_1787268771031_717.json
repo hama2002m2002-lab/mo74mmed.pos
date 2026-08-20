@@ -1,0 +1,20 @@
+{
+  "orderNumber": "ORD-20260820-833",
+  "orderDate": "2026-08-20T23:32:51.031Z",
+  "marketName": "كيك",
+  "marketPhone": "",
+  "marketAddress": "",
+  "representativeName": "مندوب المبيعات",
+  "notes": "",
+  "totalAmount": 5500,
+  "items": [
+    {
+      "productId": "4acdbb41-8fe9-474d-976e-392b458a2dae",
+      "productName": "كيك",
+      "barcode": "2002459637660",
+      "quantity": 1,
+      "unitType": "Carton",
+      "unitPrice": 5500
+    }
+  ]
+}
