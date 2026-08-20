@@ -338,6 +338,16 @@ public class MainShellViewModel : BaseViewModel
             _ = SuppliersVM.LoadSuppliersAsync();
         };
 
+        AddProductVM.RequestNavigateToInventoryWithProduct += async (product) =>
+        {
+            ActiveTab = "Inventory";
+            IsSidebarVisible = true;
+            CurrentView = InventoryVM;
+            InventoryVM.SearchQuery = string.Empty;
+            await InventoryVM.LoadProductsAsync();
+            InventoryVM.SelectedProduct = InventoryVM.Products.FirstOrDefault(p => p.Barcode == product.Barcode || p.Id == product.Id);
+        };
+
         // 13. ربط واجهة البيع (الكاشير) مع المخزن والتقارير والداشبورد والمبيعات
         CashierVM.SaleCompleted += () =>
         {

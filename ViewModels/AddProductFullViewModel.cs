@@ -459,6 +459,7 @@ public class AddProductFullViewModel : BaseViewModel
     public event Action? RequestFocusBarcodeField;
     public event Action? RequestBackToNavigation;
     public event Action? ProductSaved;
+    public event Action<Product>? RequestNavigateToInventoryWithProduct;
 
     public AddProductFullViewModel()
     {
@@ -813,75 +814,83 @@ public class AddProductFullViewModel : BaseViewModel
             return;
         }
 
-        // 1. ربط أو إنشاء الصنف تلقائياً إن كان مختاراً أو مكتوباً يدوياً
-        Guid? resolvedCategoryId = null;
-        string catName = SelectedCategory?.Name ?? CategoryText;
-        if (!string.IsNullOrWhiteSpace(catName))
+        try
         {
-            string cleanCat = catName.Trim();
-            using var dbCat = new AppDbContext();
-            var catObj = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(dbCat.Categories, c => c.Name.ToLower() == cleanCat.ToLower() && !c.IsDeleted);
-            if (catObj == null)
+            // 1. ربط أو إنشاء الصنف تلقائياً إن كان مختاراً أو مكتوباً يدوياً
+            Guid? resolvedCategoryId = null;
+            string catName = SelectedCategory?.Name ?? CategoryText;
+            if (!string.IsNullOrWhiteSpace(catName))
             {
-                catObj = new Category
+                string cleanCat = catName.Trim();
+                using var dbCat = new AppDbContext();
+                var catObj = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(dbCat.Categories, c => c.Name.ToLower() == cleanCat.ToLower() && !c.IsDeleted);
+                if (catObj == null)
                 {
-                    Id = Guid.NewGuid(),
-                    Name = cleanCat,
-                    ColorHex = "#3B82F6",
-                    CreatedAt = DateTime.UtcNow,
-                    IsDeleted = false
-                };
-                await dbCat.Categories.AddAsync(catObj);
-                await dbCat.SaveChangesAsync();
+                    catObj = new Category
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = cleanCat,
+                        ColorHex = "#3B82F6",
+                        CreatedAt = DateTime.UtcNow,
+                        IsDeleted = false
+                    };
+                    await dbCat.Categories.AddAsync(catObj);
+                    await dbCat.SaveChangesAsync();
+                }
+                resolvedCategoryId = catObj.Id;
             }
-            resolvedCategoryId = catObj.Id;
+
+            // 2. ربط أو إنشاء المندوب تلقائياً إن وجد اسم
+            Supplier? supplierObj = null;
+            if (!string.IsNullOrWhiteSpace(SupplierName))
+            {
+                supplierObj = await _supplierService.GetOrCreateSupplierByNameAsync(SupplierName.Trim(), SupplierPhone, SupplierCompany, SupplierNotes);
+            }
+
+            var product = new Product
+            {
+                Id = ProductId,
+                Barcode = Barcode.Trim(),
+                Name = Name.Trim(),
+                CategoryId = resolvedCategoryId,
+                SupplierId = supplierObj?.Id,
+                SupplierName = supplierObj?.Name ?? (string.IsNullOrWhiteSpace(SupplierName) ? null : SupplierName.Trim()),
+
+                CartonsCount = CartonsCount,
+                ItemsPerCarton = ItemsPerCarton,
+                StockQuantity = StockQuantity,
+                MinStockAlert = MinStockAlert,
+                Unit = string.IsNullOrWhiteSpace(Unit) ? "قطعة" : Unit.Trim(),
+
+                CartonPurchasePrice = CartonPurchasePrice,
+                Cost = Cost,
+                Price = Price,
+                WholesalePrice = WholesalePrice,
+                CartonSellingPrice = CartonSellingPrice,
+
+                ExpiryDate = HasExpiryDate ? ExpiryDate : null,
+                ExpiryAlertDays = ExpiryAlertDays,
+                TaxRate = 0.0m,
+                IsActive = true
+            };
+
+            bool saved = await _productService.SaveProductAsync(product);
+            if (saved)
+            {
+                StatusMessage = $"تم حفظ المادة '{product.Name}' بنجاح في قاعدة البيانات.";
+                ProductSaved?.Invoke();
+                RequestNavigateToInventoryWithProduct?.Invoke(product);
+                MessageBox.Show(Loc.IsKurdish ? $"کاڵای '{product.Name}' بە سەرکەوتوویی پاشەکەوت کرا و نێردرا بۆ کۆگا!" : $"تم حفظ المادة '{product.Name}' بنجاح وإرسالها للمخزن!", Loc.IsKurdish ? "سەرکەوتوو بوو" : "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
+                ClearForm();
+            }
+            else
+            {
+                MessageBox.Show(Loc.IsKurdish ? "پاشەکەوتکردنی کاڵا سەرکەوتوو نەبوو، تکایە دڵنیابەرەوە لە زانیارییەکان" : "فشل حفظ المادة، يرجى التأكد من البيانات ومحاولة الحفظ مجدداً.", Loc.IsKurdish ? "هەڵە" : "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
-
-        // 2. ربط أو إنشاء المندوب تلقائياً إن وجد اسم
-        Supplier? supplierObj = null;
-        if (!string.IsNullOrWhiteSpace(SupplierName))
+        catch (Exception ex)
         {
-            supplierObj = await _supplierService.GetOrCreateSupplierByNameAsync(SupplierName.Trim(), SupplierPhone, SupplierCompany, SupplierNotes);
-        }
-
-        var product = new Product
-        {
-            Id = ProductId,
-            Barcode = Barcode.Trim(),
-            Name = Name.Trim(),
-            CategoryId = resolvedCategoryId,
-            SupplierId = supplierObj?.Id,
-            SupplierName = supplierObj?.Name ?? (string.IsNullOrWhiteSpace(SupplierName) ? null : SupplierName.Trim()),
-
-            CartonsCount = CartonsCount,
-            ItemsPerCarton = ItemsPerCarton,
-            StockQuantity = StockQuantity,
-            MinStockAlert = MinStockAlert,
-            Unit = string.IsNullOrWhiteSpace(Unit) ? "قطعة" : Unit.Trim(),
-
-            CartonPurchasePrice = CartonPurchasePrice,
-            Cost = Cost,
-            Price = Price,
-            WholesalePrice = WholesalePrice,
-            CartonSellingPrice = CartonSellingPrice,
-
-            ExpiryDate = HasExpiryDate ? ExpiryDate : null,
-            ExpiryAlertDays = ExpiryAlertDays,
-            TaxRate = 0.0m,
-            IsActive = true
-        };
-
-        bool saved = await _productService.SaveProductAsync(product);
-        if (saved)
-        {
-            StatusMessage = $"تم حفظ المادة '{product.Name}' بنجاح في قاعدة البيانات.";
-            ProductSaved?.Invoke();
-            MessageBox.Show(Loc.IsKurdish ? $"کاڵای '{product.Name}' بە سەرکەوتوویی پاشەکەوت کرا!" : $"تم حفظ المادة '{product.Name}' بنجاح!", Loc.IsKurdish ? "سەرکەوتوو بوو" : "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
-            ClearForm();
-        }
-        else
-        {
-            MessageBox.Show(Loc.IsKurdish ? "پاشەکەوتکردنی کاڵا سەرکەوتوو نەبوو، تکایە دڵنیابەرەوە لە زانیارییەکان" : "فشل حفظ المادة، يرجى التأكد من البيانات ومحاولة الحفظ مجدداً.", Loc.IsKurdish ? "هەڵە" : "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"حدث خطأ أثناء حفظ المادة: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

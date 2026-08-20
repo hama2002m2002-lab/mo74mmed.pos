@@ -52,14 +52,15 @@ public class SupplierService : ISupplierService
             throw new ArgumentException("Supplier name cannot be empty", nameof(name));
 
         string cleanName = name.Trim();
-        var existing = await _context.Suppliers.FirstOrDefaultAsync(s => s.Name.ToLower() == cleanName.ToLower());
+        using var db = new AppDbContext();
+        var existing = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(db.Suppliers, s => s.Name.ToLower() == cleanName.ToLower() && !s.IsDeleted);
         if (existing != null)
         {
             if (!string.IsNullOrWhiteSpace(phone)) existing.Phone = phone;
             if (!string.IsNullOrWhiteSpace(company)) existing.Company = company;
             if (!string.IsNullOrWhiteSpace(notes)) existing.Notes = notes;
             existing.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            await db.SaveChangesAsync();
             return existing;
         }
 
@@ -73,8 +74,8 @@ public class SupplierService : ISupplierService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _context.Suppliers.AddAsync(supplier);
-        await _context.SaveChangesAsync();
+        await db.Suppliers.AddAsync(supplier);
+        await db.SaveChangesAsync();
         return supplier;
     }
 
