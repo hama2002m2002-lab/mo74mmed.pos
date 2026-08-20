@@ -104,6 +104,7 @@ public class InventoryViewModel : BaseViewModel
 
     #region Commands & Events
 
+    public ICommand AddProductCommand { get; }
     public ICommand RefreshCommand { get; }
     public ICommand EditProductCommand { get; }
     public ICommand DeleteProductCommand { get; }
@@ -121,6 +122,7 @@ public class InventoryViewModel : BaseViewModel
         _context = new AppDbContext();
         _productService = new ProductService(_context);
 
+        AddProductCommand = new RelayCommand(() => RequestAddProduct?.Invoke());
         RefreshCommand = new AsyncRelayCommand(async () => await LoadProductsAsync());
 
         EditProductCommand = new RelayCommand((param) =>

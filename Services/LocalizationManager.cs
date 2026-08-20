@@ -236,6 +236,8 @@ public class LocalizationManager : INotifyPropertyChanged
         _ar["Inv_Refresh"] = "تحديث البيانات";
         _ar["Inv_AllCategories"] = "جميع التصنيفات";
         _ar["Inv_SearchPlaceholder"] = "بحث باسم المادة، الباركود، أو المندوب...";
+        _ar["Inv_Barcode"] = "الباركود";
+        _ar["Inv_ProductName"] = "اسم المادة";
         _ar["Inv_Category"] = "التصنيف";
         _ar["Inv_Supplier"] = "المندوب المورد";
         _ar["Inv_SellingPrice"] = "سعر البيع (مفرد)";
@@ -699,6 +701,8 @@ public class LocalizationManager : INotifyPropertyChanged
         _ku["Inv_Refresh"] = "نوێکردنەوەی زانیارییەکان";
         _ku["Inv_AllCategories"] = "هەموو پۆلەکان";
         _ku["Inv_SearchPlaceholder"] = "گەڕان بەپێی ناوی کاڵا، بارکۆد، یان مەندووب...";
+        _ku["Inv_Barcode"] = "بارکۆد";
+        _ku["Inv_ProductName"] = "ناوی کاڵا";
         _ku["Inv_Category"] = "پۆل";
         _ku["Inv_Supplier"] = "مەندووبی دابینکەر";
         _ku["Inv_SellingPrice"] = "نرخی فرۆشتنی تاک";
