@@ -556,6 +556,11 @@ public class LocalizationManager : INotifyPropertyChanged
         _ar["Shift_PrintReport"] = "🖨️ طباعة تقرير الوردية";
         _ar["Shift_EndShift"] = "🛑 إنهاء وقت الكاشير وإغلاق الوردية";
 
+        // Settings & Emergency Rollback (Arabic)
+        _ar["Settings_RollbackTitle"] = "الرجوع إلى الإصدار السابق (حالة الطوارئ)";
+        _ar["Settings_RollbackDesc"] = "في حال واجهت أي مشكلة بعد آخر تحديث أو حدوث تعليق، يمكنك الرجوع فوراً إلى الإصدار السابق بنقرة واحدة مع الحفاظ الكامل على قاعدة بيانات المبيعات والمخزن.";
+        _ar["Settings_RollbackBtn"] = "🔄 الرجوع للإصدار السابق (Rollback)";
+
         // =========================================================================
         // KURDISH TRANSLATIONS (کوردی سۆرانی)
         // =========================================================================
@@ -1022,6 +1027,11 @@ public class LocalizationManager : INotifyPropertyChanged
         _ku["Shift_InvoicesCount"] = "ژمارەی وەسڵەکان:";
         _ku["Shift_PrintReport"] = "🖨️ چاپکردنی راپۆرتی وردیە";
         _ku["Shift_EndShift"] = "🛑 کۆتاییهێنان بە وردیە و دەرچوون";
+
+        // Settings & Emergency Rollback (Kurdish)
+        _ku["Settings_RollbackTitle"] = "گەڕانەوە بۆ وەشانی پێشوو (دۆخی کتوپڕ)";
+        _ku["Settings_RollbackDesc"] = "ئەگەر دوای دوایین نوێکردنەوە تووشی کێشە یان وەستان بوویت، دەتوانیت بە یەک کلیک بگەڕێیتەوە بۆ وەشانی پێشوو لەگەڵ پاراستنی تەواوی داتابەیس.";
+        _ku["Settings_RollbackBtn"] = "🔄 گەڕانەوە بۆ وەشانی پێشوو (Rollback)";
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)

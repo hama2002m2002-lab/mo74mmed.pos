@@ -76,6 +76,7 @@ public class NetworkSettingsViewModel : BaseViewModel
     public ICommand SaveSettingsCommand { get; }
     public ICommand BrowseDatabasePathCommand { get; }
     public ICommand CheckUpdatesCommand { get; }
+    public ICommand RollbackPreviousVersionCommand { get; }
     public ICommand CopyIpCommand { get; }
 
     public event Action? RequestClose;
@@ -94,6 +95,7 @@ public class NetworkSettingsViewModel : BaseViewModel
         SaveSettingsCommand = new RelayCommand(ExecuteSaveSettings);
         BrowseDatabasePathCommand = new RelayCommand(ExecuteBrowseDatabasePath);
         CheckUpdatesCommand = new RelayCommand(ExecuteCheckUpdates);
+        RollbackPreviousVersionCommand = new AsyncRelayCommand(async () => await UpdateService.Instance.RollbackToPreviousVersionAsync());
         CopyIpCommand = new RelayCommand(ExecuteCopyIp);
     }
 

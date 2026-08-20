@@ -132,13 +132,130 @@ public class UpdateService
                 MessageBox.Show(msg, isKu ? "پشکنینی نوێکردنەوە" : "فحص التحديثات", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
-        else
+    public async Task RollbackToPreviousVersionAsync()
+    {
+        bool isKu = LocalizationManager.Instance.IsKurdish;
+        try
         {
-            string msg = isKu
-                ? $"تۆ نوێترین وەشانی بەرنامەت بەکارهێناوە (v{installedVer}) ✔"
-                : $"أنت تستخدم أحدث إصدار من البرنامج بالفعل (v{installedVer}) ✔";
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "7amoPOS-Updater");
 
-            MessageBox.Show(msg, isKu ? "پشکنینی نوێکردنەوە" : "فحص التحديثات", MessageBoxButton.OK, MessageBoxImage.Information);
+            string relUrl = "https://api.github.com/repos/hama2002m2002-lab/mo74mmed.pos/releases";
+            var response = await httpClient.GetAsync(relUrl);
+            if (!response.IsSuccessStatusCode)
+            {
+                string msgErr = isKu 
+                    ? "نەتوانرا پەیوەندی بە سێرڤەری گەڕانەوە بکرێت. تکایە دڵنیابەرەوە لە هەبوونی ئینتەرنێت."
+                    : "تعذر الاتصال بخادم الاسترجاع. يرجى التأكد من اتصال الإنترنت والمحاولة مجدداً.";
+                MessageBox.Show(msgErr, isKu ? "هەڵە" : "خطأ", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string json = await response.Content.ReadAsStringAsync();
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            if (root.ValueKind != System.Text.Json.JsonValueKind.Array || root.GetArrayLength() < 2)
+            {
+                string msgNoPrev = isKu 
+                    ? "هیچ وەشانێکی پێشوو نەدۆزرایەوە بۆ گەڕانەوە."
+                    : "لا يوجد إصدار سابق متاح للرجوع إليه حالياً.";
+                MessageBox.Show(msgNoPrev, isKu ? "ئاگاداری" : "تنبيه", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Current assembly version
+            var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            string currentTag = currentAsmVer != null ? $"v{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "";
+
+            // Find the release immediately preceding current version
+            System.Text.Json.JsonElement targetRelease = default;
+            bool foundCurrent = false;
+            foreach (var release in root.EnumerateArray())
+            {
+                string tagName = release.GetProperty("tag_name").GetString() ?? "";
+                if (!foundCurrent)
+                {
+                    if (string.Equals(tagName, currentTag, StringComparison.OrdinalIgnoreCase))
+                    {
+                        foundCurrent = true;
+                    }
+                    continue;
+                }
+                
+                targetRelease = release;
+                break;
+            }
+
+            if (targetRelease.ValueKind == System.Text.Json.JsonValueKind.Undefined)
+            {
+                // If current tag wasn't matched exactly, take the second release in list
+                targetRelease = root[1];
+            }
+
+            string prevTag = targetRelease.GetProperty("tag_name").GetString() ?? "الإصدار السابق";
+            string downloadUrl = "";
+
+            if (targetRelease.TryGetProperty("assets", out var assets) && assets.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var asset in assets.EnumerateArray())
+                {
+                    string name = asset.GetProperty("name").GetString() ?? "";
+                    if (name.Equals("payload.zip", StringComparison.OrdinalIgnoreCase))
+                    {
+                        downloadUrl = asset.GetProperty("browser_download_url").GetString() ?? "";
+                        break;
+                    }
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(downloadUrl))
+            {
+                downloadUrl = $"https://github.com/hama2002m2002-lab/mo74mmed.pos/releases/download/{prevTag}/payload.zip";
+            }
+
+            string confirmMsg = isKu
+                ? $"ئایا دڵنیایت لە گەڕانەوە بۆ وەشانی پێشوو ({prevTag}) بۆ دۆخی کتوپڕ؟\n\nسیستەم فایلەکانی وەشانی پێشوو دادەبەزێنێت و بەرنامە دادەخات بۆ دانانی فایلەکان، لەگەڵ پاراستنی تەواوی داتابەیسی فرۆشتن و کاڵاکان."
+                : $"هل ترغب في الرجوع إلى الإصدار السابق ({prevTag}) لحالة الطوارئ؟\n\nسيتم تنزيل الإصدار السابق وتثبيته تلقائياً، مع الحفاظ الكامل على قاعدة بيانات المبيعات والمخزن.";
+
+            var confirmResult = MessageBox.Show(confirmMsg, isKu ? "گەڕانەوە بۆ وەشانی پێشوو" : "تأكيد الرجوع للإصدار السابق", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirmResult != MessageBoxResult.Yes)
+                return;
+
+            string tempZipPath = Path.Combine(Path.GetTempPath(), "7amo_rollback_payload.zip");
+            if (File.Exists(tempZipPath)) File.Delete(tempZipPath);
+
+            var zipBytes = await httpClient.GetByteArrayAsync(downloadUrl);
+            await File.WriteAllBytesAsync(tempZipPath, zipBytes);
+
+            string appDir = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\', '/');
+            string batPath = Path.Combine(Path.GetTempPath(), "7amo_rollback_runner.bat");
+
+            string batContent = $@"@echo off
+chcp 65001 > nul
+timeout /t 2 /nobreak > nul
+taskkill /F /IM ""7amo.pos.exe"" > nul 2>&1
+powershell -NoProfile -Command ""Expand-Archive -Path '{tempZipPath.Replace("'", "''")}' -DestinationPath '{appDir.Replace("'", "''")}' -Force""
+start """" ""{Path.Combine(appDir, "7amo.pos.exe")}""
+del ""{tempZipPath}"" > nul 2>&1
+(goto) 2>nul & del ""%~f0""
+";
+
+            await File.WriteAllTextAsync(batPath, batContent);
+
+            var procInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = batPath,
+                UseShellExecute = true,
+                CreateNoWindow = true,
+                WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
+            };
+            System.Diagnostics.Process.Start(procInfo);
+            Application.Current.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            string errMsg = isKu ? $"هەڵە لە کاتی گەڕانەوە: {ex.Message}" : $"حدث خطأ أثناء محاولة الرجوع للإصدار السابق: {ex.Message}";
+            MessageBox.Show(errMsg, isKu ? "هەڵە" : "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }
