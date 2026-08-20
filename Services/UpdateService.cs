@@ -132,6 +132,16 @@ public class UpdateService
                 MessageBox.Show(msg, isKu ? "پشکنینی نوێکردنەوە" : "فحص التحديثات", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
+        else
+        {
+            string msg = isKu
+                ? $"تۆ نوێترین وەشانی بەرنامەت بەکارهێناوە (v{installedVer}) ✔"
+                : $"أنت تستخدم أحدث إصدار من البرنامج بالفعل (v{installedVer}) ✔";
+
+            MessageBox.Show(msg, isKu ? "پشکنینی نوێکردنەوە" : "فحص التحديثات", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
     public async Task RollbackToPreviousVersionAsync()
     {
         bool isKu = LocalizationManager.Instance.IsKurdish;
