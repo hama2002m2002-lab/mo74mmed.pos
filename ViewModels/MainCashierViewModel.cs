@@ -124,7 +124,7 @@ public class MainCashierViewModel : BaseViewModel
             {
                 BarcodeFeedbackState.Success => "#10B981", // Green
                 BarcodeFeedbackState.Error => "#EF4444",   // Red
-                _ => "#3B82F6"                            // Default Accent Blue
+                _ => ThemeManager.Instance.IsDarkMode ? "#3B82F6" : "#2563EB"
             };
         }
     }
@@ -133,12 +133,13 @@ public class MainCashierViewModel : BaseViewModel
     {
         get
         {
-            if (IsReturnModeActive) return "#2D0E0E"; // Dark Glowing Red Background
+            bool isDark = ThemeManager.Instance.IsDarkMode;
+            if (IsReturnModeActive) return isDark ? "#2D0E0E" : "#FEE2E2";
             return BarcodeScanStatus switch
             {
-                BarcodeFeedbackState.Success => "#0B261A", // Subtle Glowing Green Background
-                BarcodeFeedbackState.Error => "#2A0E0E",   // Subtle Glowing Red Background
-                _ => "#182234"                            // BgDarkSecondary default
+                BarcodeFeedbackState.Success => isDark ? "#0B261A" : "#D1FAE5",
+                BarcodeFeedbackState.Error => isDark ? "#2A0E0E" : "#FEE2E2",
+                _ => isDark ? "#182234" : "#FFFFFF"
             };
         }
     }
@@ -692,6 +693,13 @@ public class MainCashierViewModel : BaseViewModel
         _context = new AppDbContext();
         _productService = new ProductService(_context);
         _saleService = new SaleService(_context);
+
+        ThemeManager.Instance.PropertyChanged += (s, e) =>
+        {
+            OnPropertyChanged(nameof(BarcodeBackgroundBrush));
+            OnPropertyChanged(nameof(BarcodeBorderBrush));
+            OnPropertyChanged(nameof(BarcodeScannerIconColor));
+        };
 
         ToggleReturnModeCommand = new RelayCommand(() =>
         {

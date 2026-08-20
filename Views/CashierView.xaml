@@ -55,7 +55,7 @@
                                                 <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                        <Setter Property="Background" Value="#1E293B" />
+                                                        <Setter Property="Background" Value="{DynamicResource BgDarkHover}" />
                                                         <Setter Property="BorderBrush" Value="{DynamicResource PrimaryAccent}" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -256,13 +256,13 @@
                         <Button Command="{Binding ClearCartCommand}" Height="36" Cursor="Hand">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
-                                    <Setter Property="BorderBrush" Value="#334155" />
-                                    <Setter Property="Background" Value="#111B2E" />
-                                    <Setter Property="Foreground" Value="#EF4444" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
+                                    <Setter Property="Background" Value="{DynamicResource BgDarkPrimary}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#450A0A" />
-                                            <Setter Property="BorderBrush" Value="#EF4444" />
+                                            <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+                                            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
                                             <Setter Property="Foreground" Value="#FFFFFF" />
                                         </Trigger>
                                     </Style.Triggers>
@@ -325,14 +325,14 @@
                                 Padding="14,7" Margin="4,2" VerticalAlignment="Center">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
-                                    <Setter Property="Background" Value="#2D1515" />
-                                    <Setter Property="BorderBrush" Value="#EF4444" />
-                                    <Setter Property="Foreground" Value="#FCA5A5" />
+                                    <Setter Property="Background" Value="{DynamicResource BgDarkPrimary}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsReturnModeActive}" Value="True">
-                                            <Setter Property="Background" Value="#DC2626" />
+                                            <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
                                             <Setter Property="Foreground" Value="White" />
-                                            <Setter Property="BorderBrush" Value="#F87171" />
+                                            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -417,7 +417,7 @@
                                                         <Button Command="{Binding SetRetailCommand}" Padding="6,3" Margin="2,0" FontSize="11" Cursor="Hand">
                                                             <Button.Style>
                                                                 <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
-                                                                    <Setter Property="Background" Value="#1E293B" />
+                                                                    <Setter Property="Background" Value="{DynamicResource BgDarkHover}" />
                                                                     <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
                                                                     <Setter Property="BorderThickness" Value="1" />
                                                                     <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
@@ -438,7 +438,7 @@
                                                         <Button Command="{Binding SetWholesaleCommand}" Padding="6,3" Margin="2,0" FontSize="11" Cursor="Hand">
                                                             <Button.Style>
                                                                 <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
-                                                                    <Setter Property="Background" Value="#1E293B" />
+                                                                    <Setter Property="Background" Value="{DynamicResource BgDarkHover}" />
                                                                     <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
                                                                     <Setter Property="BorderThickness" Value="1" />
                                                                     <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
@@ -459,7 +459,7 @@
                                                         <Button Command="{Binding SetCartonCommand}" Padding="6,3" Margin="2,0" FontSize="11" Cursor="Hand">
                                                             <Button.Style>
                                                                 <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
-                                                                    <Setter Property="Background" Value="#1E293B" />
+                                                                    <Setter Property="Background" Value="{DynamicResource BgDarkHover}" />
                                                                     <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
                                                                     <Setter Property="BorderThickness" Value="1" />
                                                                     <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
@@ -921,7 +921,7 @@
                     </Grid>
 
                     <!-- 3: TRANSACTIONS LIST CONTAINER -->
-                    <Border Grid.Row="3" Background="#060C18" CornerRadius="12" BorderBrush="#1E293B" BorderThickness="1" Padding="8" MaxHeight="310">
+                    <Border Grid.Row="3" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="8" MaxHeight="310">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding LiveTransactionsList}">
                                 <ItemsControl.ItemTemplate>
@@ -1158,7 +1158,7 @@
                     </Grid>
 
                     <!-- 2: Filter Switcher Bar (أزرار عرض المبيعات والمرتجعات والكل) -->
-                    <Border Grid.Row="2" Background="#0C152B" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="12" Padding="5" Margin="0,0,0,8">
+                    <Border Grid.Row="2" Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" CornerRadius="12" Padding="5" Margin="0,0,0,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -1281,7 +1281,7 @@
                         <DataGrid ItemsSource="{Binding SalesHistoryList}" AutoGenerateColumns="False" 
                                   IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                                   Background="Transparent" RowBackground="Transparent" BorderThickness="0"
-                                  HorizontalGridLinesBrush="#1E293B"
+                                  HorizontalGridLinesBrush="{DynamicResource BorderDark}"
                                   ScrollViewer.CanContentScroll="False"
                                   ScrollViewer.VerticalScrollBarVisibility="Auto"
                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -1294,7 +1294,7 @@
                                 <Style TargetType="DataGridRow">
                                     <Setter Property="Background" Value="Transparent" />
                                     <Setter Property="BorderThickness" Value="0,0,0,1" />
-                                    <Setter Property="BorderBrush" Value="#1E293B" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Status}" Value="Returned">
                                             <Setter Property="Background" Value="#3D0B14" />
