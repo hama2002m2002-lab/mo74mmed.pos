@@ -1,7 +1,1 @@
-{
-    "updatedAt":  "2026-08-20T22:42:22.6557688Z",
-    "productsCount":  0,
-    "products":  [
-
-                 ]
-}
+{"updatedAt":"2026-08-20T22:43:00.3000026Z","productsCount":1,"products":[{"id":"1","name":"مادة تجريبية","barcode":"123","price":5000,"stock":100,"unit":"قطعة"}]}
