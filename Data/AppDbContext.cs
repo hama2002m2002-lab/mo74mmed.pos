@@ -42,8 +42,8 @@ public class AppDbContext : DbContext
         if (!optionsBuilder.IsConfigured)
         {
             string dbPath = DatabasePath;
-            // SQLite connection string with WAL and busy timeout for concurrent multi-device network access
-            string connStr = $"Data Source={dbPath};Mode=ReadWriteCreate;Cache=Shared;Busy Timeout=5000;";
+            // SQLite connection string with WAL and Default Timeout for concurrent multi-device network access
+            string connStr = $"Data Source={dbPath};Mode=ReadWriteCreate;Cache=Shared;Default Timeout=30;";
             optionsBuilder.UseSqlite(connStr);
         }
     }
