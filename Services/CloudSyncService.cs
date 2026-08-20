@@ -35,8 +35,8 @@ public class CloudSyncService
 
     public CloudSyncService()
     {
-        _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-        _httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("HamoPOS-CloudSync", "1.0"));
+        _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) HamoPOS/1.0");
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"token {GetGitHubToken()}");
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
     }

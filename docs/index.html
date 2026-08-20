@@ -159,18 +159,40 @@
 
         async function init() {
             try {
-                // 1. Try fetching from Cloud GitHub Raw Catalog
-                let rawUrl = `https://raw.githubusercontent.com/${REPO}/main/docs/catalog.json?t=` + new Date().getTime();
-                let res = await fetch(rawUrl);
-                if (res.ok) {
-                    let data = await res.json();
-                    allProducts = data.products || data || [];
+                // 1. Fetch directly via GitHub API (Always 100% fresh and instant)
+                let apiRes = await fetch(`https://api.github.com/repos/${REPO}/contents/docs/catalog.json`, {
+                    headers: { 
+                        'Authorization': 'token ' + GITHUB_TOKEN,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                if (apiRes.ok) {
+                    let apiData = await apiRes.json();
+                    if (apiData.content) {
+                        let decodedStr = decodeURIComponent(escape(atob(apiData.content.replace(/\s/g, ''))));
+                        let parsed = JSON.parse(decodedStr);
+                        allProducts = parsed.products || parsed || [];
+                    }
                 }
             } catch (e) {
-                console.warn('Cloud catalog fetch note:', e);
+                console.warn('API catalog fetch error:', e);
             }
 
-            // Fallback: If still empty, try local endpoint if available
+            // 2. Fallback: Try raw URL
+            if (!allProducts.length) {
+                try {
+                    let rawUrl = `https://raw.githubusercontent.com/${REPO}/main/docs/catalog.json?t=` + new Date().getTime();
+                    let res = await fetch(rawUrl);
+                    if (res.ok) {
+                        let data = await res.json();
+                        allProducts = data.products || data || [];
+                    }
+                } catch (e) {
+                    console.warn('Cloud catalog fetch note:', e);
+                }
+            }
+
+            // 3. Fallback: If on local WiFi server
             if (!allProducts.length) {
                 try {
                     let locRes = await fetch('/api/products');

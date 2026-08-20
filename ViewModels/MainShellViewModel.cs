@@ -366,6 +366,7 @@ public class MainShellViewModel : BaseViewModel
             _ = ReportsVM.LoadReportAsync();
             _ = SuppliersVM.LoadSuppliersAsync();
             _ = DashboardVM.LoadDashboardDataAsync();
+            _ = CloudSyncService.Instance.PushProductsToCloudAsync();
         };
 
         // 11. ربط المواد التالفة مع تحديث المخزون
@@ -374,6 +375,7 @@ public class MainShellViewModel : BaseViewModel
             _ = InventoryVM.LoadProductsAsync();
             _ = StockVM.LoadStockAsync();
             _ = DashboardVM.LoadDashboardDataAsync();
+            _ = CloudSyncService.Instance.PushProductsToCloudAsync();
         };
 
         // 12. ربط واجهة إضافة المواد مع واجهات المخزن والبيع والداشبورد
@@ -385,6 +387,7 @@ public class MainShellViewModel : BaseViewModel
             _ = CashierVM.FilterWarehouseProductsAsync();
             _ = DashboardVM.LoadDashboardDataAsync();
             _ = SuppliersVM.LoadSuppliersAsync();
+            _ = CloudSyncService.Instance.PushProductsToCloudAsync();
         };
 
         AddProductVM.RequestNavigateToInventoryWithProduct += async (product) =>
@@ -406,6 +409,7 @@ public class MainShellViewModel : BaseViewModel
             _ = DashboardVM.LoadDashboardDataAsync();
             _ = SuppliersVM.LoadSuppliersAsync();
             _ = SalesHistoryVM.LoadSalesDataAsync();
+            _ = CloudSyncService.Instance.PushProductsToCloudAsync();
         };
 
         SelectTabCommand = new RelayCommand(param =>
