@@ -391,6 +391,7 @@ public class LocalizationManager : INotifyPropertyChanged
         _ar["Rep_From"] = "من:";
         _ar["Rep_To"] = "إلى:";
         _ar["Rep_BackToHub"] = "العودة للتقارير";
+        _ar["Rep_Tab_Master"] = "التقرير المالي الشامل المتكامل";
         _ar["Rep_Tab_Sales"] = "المبيعات والأرباح";
         _ar["Rep_Tab_Damaged"] = "المواد التالفة والهالك";
         _ar["Rep_Tab_Returns"] = "المرتجعات والمستردات";
@@ -403,6 +404,17 @@ public class LocalizationManager : INotifyPropertyChanged
         _ar["Rep_TotalSales"] = "إجمالي المبيعات";
         _ar["Rep_TotalProfits"] = "صافي الأرباح";
         _ar["Rep_TotalExpenses"] = "المصروفات والخسائر";
+        _ar["Rep_Master_Sales"] = "سجل وفواتير المبيعات";
+        _ar["Rep_Master_Expenses"] = "إدارة وتسجيل المصروفات";
+        _ar["Rep_Master_Damaged"] = "المواد التالفة والهالكة والضرر";
+        _ar["Rep_Master_Inventory"] = "المخزون والتوفر والنفاد";
+        _ar["Rep_Master_Debts"] = "ديون ومستحقات العملاء";
+        _ar["Rep_Master_NetProfit"] = "صافي الأرباح الحقيقي";
+        _ar["Rep_Expense_Title"] = "بيان ووصف المصروف (مثل: إيجار المحل، كهرباء...):";
+        _ar["Rep_Expense_Amount"] = "المبلغ المالي (دينار عراقي):";
+        _ar["Rep_Expense_Category"] = "نوع وتصنيف المصروف:";
+        _ar["Rep_Expense_Notes"] = "ملاحظات وتفاصيل إضافية:";
+        _ar["Rep_Expense_Save"] = "حفظ وحسم المصروف من الأرباح";
 
         // Sales Report Details (Arabic)
         _ar["Rep_Sales_SingleProfit"] = "أرباح بيع المفرد";
@@ -861,6 +873,7 @@ public class LocalizationManager : INotifyPropertyChanged
         _ku["Rep_From"] = "لە:";
         _ku["Rep_To"] = "بۆ:";
         _ku["Rep_BackToHub"] = "گەڕانەوە بۆ ڕاپۆرتەکان";
+        _ku["Rep_Tab_Master"] = "ڕاپۆرتی گشتگیری دارایی";
         _ku["Rep_Tab_Sales"] = "فرۆشتن و قازانج";
         _ku["Rep_Tab_Damaged"] = "کاڵای تێکچوو و بەسەرچوو";
         _ku["Rep_Tab_Returns"] = "گەڕاوە و مسترجع";
@@ -873,6 +886,17 @@ public class LocalizationManager : INotifyPropertyChanged
         _ku["Rep_TotalSales"] = "کۆی گشتی فرۆشتن";
         _ku["Rep_TotalProfits"] = "پوختی قازانج";
         _ku["Rep_TotalExpenses"] = "خەرجی و زەرەرەکان";
+        _ku["Rep_Master_Sales"] = "تۆماری پسوولەکانی فرۆشتن";
+        _ku["Rep_Master_Expenses"] = "بەڕێوەبردن و تۆمارکردنی خەرجییەکان";
+        _ku["Rep_Master_Damaged"] = "کاڵای تێکچوو و زەرەرەکان";
+        _ku["Rep_Master_Inventory"] = "کۆگا، بەردەست و تەواوبوو";
+        _ku["Rep_Master_Debts"] = "قەرز و شایستەکانی کڕیاران";
+        _ku["Rep_Master_NetProfit"] = "پوختەی ڕاستەقینەی قازانج";
+        _ku["Rep_Expense_Title"] = "ڕوونکردنەوەی خەرجی (بۆ نموونە: کرێی دوکان، مۆلیدە...):";
+        _ku["Rep_Expense_Amount"] = "بڕی پارە (دیناری عێراقی):";
+        _ku["Rep_Expense_Category"] = "جۆری پۆلێنکردنی خەرجی:";
+        _ku["Rep_Expense_Notes"] = "تێبینی و وردەکاری زیاتر:";
+        _ku["Rep_Expense_Save"] = "پاشەکەوت و کەمکردنەوەی خەرجی لە قازانج";
 
         // Sales Report Details (Kurdish)
         _ku["Rep_Sales_SingleProfit"] = "قازانجی فرۆشتنی تاک";

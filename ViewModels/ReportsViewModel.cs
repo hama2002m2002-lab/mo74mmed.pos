@@ -104,6 +104,43 @@ public class ReportsViewModel : BaseViewModel
 
     #region Master Report & Expenses Management
 
+    private string _masterSubSection = "Sales";
+    public string MasterSubSection
+    {
+        get => _masterSubSection;
+        set
+        {
+            if (SetProperty(ref _masterSubSection, value))
+            {
+                OnPropertyChanged(nameof(IsMasterSalesSectionActive));
+                OnPropertyChanged(nameof(IsMasterExpensesSectionActive));
+                OnPropertyChanged(nameof(IsMasterDamagedSectionActive));
+                OnPropertyChanged(nameof(IsMasterInventorySectionActive));
+                OnPropertyChanged(nameof(IsMasterDebtsSectionActive));
+            }
+        }
+    }
+
+    public bool IsMasterSalesSectionActive => MasterSubSection == "Sales";
+    public bool IsMasterExpensesSectionActive => MasterSubSection == "Expenses";
+    public bool IsMasterDamagedSectionActive => MasterSubSection == "Damaged";
+    public bool IsMasterInventorySectionActive => MasterSubSection == "Inventory";
+    public bool IsMasterDebtsSectionActive => MasterSubSection == "Debts";
+
+    public ICommand SetMasterSubSectionCommand { get; }
+
+    public ObservableCollection<string> ExpenseCategoriesList { get; } = new()
+    {
+        "نثريات ومصروفات عامة",
+        "إيجار المحل / المخزن",
+        "كهرباء ومولد وطاقة",
+        "رواتب وأجور عمال وكاشير",
+        "صيانة وتصليح ومعدات",
+        "شحن وتوصيل ونقل",
+        "ضيافة ونظافة",
+        "مصروفات أخرى"
+    };
+
     public ObservableCollection<Expense> ExpensesList { get; } = new();
 
     private decimal _totalExpensesAmount;
@@ -115,7 +152,7 @@ public class ReportsViewModel : BaseViewModel
     private decimal _newExpenseAmount;
     public decimal NewExpenseAmount { get => _newExpenseAmount; set => SetProperty(ref _newExpenseAmount, value); }
 
-    private string _newExpenseCategory = "عام";
+    private string _newExpenseCategory = "نثريات ومصروفات عامة";
     public string NewExpenseCategory { get => _newExpenseCategory; set => SetProperty(ref _newExpenseCategory, value); }
 
     private string _newExpenseNotes = string.Empty;
@@ -123,6 +160,9 @@ public class ReportsViewModel : BaseViewModel
 
     public ICommand SaveExpenseCommand { get; }
     public ICommand DeleteExpenseCommand { get; }
+
+    public int InStockCount => InventoryValuationList.Count(p => p.StockQuantity > 5);
+    public int LowStockCount => InventoryValuationList.Count(p => p.StockQuantity > 0 && p.StockQuantity <= 5);
 
     #endregion
 
@@ -353,6 +393,14 @@ public class ReportsViewModel : BaseViewModel
             {
                 ActiveSubReportTab = tabName;
                 _ = LoadReportAsync();
+            }
+        });
+
+        SetMasterSubSectionCommand = new RelayCommand(param =>
+        {
+            if (param is string sec)
+            {
+                MasterSubSection = sec;
             }
         });
 
