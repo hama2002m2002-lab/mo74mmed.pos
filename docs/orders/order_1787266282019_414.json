@@ -1,0 +1,20 @@
+{
+  "orderNumber": "ORD-20260820-433",
+  "orderDate": "2026-08-20T22:51:22.018Z",
+  "marketName": "كرك",
+  "marketPhone": "",
+  "marketAddress": "",
+  "representativeName": "مندوب المبيعات",
+  "notes": "",
+  "totalAmount": 500,
+  "items": [
+    {
+      "productId": "4b4ac806-d2f6-4638-aa15-63b98fd730be",
+      "productName": "لل",
+      "barcode": "2002455656496",
+      "quantity": 1,
+      "unitType": "Retail",
+      "unitPrice": 500
+    }
+  ]
+}
