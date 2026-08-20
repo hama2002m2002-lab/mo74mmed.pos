@@ -1,0 +1,20 @@
+{
+  "orderNumber": "ORD-20260820-422",
+  "orderDate": "2026-08-20T22:58:05.683Z",
+  "marketName": "كرك",
+  "marketPhone": "7503874408",
+  "marketAddress": "",
+  "representativeName": "مندوب المبيعات",
+  "notes": "",
+  "totalAmount": 3750,
+  "items": [
+    {
+      "productId": "b0cb59a5-35e9-4037-a8ae-cbd6928640fa",
+      "productName": "كيك هندرين",
+      "barcode": "2002454224835",
+      "quantity": 5,
+      "unitType": "Retail",
+      "unitPrice": 750
+    }
+  ]
+}
