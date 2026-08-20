@@ -87,23 +87,13 @@ public class SupplierOrdersViewModel : BaseViewModel
     private decimal _totalOrdersValue;
     public decimal TotalOrdersValue { get => _totalOrdersValue; set => SetProperty(ref _totalOrdersValue, value); }
 
-    // Tab Navigation within Supplier Orders
-    private string _activeSubTab = "Orders";
-    public string ActiveSubTab
+    // Reps Modal Popup State
+    private bool _isRepsModalOpen = false;
+    public bool IsRepsModalOpen
     {
-        get => _activeSubTab;
-        set
-        {
-            if (SetProperty(ref _activeSubTab, value))
-            {
-                OnPropertyChanged(nameof(IsOrdersTabActive));
-                OnPropertyChanged(nameof(IsRepsTabActive));
-            }
-        }
+        get => _isRepsModalOpen;
+        set => SetProperty(ref _isRepsModalOpen, value);
     }
-
-    public bool IsOrdersTabActive => ActiveSubTab == "Orders";
-    public bool IsRepsTabActive => ActiveSubTab == "Reps";
 
     // Reps Management
     public ObservableCollection<StoreRepAccount> RepAccounts { get; } = new();
@@ -125,7 +115,8 @@ public class SupplierOrdersViewModel : BaseViewModel
     public string NewRepPin { get => _newRepPin; set => SetProperty(ref _newRepPin, value); }
 
     // Commands
-    public ICommand SwitchSubTabCommand { get; }
+    public ICommand OpenRepsModalCommand { get; }
+    public ICommand CloseRepsModalCommand { get; }
     public ICommand AddRepAccountCommand { get; }
     public ICommand DeleteRepAccountCommand { get; }
     public ICommand SaveRepsCommand { get; }
@@ -162,13 +153,12 @@ public class SupplierOrdersViewModel : BaseViewModel
 
         LoadRepAccounts();
 
-        SwitchSubTabCommand = new RelayCommand((p) =>
+        OpenRepsModalCommand = new RelayCommand(() =>
         {
-            if (p is string tab)
-            {
-                ActiveSubTab = tab;
-            }
+            LoadRepAccounts();
+            IsRepsModalOpen = true;
         });
+        CloseRepsModalCommand = new RelayCommand(() => IsRepsModalOpen = false);
 
         AddRepAccountCommand = new RelayCommand(ExecuteAddRepAccount);
         DeleteRepAccountCommand = new RelayCommand(ExecuteDeleteRepAccount);

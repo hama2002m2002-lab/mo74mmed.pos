@@ -11,26 +11,30 @@
              FlowDirection="RightToLeft"
              FontFamily="Segoe UI, Tahoma, Arial">
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <!-- 0: Page Header & Subtab Bar -->
-            <RowDefinition Height="Auto" />
-            <!-- 1: Main Content (Orders View OR Reps View) -->
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <!-- ======================================================== -->
-        <!-- 0: HEADER & NAVIGATION TOOLBAR -->
-        <!-- ======================================================== -->
-        <Grid Grid.Row="0" Margin="0,0,0,16">
+    <Grid>
+        <!-- MAIN CONTENT LAYER -->
+        <Grid Margin="20">
             <Grid.RowDefinitions>
+                <!-- 0: Header -->
                 <RowDefinition Height="Auto" />
+                <!-- 1: KPI Cards -->
                 <RowDefinition Height="Auto" />
+                <!-- 2: Filters & Search Toolbar -->
+                <RowDefinition Height="Auto" />
+                <!-- 3: Orders List & Details Grid -->
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Page Title Bar -->
-            <Grid Grid.Row="0" Margin="0,0,0,12">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <!-- ======================================================== -->
+            <!-- 0: HEADER & ACTIONS TOOLBAR -->
+            <!-- ======================================================== -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Width="44" Height="44" Background="#0C2548" CornerRadius="12" Margin="0,0,14,0">
                         <TextBlock Text="📦" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
@@ -42,22 +46,30 @@
                                 <TextBlock Text="{Binding StoreId, StringFormat='{}كود المخزن: {0}'}" FontSize="11" FontWeight="Bold" Foreground="#34D399" />
                             </Border>
                         </StackPanel>
-                        <TextBlock Text="استقبال طلبيات البضائع سحابياً 24/7، إدارة حسابات المناديب، وطباعة فواتير A4" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0" />
+                        <TextBlock Text="استقبال ومتابعة طلبيات البضائع سحابياً 24/7، إدارة حسابات المناديب، وطباعة فواتير A4" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0" />
                     </StackPanel>
                 </StackPanel>
 
                 <!-- Actions Top Right -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <!-- Manage Reps Modal Button -->
+                    <Button Style="{DynamicResource ActionButton}" Command="{Binding OpenRepsModalCommand}" Padding="12,8" Margin="0,0,8,0" Cursor="Hand" Background="#0C2548" BorderBrush="#38BDF8" ToolTip="إنشاء وإدارة حسابات المناديب ورموز الدخول PIN">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="👥 " FontSize="13" />
+                            <TextBlock Text="إدارة حسابات المناديب (PIN)" FontWeight="Bold" FontSize="12" Foreground="#38BDF8" />
+                        </StackPanel>
+                    </Button>
+
                     <!-- Cloud 24/7 Portal Button -->
-                    <Button Style="{DynamicResource ActionButton}" Command="{Binding OpenCloudPortalCommand}" Padding="12,7" Margin="0,0,8,0" Cursor="Hand" Background="#0C2548" BorderBrush="#0284C7" ToolTip="فتح صفحة الموبايل السحابية الخاصة بهذا المخزن">
+                    <Button Style="{DynamicResource ActionButton}" Command="{Binding OpenCloudPortalCommand}" Padding="12,8" Margin="0,0,8,0" Cursor="Hand" Background="#0C2548" BorderBrush="#0284C7" ToolTip="فتح صفحة الموبايل السحابية الخاصة بهذا المخزن">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="🌐 " FontSize="13" />
-                            <TextBlock Text="بوابة الموبايل السحابية" FontWeight="Bold" FontSize="12" Foreground="#38BDF8" />
+                            <TextBlock Text="بوابة الموبايل السحابية" FontWeight="Bold" FontSize="12" />
                         </StackPanel>
                     </Button>
                     
                     <!-- Copy Cloud Link -->
-                    <Button Style="{DynamicResource ActionButton}" Command="{Binding CopyCloudPortalUrlCommand}" Padding="10,7" Margin="0,0,8,0" Cursor="Hand" ToolTip="نسخ رابط السحابة المخصص لمخزنك لمشاركته مع المناديب">
+                    <Button Style="{DynamicResource ActionButton}" Command="{Binding CopyCloudPortalUrlCommand}" Padding="10,8" Margin="0,0,8,0" Cursor="Hand" ToolTip="نسخ رابط السحابة المخصص لمخزنك لمشاركته مع المناديب">
                         <TextBlock Text="📋 نسخ رابط المندوب" FontSize="11.5" FontWeight="Bold" />
                     </Button>
 
@@ -70,77 +82,10 @@
                 </StackPanel>
             </Grid>
 
-            <!-- Subtab Bar Switcher -->
-            <Grid Grid.Row="1" Margin="0,0,0,6">
-                <StackPanel Orientation="Horizontal">
-                    <RadioButton IsChecked="{Binding IsOrdersTabActive, Mode=OneWay}" Command="{Binding SwitchSubTabCommand}" CommandParameter="Orders" GroupName="OrdersSubTabs" Cursor="Hand" Margin="0,0,8,0">
-                        <RadioButton.Template>
-                            <ControlTemplate TargetType="RadioButton">
-                                <Border CornerRadius="10" Padding="16,8" BorderThickness="1.5">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{DynamicResource BgDarkSecondary}" />
-                                            <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
-                                                    <Setter Property="Background" Value="#0284C7" />
-                                                    <Setter Property="BorderBrush" Value="#38BDF8" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="📦 " FontSize="13" />
-                                        <TextBlock Text="سجل وإدارة الطلبيات" FontWeight="Bold" FontSize="12.5" Foreground="White" />
-                                    </StackPanel>
-                                </Border>
-                            </ControlTemplate>
-                        </RadioButton.Template>
-                    </RadioButton>
-
-                    <RadioButton IsChecked="{Binding IsRepsTabActive, Mode=OneWay}" Command="{Binding SwitchSubTabCommand}" CommandParameter="Reps" GroupName="OrdersSubTabs" Cursor="Hand">
-                        <RadioButton.Template>
-                            <ControlTemplate TargetType="RadioButton">
-                                <Border CornerRadius="10" Padding="16,8" BorderThickness="1.5">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{DynamicResource BgDarkSecondary}" />
-                                            <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
-                                                    <Setter Property="Background" Value="#059669" />
-                                                    <Setter Property="BorderBrush" Value="#34D399" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="👥 " FontSize="13" />
-                                        <TextBlock Text="حسابات المناديب ورموز الدخول (PIN)" FontWeight="Bold" FontSize="12.5" Foreground="White" />
-                                    </StackPanel>
-                                </Border>
-                            </ControlTemplate>
-                        </RadioButton.Template>
-                    </RadioButton>
-                </StackPanel>
-            </Grid>
-        </Grid>
-
-        <!-- ======================================================== -->
-        <!-- VIEW 1: ORDERS MANAGEMENT (سجل وإدارة الطلبيات) -->
-        <!-- ======================================================== -->
-        <Grid Grid.Row="1" Visibility="{Binding IsOrdersTabActive, Converter={StaticResource BoolToVis}}">
-            <Grid.RowDefinitions>
-                <!-- KPI Cards -->
-                <RowDefinition Height="Auto" />
-                <!-- Filters & Search Toolbar -->
-                <RowDefinition Height="Auto" />
-                <!-- Orders Table & Details -->
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-
-            <!-- KPI Cards Strip -->
-            <Grid Grid.Row="0" Margin="0,0,0,12">
+            <!-- ======================================================== -->
+            <!-- 1: KPI SUMMARY CARDS STRIP -->
+            <!-- ======================================================== -->
+            <Grid Grid.Row="1" Margin="0,0,0,14">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
@@ -150,57 +95,59 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Total Orders -->
-                <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="12,10" Margin="0,0,6,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="14,10" Margin="0,0,6,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
                     <StackPanel>
                         <TextBlock Text="إجمالي الطلبيات" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
-                        <TextBlock Text="{Binding TotalOrdersCount}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" Margin="0,2,0,0" />
+                        <TextBlock Text="{Binding TotalOrdersCount}" FontSize="19" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" Margin="0,2,0,0" />
                     </StackPanel>
                 </Border>
 
                 <!-- Pending Orders -->
-                <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="12,10" Margin="3,0,3,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="14,10" Margin="3,0,3,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="7" Height="7" Fill="#F59E0B" Margin="0,0,5,0" />
                             <TextBlock Text="قيد الانتظار" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
                         </StackPanel>
-                        <TextBlock Text="{Binding PendingOrdersCount}" FontSize="18" FontWeight="Black" Foreground="#F59E0B" Margin="0,2,0,0" />
+                        <TextBlock Text="{Binding PendingOrdersCount}" FontSize="19" FontWeight="Black" Foreground="#F59E0B" Margin="0,2,0,0" />
                     </StackPanel>
                 </Border>
 
                 <!-- In Prep Orders -->
-                <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="12,10" Margin="3,0,3,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="14,10" Margin="3,0,3,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="7" Height="7" Fill="#3B82F6" Margin="0,0,5,0" />
                             <TextBlock Text="جاري التجهيز" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
                         </StackPanel>
-                        <TextBlock Text="{Binding InPrepOrdersCount}" FontSize="18" FontWeight="Black" Foreground="#3B82F6" Margin="0,2,0,0" />
+                        <TextBlock Text="{Binding InPrepOrdersCount}" FontSize="19" FontWeight="Black" Foreground="#3B82F6" Margin="0,2,0,0" />
                     </StackPanel>
                 </Border>
 
                 <!-- Delivered Orders -->
-                <Border Grid.Column="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="12,10" Margin="3,0,3,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                <Border Grid.Column="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="14,10" Margin="3,0,3,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="7" Height="7" Fill="#10B981" Margin="0,0,5,0" />
                             <TextBlock Text="تم التوصيل والتوريد" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
                         </StackPanel>
-                        <TextBlock Text="{Binding DeliveredOrdersCount}" FontSize="18" FontWeight="Black" Foreground="#10B981" Margin="0,2,0,0" />
+                        <TextBlock Text="{Binding DeliveredOrdersCount}" FontSize="19" FontWeight="Black" Foreground="#10B981" Margin="0,2,0,0" />
                     </StackPanel>
                 </Border>
 
                 <!-- Total Amount -->
-                <Border Grid.Column="4" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="12,10" Margin="6,0,0,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                <Border Grid.Column="4" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" Padding="14,10" Margin="6,0,0,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
                     <StackPanel>
                         <TextBlock Text="إجمالي قيمة الطلبيات" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
-                        <TextBlock Text="{Binding TotalOrdersValue, StringFormat='{}{0:N0} د.ع'}" FontSize="16" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" Margin="0,2,0,0" />
+                        <TextBlock Text="{Binding TotalOrdersValue, StringFormat='{}{0:N0} د.ع'}" FontSize="17" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" Margin="0,2,0,0" />
                     </StackPanel>
                 </Border>
             </Grid>
 
-            <!-- Filters Bar -->
-            <Grid Grid.Row="1" Margin="0,0,0,12">
+            <!-- ======================================================== -->
+            <!-- 2: FILTERS & SEARCH TOOLBAR -->
+            <!-- ======================================================== -->
+            <Grid Grid.Row="2" Margin="0,0,0,12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -226,15 +173,17 @@
                 </Border>
             </Grid>
 
-            <!-- Orders Table & Details Grid -->
-            <Grid Grid.Row="2">
+            <!-- ======================================================== -->
+            <!-- 3: ORDERS DATA GRID & ORDER DETAILS VIEW -->
+            <!-- ======================================================== -->
+            <Grid Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="6.5*" />
                     <ColumnDefinition Width="3.5*" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Orders DataGrid -->
-                <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Margin="0,0,14,0" Padding="8">
+                <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Margin="0,0,14,0" Padding="8">
                     <DataGrid ItemsSource="{Binding FilteredOrders}"
                               SelectedItem="{Binding SelectedOrder}"
                               AutoGenerateColumns="False"
@@ -242,7 +191,7 @@
                               SelectionMode="Single"
                               Background="Transparent"
                               BorderThickness="0"
-                              RowHeight="40"
+                              RowHeight="42"
                               GridLinesVisibility="Horizontal"
                               HorizontalGridLinesBrush="{DynamicResource BorderDark}"
                               HeadersVisibility="Column"
@@ -285,7 +234,7 @@
                 </Border>
 
                 <!-- Order Details Panel -->
-                <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14">
+                <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14">
                     <Grid>
                         <!-- EMPTY STATE -->
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding HasSelectedOrder, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
@@ -415,108 +364,128 @@
         </Grid>
 
         <!-- ======================================================== -->
-        <!-- VIEW 2: REPS MANAGEMENT (حسابات المناديب ورموز الدخول PIN) -->
+        <!-- MODAL OVERLAY: REPS MANAGEMENT & PIN (إدارة حسابات المناديب) -->
         <!-- ======================================================== -->
-        <Grid Grid.Row="1" Visibility="{Binding IsRepsTabActive, Converter={StaticResource BoolToVis}}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="380" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <!-- Add Rep Account Form -->
-            <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="16" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="20" Margin="0,0,16,0">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                        <TextBlock Text="👤 " FontSize="18" />
-                        <TextBlock Text="إنشاء حساب مندوب جديد" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
-                    </StackPanel>
-
-                    <TextBlock Text="اسم المندوب الرباعي / الشهرة:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
-                    <TextBox Text="{Binding NewRepName, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="38" FontSize="13" Margin="0,0,0,10" />
-
-                    <TextBlock Text="رقم هاتف المندوب:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
-                    <TextBox Text="{Binding NewRepPhone, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="38" FontSize="13" Margin="0,0,0,10" />
-
-                    <TextBlock Text="رمز الدخول السري للموبايل (PIN):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
-                    <TextBox Text="{Binding NewRepPin, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="38" FontSize="14" FontWeight="Bold" Margin="0,0,0,16" />
-
-                    <Button Style="{DynamicResource PrimarySuccessButton}" Command="{Binding AddRepAccountCommand}" Height="42" Cursor="Hand" Margin="0,0,0,14">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="➕ " FontSize="14" />
-                            <TextBlock Text="حفظ وتفعيل حساب المندوب" FontWeight="Black" FontSize="13" />
-                        </StackPanel>
-                    </Button>
-
-                    <Border Background="#0C2548" BorderBrush="#0284C7" BorderThickness="1" CornerRadius="10" Padding="12">
-                        <StackPanel>
-                            <TextBlock Text="💡 كيف يسجل المندوب دخوله؟" FontSize="12" FontWeight="Bold" Foreground="#38BDF8" Margin="0,0,0,4" />
-                            <TextBlock Text="1. يفتح المندوب رابط بوابة المخزن من هاتفه." FontSize="11" Foreground="#94A3B8" Margin="0,0,0,2" />
-                            <TextBlock Text="2. يختار اسمه من قائمة المناديب." FontSize="11" Foreground="#94A3B8" Margin="0,0,0,2" />
-                            <TextBlock Text="3. يكتب رمز الـ PIN المخصص له للدخول فوراً." FontSize="11" Foreground="#94A3B8" />
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </Border>
-
-            <!-- Reps List Table -->
-            <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="16" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="16">
+        <Grid Visibility="{Binding IsRepsModalOpen, Converter={StaticResource BoolToVis}}" Background="#E0000000">
+            <Border Width="880" Height="580" Background="{DynamicResource BgDarkPrimary}" CornerRadius="18" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="0,0,0,12">
-                        <TextBlock Text="قائمة المناديب المصرح لهم بدخول البوابة" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                        <Button HorizontalAlignment="Right" Style="{DynamicResource ActionButton}" Command="{Binding SaveRepsCommand}" Padding="12,6" Cursor="Hand">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="💾 " FontSize="12" />
-                                <TextBlock Text="حفظ التعديلات" FontWeight="Bold" FontSize="11.5" />
-                            </StackPanel>
+                    <!-- Modal Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="👥 " FontSize="20" />
+                            <TextBlock Text="إدارة حسابات المناديب ورموز الدخول (PIN)" FontSize="16" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" />
+                        </StackPanel>
+
+                        <Button HorizontalAlignment="Right" Style="{DynamicResource ActionButton}" Command="{Binding CloseRepsModalCommand}" Padding="10,4" Cursor="Hand">
+                            <TextBlock Text="✖ إغلاق" FontSize="12" FontWeight="Bold" />
                         </Button>
                     </Grid>
 
-                    <DataGrid Grid.Row="1"
-                              ItemsSource="{Binding RepAccounts}"
-                              SelectedItem="{Binding SelectedRepAccount}"
-                              AutoGenerateColumns="False"
-                              Background="Transparent"
-                              BorderThickness="0"
-                              RowHeight="44"
-                              GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="{DynamicResource BorderDark}"
-                              HeadersVisibility="Column"
-                              VerticalScrollBarVisibility="Auto">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="اسم المندوب" Binding="{Binding Name}" Width="1.5*" FontWeight="Bold" />
-                            <DataGridTextColumn Header="رقم الهاتف" Binding="{Binding Phone}" Width="*" />
-                            <DataGridTextColumn Header="رمز الدخول (PIN)" Binding="{Binding PinCode}" Width="110" FontWeight="Black" Foreground="#F59E0B" />
-                            
-                            <DataGridTemplateColumn Header="الحالة" Width="100">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox IsChecked="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}" Content="نشط" Foreground="#34D399" FontWeight="Bold" HorizontalAlignment="Center" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                    <!-- Modal Body: Split Form & Table -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="320" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
 
-                            <DataGridTemplateColumn Header="إجراءات" Width="90">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Command="{Binding DataContext.DeleteRepAccountCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{DynamicResource ActionButton}"
-                                                Padding="8,4"
-                                                HorizontalAlignment="Center"
-                                                Cursor="Hand"
-                                                ToolTip="حذف حساب المندوب">
-                                            <TextBlock Text="🗑️ حذف" FontSize="11" Foreground="#EF4444" FontWeight="Bold" />
-                                        </Button>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                        <!-- Add Rep Form -->
+                        <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="16" Margin="0,0,14,0">
+                            <StackPanel>
+                                <TextBlock Text="➕ إنشاء حساب مندوب جديد" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" Margin="0,0,0,12" />
+
+                                <TextBlock Text="اسم المندوب الرباعي / الشهرة:" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding NewRepName, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="36" FontSize="12.5" Margin="0,0,0,8" />
+
+                                <TextBlock Text="رقم هاتف المندوب:" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding NewRepPhone, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="36" FontSize="12.5" Margin="0,0,0,8" />
+
+                                <TextBlock Text="رمز الدخول السري (PIN):" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding NewRepPin, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="36" FontSize="14" FontWeight="Bold" Margin="0,0,0,14" />
+
+                                <Button Style="{DynamicResource PrimarySuccessButton}" Command="{Binding AddRepAccountCommand}" Height="40" Cursor="Hand" Margin="0,0,0,12">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="➕ " FontSize="13" />
+                                        <TextBlock Text="حفظ وتفعيل حساب المندوب" FontWeight="Black" FontSize="12" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Border Background="#0C2548" BorderBrush="#0284C7" BorderThickness="1" CornerRadius="8" Padding="10">
+                                    <StackPanel>
+                                        <TextBlock Text="💡 كيف يسجل المندوب دخوله؟" FontSize="11" FontWeight="Bold" Foreground="#38BDF8" Margin="0,0,0,2" />
+                                        <TextBlock Text="1. يفتح المندوب الرابط من هاتفه." FontSize="10.5" Foreground="#94A3B8" />
+                                        <TextBlock Text="2. يختار اسمه ويكتب رمز الـ PIN." FontSize="10.5" Foreground="#94A3B8" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Reps Table -->
+                        <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0" Margin="0,0,0,10">
+                                    <TextBlock Text="قائمة المناديب المسجلين" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                    <Button HorizontalAlignment="Right" Style="{DynamicResource ActionButton}" Command="{Binding SaveRepsCommand}" Padding="10,5" Cursor="Hand">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="💾 " FontSize="11" />
+                                            <TextBlock Text="حفظ التعديلات" FontWeight="Bold" FontSize="11" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+
+                                <DataGrid Grid.Row="1"
+                                          ItemsSource="{Binding RepAccounts}"
+                                          SelectedItem="{Binding SelectedRepAccount}"
+                                          AutoGenerateColumns="False"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          RowHeight="40"
+                                          GridLinesVisibility="Horizontal"
+                                          HorizontalGridLinesBrush="{DynamicResource BorderDark}"
+                                          HeadersVisibility="Column"
+                                          VerticalScrollBarVisibility="Auto">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="اسم المندوب" Binding="{Binding Name}" Width="1.5*" FontWeight="Bold" />
+                                        <DataGridTextColumn Header="رقم الهاتف" Binding="{Binding Phone}" Width="*" />
+                                        <DataGridTextColumn Header="رمز الـ PIN" Binding="{Binding PinCode}" Width="95" FontWeight="Black" Foreground="#F59E0B" />
+                                        
+                                        <DataGridTemplateColumn Header="الحالة" Width="80">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsActive, UpdateSourceTrigger=PropertyChanged}" Content="نشط" Foreground="#34D399" FontWeight="Bold" HorizontalAlignment="Center" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <DataGridTemplateColumn Header="إجراءات" Width="80">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Command="{Binding DataContext.DeleteRepAccountCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{DynamicResource ActionButton}"
+                                                            Padding="6,3"
+                                                            HorizontalAlignment="Center"
+                                                            Cursor="Hand"
+                                                            ToolTip="حذف حساب المندوب">
+                                                        <TextBlock Text="🗑️" FontSize="12" Foreground="#EF4444" />
+                                                    </Button>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>

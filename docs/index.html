@@ -72,60 +72,62 @@
 </head>
 <body>
 
-    <!-- REP PIN LOGIN SCREEN -->
-    <div id="loginScreen" class="login-overlay" style="display: none;">
+    <!-- REP PIN LOGIN SCREEN (LOCKED BY DEFAULT) -->
+    <div id="loginScreen" class="login-overlay" style="display: flex;">
         <div class="login-box">
-            <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
-            <h2 style="color: #38bdf8; font-size: 18px; font-weight: 900; margin-bottom: 4px;" id="loginStoreTitle">تسجيل دخول المندوب</h2>
-            <p style="color: var(--text-sec); font-size: 12px; margin-bottom: 16px;" id="loginStoreSubtitle">مخزن ومبيعات 7amo POS</p>
+            <div style="font-size: 44px; margin-bottom: 12px;">🔐</div>
+            <h2 style="color: #38bdf8; font-size: 19px; font-weight: 900; margin-bottom: 4px;" id="loginStoreTitle">تسجيل دخول المندوب</h2>
+            <p style="color: var(--text-sec); font-size: 12px; margin-bottom: 18px;" id="loginStoreSubtitle">مخزن ومبيعات 7amo POS (سحابي 24/7)</p>
 
-            <div style="text-align: right; margin-bottom: 4px; font-size: 12px; color: #93c5fd; font-weight: bold;">اختر حسابك:</div>
-            <select id="loginRepSelect" style="margin-bottom: 12px;">
-                <option value="">-- اختر اسم المندوب --</option>
+            <div style="text-align: right; margin-bottom: 5px; font-size: 12px; color: #93c5fd; font-weight: bold;">👤 اختر اسم المندوب:</div>
+            <select id="loginRepSelect" style="margin-bottom: 14px;">
+                <option value="">-- جارٍ تحميل المناديب... --</option>
             </select>
 
-            <div style="text-align: right; margin-bottom: 4px; font-size: 12px; color: #93c5fd; font-weight: bold;">رمز الدخول السري (PIN):</div>
-            <input type="password" id="loginPinInput" placeholder="أدخل رمز الـ PIN (مثلاً: 1234)" maxlength="8" style="text-align: center; font-size: 18px; letter-spacing: 4px; font-weight: bold;">
+            <div style="text-align: right; margin-bottom: 5px; font-size: 12px; color: #93c5fd; font-weight: bold;">🔑 رمز الدخول السري (PIN):</div>
+            <input type="password" id="loginPinInput" placeholder="••••" maxlength="8" style="text-align: center; font-size: 22px; letter-spacing: 6px; font-weight: bold; background: #081224; border: 1.5px solid #0284c7; margin-bottom: 14px;">
 
-            <button onclick="attemptLogin()" style="width: 100%; background: #0284c7; color: white; border: none; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 900; cursor: pointer; margin-top: 6px;">دخول للبوابة 🚀</button>
+            <button onclick="attemptLogin()" style="width: 100%; background: #0284c7; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 14px rgba(2,132,199,0.4);">دخول للبوابة 🚀</button>
 
-            <div style="margin-top: 14px; font-size: 11px; color: var(--text-sec);">
-                كود المخزن: <b id="displayStoreId" style="color: #fbbf24;">--</b>
+            <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #23334d; font-size: 11.5px; color: var(--text-sec);">
+                كود المخزن: <b id="displayStoreId" style="color: #fbbf24; font-size: 12.5px;">--</b>
                 <br>
-                <a href="javascript:void(0)" onclick="promptChangeStore()" style="color: #38bdf8; text-decoration: none; font-size: 11px;">(تغيير كود المخزن)</a>
+                <a href="javascript:void(0)" onclick="promptChangeStore()" style="color: #38bdf8; text-decoration: none; font-size: 11px; display: inline-block; margin-top: 4px;">(تبديل كود المخزن)</a>
             </div>
         </div>
     </div>
 
-    <!-- MAIN APP HEADER -->
-    <div class="header">
-        <div class="brand">
-            <span>📦</span> <span id="appStoreName">7amo POS</span>
+    <!-- MAIN APP WRAPPER (HIDDEN UNTIL LOGIN) -->
+    <div id="mainApp" style="display: none;">
+        <!-- MAIN APP HEADER -->
+        <div class="header">
+            <div class="brand">
+                <span>📦</span> <span id="appStoreName">7amo POS</span>
+            </div>
+            <div class="cloud-badge">
+                <span>☁️</span> سحابي 24/7
+            </div>
         </div>
-        <div class="cloud-badge">
-            <span>☁️</span> سحابي 24/7
-        </div>
-    </div>
 
-    <div class="container">
-        <!-- Rep Profile Strip -->
-        <div class="rep-strip">
-            <div>
-                <div style="font-size: 12px; color: #93c5fd;">
-                    المندوب: <b id="repNameDisplay" style="color: white;">مندوب المبيعات</b>
+        <div class="container">
+            <!-- Rep Profile Strip -->
+            <div class="rep-strip">
+                <div>
+                    <div style="font-size: 12px; color: #93c5fd;">
+                        المندوب: <b id="repNameDisplay" style="color: white;">مندوب المبيعات</b>
+                    </div>
+                    <div style="font-size: 10.5px; color: #64748b;" id="repStoreCodeDisplay">كود المخزن: ST-0000</div>
                 </div>
-                <div style="font-size: 10.5px; color: #64748b;" id="repStoreCodeDisplay">كود المخزن: ST-0000</div>
+                <button onclick="logoutRep()" style="background: #334155; color: #f87171; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;">🔒 قفل / خروج</button>
             </div>
-            <button onclick="logoutRep()" style="background: #334155; color: #f87171; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;">🔒 خروج</button>
-        </div>
 
-        <!-- Tab Nav -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('order')">📝 طلبية</button>
-            <button class="tab-btn" onclick="switchTab('markets')">🏪 المحلات</button>
-            <button class="tab-btn" onclick="switchTab('catalog')">📦 المخزن</button>
-            <button class="tab-btn" onclick="switchTab('myOrders')">📋 طلبياتي</button>
-        </div>
+            <!-- Tab Nav -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('order')">📝 طلبية</button>
+                <button class="tab-btn" onclick="switchTab('markets')">🏪 المحلات</button>
+                <button class="tab-btn" onclick="switchTab('catalog')">📦 المخزن</button>
+                <button class="tab-btn" onclick="switchTab('myOrders')">📋 طلبياتي</button>
+            </div>
 
         <!-- TAB 1: ORDER CREATOR -->
         <div id="tabOrder">
@@ -219,13 +221,14 @@
         </div>
     </div>
 
-    <!-- Bottom Cart Floating Bar -->
-    <div class="cart-bar" id="bottomCartBar" onclick="switchTab('order')" style="display: none;">
-        <div class="cart-indicator">
-            <span class="badge" id="bottomBadge">0</span>
-            <span style="font-size: 13px; font-weight: bold;">سلة الطلبية</span>
+        <!-- Bottom Cart Floating Bar -->
+        <div class="cart-bar" id="bottomCartBar" onclick="switchTab('order')" style="display: none;">
+            <div class="cart-indicator">
+                <span class="badge" id="bottomBadge">0</span>
+                <span style="font-size: 13px; font-weight: bold;">سلة الطلبية</span>
+            </div>
+            <div style="font-weight: 900; color: #38bdf8; font-size: 14px;" id="bottomTotal">0 د.ع</div>
         </div>
-        <div style="font-weight: 900; color: #38bdf8; font-size: 14px;" id="bottomTotal">0 د.ع</div>
     </div>
 
     <script>
@@ -345,11 +348,15 @@
 
         function showLoginModal() {
             document.getElementById('loginScreen').style.display = 'flex';
+            var app = document.getElementById('mainApp');
+            if (app) app.style.display = 'none';
             populateLoginReps();
         }
 
         function hideLoginModal() {
             document.getElementById('loginScreen').style.display = 'none';
+            var app = document.getElementById('mainApp');
+            if (app) app.style.display = 'block';
         }
 
         function populateLoginReps() {
