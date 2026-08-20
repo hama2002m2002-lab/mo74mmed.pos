@@ -232,13 +232,13 @@ public class SalesHistoryViewModel : BaseViewModel
             var targetSale = param as Sale ?? SelectedSale;
             if (targetSale != null)
             {
-                if (targetSale.Status == "Returned")
+                if (targetSale.IsAlreadyReturned || targetSale.Status == "Returned" || targetSale.InvoiceNumber.StartsWith("RET-"))
                 {
                     MessageBox.Show("هذا الوصل تم استرجاعه مسبقاً بالفعل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
-                var res = MessageBox.Show($"هل ترغب في استرجاع الوصل رقم '{targetSale.InvoiceNumber}' بقيمة {targetSale.TotalAmount:N0} د.ع وإعادة كميات المواد للمخزن؟",
+                var res = MessageBox.Show($"هل ترغب في استرجاع الوصل رقم '{targetSale.InvoiceNumber}' بقيمة {targetSale.TotalAmount:N0} د.ع وإنشاء وصل إرجاع جديد وإعادة المواد للمخزن؟",
                                           "تأكيد استرجاع الوصل", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (res == MessageBoxResult.Yes)
                 {
@@ -248,7 +248,8 @@ public class SalesHistoryViewModel : BaseViewModel
                     {
                         await LoadSalesDataAsync();
                         IsInvoiceModalOpen = false;
-                        MessageBox.Show($"تم استرجاع الوصل '{targetSale.InvoiceNumber}' بنجاح وإعادة كافة المواد إلى المخزن.", "تم الاسترجاع بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                        string retNum = targetSale.InvoiceNumber.StartsWith("INV-") ? "RET-" + targetSale.InvoiceNumber.Substring(4) : "RET-" + targetSale.InvoiceNumber;
+                        MessageBox.Show($"تم استرجاع الوصل بنجاح!\nتم الحفاظ على الوصل الأصلي ({targetSale.InvoiceNumber}) وإنشاء وصل استرجاع جديد ({retNum}) وإعادة الكميات للمخزن.", "تم الاسترجاع بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                 }
             }
@@ -264,7 +265,12 @@ public class SalesHistoryViewModel : BaseViewModel
 
     public async Task LoadSalesDataAsync()
     {
-        var users = await _context.Users.Select(u => u.FullName).Distinct().ToListAsync();
+        var users = await _context.Users
+            .AsNoTracking()
+            .Select(u => u.FullName)
+            .Distinct()
+            .ToListAsync();
+
         CashierNames.Clear();
         CashierNames.Add("الكل");
         foreach (var u in users)
@@ -345,25 +351,30 @@ public class SalesHistoryViewModel : BaseViewModel
         var salesList = await query.OrderByDescending(s => s.CreatedAt).ToListAsync();
 
         FilteredSales.Clear();
-        decimal totalSum = 0;
+        decimal totalCompletedSum = 0;
+        decimal totalReturnedSum = 0;
         decimal totalProfit = 0;
         int completedCount = 0;
 
         foreach (var s in salesList)
         {
             FilteredSales.Add(s);
-            if (s.Status != "Returned")
+            if (s.Status == "Returned" || s.InvoiceNumber.StartsWith("RET-"))
             {
-                totalSum += s.TotalAmount;
+                totalReturnedSum += Math.Abs(s.TotalAmount);
+            }
+            else
+            {
+                totalCompletedSum += s.TotalAmount;
                 totalProfit += s.InvoiceNetProfit;
                 completedCount++;
             }
         }
 
-        TotalSalesAmount = totalSum;
-        TotalInvoicesCount = salesList.Count;
+        TotalSalesAmount = totalCompletedSum - totalReturnedSum;
+        TotalInvoicesCount = completedCount;
         TotalProfitAmount = totalProfit;
-        AverageInvoiceAmount = completedCount > 0 ? (totalSum / completedCount) : 0;
+        AverageInvoiceAmount = completedCount > 0 ? (TotalSalesAmount / completedCount) : 0;
     }
 
     private void PrintReceipt(Sale sale)

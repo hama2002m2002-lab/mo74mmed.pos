@@ -30,6 +30,12 @@ public class Sale : BaseEntity
     public virtual ICollection<SaleItem> Items { get; set; } = new List<SaleItem>();
 
     [NotMapped]
+    public bool IsReturnSale => Status == "Returned" || (!string.IsNullOrEmpty(InvoiceNumber) && InvoiceNumber.StartsWith("RET-"));
+
+    [NotMapped]
+    public bool IsAlreadyReturned => IsReturnSale || (!string.IsNullOrEmpty(Notes) && Notes.Contains("تم الاسترجاع"));
+
+    [NotMapped]
     public decimal InvoiceNetProfit
     {
         get

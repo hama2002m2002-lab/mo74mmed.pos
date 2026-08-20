@@ -96,18 +96,68 @@ public class SaleService : ISaleService
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            var sale = await _context.Sales
+            var originalSale = await _context.Sales
                 .Include(s => s.Items)
                 .FirstOrDefaultAsync(s => s.Id == saleId);
 
-            if (sale == null || sale.Status == "Returned")
+            if (originalSale == null || originalSale.Status == "Returned" || originalSale.InvoiceNumber.StartsWith("RET-"))
                 return false;
 
-            sale.Status = "Returned";
-            sale.UpdatedAt = DateTime.UtcNow;
+            string retInvoiceNumber = originalSale.InvoiceNumber.StartsWith("INV-")
+                ? "RET-" + originalSale.InvoiceNumber.Substring(4)
+                : "RET-" + originalSale.InvoiceNumber;
 
-            // استرجاع كميات المواد والكراتين بدقة للمخزن
-            foreach (var item in sale.Items)
+            // التأكد من عدم تكرار الإرجاع
+            bool alreadyReturned = await _context.Sales.AnyAsync(s => s.InvoiceNumber == retInvoiceNumber);
+            if (alreadyReturned)
+                return false;
+
+            // 1. الإبقاء على الوصل الأصلي كمبيعات مكتملة وتوثيق الإرجاع في ملاحظاته
+            originalSale.Notes = string.IsNullOrWhiteSpace(originalSale.Notes)
+                ? $"[تم الاسترجاع بالوصل {retInvoiceNumber}]"
+                : $"{originalSale.Notes} [تم الاسترجاع بالوصل {retInvoiceNumber}]";
+            originalSale.UpdatedAt = DateTime.UtcNow;
+
+            // 2. إنشاء وصل إرجاع جديد منفصل ومستقل بتوقيت وتاريخ الإرجاع اللحظي
+            var returnSale = new Sale
+            {
+                Id = Guid.NewGuid(),
+                InvoiceNumber = retInvoiceNumber,
+                UserId = originalSale.UserId,
+                SubTotal = originalSale.SubTotal,
+                TaxAmount = originalSale.TaxAmount,
+                DiscountAmount = originalSale.DiscountAmount,
+                TotalAmount = originalSale.TotalAmount,
+                PaidAmount = originalSale.PaidAmount,
+                ChangeAmount = originalSale.ChangeAmount,
+                PaymentMethod = originalSale.PaymentMethod,
+                Status = "Returned",
+                CustomerName = originalSale.CustomerName,
+                Notes = $"وصل إرجاع للمبيعات رقم {originalSale.InvoiceNumber}",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            foreach (var item in originalSale.Items)
+            {
+                var returnItem = new SaleItem
+                {
+                    Id = Guid.NewGuid(),
+                    SaleId = returnSale.Id,
+                    ProductId = item.ProductId,
+                    ProductName = item.ProductName,
+                    Barcode = item.Barcode,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice,
+                    TotalPrice = item.TotalPrice
+                };
+                returnSale.Items.Add(returnItem);
+            }
+
+            await _context.Sales.AddAsync(returnSale);
+
+            // 3. استرجاع كميات المواد والكراتين بدقة للمخزن
+            foreach (var item in originalSale.Items)
             {
                 if (item.ProductId.HasValue && item.ProductId != Guid.Empty)
                 {
@@ -161,13 +211,22 @@ public class SaleService : ISaleService
         var today = DateTime.UtcNow.Date;
         var todaySales = await _context.Sales
             .AsNoTracking()
-            .Where(s => s.CreatedAt >= today && s.Status == "Completed")
+            .Where(s => s.CreatedAt >= today)
             .ToListAsync();
 
-        int count = todaySales.Count;
-        decimal total = todaySales.Sum(s => s.TotalAmount);
-        decimal cash = todaySales.Where(s => s.PaymentMethod == "Cash").Sum(s => s.TotalAmount);
-        decimal card = todaySales.Where(s => s.PaymentMethod == "Card").Sum(s => s.TotalAmount);
+        var completedSales = todaySales.Where(s => s.Status == "Completed").ToList();
+        var returnedSales = todaySales.Where(s => s.Status == "Returned").ToList();
+
+        int count = completedSales.Count;
+        decimal completedRev = completedSales.Sum(s => s.TotalAmount);
+        decimal returnedRev = returnedSales.Sum(s => s.TotalAmount);
+        decimal total = completedRev - returnedRev;
+
+        decimal cash = completedSales.Where(s => s.PaymentMethod == "Cash").Sum(s => s.TotalAmount)
+                     - returnedSales.Where(s => s.PaymentMethod == "Cash").Sum(s => s.TotalAmount);
+
+        decimal card = completedSales.Where(s => s.PaymentMethod == "Card").Sum(s => s.TotalAmount)
+                     - returnedSales.Where(s => s.PaymentMethod == "Card").Sum(s => s.TotalAmount);
 
         return (count, total, cash, card);
     }
@@ -177,10 +236,16 @@ public class SaleService : ISaleService
         var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var monthSales = await _context.Sales
             .AsNoTracking()
-            .Where(s => s.CreatedAt >= startOfMonth && s.Status == "Completed")
+            .Where(s => s.CreatedAt >= startOfMonth)
             .ToListAsync();
 
-        return (monthSales.Count, monthSales.Sum(s => s.TotalAmount));
+        var completedSales = monthSales.Where(s => s.Status == "Completed").ToList();
+        var returnedSales = monthSales.Where(s => s.Status == "Returned").ToList();
+
+        int count = completedSales.Count;
+        decimal total = completedSales.Sum(s => s.TotalAmount) - returnedSales.Sum(s => s.TotalAmount);
+
+        return (count, total);
     }
 
     public async Task<List<Sale>> GetRecentSalesAsync(int take = 10)

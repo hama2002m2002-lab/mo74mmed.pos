@@ -1322,7 +1322,7 @@
                                     <Setter Property="BorderThickness" Value="0,0,0,1" />
                                     <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                        <DataTrigger Binding="{Binding IsReturnSale}" Value="True">
                                             <Setter Property="Background" Value="#3D0B14" />
                                             <Setter Property="Foreground" Value="#FECACA" />
                                             <Setter Property="BorderBrush" Value="#7F1D1D" />
@@ -1337,14 +1337,7 @@
                                         </Trigger>
                                         <MultiDataTrigger>
                                             <MultiDataTrigger.Conditions>
-                                                <Condition Binding="{Binding Status}" Value="Returned" />
-                                                <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
-                                            </MultiDataTrigger.Conditions>
-                                            <Setter Property="Background" Value="#52101C" />
-                                        </MultiDataTrigger>
-                                        <MultiDataTrigger>
-                                            <MultiDataTrigger.Conditions>
-                                                <Condition Binding="{Binding DataContext.IsReturnsOnlyFilterActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True" />
+                                                <Condition Binding="{Binding IsReturnSale}" Value="True" />
                                                 <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
                                             </MultiDataTrigger.Conditions>
                                             <Setter Property="Background" Value="#52101C" />
@@ -1362,7 +1355,7 @@
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="{DynamicResource PrimaryAccent}" />
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                            <DataTrigger Binding="{Binding IsReturnSale}" Value="True">
                                                                 <Setter Property="Foreground" Value="#F87171" />
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding DataContext.IsReturnsOnlyFilterActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
@@ -1387,13 +1380,13 @@
                                                         <Style TargetType="Border">
                                                             <Setter Property="Visibility" Value="Collapsed" />
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                                <DataTrigger Binding="{Binding IsReturnSale}" Value="True">
                                                                     <Setter Property="Visibility" Value="Visible" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
                                                     </Border.Style>
-                                                    <TextBlock Text="{Binding UpdatedAt, StringFormat='{}إرجاع: {0:yyyy/MM/dd hh:mm tt}'}" FontSize="10" Foreground="#FCA5A5" FontWeight="Bold" />
+                                                    <TextBlock Text="{Binding CreatedAt, StringFormat='{}إرجاع: {0:yyyy/MM/dd hh:mm tt}'}" FontSize="10" Foreground="#FCA5A5" FontWeight="Bold" />
                                                 </Border>
                                             </StackPanel>
                                         </DataTemplate>
@@ -1413,7 +1406,7 @@
                                                         <Setter Property="Text" Value="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" />
                                                         <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                            <DataTrigger Binding="{Binding IsReturnSale}" Value="True">
                                                                 <Setter Property="Foreground" Value="#EF4444" />
                                                                 <Setter Property="Text" Value="{Binding TotalAmount, StringFormat='- {0:N0} د.ع'}" />
                                                             </DataTrigger>
@@ -1443,13 +1436,12 @@
                                                         <Setter Property="BorderBrush" Value="#10B981" />
                                                         <Setter Property="BorderThickness" Value="1" />
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                            <DataTrigger Binding="{Binding IsReturnSale}" Value="True">
                                                                 <Setter Property="Background" Value="#7F1D1D" />
                                                                 <Setter Property="BorderBrush" Value="#EF4444" />
                                                             </DataTrigger>
-                                                            <DataTrigger Binding="{Binding DataContext.IsReturnsOnlyFilterActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                                                                <Setter Property="Background" Value="#7F1D1D" />
-                                                                <Setter Property="BorderBrush" Value="#EF4444" />
+                                                            <DataTrigger Binding="{Binding IsAlreadyReturned}" Value="True">
+                                                                <Setter Property="BorderBrush" Value="#F59E0B" />
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -1459,10 +1451,7 @@
                                                         <Style TargetType="TextBlock">
                                                             <Setter Property="Text" Value="مكتمل ✔" />
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Status}" Value="Returned">
-                                                                    <Setter Property="Text" Value="مسترجع 🔄" />
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding DataContext.IsReturnsOnlyFilterActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                                                <DataTrigger Binding="{Binding IsReturnSale}" Value="True">
                                                                     <Setter Property="Text" Value="مسترجع 🔄" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
@@ -1489,9 +1478,9 @@
                                                     <Button.Style>
                                                         <Style TargetType="Button" BasedOn="{StaticResource DangerButton}">
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                                <DataTrigger Binding="{Binding IsAlreadyReturned}" Value="True">
                                                                     <Setter Property="IsEnabled" Value="False" />
-                                                                    <Setter Property="Opacity" Value="0.4" />
+                                                                    <Setter Property="Opacity" Value="0.35" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
