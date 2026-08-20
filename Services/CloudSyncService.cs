@@ -5,8 +5,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Threading;
 using Microsoft.EntityFrameworkCore;
 using HamoPos.Data;
 using HamoPos.Models;
@@ -19,7 +19,7 @@ public class CloudSyncService
     public static CloudSyncService Instance => _instance.Value;
 
     private readonly HttpClient _httpClient;
-    private DispatcherTimer? _syncTimer;
+    private CancellationTokenSource? _cts;
     private bool _isSyncing = false;
 
     private const string GitHubRepo = "hama2002m2002-lab/mo74mmed.pos";
@@ -38,33 +38,51 @@ public class CloudSyncService
 
     public CloudSyncService()
     {
-        _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) HamoPOS/1.0");
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"token {GetGitHubToken()}");
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
     }
 
-    public void StartBackgroundSync(int intervalSeconds = 5)
+    public void StartBackgroundSync(int intervalSeconds = 4)
     {
-        if (_syncTimer != null)
-        {
-            _syncTimer.Stop();
-        }
+        StopBackgroundSync();
 
-        _syncTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(intervalSeconds)
-        };
-        _syncTimer.Tick += async (s, e) => await SyncAllAsync();
-        _syncTimer.Start();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
-        // Initial sync on start
-        _ = Task.Run(async () => await SyncAllAsync());
+        Task.Run(async () =>
+        {
+            // Initial Push and Pull
+            await PushProductsToCloudAsync().ConfigureAwait(false);
+            await PullNewOrdersFromCloudAsync().ConfigureAwait(false);
+
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(intervalSeconds), token).ConfigureAwait(false);
+                    if (token.IsCancellationRequested) break;
+
+                    await PullNewOrdersFromCloudAsync().ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) { break; }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Background loop note: {ex.Message}");
+                }
+            }
+        }, token);
     }
 
     public void StopBackgroundSync()
     {
-        _syncTimer?.Stop();
+        if (_cts != null)
+        {
+            _cts.Cancel();
+            _cts.Dispose();
+            _cts = null;
+        }
     }
 
     public async Task SyncAllAsync()
@@ -74,8 +92,8 @@ public class CloudSyncService
 
         try
         {
-            await PushProductsToCloudAsync();
-            await PullNewOrdersFromCloudAsync();
+            await PushProductsToCloudAsync().ConfigureAwait(false);
+            await PullNewOrdersFromCloudAsync().ConfigureAwait(false);
 
             LastSyncTime = DateTime.Now;
             SyncStatusMessage = $"✔ متصل بالسحابة 24/7 (آخر مزامنة: {LastSyncTime:hh:mm:ss tt})";
@@ -111,7 +129,8 @@ public class CloudSyncService
                     unit = p.Unit,
                     itemsPerCarton = p.ItemsPerCarton
                 })
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
 
             var storeSettings = StoreSettingsService.Instance.Settings;
             string storeId = storeSettings.StoreId;
@@ -138,10 +157,10 @@ public class CloudSyncService
             string json = JsonSerializer.Serialize(catalogObj, new JsonSerializerOptions { WriteIndented = true });
 
             // 1. Upload to dedicated store folder
-            await UploadFileToGitHubAsync($"docs/stores/{storeId}/catalog.json", json, $"cloud sync: update catalog for store {storeId}");
+            await UploadFileToGitHubAsync($"docs/stores/{storeId}/catalog.json", json, $"cloud sync: update catalog for store {storeId}").ConfigureAwait(false);
             
             // 2. Also write root catalog for fallback
-            await UploadFileToGitHubAsync("docs/catalog.json", json, "cloud sync: fallback catalog update");
+            await UploadFileToGitHubAsync("docs/catalog.json", json, "cloud sync: fallback catalog update").ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -153,12 +172,38 @@ public class CloudSyncService
     {
         try
         {
-            string storeId = StoreSettingsService.Instance.Settings.StoreId;
+            string currentStoreId = StoreSettingsService.Instance.Settings.StoreId;
             var pathsToScan = new List<string>
             {
-                $"docs/stores/{storeId}/orders",
+                $"docs/stores/{currentStoreId}/orders",
                 "docs/orders"
             };
+
+            // Also scan any other store subfolders in docs/stores
+            try
+            {
+                var storesResp = await _httpClient.GetAsync($"https://api.github.com/repos/{GitHubRepo}/contents/docs/stores?t={DateTime.UtcNow.Ticks}").ConfigureAwait(false);
+                if (storesResp.IsSuccessStatusCode)
+                {
+                    string storesJson = await storesResp.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    using var storesDoc = JsonDocument.Parse(storesJson);
+                    if (storesDoc.RootElement.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var stItem in storesDoc.RootElement.EnumerateArray())
+                        {
+                            if (stItem.TryGetProperty("path", out var p) && p.GetString() is string storePath)
+                            {
+                                string subOrderPath = $"{storePath}/orders";
+                                if (!pathsToScan.Contains(subOrderPath))
+                                {
+                                    pathsToScan.Add(subOrderPath);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
 
             bool hasNewOrders = false;
 
@@ -175,51 +220,32 @@ public class CloudSyncService
                 foreach (var item in doc.RootElement.EnumerateArray())
                 {
                     string? name = item.TryGetProperty("name", out var n) ? n.GetString() : null;
-                    string? downloadUrl = item.TryGetProperty("download_url", out var du) ? du.GetString() : null;
                     string? sha = item.TryGetProperty("sha", out var s) ? s.GetString() : null;
                     string? path = item.TryGetProperty("path", out var p) ? p.GetString() : null;
-                    string? contentB64 = item.TryGetProperty("content", out var c) ? c.GetString() : null;
 
-                    if (string.IsNullOrEmpty(name) || !name.EndsWith(".json")) continue;
+                    if (string.IsNullOrEmpty(name) || !name.EndsWith(".json") || string.IsNullOrEmpty(path)) continue;
 
-                    string? orderJson = null;
+                    // Fetch file content via GitHub contents API directly
+                    string fileApiUrl = $"https://api.github.com/repos/{GitHubRepo}/contents/{path}?t={DateTime.UtcNow.Ticks}";
+                    var fileResp = await _httpClient.GetAsync(fileApiUrl).ConfigureAwait(false);
+                    if (!fileResp.IsSuccessStatusCode) continue;
 
-                    // 1. If content is in listing
-                    if (!string.IsNullOrEmpty(contentB64))
-                    {
-                        try
-                        {
-                            orderJson = Encoding.UTF8.GetString(Convert.FromBase64String(contentB64.Replace("\n", "").Replace("\r", "")));
-                        }
-                        catch { }
-                    }
+                    string fileJson = await fileResp.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    using var fileDoc = JsonDocument.Parse(fileJson);
+                    
+                    if (!fileDoc.RootElement.TryGetProperty("content", out var contentElem) || contentElem.GetString() is not string contentB64)
+                        continue;
 
-                    // 2. Otherwise download
-                    if (string.IsNullOrEmpty(orderJson) && !string.IsNullOrEmpty(downloadUrl))
-                    {
-                        var orderResp = await _httpClient.GetAsync(downloadUrl + $"?t={DateTime.UtcNow.Ticks}").ConfigureAwait(false);
-                        if (orderResp.IsSuccessStatusCode)
-                        {
-                            orderJson = await orderResp.Content.ReadAsStringAsync().ConfigureAwait(false);
-                        }
-                    }
-
-                    if (string.IsNullOrEmpty(orderJson)) continue;
+                    string orderJson = Encoding.UTF8.GetString(Convert.FromBase64String(contentB64.Replace("\n", "").Replace("\r", "").Trim()));
+                    if (string.IsNullOrWhiteSpace(orderJson)) continue;
 
                     var orderDto = JsonSerializer.Deserialize<CloudOrderPayload>(orderJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     if (orderDto == null || string.IsNullOrWhiteSpace(orderDto.MarketName) || orderDto.Items == null || !orderDto.Items.Any()) continue;
 
-                    // Verify store ID if specified in order
-                    if (!string.IsNullOrWhiteSpace(orderDto.StoreId) && !orderDto.StoreId.Equals(storeId, StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Belongs to another store, skip
-                        continue;
-                    }
-
                     using var db = new AppDbContext();
 
                     // Check if already imported
-                    bool exists = await db.SupplierOrders.AnyAsync(o => o.OrderNumber == orderDto.OrderNumber);
+                    bool exists = await db.SupplierOrders.AnyAsync(o => o.OrderNumber == orderDto.OrderNumber).ConfigureAwait(false);
                     if (!exists)
                     {
                         var supplierOrder = new SupplierOrder
@@ -229,7 +255,7 @@ public class CloudSyncService
                             MarketName = orderDto.MarketName.Trim(),
                             MarketPhone = orderDto.MarketPhone?.Trim(),
                             MarketAddress = orderDto.MarketAddress?.Trim(),
-                            RepresentativeName = string.IsNullOrWhiteSpace(orderDto.RepresentativeName) ? "مندوب السحابة" : orderDto.RepresentativeName.Trim(),
+                            RepresentativeName = string.IsNullOrWhiteSpace(orderDto.RepresentativeName) ? "مندوب المبيعات" : orderDto.RepresentativeName.Trim(),
                             SupplierName = "طلب سحابي 24/7",
                             Status = OrderStatus.Pending,
                             Notes = orderDto.Notes?.Trim(),
@@ -246,14 +272,15 @@ public class CloudSyncService
                         };
 
                         db.SupplierOrders.Add(supplierOrder);
-                        await db.SaveChangesAsync();
+                        await db.SaveChangesAsync().ConfigureAwait(false);
                         hasNewOrders = true;
                     }
 
                     // Delete the processed order file from GitHub queue
-                    if (!string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(sha))
+                    string actualSha = fileDoc.RootElement.TryGetProperty("sha", out var actualShaElem) ? actualShaElem.GetString() ?? sha ?? "" : sha ?? "";
+                    if (!string.IsNullOrEmpty(actualSha))
                     {
-                        await DeleteFileFromGitHubAsync(path, sha, $"cloud sync: processed order {orderDto.OrderNumber}");
+                        await DeleteFileFromGitHubAsync(path, actualSha, $"cloud sync: processed order {orderDto.OrderNumber}").ConfigureAwait(false);
                     }
                 }
             }
