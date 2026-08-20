@@ -972,11 +972,18 @@ public class MainCashierViewModel : BaseViewModel
             }
         });
 
-        // نافذة سجل الوصلات والورديات
+        // نافذة سجل الوصلات والورديات - تفتح دائماً فوراً
         OpenSalesHistoryModalCommand = new AsyncRelayCommand(async () =>
         {
-            await LoadSalesHistoryArchiveAsync();
             IsSalesHistoryModalOpen = true;
+            try
+            {
+                await LoadSalesHistoryArchiveAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"LoadSalesHistoryArchiveAsync error: {ex.Message}");
+            }
         });
 
         CloseSalesHistoryModalCommand = new RelayCommand(() =>
@@ -1278,29 +1285,53 @@ public class MainCashierViewModel : BaseViewModel
 
     public async Task LoadSalesHistoryArchiveAsync()
     {
-        var todayStart = DateTime.Today.ToUniversalTime();
-        var list = await _context.Sales
-            .Include(s => s.Items)
-            .Include(s => s.User)
-            .AsNoTracking()
-            .Where(s => s.CreatedAt >= todayStart)
-            .OrderByDescending(s => s.CreatedAt)
-            .ToListAsync();
+        try
+        {
+            var todayStart = DateTime.Today.ToUniversalTime();
+            var list = await _context.Sales
+                .Include(s => s.Items)
+                .Include(s => s.User)
+                .AsNoTracking()
+                .Where(s => s.CreatedAt >= todayStart)
+                .OrderByDescending(s => s.CreatedAt)
+                .ToListAsync();
 
-        _allSalesHistoryCache.Clear();
-        _allSalesHistoryCache.AddRange(list);
-        ApplySalesHistoryFilter();
+            if (list.Count == 0)
+            {
+                // إذا لم تكن هناك مبيعات اليوم، جلب آخر 50 فاتورة سابقة لتمكين الكاشير من استعراض الفواتير والطباعة والإرجاع
+                list = await _context.Sales
+                    .Include(s => s.Items)
+                    .Include(s => s.User)
+                    .AsNoTracking()
+                    .OrderByDescending(s => s.CreatedAt)
+                    .Take(50)
+                    .ToListAsync();
+            }
 
-        var completed = list.Where(s => s.Status == "Completed").ToList();
-        var returned = list.Where(s => s.Status == "Returned").ToList();
+            _allSalesHistoryCache.Clear();
+            _allSalesHistoryCache.AddRange(list);
+            ApplySalesHistoryFilter();
 
-        ShiftGrossSales = completed.Sum(s => s.TotalAmount);
-        ShiftReturnsAmount = returned.Sum(s => s.TotalAmount) + completed.SelectMany(s => s.Items).Where(i => i.TotalPrice < 0).Sum(i => Math.Abs(i.TotalPrice));
-        ShiftInvoicesCount = completed.Count;
-        ShiftReturnsCount = returned.Count;
+            var completed = list.Where(s => s.Status == "Completed").ToList();
+            var returned = list.Where(s => s.Status == "Returned").ToList();
 
-        OnPropertyChanged(nameof(ShiftNetSales));
+            ShiftGrossSales = completed.Sum(s => s.TotalAmount);
+            ShiftReturnsAmount = returned.Sum(s => s.TotalAmount) + completed.SelectMany(s => s.Items).Where(i => i.TotalPrice < 0).Sum(i => Math.Abs(i.TotalPrice));
+            ShiftInvoicesCount = completed.Count;
+            ShiftReturnsCount = returned.Count;
+
+            OnPropertyChanged(nameof(ShiftNetSales));
+            OnPropertyChanged(nameof(HasNoSalesHistory));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadSalesHistoryArchiveAsync error: {ex.Message}");
+            _allSalesHistoryCache.Clear();
+            ApplySalesHistoryFilter();
+        }
     }
+
+    public bool HasNoSalesHistory => SalesHistoryList.Count == 0;
 
     private FlowDocument CreateShiftReceiptFlowDocument(double printableWidth)
     {
