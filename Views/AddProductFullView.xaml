@@ -84,7 +84,7 @@
                     
                     <!-- Date Input (Manual Left-To-Right + Calendar Picker, dynamic for light/dark theme) -->
                     <Border Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.5" CornerRadius="8" Height="36" Margin="0,0,16,0" Padding="4,2" VerticalAlignment="Center"
-                            IsEnabled="{Binding HasExpiryDate}" Opacity="{Binding HasExpiryDate, Converter={StaticResource BoolToVis}, FallbackValue=1.0}">
+                            IsEnabled="{Binding HasExpiryDate}">
                         <Grid FlowDirection="LeftToRight">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="110" />
