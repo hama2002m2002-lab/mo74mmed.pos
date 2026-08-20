@@ -154,7 +154,7 @@ public class MainShellViewModel : BaseViewModel
         WarehouseHubVM.RequestOpenAddProduct += () =>
         {
             ActiveTab = "AddProduct";
-            IsSidebarVisible = false;
+            IsSidebarVisible = true;
             CurrentView = AddProductVM;
             AddProductVM.ClearForm();
         };
@@ -186,7 +186,7 @@ public class MainShellViewModel : BaseViewModel
         WarehouseHubVM.RequestEditProduct += (p) =>
         {
             ActiveTab = "AddProduct";
-            IsSidebarVisible = false;
+            IsSidebarVisible = true;
             CurrentView = AddProductVM;
             AddProductVM.LoadProductIntoForm(p);
         };
@@ -198,7 +198,7 @@ public class MainShellViewModel : BaseViewModel
         InventoryVM.RequestAddProduct += () =>
         {
             ActiveTab = "AddProduct";
-            IsSidebarVisible = false;
+            IsSidebarVisible = true;
             CurrentView = AddProductVM;
             AddProductVM.ClearForm();
         };
@@ -207,7 +207,7 @@ public class MainShellViewModel : BaseViewModel
         InventoryVM.RequestEditProduct += (p) =>
         {
             ActiveTab = "AddProduct";
-            IsSidebarVisible = false;
+            IsSidebarVisible = true;
             CurrentView = AddProductVM;
             AddProductVM.LoadProductIntoForm(p);
         };
@@ -215,7 +215,7 @@ public class MainShellViewModel : BaseViewModel
         StockVM.RequestEditProduct += (p) =>
         {
             ActiveTab = "AddProduct";
-            IsSidebarVisible = false;
+            IsSidebarVisible = true;
             CurrentView = AddProductVM;
             AddProductVM.LoadProductIntoForm(p);
         };
@@ -374,7 +374,7 @@ public class MainShellViewModel : BaseViewModel
         ShowInventoryCommand = new AsyncRelayCommand(async () =>
         {
             ActiveTab = "Inventory";
-            IsSidebarVisible = false;
+            IsSidebarVisible = true;
             CurrentView = InventoryVM;
             await InventoryVM.LoadProductsAsync();
         });
@@ -406,7 +406,7 @@ public class MainShellViewModel : BaseViewModel
         ShowPurchaseCommand = new AsyncRelayCommand(async () =>
         {
             ActiveTab = "Purchase";
-            IsSidebarVisible = false; // شاشة شراء المواد تفتح بالكامل
+            IsSidebarVisible = true;
             CurrentView = PurchaseVM;
             await PurchaseVM.InitializeAsync();
         });
@@ -414,7 +414,7 @@ public class MainShellViewModel : BaseViewModel
         ShowAddProductCommand = new AsyncRelayCommand(async () =>
         {
             ActiveTab = "AddProduct";
-            IsSidebarVisible = false;
+            IsSidebarVisible = true;
             CurrentView = AddProductVM;
             await AddProductVM.InitializeAsync();
         });
@@ -422,7 +422,7 @@ public class MainShellViewModel : BaseViewModel
         ShowSuppliersCommand = new AsyncRelayCommand(async () =>
         {
             ActiveTab = "Suppliers";
-            IsSidebarVisible = false;
+            IsSidebarVisible = true;
             CurrentView = SuppliersVM;
             await SuppliersVM.InitializeAsync();
         });

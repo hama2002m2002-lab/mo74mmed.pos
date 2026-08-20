@@ -80,19 +80,20 @@ public class SupplierService : ISupplierService
 
     public async Task<bool> SaveSupplierAsync(Supplier supplier)
     {
+        using var db = new AppDbContext();
         if (supplier.Id == Guid.Empty)
         {
             supplier.Id = Guid.NewGuid();
             supplier.CreatedAt = DateTime.UtcNow;
-            await _context.Suppliers.AddAsync(supplier);
+            await db.Suppliers.AddAsync(supplier);
         }
         else
         {
-            var existing = await _context.Suppliers.FindAsync(supplier.Id);
+            var existing = await db.Suppliers.FindAsync(supplier.Id);
             if (existing == null)
             {
                 supplier.CreatedAt = DateTime.UtcNow;
-                await _context.Suppliers.AddAsync(supplier);
+                await db.Suppliers.AddAsync(supplier);
             }
             else
             {
@@ -104,25 +105,28 @@ public class SupplierService : ISupplierService
                 existing.Balance = supplier.Balance;
                 existing.Notes = supplier.Notes;
                 existing.UpdatedAt = DateTime.UtcNow;
+                existing.IsDeleted = false;
             }
         }
 
-        return await _context.SaveChangesAsync() > 0;
+        return await db.SaveChangesAsync() > 0;
     }
 
     public async Task<bool> DeleteSupplierAsync(Guid id)
     {
-        var supplier = await _context.Suppliers.FindAsync(id);
+        using var db = new AppDbContext();
+        var supplier = await db.Suppliers.FindAsync(id);
         if (supplier == null)
             return false;
 
         supplier.IsDeleted = true;
         supplier.UpdatedAt = DateTime.UtcNow;
-        return await _context.SaveChangesAsync() > 0;
+        return await db.SaveChangesAsync() > 0;
     }
 
     public async Task<bool> AddTransactionAsync(Guid supplierId, string type, decimal amount, string? description, string? invoiceNumber = null)
     {
+        using var db = new AppDbContext();
         var transaction = new SupplierTransaction
         {
             Id = Guid.NewGuid(),
@@ -135,22 +139,34 @@ public class SupplierService : ISupplierService
             CreatedAt = DateTime.UtcNow
         };
 
-        var supplier = await _context.Suppliers.FindAsync(supplierId);
+        var supplier = await db.Suppliers.FindAsync(supplierId);
         if (supplier != null)
         {
-            if (type == "Payment")
+            if (type == "Payment" || type == "دفع")
             {
-                supplier.Balance -= amount; // تخفيض رصيد الدين المطلوب له
+                supplier.Balance -= amount;
             }
-            else if (type == "Purchase")
+            else if (type == "Purchase" || type == "شراء")
             {
-                supplier.Balance += amount; // زيادة رصيد المشتريات المستحقة له
+                supplier.Balance += amount;
             }
             supplier.UpdatedAt = DateTime.UtcNow;
         }
 
-        await _context.SupplierTransactions.AddAsync(transaction);
-        return await _context.SaveChangesAsync() > 0;
+        await db.SupplierTransactions.AddAsync(transaction);
+        return await db.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> UpdateSupplierBalanceAsync(Guid supplierId, decimal newBalance)
+    {
+        using var db = new AppDbContext();
+        var supplier = await db.Suppliers.FindAsync(supplierId);
+        if (supplier == null)
+            return false;
+
+        supplier.Balance = newBalance;
+        supplier.UpdatedAt = DateTime.UtcNow;
+        return await db.SaveChangesAsync() > 0;
     }
 
     public async Task<List<SupplierTransaction>> GetSupplierTransactionsAsync(Guid supplierId)

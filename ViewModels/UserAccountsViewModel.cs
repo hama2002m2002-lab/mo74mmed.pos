@@ -429,15 +429,16 @@ public class UserAccountsViewModel : BaseViewModel
         {
             if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(FullName))
             {
-                MessageBox.Show("يرجى إدخال اسم المستخدم والاسم الكامل.", "بيانات ناقصة", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.IsKurdish ? "تکایە ناوی بەکارهێنەر و ناوی تەواو بنووسە." : "يرجى إدخال اسم المستخدم والاسم الكامل.", Loc.IsKurdish ? "ئاگاداری" : "بيانات ناقصة", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             try
             {
+                using var db = new AppDbContext();
                 if (EditingUserId.HasValue)
                 {
-                    var existing = await _context.Users.FindAsync(EditingUserId.Value);
+                    var existing = await db.Users.FindAsync(EditingUserId.Value);
                     if (existing != null)
                     {
                         existing.Username = Username.Trim();
@@ -453,10 +454,10 @@ public class UserAccountsViewModel : BaseViewModel
                 }
                 else
                 {
-                    bool exists = await _context.Users.AnyAsync(u => u.Username.ToLower() == Username.Trim().ToLower());
+                    bool exists = await db.Users.AnyAsync(u => u.Username.ToLower() == Username.Trim().ToLower());
                     if (exists)
                     {
-                        MessageBox.Show("اسم المستخدم هذا مستخدم مسبقاً، يرجى اختيار اسم آخر.", "تكرار", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show(Loc.IsKurdish ? "ئەم ناوی بەکارهێنەرە پێشتر بەکارهاتووە، تکایە ناوێکی تر هەڵبژێرە." : "اسم المستخدم هذا مستخدم مسبقاً، يرجى اختيار اسم آخر.", Loc.IsKurdish ? "ئاگاداری" : "تكرار", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                     }
 
@@ -470,10 +471,10 @@ public class UserAccountsViewModel : BaseViewModel
                         IsActive = IsActive,
                         CreatedAt = DateTime.UtcNow
                     };
-                    await _context.Users.AddAsync(newUser);
+                    await db.Users.AddAsync(newUser);
                 }
 
-                await _context.SaveChangesAsync();
+                await db.SaveChangesAsync();
                 IsAddEditModalOpen = false;
                 ClearForm();
                 await RefreshDataAsync();
@@ -483,7 +484,7 @@ public class UserAccountsViewModel : BaseViewModel
                     SelectedCashier = CashierCards.FirstOrDefault(c => c.Id == EditingUserId.Value);
                 }
 
-                MessageBox.Show("تم حفظ بيانات الحساب بنجاح!", "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.IsKurdish ? "زانیاری هەژمار بە سەرکەوتوویی پاشەکەوت کرا!" : "تم حفظ بيانات الحساب بنجاح!", Loc.IsKurdish ? "سەرکەوتوو بوو" : "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -498,18 +499,19 @@ public class UserAccountsViewModel : BaseViewModel
             {
                 if (CashierCards.Count <= 1)
                 {
-                    MessageBox.Show("لا يمكن حذف المستخدم الوحيد في النظام.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(Loc.IsKurdish ? "ناتوانرێت تەنها بەکارهێنەری سیستەم بسڕدرێتەوە." : "لا يمكن حذف المستخدم الوحيد في النظام.", Loc.IsKurdish ? "ئاگاداری" : "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                var res = MessageBox.Show($"هل ترغب في حذف حساب المستخدم '{target.FullName}' نهائياً؟", "تأكيد الحذف", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var res = MessageBox.Show(Loc.IsKurdish ? $"ئایا دڵنیایت لە سڕینەوەی هەژماری '{target.FullName}'؟" : $"هل ترغب في حذف حساب المستخدم '{target.FullName}' نهائياً؟", Loc.IsKurdish ? "سڕینەوە" : "تأكيد الحذف", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (res == MessageBoxResult.Yes)
                 {
-                    var user = await _context.Users.FindAsync(target.Id);
+                    using var db = new AppDbContext();
+                    var user = await db.Users.FindAsync(target.Id);
                     if (user != null)
                     {
-                        _context.Users.Remove(user);
-                        await _context.SaveChangesAsync();
+                        db.Users.Remove(user);
+                        await db.SaveChangesAsync();
                     }
 
                     if (IsDetailsActive && SelectedCashier?.Id == target.Id)
@@ -527,12 +529,13 @@ public class UserAccountsViewModel : BaseViewModel
         {
             if (param is CashierCardItem target)
             {
-                var user = await _context.Users.FindAsync(target.Id);
+                using var db = new AppDbContext();
+                var user = await db.Users.FindAsync(target.Id);
                 if (user != null)
                 {
                     user.IsActive = !user.IsActive;
                     user.UpdatedAt = DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
+                    await db.SaveChangesAsync();
                     await RefreshDataAsync();
                 }
             }
