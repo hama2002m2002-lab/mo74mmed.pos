@@ -99,9 +99,12 @@ public class SupplierOrdersViewModel : BaseViewModel
     public ICommand PrintOrderCommand { get; }
     public ICommand OpenMobilePortalCommand { get; }
     public ICommand CopyMobilePortalUrlCommand { get; }
+    public ICommand OpenCloudPortalCommand { get; }
+    public ICommand CopyCloudPortalUrlCommand { get; }
     public ICommand SyncCloudNowCommand { get; }
 
     public string PortalUrl => HamoPos.Services.RepWebPortalService.Instance.PortalUrl;
+    public string CloudPortalUrl => HamoPos.Services.CloudSyncService.Instance.PublicCloudPortalUrl;
     public string CloudSyncStatus => HamoPos.Services.CloudSyncService.Instance.SyncStatusMessage;
 
     public event Action? OrderConvertedToPurchase;
@@ -125,6 +128,7 @@ public class SupplierOrdersViewModel : BaseViewModel
             await HamoPos.Services.CloudSyncService.Instance.SyncAllAsync();
             OnPropertyChanged(nameof(CloudSyncStatus));
             await LoadOrdersAsync();
+            MessageBox.Show("تمت المزامنة السحابية بنجاح 24/7!\nتم تحديث الكتالوج وفحص كافة الطلبيات الواردة من الموبايل.", "السحابة متصلة", MessageBoxButton.OK, MessageBoxImage.Information);
         });
 
         HamoPos.Services.CloudSyncService.Instance.CloudOrdersImported += () =>
@@ -154,7 +158,30 @@ public class SupplierOrdersViewModel : BaseViewModel
             try
             {
                 Clipboard.SetText(PortalUrl);
-                MessageBox.Show($"تم نسخ رابط بوابة المندوب للموبايل بنجاح:\n{PortalUrl}", "تم النسخ", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"تم نسخ رابط شبكة الواي فاي المحلية للموبايل:\n{PortalUrl}", "تم النسخ", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch { }
+        });
+
+        OpenCloudPortalCommand = new RelayCommand(() =>
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = CloudPortalUrl,
+                    UseShellExecute = true
+                });
+            }
+            catch { }
+        });
+
+        CopyCloudPortalUrlCommand = new RelayCommand(() =>
+        {
+            try
+            {
+                Clipboard.SetText(CloudPortalUrl);
+                MessageBox.Show($"تم نسخ رابط الموبايل السحابي العالمي 24/7 بنجاح:\n\n{CloudPortalUrl}\n\n(يمكنك إرساله عبر واتساب لأي مندوب أو فتحه من أي موبايل حول العالم عبر 4G/5G حتى واللابتوب مطفأ!)", "تم نسخ الرابط السحابي", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch { }
         });

@@ -44,28 +44,35 @@
 
                 <!-- Actions Top Right -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <!-- Cloud 24/7 Portal Button -->
+                    <Button Style="{DynamicResource ActionButton}" Command="{Binding OpenCloudPortalCommand}" Padding="12,7" Margin="0,0,8,0" Cursor="Hand" Background="#0C2548" BorderBrush="#0284C7" ToolTip="فتح صفحة الموبايل السحابية التي تعمل 24/7 من أي شبكة حتى لو كان اللابتوب مطفأ">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🌐 " FontSize="13" />
+                            <TextBlock Text="بوابة الموبايل السحابية (24/7)" FontWeight="Bold" FontSize="12" Foreground="#38BDF8" />
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Copy Cloud Link -->
+                    <Button Style="{DynamicResource ActionButton}" Command="{Binding CopyCloudPortalUrlCommand}" Padding="10,7" Margin="0,0,8,0" Cursor="Hand" ToolTip="نسخ رابط السحابة لمشاركته عبر واتساب مع المناديب والمحلات">
+                        <TextBlock Text="📋 نسخ رابط السحابة" FontSize="11.5" FontWeight="Bold" />
+                    </Button>
+
+                    <!-- Cloud Sync Button -->
                     <Button Style="{DynamicResource ActionButton}" Command="{Binding SyncCloudNowCommand}" Padding="12,7" Margin="0,0,8,0" Cursor="Hand" ToolTip="مزامنة فورية مع السحابة 24/7">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="☁️ " FontSize="13" />
                             <TextBlock Text="مزامنة السحابة 24/7" FontWeight="Bold" FontSize="12" />
                         </StackPanel>
                     </Button>
-                    <Button Style="{DynamicResource ActionButton}" Command="{Binding OpenMobilePortalCommand}" Padding="12,7" Margin="0,0,8,0" Cursor="Hand" ToolTip="فتح صفحة المندوب في المتصفح">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📱 " FontSize="13" />
-                            <TextBlock Text="بوابة المندوب" FontWeight="Bold" FontSize="12" />
-                        </StackPanel>
-                    </Button>
-                    <Button Style="{DynamicResource ActionButton}" Command="{Binding CopyMobilePortalUrlCommand}" Padding="10,7" Margin="0,0,8,0" Cursor="Hand" ToolTip="نسخ رابط الموبايل للمندوب">
-                        <TextBlock Text="📋 نسخ الرابط" FontSize="11.5" FontWeight="Bold" />
-                    </Button>
+
                     <Button Style="{DynamicResource ActionButton}" Command="{Binding LoadOrdersCommand}" Padding="12,7" Margin="0,0,8,0" Cursor="Hand">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="🔄 " FontSize="13" />
                             <TextBlock Text="تحديث" FontWeight="Bold" FontSize="12" />
                         </StackPanel>
                     </Button>
-                    <Button Style="{DynamicResource PrimaryAccentButton}" Command="{Binding AddNewOrderCommand}" Padding="16,8" Cursor="Hand">
+
+                    <Button Style="{DynamicResource PrimarySuccessButton}" Command="{Binding AddNewOrderCommand}" Padding="16,8" Cursor="Hand">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="➕ " FontSize="14" />
                             <TextBlock Text="تسجيل طلبية جديدة" FontWeight="Bold" FontSize="13" />
