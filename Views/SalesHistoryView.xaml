@@ -273,19 +273,61 @@
                                 <Setter Property="Background" Value="{DynamicResource BgDarkHover}" />
                             </Trigger>
                             <DataTrigger Binding="{Binding Status}" Value="Returned">
-                                <Setter Property="Background" Value="#350C0C" />
-                                <Setter Property="Foreground" Value="#EF4444" />
-                                <Setter Property="FontWeight" Value="Bold" />
+                                <Setter Property="Background" Value="#2D0B0B" />
+                                <Setter Property="Foreground" Value="#F87171" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </DataGrid.RowStyle>
                 <DataGrid.Columns>
                     <!-- رقم الفاتورة -->
-                    <DataGridTextColumn Header="رقم الوصل" Binding="{Binding InvoiceNumber}" Width="150" Foreground="{DynamicResource PrimaryAccent}" FontWeight="Bold" FontSize="13" />
+                    <DataGridTemplateColumn Header="رقم الوصل" Width="150">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding InvoiceNumber}" FontWeight="Bold" FontSize="13">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource PrimaryAccent}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                        <Setter Property="Foreground" Value="#EF4444" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
                     <!-- التاريخ والوقت -->
-                    <DataGridTextColumn Header="التاريخ والوقت" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd hh:mm tt}'}" Width="160" Foreground="{DynamicResource TextSecondary}" FontSize="12" />
+                    <DataGridTemplateColumn Header="التاريخ والوقت" Width="180">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="📅 " FontSize="10" />
+                                        <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd hh:mm tt}'}" FontSize="12" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                    <Border Background="#450A0A" CornerRadius="4" Padding="4,1" Margin="0,2,0,0" HorizontalAlignment="Left">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding UpdatedAt, StringFormat='{}إرجاع: {0:yyyy/MM/dd hh:mm tt}'}" FontSize="10.5" Foreground="#FCA5A5" FontWeight="Bold" />
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
                     <!-- الكاشير -->
                     <DataGridTextColumn Header="الكاشير" Binding="{Binding User.FullName, TargetNullValue='كاشير عام'}" Width="130" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" FontSize="13" />
@@ -300,7 +342,25 @@
                     <DataGridTextColumn Header="الخصم" Binding="{Binding DiscountAmount, StringFormat='{}{0:N0} د.ع'}" Width="100" Foreground="{DynamicResource DangerBrush}" FontSize="12" />
 
                     <!-- المبلغ الإجمالي النهائي -->
-                    <DataGridTextColumn Header="المبلغ الإجمالي" Binding="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" Width="140" Foreground="{DynamicResource SuccessBrush}" FontWeight="Black" FontSize="14" />
+                    <DataGridTemplateColumn Header="المبلغ الإجمالي" Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" FontWeight="Black" FontSize="13.5" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                    <Setter Property="Foreground" Value="#EF4444" />
+                                                    <Setter Property="Text" Value="{Binding TotalAmount, StringFormat='{}- {0:N0} د.ع'}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
                     <!-- طريقة الدفع -->
                     <DataGridTemplateColumn Header="طريقة الدفع" Width="100">
@@ -339,7 +399,41 @@
                     </DataGridTemplateColumn>
 
                     <!-- الحالة -->
-                    <DataGridTextColumn Header="الحالة" Binding="{Binding Status}" Width="90" Foreground="{DynamicResource WarningBrush}" FontWeight="Bold" />
+                    <DataGridTemplateColumn Header="الحالة" Width="110">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="8" Padding="8,4" HorizontalAlignment="Center">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#064E3B" />
+                                            <Setter Property="BorderBrush" Value="#10B981" />
+                                            <Setter Property="BorderThickness" Value="1" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                    <Setter Property="Background" Value="#500724" />
+                                                    <Setter Property="BorderBrush" Value="#EF4444" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock FontSize="11" FontWeight="Bold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#34D399" />
+                                                <Setter Property="Text" Value="🟢 مكتمل" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                        <Setter Property="Foreground" Value="#F87171" />
+                                                        <Setter Property="Text" Value="🔴 مسترجع" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
                     <!-- الإجراءات (عرض وطباعة واسترجاع) -->
                     <DataGridTemplateColumn Header="إجراءات" Width="240">
@@ -370,6 +464,16 @@
                                     <Button Style="{DynamicResource DangerButton}" 
                                             Command="{Binding DataContext.ReturnSaleInvoiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                             CommandParameter="{Binding}" Padding="8,4" FontSize="11">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource DangerButton}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Returned">
+                                                        <Setter Property="IsEnabled" Value="False" />
+                                                        <Setter Property="Opacity" Value="0.4" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="🔄 " FontSize="11" />
                                             <TextBlock Text="استرجاع" FontWeight="Bold" FontSize="11" />

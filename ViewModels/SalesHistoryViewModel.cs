@@ -281,8 +281,7 @@ public class SalesHistoryViewModel : BaseViewModel
             .AsNoTracking()
             .Include(s => s.User)
             .Include(s => s.Items)
-                .ThenInclude(i => i.Product)
-            .Where(s => s.Status == "Completed");
+                .ThenInclude(i => i.Product);
 
         // 1. Date Filter using Local Time converted to UTC
         DateTime localNow = DateTime.Now;
@@ -292,26 +291,26 @@ public class SalesHistoryViewModel : BaseViewModel
         switch (SelectedDateFilter)
         {
             case "Today":
-                query = query.Where(s => s.CreatedAt >= todayLocalStart && s.CreatedAt < todayLocalEnd);
+                query = query.Where(s => (s.CreatedAt >= todayLocalStart && s.CreatedAt < todayLocalEnd) || (s.UpdatedAt != null && s.UpdatedAt >= todayLocalStart && s.UpdatedAt < todayLocalEnd));
                 break;
             case "Yesterday":
                 DateTime yestStart = localNow.Date.AddDays(-1).ToUniversalTime();
-                query = query.Where(s => s.CreatedAt >= yestStart && s.CreatedAt < todayLocalStart);
+                query = query.Where(s => (s.CreatedAt >= yestStart && s.CreatedAt < todayLocalStart) || (s.UpdatedAt != null && s.UpdatedAt >= yestStart && s.UpdatedAt < todayLocalStart));
                 break;
             case "Week":
                 DateTime weekStart = localNow.Date.AddDays(-7).ToUniversalTime();
-                query = query.Where(s => s.CreatedAt >= weekStart);
+                query = query.Where(s => s.CreatedAt >= weekStart || (s.UpdatedAt != null && s.UpdatedAt >= weekStart));
                 break;
             case "Month":
                 DateTime monthStart = new DateTime(localNow.Year, localNow.Month, 1).ToUniversalTime();
-                query = query.Where(s => s.CreatedAt >= monthStart);
+                query = query.Where(s => s.CreatedAt >= monthStart || (s.UpdatedAt != null && s.UpdatedAt >= monthStart));
                 break;
             case "Custom":
                 if (CustomStartDate.HasValue || CustomEndDate.HasValue)
                 {
                     DateTime cStart = (CustomStartDate ?? CustomEndDate ?? DateTime.Today).Date.ToUniversalTime();
                     DateTime cEnd = (CustomEndDate ?? CustomStartDate ?? DateTime.Today).Date.AddDays(1).ToUniversalTime();
-                    query = query.Where(s => s.CreatedAt >= cStart && s.CreatedAt < cEnd);
+                    query = query.Where(s => (s.CreatedAt >= cStart && s.CreatedAt < cEnd) || (s.UpdatedAt != null && s.UpdatedAt >= cStart && s.UpdatedAt < cEnd));
                 }
                 break;
             case "All":
@@ -348,18 +347,23 @@ public class SalesHistoryViewModel : BaseViewModel
         FilteredSales.Clear();
         decimal totalSum = 0;
         decimal totalProfit = 0;
+        int completedCount = 0;
 
         foreach (var s in salesList)
         {
             FilteredSales.Add(s);
-            totalSum += s.TotalAmount;
-            totalProfit += s.InvoiceNetProfit;
+            if (s.Status != "Returned")
+            {
+                totalSum += s.TotalAmount;
+                totalProfit += s.InvoiceNetProfit;
+                completedCount++;
+            }
         }
 
         TotalSalesAmount = totalSum;
         TotalInvoicesCount = salesList.Count;
         TotalProfitAmount = totalProfit;
-        AverageInvoiceAmount = TotalInvoicesCount > 0 ? (totalSum / TotalInvoicesCount) : 0;
+        AverageInvoiceAmount = completedCount > 0 ? (totalSum / completedCount) : 0;
     }
 
     private void PrintReceipt(Sale sale)
