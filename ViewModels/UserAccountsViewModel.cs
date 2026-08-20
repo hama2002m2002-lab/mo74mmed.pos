@@ -56,9 +56,35 @@ public class UserAccountsViewModel : BaseViewModel
         {
             if (SetProperty(ref _selectedCashierFilter, value))
             {
-                _ = RefreshDataAsync();
+                _ = OnCashierFilterChangedAsync();
             }
         }
+    }
+
+    private async Task OnCashierFilterChangedAsync()
+    {
+        await CalculateTopSummaryAsync();
+        await LoadCashierCardsAsync();
+
+        if (SelectedCashierFilter != null && SelectedCashierFilter.Id.HasValue)
+        {
+            var targetCard = CashierCards.FirstOrDefault(c => c.Id == SelectedCashierFilter.Id.Value);
+            if (targetCard != null)
+            {
+                SelectedCashier = targetCard;
+                IsDetailsActive = true;
+                _dateFrom = SummaryDateFrom;
+                _dateTo = SummaryDateTo;
+                OnPropertyChanged(nameof(DateFrom));
+                OnPropertyChanged(nameof(DateTo));
+                await FilterCashierSalesAsync();
+                return;
+            }
+        }
+
+        IsDetailsActive = false;
+        SelectedCashier = null;
+        CashierSalesHistory.Clear();
     }
 
     private string _summaryDatePreset = "Today";
@@ -76,6 +102,8 @@ public class UserAccountsViewModel : BaseViewModel
         {
             if (SetProperty(ref _summaryDateFrom, value))
             {
+                _dateFrom = value;
+                OnPropertyChanged(nameof(DateFrom));
                 _ = RefreshDataAsync();
             }
         }
@@ -89,6 +117,8 @@ public class UserAccountsViewModel : BaseViewModel
         {
             if (SetProperty(ref _summaryDateTo, value))
             {
+                _dateTo = value;
+                OnPropertyChanged(nameof(DateTo));
                 _ = RefreshDataAsync();
             }
         }
@@ -648,7 +678,11 @@ public class UserAccountsViewModel : BaseViewModel
 
     private async Task LoadCashierFilterOptionsAsync()
     {
-        var users = await _context.Users.AsNoTracking().OrderBy(u => u.FullName).ToListAsync();
+        var users = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.IsActive && !string.IsNullOrWhiteSpace(u.Username))
+            .OrderBy(u => u.FullName)
+            .ToListAsync();
         
         Guid? currentSelectedId = SelectedCashierFilter?.Id;
         
@@ -660,9 +694,9 @@ public class UserAccountsViewModel : BaseViewModel
             CashierFilterOptions.Add(new CashierFilterOption { Id = u.Id, DisplayName = $"👤 {u.FullName} (@{u.Username})" });
         }
 
-        if (currentSelectedId.HasValue)
+        if (currentSelectedId.HasValue && CashierFilterOptions.Any(o => o.Id == currentSelectedId.Value))
         {
-            _selectedCashierFilter = CashierFilterOptions.FirstOrDefault(o => o.Id == currentSelectedId.Value) ?? CashierFilterOptions.First();
+            _selectedCashierFilter = CashierFilterOptions.FirstOrDefault(o => o.Id == currentSelectedId.Value);
         }
         else
         {
@@ -724,7 +758,10 @@ public class UserAccountsViewModel : BaseViewModel
 
     public async Task LoadCashierCardsAsync()
     {
-        var query = _context.Users.AsNoTracking().AsQueryable();
+        var query = _context.Users
+            .AsNoTracking()
+            .Where(u => u.IsActive && !string.IsNullOrWhiteSpace(u.Username))
+            .AsQueryable();
         
         // If specific cashier filter is selected, filter cards
         if (SelectedCashierFilter != null && SelectedCashierFilter.Id.HasValue)
