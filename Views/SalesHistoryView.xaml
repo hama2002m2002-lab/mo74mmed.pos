@@ -8,44 +8,20 @@
              FlowDirection="RightToLeft"
              FontFamily="Times New Roman, Segoe UI, Tahoma, Arial">
 
-    <Grid Margin="14,10">
+    <Grid Margin="12,8">
         <Grid.RowDefinitions>
-            <!-- 0: Header -->
+            <!-- 0: 4 Financial KPI Summary Cards -->
             <RowDefinition Height="Auto" />
-            <!-- 1: 4 Financial KPI Summary Cards -->
+            <!-- 1: Single Sleek Compact Filter Bar -->
             <RowDefinition Height="Auto" />
-            <!-- 2: Filter Toolbar & Presets -->
-            <RowDefinition Height="Auto" />
-            <!-- 3: Invoices DataGrid (Expanded Box) -->
+            <!-- 2: Invoices DataGrid (Maximized View) -->
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- ======================================================== -->
-        <!-- 0: HEADER -->
+        <!-- 0: 4 FINANCIAL KPI SUMMARY CARDS -->
         <!-- ======================================================== -->
         <Grid Grid.Row="0" Margin="0,0,0,8">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Border Width="36" Height="36" Background="#1E3A8A" CornerRadius="10" Margin="0,0,10,0" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5">
-                    <TextBlock Text="💰" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
-                </Border>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Loc[Nav_SalesHistory]}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                    <TextBlock Text="سجل المبيعات الشامل، استعراض تفاصيل الفواتير والوصلات، وإعادة طباعتها" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,1,0,0" />
-                </StackPanel>
-            </StackPanel>
-
-            <Button HorizontalAlignment="Right" Style="{DynamicResource ActionButton}" Command="{Binding RefreshCommand}" Padding="10,5" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="🔄 " FontSize="11" />
-                    <TextBlock Text="تحديث البيانات" FontWeight="Bold" FontSize="11" />
-                </StackPanel>
-            </Button>
-        </Grid>
-
-        <!-- ======================================================== -->
-        <!-- 1: 4 FINANCIAL KPI SUMMARY CARDS -->
-        <!-- ======================================================== -->
-        <Grid Grid.Row="1" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1.2*" />
                 <ColumnDefinition Width="*" />
@@ -54,22 +30,22 @@
             </Grid.ColumnDefinitions>
 
             <!-- Card 1: 💰 إجمالي المبيعات -->
-            <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.2" Padding="10,6" Margin="0,0,6,0">
+            <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.2" Padding="10,5" Margin="0,0,5,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="💰 إجمالي المبيعات للفترة المحددة" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                    <TextBlock Grid.Row="0" Text="💰 إجمالي المبيعات للفترة" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
-                        <TextBlock Text="{Binding TotalSalesAmount, StringFormat='{}{0:N0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" />
-                        <TextBlock Text=" د.ع" FontSize="10.5" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
+                        <TextBlock Text="{Binding TotalSalesAmount, StringFormat='{}{0:N0}'}" FontSize="17" FontWeight="Black" Foreground="{DynamicResource PrimaryAccent}" />
+                        <TextBlock Text=" د.ع" FontSize="10" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
                     </StackPanel>
                 </Grid>
             </Border>
 
             <!-- Card 2: 🧾 عدد الفواتير المنفذة -->
-            <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1.2" Padding="10,6" Margin="3,0,6,0">
+            <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1.2" Padding="10,5" Margin="3,0,5,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -77,14 +53,14 @@
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Text="🧾 عدد الفواتير والوصلات" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
-                        <TextBlock Text="{Binding TotalInvoicesCount, StringFormat='{}{0:N0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" />
-                        <TextBlock Text=" فاتورة" FontSize="10.5" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
+                        <TextBlock Text="{Binding TotalInvoicesCount, StringFormat='{}{0:N0}'}" FontSize="17" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" />
+                        <TextBlock Text=" فاتورة" FontSize="10" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
                     </StackPanel>
                 </Grid>
             </Border>
 
             <!-- Card 3: 📈 صافي أرباح المبيعات -->
-            <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1.2" Padding="10,6" Margin="3,0,6,0">
+            <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1.2" Padding="10,5" Margin="3,0,5,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -92,14 +68,14 @@
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Text="📈 صافي الأرباح المحققة" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
-                        <TextBlock Text="{Binding TotalProfitAmount, StringFormat='{}{0:N0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" />
-                        <TextBlock Text=" د.ع" FontSize="10.5" Foreground="{DynamicResource WarningBrush}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
+                        <TextBlock Text="{Binding TotalProfitAmount, StringFormat='{}{0:N0}'}" FontSize="17" FontWeight="Black" Foreground="{DynamicResource WarningBrush}" />
+                        <TextBlock Text=" د.ع" FontSize="10" Foreground="{DynamicResource WarningBrush}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
                     </StackPanel>
                 </Grid>
             </Border>
 
             <!-- Card 4: 💳 متوسط قيمة الفاتورة -->
-            <Border Grid.Column="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.2" Padding="10,6" Margin="3,0,0,0">
+            <Border Grid.Column="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.2" Padding="10,5" Margin="3,0,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -107,164 +83,140 @@
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Text="💳 متوسط قيمة الفاتورة" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
-                        <TextBlock Text="{Binding AverageInvoiceAmount, StringFormat='{}{0:N0}'}" FontSize="18" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" />
-                        <TextBlock Text=" د.ع" FontSize="10.5" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
+                        <TextBlock Text="{Binding AverageInvoiceAmount, StringFormat='{}{0:N0}'}" FontSize="17" FontWeight="Black" Foreground="{DynamicResource TextPrimary}" />
+                        <TextBlock Text=" د.ع" FontSize="10" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Bottom" Margin="3,0,0,1" />
                     </StackPanel>
                 </Grid>
             </Border>
         </Grid>
 
         <!-- ======================================================== -->
-        <!-- 2: FILTERS TOOLBAR & PRESETS (COMPACT & RAISED UP) -->
+        <!-- 1: SINGLE SLEEK COMPACT FILTER BAR -->
         <!-- ======================================================== -->
-        <Border Grid.Row="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,6" Margin="0,0,0,8">
+        <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="8,5" Margin="0,0,0,8">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <!-- Date Range -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Payment Method Filter -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Cashier Filter -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Compact Search Box (Barcode sized) -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Spacer -->
+                    <ColumnDefinition Width="*" />
+                    <!-- Refresh Button -->
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                <!-- Row 0: Quick Date Presets & Custom Calendar Date Pickers -->
-                <Grid Grid.Row="0" Margin="0,0,0,6">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                <!-- Custom Calendar Date Selector (من تاريخ / إلى تاريخ) -->
+                <Border Grid.Column="0" Background="{DynamicResource BgDarkPrimary}" CornerRadius="8" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="6,2" Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="📅 من:" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center" Margin="0,0,4,0" />
+                        <DatePicker SelectedDate="{Binding CustomStartDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                    Height="26" Width="105" Margin="0,0,6,0" VerticalAlignment="Center" FontSize="10.5" />
 
-                    <!-- Quick Date Presets -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="الفترة الزمنية:" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,6,0" />
-                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterTodayCommand}" Padding="8,4" Margin="0,0,3,0">
-                            <TextBlock Text="📅 اليوم" FontWeight="Bold" FontSize="11" />
-                        </Button>
-                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterYesterdayCommand}" Padding="8,4" Margin="0,0,3,0">
-                            <TextBlock Text="أمس" FontSize="11" />
-                        </Button>
-                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterWeekCommand}" Padding="8,4" Margin="0,0,3,0">
-                            <TextBlock Text="آخر 7 أيام" FontSize="11" />
-                        </Button>
-                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterMonthCommand}" Padding="8,4" Margin="0,0,3,0">
-                            <TextBlock Text="هذا الشهر" FontSize="11" />
-                        </Button>
-                        <Button Style="{DynamicResource ActionButton}" Command="{Binding FilterAllCommand}" Padding="8,4">
-                            <TextBlock Text="كافة المبيعات" FontSize="11" />
-                        </Button>
+                        <TextBlock Text="إلى:" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center" Margin="0,0,4,0" />
+                        <DatePicker SelectedDate="{Binding CustomEndDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                    Height="26" Width="105" VerticalAlignment="Center" FontSize="10.5" />
                     </StackPanel>
+                </Border>
 
-                    <!-- Custom Calendar Date Selector (من تاريخ / إلى تاريخ) -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource BgDarkPrimary}" CornerRadius="8" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="6,2">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="📅 من:" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center" Margin="0,0,4,0" />
-                                <DatePicker SelectedDate="{Binding CustomStartDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                            Height="26" Width="110" Margin="0,0,6,0" VerticalAlignment="Center" FontSize="10.5" />
+                <!-- Payment Method Dropdown -->
+                <ComboBox Grid.Column="1" SelectedValue="{Binding SelectedPaymentMethod}" SelectedValuePath="Tag" Height="30" Width="120" Margin="0,0,8,0" VerticalContentAlignment="Center" FontSize="11">
+                    <ComboBoxItem Content="💳 طرق الدفع (الكل)" Tag="All" IsSelected="True" />
+                    <ComboBoxItem Content="💵 نقداً (Cash)" Tag="Cash" />
+                    <ComboBoxItem Content="💳 بطاقة (Card)" Tag="Card" />
+                </ComboBox>
 
-                                <TextBlock Text="إلى:" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" VerticalAlignment="Center" Margin="0,0,4,0" />
-                                <DatePicker SelectedDate="{Binding CustomEndDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                            Height="26" Width="110" VerticalAlignment="Center" FontSize="10.5" />
-                            </StackPanel>
-                        </Border>
+                <!-- Cashier Selector -->
+                <ComboBox Grid.Column="2" ItemsSource="{Binding CashierNames}" SelectedItem="{Binding SelectedCashier}" Height="30" Width="125" Margin="0,0,8,0" VerticalContentAlignment="Center" FontSize="11" />
+
+                <!-- Compact Barcode Search Box (175px width) -->
+                <Border Grid.Column="3" Background="{DynamicResource BgDarkPrimary}" CornerRadius="8" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.2" Height="30" Width="185" Margin="0,0,8,0" VerticalAlignment="Center">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="🔍" FontSize="11" VerticalAlignment="Center" Margin="6,0,3,0" Foreground="{DynamicResource TextSecondary}" />
+
+                        <TextBox Grid.Column="1" 
+                                 Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                 FontSize="11" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource TextPrimary}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="2,2"
+                                 VerticalContentAlignment="Center" />
+
+                        <!-- Placeholder Watermark Text -->
+                        <TextBlock Grid.Column="1" 
+                                   Text="باركود / رقم الوصل..." 
+                                   FontSize="10.5" Foreground="{DynamicResource TextMuted}"
+                                   VerticalAlignment="Center" Margin="3,0,0,0" IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SearchQuery}" Value="">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SearchQuery}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <!-- Clear Search Button -->
+                        <Button Grid.Column="2" 
+                                Command="{Binding ClearSearchCommand}"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Cursor="Hand" Margin="0,0,3,0" VerticalAlignment="Center" Padding="2">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SearchQuery}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SearchQuery}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <TextBlock Text="✕" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" />
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Refresh Button -->
+                <Button Grid.Column="5" Style="{DynamicResource ActionButton}" Command="{Binding RefreshCommand}" Height="30" Padding="10,0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔄 " FontSize="11" />
+                        <TextBlock Text="تحديث" FontWeight="Bold" FontSize="11" />
                     </StackPanel>
-                </Grid>
-
-                <!-- Row 1: Search & Dropdown Filters (COMPACT) -->
-                <Grid Grid.Row="1">
-                    <Grid.ColumnDefinitions>
-                        <!-- Search Box (Supports Barcode, Product Name, Invoice Number, Cashier, Customer) -->
-                        <ColumnDefinition Width="2.2*" />
-                        <!-- Payment Method Filter -->
-                        <ColumnDefinition Width="135" />
-                        <!-- Cashier Filter -->
-                        <ColumnDefinition Width="145" />
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Modern Search Box with integrated icon & watermark -->
-                    <Border Grid.Column="0" Background="{DynamicResource BgDarkPrimary}" CornerRadius="8" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1.2" Height="32" Margin="0,0,8,0" VerticalAlignment="Center">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock Grid.Column="0" Text="🔍" FontSize="12" VerticalAlignment="Center" Margin="8,0,4,0" Foreground="{DynamicResource TextSecondary}" />
-
-                            <TextBox Grid.Column="1" 
-                                     Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
-                                     FontSize="11.5" FontWeight="SemiBold"
-                                     Foreground="{DynamicResource TextPrimary}"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     Padding="4,4"
-                                     VerticalContentAlignment="Center" />
-
-                            <!-- Placeholder Watermark Text -->
-                            <TextBlock Grid.Column="1" 
-                                       Text="ابحث بالباركود، اسم المادة، رقم الوصل، الكاشير، أو العميل..." 
-                                       FontSize="11" Foreground="{DynamicResource TextMuted}"
-                                       VerticalAlignment="Center" Margin="4,0,0,0" IsHitTestVisible="False">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SearchQuery}" Value="">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding SearchQuery}" Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-
-                            <!-- Clear Search Button -->
-                            <Button Grid.Column="2" 
-                                    Command="{Binding ClearSearchCommand}"
-                                    Background="Transparent" BorderThickness="0"
-                                    Foreground="{DynamicResource TextSecondary}"
-                                    Cursor="Hand" Margin="0,0,4,0" VerticalAlignment="Center" Padding="2">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SearchQuery}" Value="">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding SearchQuery}" Value="{x:Null}">
-                                                <Setter Property="Visibility" Value="Collapsed" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <TextBlock Text="✕" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" />
-                            </Button>
-                        </Grid>
-                    </Border>
-
-                    <!-- Payment Method Dropdown -->
-                    <ComboBox Grid.Column="1" SelectedValue="{Binding SelectedPaymentMethod}" SelectedValuePath="Tag" Height="32" Margin="0,0,8,0" VerticalContentAlignment="Center" FontSize="11">
-                        <ComboBoxItem Content="💳 طرق الدفع (الكل)" Tag="All" IsSelected="True" />
-                        <ComboBoxItem Content="💵 نقداً (Cash)" Tag="Cash" />
-                        <ComboBoxItem Content="💳 بطاقة (Card)" Tag="Card" />
-                    </ComboBox>
-
-                    <!-- Cashier Selector -->
-                    <ComboBox Grid.Column="2" ItemsSource="{Binding CashierNames}" SelectedItem="{Binding SelectedCashier}" Height="32" VerticalContentAlignment="Center" FontSize="11" />
-                </Grid>
+                </Button>
             </Grid>
         </Border>
 
         <!-- ======================================================== -->
-        <!-- 3: INVOICES MASTER DATAGRID (EXPANDED TO MAXIMUM VIEW) -->
+        <!-- 2: INVOICES MASTER DATAGRID (MAXIMIZED VIEW) -->
         <!-- ======================================================== -->
-        <Border Grid.Row="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="6">
+        <Border Grid.Row="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="6">
             <DataGrid ItemsSource="{Binding FilteredSales}" SelectedItem="{Binding SelectedSale}" AutoGenerateColumns="False" 
                       IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                       Background="Transparent" RowBackground="Transparent" BorderThickness="0"
                       HorizontalGridLinesBrush="{DynamicResource BorderDark}"
                       CanUserResizeColumns="False" CanUserReorderColumns="False"
-                      RowHeight="40">
+                      RowHeight="38">
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
                         <Setter Property="Cursor" Value="Hand" />
@@ -487,7 +439,7 @@
         <!-- ======================================================== -->
         <!-- MODAL: DETAILED INVOICE RECEIPT VIEWER & PRINTER -->
         <!-- ======================================================== -->
-        <Grid Grid.RowSpan="4" Visibility="{Binding IsInvoiceModalOpen, Converter={StaticResource BoolToVis}}" Background="#80000000">
+        <Grid Grid.RowSpan="3" Visibility="{Binding IsInvoiceModalOpen, Converter={StaticResource BoolToVis}}" Background="#80000000">
             <Border Background="{DynamicResource BgDarkSecondary}" CornerRadius="18" BorderBrush="{DynamicResource BorderDark}" BorderThickness="2" 
                     Width="520" MaxHeight="720" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid>
