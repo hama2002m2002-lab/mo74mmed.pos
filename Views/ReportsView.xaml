@@ -90,6 +90,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -97,8 +98,44 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
+            <!-- Hero Master Report Button (التقرير المالي الشامل المتكامل) -->
+            <Button Grid.Row="0" Grid.ColumnSpan="3" Command="{Binding SwitchReportTabCommand}" CommandParameter="Master" 
+                    Height="80" Margin="0,0,0,16" Background="#0C1B33" BorderBrush="#38BDF8" BorderThickness="2" Cursor="Hand" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="16" Padding="18,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                
+                                <Border Grid.Column="0" Width="50" Height="50" Background="#0284C7" CornerRadius="12" Margin="0,0,14,0">
+                                    <TextBlock Text="💎" FontSize="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="التقرير المالي الشامل المتكامل (Master Report)" FontSize="17" FontWeight="Black" Foreground="#FFFFFF" />
+                                        <Border Background="#059669" CornerRadius="6" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="كل التقارير في زر واحد 🌟" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" />
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="المبيعات، المرجوعات، الأرباح، الديون، تسجيل وإدارة المصروفات، واحتساب صافي الأرباح النهائي بدقة متناهية" FontSize="11.5" Foreground="#94A3B8" Margin="0,3,0,0" />
+                                </StackPanel>
+
+                                <Border Grid.Column="2" Background="#1E293B" CornerRadius="10" Padding="14,8" BorderBrush="#38BDF8" BorderThickness="1">
+                                    <TextBlock Text="فتح التقرير الشامل ➔" FontSize="12.5" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
             <!-- Card 1: Sales & Net Profits -->
-            <Button Grid.Row="0" Grid.Column="0" Command="{Binding SwitchReportTabCommand}" CommandParameter="Sales" 
+            <Button Grid.Row="1" Grid.Column="0" Command="{Binding SwitchReportTabCommand}" CommandParameter="Sales" 
                     Height="80" Margin="0,0,10,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#10B981" BorderThickness="1.5" Cursor="Hand" Padding="0">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
@@ -115,7 +152,7 @@
             </Button>
 
             <!-- Card 2: Damaged Items -->
-            <Button Grid.Row="0" Grid.Column="1" Command="{Binding SwitchReportTabCommand}" CommandParameter="Damaged" 
+            <Button Grid.Row="1" Grid.Column="1" Command="{Binding SwitchReportTabCommand}" CommandParameter="Damaged" 
                     Height="80" Margin="5,0,5,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1.5" Cursor="Hand" Padding="0">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
@@ -132,7 +169,7 @@
             </Button>
 
             <!-- Card 3: Returns & Refunds -->
-            <Button Grid.Row="0" Grid.Column="2" Command="{Binding SwitchReportTabCommand}" CommandParameter="Returns" 
+            <Button Grid.Row="1" Grid.Column="2" Command="{Binding SwitchReportTabCommand}" CommandParameter="Returns" 
                     Height="80" Margin="10,0,0,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1.5" Cursor="Hand" Padding="0">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
@@ -149,7 +186,7 @@
             </Button>
 
             <!-- Card 4: Purchases & Supplier Invoices -->
-            <Button Grid.Row="1" Grid.Column="0" Command="{Binding SwitchReportTabCommand}" CommandParameter="Purchases" 
+            <Button Grid.Row="2" Grid.Column="0" Command="{Binding SwitchReportTabCommand}" CommandParameter="Purchases" 
                     Height="80" Margin="0,0,10,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource PrimaryAccent}" BorderThickness="1.5" Cursor="Hand" Padding="0">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
@@ -166,7 +203,7 @@
             </Button>
 
             <!-- Card 5: Inventory Valuation -->
-            <Button Grid.Row="1" Grid.Column="1" Command="{Binding SwitchReportTabCommand}" CommandParameter="Inventory" 
+            <Button Grid.Row="2" Grid.Column="1" Command="{Binding SwitchReportTabCommand}" CommandParameter="Inventory" 
                     Height="80" Margin="5,0,5,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#059669" BorderThickness="1.5" Cursor="Hand" Padding="0">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
@@ -183,7 +220,7 @@
             </Button>
 
             <!-- Card 6: Customer Debts -->
-            <Button Grid.Row="1" Grid.Column="2" Command="{Binding SwitchReportTabCommand}" CommandParameter="Debts" 
+            <Button Grid.Row="2" Grid.Column="2" Command="{Binding SwitchReportTabCommand}" CommandParameter="Debts" 
                     Height="80" Margin="10,0,0,12" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#D97706" BorderThickness="1.5" Cursor="Hand" Padding="0">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
@@ -200,7 +237,7 @@
             </Button>
 
             <!-- Card 7: Shift Cash Audit & Handover -->
-            <Button Grid.Row="2" Grid.Column="0" Command="{Binding SwitchReportTabCommand}" CommandParameter="ShiftAudit" 
+            <Button Grid.Row="3" Grid.Column="0" Command="{Binding SwitchReportTabCommand}" CommandParameter="ShiftAudit" 
                     Height="80" Margin="0,0,10,0" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#F59E0B" BorderThickness="1.5" Cursor="Hand" Padding="0">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
@@ -217,7 +254,7 @@
             </Button>
 
             <!-- Card 8: Cashier Performance & Peak Hours -->
-            <Button Grid.Row="2" Grid.Column="1" Command="{Binding SwitchReportTabCommand}" CommandParameter="Performance" 
+            <Button Grid.Row="3" Grid.Column="1" Command="{Binding SwitchReportTabCommand}" CommandParameter="Performance" 
                     Height="80" Margin="5,0,5,0" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#8B5CF6" BorderThickness="1.5" Cursor="Hand" Padding="0">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
@@ -234,7 +271,7 @@
             </Button>
 
             <!-- Card 9: Product Velocity & Movement -->
-            <Button Grid.Row="2" Grid.Column="2" Command="{Binding SwitchReportTabCommand}" CommandParameter="StockMovement" 
+            <Button Grid.Row="3" Grid.Column="2" Command="{Binding SwitchReportTabCommand}" CommandParameter="StockMovement" 
                     Height="80" Margin="10,0,0,0" Background="{DynamicResource BgDarkSecondary}" BorderBrush="#10B981" BorderThickness="1.5" Cursor="Hand" Padding="0">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
@@ -255,6 +292,181 @@
         <!-- 2: FULL SCREEN DEDICATED REPORT WORKSPACE (SHOWN WHEN REPORT IS CLICKED) -->
         <!-- ======================================================== -->
         <Grid Grid.Row="1" Visibility="{Binding IsReportDetailActive, Converter={StaticResource BoolToVis}}">
+
+            <!-- ======================================================== -->
+            <!-- TAB 0: MASTER COMPREHENSIVE ALL-IN-ONE REPORT -->
+            <!-- ======================================================== -->
+            <Grid Visibility="{Binding IsMasterTabActive, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <!-- 0: Summary Financial KPI Cards (6 Metrics) -->
+                    <RowDefinition Height="Auto" />
+                    <!-- 1: 2-Columns: Left Expenses Management, Right Invoices Overview -->
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Row 0: 6 Comprehensive Financial Cards -->
+                <Grid Grid.Row="0" Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="1.35*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 1: Sales -->
+                    <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,8" Margin="0,0,4,0">
+                        <StackPanel>
+                            <TextBlock Text="💰 إجمالي المبيعات" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalSalesRevenue, StringFormat='{}{0:N0} د.ع'}" FontSize="15" FontWeight="Black" Foreground="{DynamicResource SuccessBrush}" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 2: Returns -->
+                    <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,8" Margin="2,0">
+                        <StackPanel>
+                            <TextBlock Text="🔄 إجمالي المرجوعات" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalReturnsAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="15" FontWeight="Black" Foreground="{DynamicResource DangerBrush}" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 3: Gross Profit -->
+                    <Border Grid.Column="2" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,8" Margin="2,0">
+                        <StackPanel>
+                            <TextBlock Text="📊 أرباح المبيعات" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalGrossSalesProfit, StringFormat='{}{0:N0} د.ع'}" FontSize="15" FontWeight="Black" Foreground="#6EE7B7" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 4: Expenses -->
+                    <Border Grid.Column="3" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,8" Margin="2,0">
+                        <StackPanel>
+                            <TextBlock Text="📉 المصروفات المسجلة" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding TotalExpensesAmount, StringFormat='{}{0:N0} د.ع'}" FontSize="15" FontWeight="Black" Foreground="#F87171" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 5: Debts -->
+                    <Border Grid.Column="4" Background="{DynamicResource BgDarkSecondary}" CornerRadius="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,8" Margin="2,0">
+                        <StackPanel>
+                            <TextBlock Text="👥 ديون العملاء" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock Text="{Binding NetOutstandingCustomerDebts, StringFormat='{}{0:N0} د.ع'}" FontSize="15" FontWeight="Black" Foreground="#F59E0B" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 6: Final Real Net Profit -->
+                    <Border Grid.Column="5" Background="#064E3B" CornerRadius="12" BorderBrush="#10B981" BorderThickness="1.5" Padding="12,8" Margin="4,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="🏆 صافي الأرباح الحقيقي" FontSize="11" FontWeight="Bold" Foreground="#A7F3D0" />
+                            <TextBlock Text="{Binding FinalNetProfit, StringFormat='{}{0:N0} د.ع'}" FontSize="18" FontWeight="Black" Foreground="#FFFFFF" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Row 1: Left Expenses Management, Right Invoices Grid -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <!-- Expenses Form & List (420px) -->
+                        <ColumnDefinition Width="420" />
+                        <!-- Invoices List (*) -->
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Expenses Panel -->
+                    <Border Grid.Column="0" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14" Margin="0,0,10,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="💸 إدارة وتسجيل المصروفات" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,10" />
+
+                            <!-- New Expense Form -->
+                            <Border Grid.Row="1" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" Padding="10" Margin="0,0,0,12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="130" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" Text="{Binding NewExpenseTitle, UpdateSourceTrigger=PropertyChanged}" Height="32" VerticalContentAlignment="Center" Margin="0,0,6,0" Padding="6,0" />
+                                        <TextBox Grid.Column="1" Text="{Binding NewExpenseAmount, UpdateSourceTrigger=PropertyChanged}" Height="32" VerticalContentAlignment="Center" Padding="6,0" />
+                                    </Grid>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" Text="{Binding NewExpenseCategory, UpdateSourceTrigger=PropertyChanged}" Height="30" VerticalContentAlignment="Center" Margin="0,0,6,0" Padding="6,0" />
+                                        <TextBox Grid.Column="1" Text="{Binding NewExpenseNotes, UpdateSourceTrigger=PropertyChanged}" Height="30" VerticalContentAlignment="Center" Padding="6,0" />
+                                    </Grid>
+                                    <Button Command="{Binding SaveExpenseCommand}" Style="{DynamicResource PrimaryAccentButton}" Height="34">
+                                        <TextBlock Text="➕ حفظ وحسم المصروف من الأرباح" FontWeight="Bold" FontSize="12" />
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Expenses Table -->
+                            <DataGrid Grid.Row="2" ItemsSource="{Binding ExpensesList}" AutoGenerateColumns="False" 
+                                      IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                      Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                      HorizontalGridLinesBrush="{DynamicResource BorderDark}"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto" RowHeight="36">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="المصروف" Binding="{Binding Title}" Width="*" Foreground="{DynamicResource TextPrimary}" />
+                                    <DataGridTextColumn Header="المبلغ" Binding="{Binding Amount, StringFormat='{}{0:N0} د.ع'}" Width="95" Foreground="#F87171" FontWeight="Bold" />
+                                    <DataGridTextColumn Header="التاريخ" Binding="{Binding CreatedAt, StringFormat='{}{0:MM/dd HH:mm}'}" Width="85" Foreground="{DynamicResource TextSecondary}" />
+                                    <DataGridTemplateColumn Width="40">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding DataContext.DeleteExpenseCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                        CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                                                    <TextBlock Text="🗑️" FontSize="12" />
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Invoices Overview -->
+                    <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="📑 فواتير ومبيعات الفترة" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,10" />
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding Invoices}" AutoGenerateColumns="False" 
+                                      IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                      Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                      HorizontalGridLinesBrush="{DynamicResource BorderDark}"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto" RowHeight="38">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="رقم الوصل" Binding="{Binding InvoiceNumber}" Width="140" Foreground="{DynamicResource PrimaryAccent}" FontWeight="Bold" />
+                                    <DataGridTextColumn Header="التاريخ" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" Width="160" Foreground="{DynamicResource TextSecondary}" />
+                                    <DataGridTextColumn Header="طريقة الدفع" Binding="{Binding PaymentMethod}" Width="90" Foreground="{DynamicResource TextPrimary}" />
+                                    <DataGridTextColumn Header="المجموع" Binding="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" Width="120" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" />
+                                    <DataGridTemplateColumn Header="معاينة" Width="70">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{DynamicResource ActionButton}" Command="{Binding DataContext.OpenInvoiceDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Padding="6,2" FontSize="11">
+                                                    <TextBlock Text="عرض" />
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
 
             <!-- ======================================================== -->
             <!-- TAB 1: SALES & NET PROFITS REPORT -->

@@ -206,6 +206,37 @@ public static class DbInitializer
                 );
             ");
 
+            // 7.1 إنشاء جدول Expenses (المصروفات العامة)
+            await context.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS ""Expenses"" (
+                    ""Id"" TEXT NOT NULL CONSTRAINT ""PK_Expenses"" PRIMARY KEY,
+                    ""Title"" TEXT NOT NULL,
+                    ""Amount"" TEXT NOT NULL DEFAULT '0',
+                    ""Category"" TEXT NOT NULL DEFAULT 'عام',
+                    ""Notes"" TEXT NULL,
+                    ""RecordedBy"" TEXT NOT NULL DEFAULT 'مدير النظام',
+                    ""CreatedAt"" TEXT NOT NULL,
+                    ""UpdatedAt"" TEXT NULL,
+                    ""IsSynced"" INTEGER NOT NULL DEFAULT 0,
+                    ""IsDeleted"" INTEGER NOT NULL DEFAULT 0
+                );
+            ");
+
+            // 7.2 إنشاء جدول CashDrawerMovements (حركات الدرج والصندوق)
+            await context.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS ""CashDrawerMovements"" (
+                    ""Id"" TEXT NOT NULL CONSTRAINT ""PK_CashDrawerMovements"" PRIMARY KEY,
+                    ""CashierName"" TEXT NOT NULL,
+                    ""MovementType"" TEXT NOT NULL DEFAULT 'Deposit',
+                    ""Amount"" TEXT NOT NULL DEFAULT '0',
+                    ""Reason"" TEXT NOT NULL DEFAULT '',
+                    ""CreatedAt"" TEXT NOT NULL,
+                    ""UpdatedAt"" TEXT NULL,
+                    ""IsSynced"" INTEGER NOT NULL DEFAULT 0,
+                    ""IsDeleted"" INTEGER NOT NULL DEFAULT 0
+                );
+            ");
+
             // 8. تحديث أعمدة جدول Products
             await AddColumnIfNotExistsAsync(conn, "Products", "CartonPurchasePrice", "TEXT NOT NULL DEFAULT '0'");
             await AddColumnIfNotExistsAsync(conn, "Products", "Cost", "TEXT NOT NULL DEFAULT '0'");

@@ -284,13 +284,15 @@
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <!-- Top Mini-Header -->
-                <RowDefinition Height="50" />
-                <!-- Dynamic View -->
+                <RowDefinition Height="46" />
+                <!-- 1: Chrome-Style Browser Tabs Bar -->
+                <RowDefinition Height="Auto" />
+                <!-- Dynamic View Switcher -->
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
             <!-- Top Header Bar -->
-            <Border Grid.Row="0" Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="20,0">
+            <Border Grid.Row="0" Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="16,0">
                 <Grid VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- Sidebar Toggle Hamburger Button -->
@@ -322,12 +324,97 @@
                         </Button>
                     </StackPanel>
 
-                    <TextBlock HorizontalAlignment="Right" Text="{Binding CurrentDateTimeString}" FontSize="13" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
+                    <TextBlock HorizontalAlignment="Right" Text="{Binding CurrentDateTimeString}" FontSize="12.5" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
                 </Grid>
             </Border>
 
+            <!-- 1: Chrome-Style Browser Tabs Bar -->
+            <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="8,4,8,0">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Focusable="False">
+                    <ItemsControl ItemsSource="{Binding OpenTabs}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,4,0" CornerRadius="8,8,0,0" Cursor="Hand" BorderThickness="1.2,1.2,1.2,0">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Setter Property="BorderBrush" Value="Transparent" />
+                                            <Setter Property="Padding" Value="12,5" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource BgDarkPrimary}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryAccent}" />
+                                                </DataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsSelected}" Value="False" />
+                                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Background" Value="{DynamicResource BgDarkHover}" />
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" 
+                                                      Command="{Binding DataContext.SelectTabCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                      CommandParameter="{Binding}" />
+                                    </Border.InputBindings>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <!-- Icon -->
+                                        <TextBlock Text="{Binding Icon}" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        
+                                        <!-- Title -->
+                                        <TextBlock Text="{Binding Title}" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,8,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                                    <Setter Property="FontWeight" Value="Normal" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryAccent}" />
+                                                            <Setter Property="FontWeight" Value="Bold" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <!-- Close Tab Button (✕) -->
+                                        <Button Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Background="Transparent" BorderThickness="0"
+                                                Padding="2" VerticalAlignment="Center" Margin="2,0,0,0"
+                                                Cursor="Hand" ToolTip="إغلاق التبويب">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CanClose}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                            <Border CornerRadius="8" Width="16" Height="16" Background="Transparent" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <TextBlock Text="✕" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+
             <!-- Dynamic View Switcher -->
-            <ContentControl Grid.Row="1" Content="{Binding CurrentView}" />
+            <ContentControl Grid.Row="2" Content="{Binding CurrentView}" />
         </Grid>
     </Grid>
 </Window>

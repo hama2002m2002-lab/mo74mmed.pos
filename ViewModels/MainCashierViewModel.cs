@@ -608,6 +608,61 @@ public class MainCashierViewModel : BaseViewModel
 
     #endregion
 
+    #region Shift Archive Date Filter & Drawer Movements Log
+
+    private DateTime? _shiftFilterStartDate = DateTime.Today;
+    public DateTime? ShiftFilterStartDate
+    {
+        get => _shiftFilterStartDate;
+        set => SetProperty(ref _shiftFilterStartDate, value);
+    }
+
+    private DateTime? _shiftFilterEndDate = DateTime.Today;
+    public DateTime? ShiftFilterEndDate
+    {
+        get => _shiftFilterEndDate;
+        set => SetProperty(ref _shiftFilterEndDate, value);
+    }
+
+    public ICommand FilterShiftByDateCommand { get; }
+    public ICommand ResetShiftFilterCommand { get; }
+
+    public ObservableCollection<CashDrawerMovement> DrawerMovementsList { get; } = new();
+
+    private bool _isDrawerMovementsLogOpen;
+    public bool IsDrawerMovementsLogOpen
+    {
+        get => _isDrawerMovementsLogOpen;
+        set => SetProperty(ref _isDrawerMovementsLogOpen, value);
+    }
+
+    public ICommand OpenDrawerMovementsLogCommand { get; }
+    public ICommand CloseDrawerMovementsLogCommand { get; }
+
+    public async Task LoadDrawerMovementsLogAsync()
+    {
+        try
+        {
+            var movements = await _context.CashDrawerMovements
+                .AsNoTracking()
+                .OrderByDescending(m => m.CreatedAt)
+                .Take(100)
+                .ToListAsync();
+
+            DrawerMovementsList.Clear();
+            foreach (var m in movements)
+            {
+                DrawerMovementsList.Add(m);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadDrawerMovementsLogAsync error: {ex.Message}");
+        }
+    }
+
+    #endregion
+
     #region Direct Item Return Modal Properties & Collections
 
     private bool _isDirectReturnModalOpen;
@@ -1077,6 +1132,29 @@ public class MainCashierViewModel : BaseViewModel
             IsSalesHistoryModalOpen = false;
         });
 
+        FilterShiftByDateCommand = new AsyncRelayCommand(async () =>
+        {
+            await LoadSalesHistoryArchiveAsync();
+        });
+
+        ResetShiftFilterCommand = new AsyncRelayCommand(async () =>
+        {
+            ShiftFilterStartDate = DateTime.Today;
+            ShiftFilterEndDate = DateTime.Today;
+            await LoadSalesHistoryArchiveAsync();
+        });
+
+        OpenDrawerMovementsLogCommand = new AsyncRelayCommand(async () =>
+        {
+            IsDrawerMovementsLogOpen = true;
+            await LoadDrawerMovementsLogAsync();
+        });
+
+        CloseDrawerMovementsLogCommand = new RelayCommand(() =>
+        {
+            IsDrawerMovementsLogOpen = false;
+        });
+
         ReturnSaleInvoiceCommand = new AsyncRelayCommand(async (param) =>
         {
             if (param is Sale sale)
@@ -1373,36 +1451,26 @@ public class MainCashierViewModel : BaseViewModel
     {
         try
         {
-            var todayStart = DateTime.Today.ToUniversalTime();
+            DateTime start = (ShiftFilterStartDate ?? DateTime.Today).Date.ToUniversalTime();
+            DateTime end = (ShiftFilterEndDate ?? ShiftFilterStartDate ?? DateTime.Today).Date.AddDays(1).ToUniversalTime();
+
             var list = await _context.Sales
                 .Include(s => s.Items)
                 .Include(s => s.User)
                 .AsNoTracking()
-                .Where(s => s.CreatedAt >= todayStart)
+                .Where(s => s.CreatedAt >= start && s.CreatedAt < end)
                 .OrderByDescending(s => s.CreatedAt)
                 .ToListAsync();
-
-            if (list.Count == 0)
-            {
-                // إذا لم تكن هناك مبيعات اليوم، جلب آخر 50 فاتورة سابقة لتمكين الكاشير من استعراض الفواتير والطباعة والإرجاع
-                list = await _context.Sales
-                    .Include(s => s.Items)
-                    .Include(s => s.User)
-                    .AsNoTracking()
-                    .OrderByDescending(s => s.CreatedAt)
-                    .Take(50)
-                    .ToListAsync();
-            }
 
             _allSalesHistoryCache.Clear();
             _allSalesHistoryCache.AddRange(list);
             ApplySalesHistoryFilter();
 
             var completed = list.Where(s => s.Status == "Completed").ToList();
-            var returned = list.Where(s => s.Status == "Returned").ToList();
+            var returned = list.Where(s => s.Status == "Returned" || s.InvoiceNumber.StartsWith("RET-")).ToList();
 
             ShiftGrossSales = completed.Sum(s => s.TotalAmount);
-            ShiftReturnsAmount = returned.Sum(s => s.TotalAmount) + completed.SelectMany(s => s.Items).Where(i => i.TotalPrice < 0).Sum(i => Math.Abs(i.TotalPrice));
+            ShiftReturnsAmount = returned.Sum(s => s.TotalAmount);
             ShiftInvoicesCount = completed.Count;
             ShiftReturnsCount = returned.Count;
 

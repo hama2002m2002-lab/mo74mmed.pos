@@ -73,6 +73,7 @@ public class ReportsViewModel : BaseViewModel
             {
                 OnPropertyChanged(nameof(IsHubViewActive));
                 OnPropertyChanged(nameof(IsReportDetailActive));
+                OnPropertyChanged(nameof(IsMasterTabActive));
                 OnPropertyChanged(nameof(IsSalesTabActive));
                 OnPropertyChanged(nameof(IsDamagedTabActive));
                 OnPropertyChanged(nameof(IsReturnsTabActive));
@@ -88,6 +89,7 @@ public class ReportsViewModel : BaseViewModel
 
     public bool IsHubViewActive => ActiveSubReportTab == "Hub";
     public bool IsReportDetailActive => ActiveSubReportTab != "Hub";
+    public bool IsMasterTabActive => ActiveSubReportTab == "Master";
     public bool IsSalesTabActive => ActiveSubReportTab == "Sales";
     public bool IsDamagedTabActive => ActiveSubReportTab == "Damaged";
     public bool IsReturnsTabActive => ActiveSubReportTab == "Returns";
@@ -97,6 +99,30 @@ public class ReportsViewModel : BaseViewModel
     public bool IsShiftAuditTabActive => ActiveSubReportTab == "ShiftAudit";
     public bool IsPerformanceTabActive => ActiveSubReportTab == "Performance";
     public bool IsStockMovementTabActive => ActiveSubReportTab == "StockMovement";
+
+    #endregion
+
+    #region Master Report & Expenses Management
+
+    public ObservableCollection<Expense> ExpensesList { get; } = new();
+
+    private decimal _totalExpensesAmount;
+    public decimal TotalExpensesAmount { get => _totalExpensesAmount; set => SetProperty(ref _totalExpensesAmount, value); }
+
+    private string _newExpenseTitle = string.Empty;
+    public string NewExpenseTitle { get => _newExpenseTitle; set => SetProperty(ref _newExpenseTitle, value); }
+
+    private decimal _newExpenseAmount;
+    public decimal NewExpenseAmount { get => _newExpenseAmount; set => SetProperty(ref _newExpenseAmount, value); }
+
+    private string _newExpenseCategory = "عام";
+    public string NewExpenseCategory { get => _newExpenseCategory; set => SetProperty(ref _newExpenseCategory, value); }
+
+    private string _newExpenseNotes = string.Empty;
+    public string NewExpenseNotes { get => _newExpenseNotes; set => SetProperty(ref _newExpenseNotes, value); }
+
+    public ICommand SaveExpenseCommand { get; }
+    public ICommand DeleteExpenseCommand { get; }
 
     #endregion
 
@@ -456,6 +482,50 @@ public class ReportsViewModel : BaseViewModel
             }
         });
 
+        SaveExpenseCommand = new AsyncRelayCommand(async () =>
+        {
+            if (string.IsNullOrWhiteSpace(NewExpenseTitle) || NewExpenseAmount <= 0)
+            {
+                MessageBox.Show("يرجى كتابة بيان المصروف والمبلغ بشكل صحيح.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var exp = new Expense
+            {
+                Id = Guid.NewGuid(),
+                Title = NewExpenseTitle.Trim(),
+                Amount = NewExpenseAmount,
+                Category = string.IsNullOrWhiteSpace(NewExpenseCategory) ? "عام" : NewExpenseCategory.Trim(),
+                Notes = NewExpenseNotes,
+                RecordedBy = "محمد الكاشير",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _context.Expenses.AddAsync(exp);
+            await _context.SaveChangesAsync();
+
+            NewExpenseTitle = string.Empty;
+            NewExpenseAmount = 0;
+            NewExpenseNotes = string.Empty;
+
+            await LoadReportAsync();
+            MessageBox.Show("تم تسجيل المصروف بنجاح وتحديث صافي الأرباح.", "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
+        });
+
+        DeleteExpenseCommand = new AsyncRelayCommand(async param =>
+        {
+            if (param is Expense exp)
+            {
+                var res = MessageBox.Show($"هل ترغب في حذف المصروف '{exp.Title}' بمبلغ {exp.Amount:N0} د.ع؟", "تأكيد الحذف", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (res == MessageBoxResult.Yes)
+                {
+                    _context.Expenses.Remove(exp);
+                    await _context.SaveChangesAsync();
+                    await LoadReportAsync();
+                }
+            }
+        });
+
         BackToMainCommand = new RelayCommand(() => RequestBackToNavigation?.Invoke());
     }
 
@@ -592,10 +662,28 @@ public class ReportsViewModel : BaseViewModel
         TotalGrossSalesProfit = Math.Max(0, retailGross + wholesaleGross + cartonGross);
         TotalDiscountsGranted = totalDiscounts;
         TotalSalesRevenue = totalRevenue;
-        FinalNetProfit = Math.Max(0, TotalGrossSalesProfit - (TotalDiscountsGranted + OperatingExpenses));
 
         TotalReturnsAmount = totalReturns;
-        TotalReturnedCount = ReturnedInvoicesList.Count + sales.Count(s => s.Status != "Returned" && s.Items.Any(i => i.TotalPrice < 0 || i.Quantity < 0 || i.ProductName.Contains("(إرجاع)")));
+        TotalReturnedCount = ReturnedInvoicesList.Count + sales.Count(s => (s.Status == "Returned" || s.InvoiceNumber.StartsWith("RET-")) || s.Items.Any(i => i.TotalPrice < 0 || i.Quantity < 0 || i.ProductName.Contains("(إرجاع)")));
+
+        // 1.1 Expenses Loading (المصروفات العامة)
+        var expenses = await _context.Expenses
+            .Where(e => e.CreatedAt >= start && e.CreatedAt <= end)
+            .OrderByDescending(e => e.CreatedAt)
+            .ToListAsync();
+
+        ExpensesList.Clear();
+        decimal expTotal = 0;
+        foreach (var ex in expenses)
+        {
+            ExpensesList.Add(ex);
+            expTotal += ex.Amount;
+        }
+        TotalExpensesAmount = expTotal;
+        OperatingExpenses = expTotal;
+
+        // صافي الأرباح النهائي = الأرباح الإجمالية - (الخصومات + المصروفات)
+        FinalNetProfit = (TotalGrossSalesProfit - (TotalDiscountsGranted + TotalExpensesAmount));
 
         // 2. Damaged Items
         var damaged = await _context.DamagedItems

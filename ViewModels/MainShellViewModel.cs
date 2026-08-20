@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -75,6 +76,11 @@ public class MainShellViewModel : BaseViewModel
 
     #region Navigation Commands
 
+    public ObservableCollection<ShellTabItem> OpenTabs { get; } = new();
+
+    public ICommand SelectTabCommand { get; }
+    public ICommand CloseTabCommand { get; }
+
     public ICommand ShowDashboardCommand { get; }
     public ICommand ShowCashierCommand { get; }
     public ICommand ShowSalesHistoryCommand { get; }
@@ -101,6 +107,49 @@ public class MainShellViewModel : BaseViewModel
     public ThemeManager Theme => ThemeManager.Instance;
 
     #endregion
+
+    public void OpenOrSelectTab(string tabId, string title, string icon, object viewModel, bool canClose = true)
+    {
+        var existing = OpenTabs.FirstOrDefault(t => t.Id == tabId);
+        if (existing == null)
+        {
+            existing = new ShellTabItem
+            {
+                Id = tabId,
+                Title = title,
+                Icon = icon,
+                ViewModel = viewModel,
+                CanClose = canClose
+            };
+            OpenTabs.Add(existing);
+        }
+
+        foreach (var tab in OpenTabs)
+        {
+            tab.IsSelected = (tab == existing);
+        }
+
+        ActiveTab = tabId;
+        CurrentView = viewModel;
+    }
+
+    public void CloseTab(ShellTabItem tab)
+    {
+        if (tab == null || !tab.CanClose || OpenTabs.Count <= 1) return;
+
+        int index = OpenTabs.IndexOf(tab);
+        OpenTabs.Remove(tab);
+
+        if (tab.IsSelected)
+        {
+            int newIndex = Math.Min(index, OpenTabs.Count - 1);
+            if (newIndex >= 0)
+            {
+                var nextTab = OpenTabs[newIndex];
+                OpenOrSelectTab(nextTab.Id, nextTab.Title, nextTab.Icon, nextTab.ViewModel, nextTab.CanClose);
+            }
+        }
+    }
 
     public MainShellViewModel()
     {
@@ -359,91 +408,99 @@ public class MainShellViewModel : BaseViewModel
             _ = SalesHistoryVM.LoadSalesDataAsync();
         };
 
+        SelectTabCommand = new RelayCommand(param =>
+        {
+            if (param is ShellTabItem tab)
+            {
+                OpenOrSelectTab(tab.Id, tab.Title, tab.Icon, tab.ViewModel, tab.CanClose);
+            }
+        });
+
+        CloseTabCommand = new RelayCommand(param =>
+        {
+            if (param is ShellTabItem tab)
+            {
+                CloseTab(tab);
+            }
+        });
+
+        // Initialize with default Dashboard Tab
+        OpenOrSelectTab("Dashboard", "تابلۆی سەرەکی (داشبۆرد)", "📊", DashboardVM, canClose: false);
+
         ShowDashboardCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "Dashboard";
             IsSidebarVisible = true;
-            CurrentView = DashboardVM;
+            OpenOrSelectTab("Dashboard", Loc["Nav_Dashboard"], "📊", DashboardVM, canClose: false);
             await DashboardVM.LoadDashboardDataAsync();
         });
 
         ShowCashierCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "Cashier";
             IsSidebarVisible = false;
-            CurrentView = CashierVM;
+            OpenOrSelectTab("Cashier", Loc["Nav_Cashier"], "🛒", CashierVM);
             await CashierVM.InitializeAsync();
         });
 
         ShowSalesHistoryCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "SalesHistory";
             IsSidebarVisible = true;
-            CurrentView = SalesHistoryVM;
+            OpenOrSelectTab("SalesHistory", Loc["Nav_SalesHistory"], "💰", SalesHistoryVM);
             await SalesHistoryVM.LoadSalesDataAsync();
         });
 
         ShowInventoryCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "Inventory";
             IsSidebarVisible = true;
-            CurrentView = InventoryVM;
+            OpenOrSelectTab("Inventory", Loc["Nav_Inventory"], "📦", InventoryVM);
             await InventoryVM.LoadProductsAsync();
         });
 
         ShowStockCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "Stock";
             IsSidebarVisible = true;
-            CurrentView = StockVM;
+            OpenOrSelectTab("Stock", "موجودی و کالا", "📦", StockVM);
             await StockVM.LoadStockAsync();
         });
 
         ShowStockAuditCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "StockAudit";
             IsSidebarVisible = true;
-            CurrentView = StockAuditVM;
+            OpenOrSelectTab("StockAudit", "جرد المخزون", "🔍", StockAuditVM);
             await StockAuditVM.LoadAllForAuditAsync();
         });
 
         ShowDamagedItemsCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "DamagedItems";
             IsSidebarVisible = true;
-            CurrentView = DamagedItemsVM;
+            OpenOrSelectTab("DamagedItems", "المواد التالفة", "⚠️", DamagedItemsVM);
             await DamagedItemsVM.LoadDataAsync();
         });
 
         ShowPurchaseCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "Purchase";
             IsSidebarVisible = true;
-            CurrentView = PurchaseVM;
+            OpenOrSelectTab("Purchase", Loc["Nav_Purchase"], "🛍️", PurchaseVM);
             await PurchaseVM.InitializeAsync();
         });
 
         ShowAddProductCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "AddProduct";
             IsSidebarVisible = true;
-            CurrentView = AddProductVM;
+            OpenOrSelectTab("AddProduct", Loc["Nav_AddProduct"], "➕", AddProductVM);
             await AddProductVM.InitializeAsync();
         });
 
         ShowSuppliersCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "Suppliers";
             IsSidebarVisible = true;
-            CurrentView = SuppliersVM;
+            OpenOrSelectTab("Suppliers", Loc["Nav_Suppliers"], "🤝", SuppliersVM);
             await SuppliersVM.InitializeAsync();
         });
 
         ShowSupplierOrdersCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "SupplierOrders";
             IsSidebarVisible = true;
-            CurrentView = SupplierOrdersVM;
+            OpenOrSelectTab("SupplierOrders", Loc["Nav_SupplierOrders"], "📦", SupplierOrdersVM);
             await SupplierOrdersVM.LoadOrdersAsync();
         });
 
@@ -475,33 +532,29 @@ public class MainShellViewModel : BaseViewModel
 
         ShowUserAccountsCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "UserAccounts";
             IsSidebarVisible = true;
-            CurrentView = UserAccountsVM;
+            OpenOrSelectTab("UserAccounts", Loc["Nav_UserAccounts"], "👤", UserAccountsVM);
             await UserAccountsVM.LoadUsersAsync();
         });
 
         ShowPrintingCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "Printing";
             IsSidebarVisible = true;
-            CurrentView = PrintingVM;
+            OpenOrSelectTab("Printing", Loc["Nav_Printing"], "🖨️", PrintingVM);
             await PrintingVM.InitializeAsync();
         });
 
         ShowReportsCommand = new AsyncRelayCommand(async () =>
         {
-            ActiveTab = "Reports";
             IsSidebarVisible = false;
-            CurrentView = ReportsVM;
+            OpenOrSelectTab("Reports", Loc["Nav_Reports"], "📑", ReportsVM);
             await ReportsVM.LoadReportAsync();
         });
 
         ShowSettingsCommand = new RelayCommand(() =>
         {
-            ActiveTab = "Settings";
             IsSidebarVisible = true;
-            CurrentView = SettingsVM;
+            OpenOrSelectTab("Settings", Loc["Nav_Settings"], "⚙️", SettingsVM);
         });
 
         ToggleSidebarCommand = new RelayCommand(() =>

@@ -26,6 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<CashDrawerMovement> CashDrawerMovements => Set<CashDrawerMovement>();
     public DbSet<SupplierOrder> SupplierOrders => Set<SupplierOrder>();
     public DbSet<SupplierOrderItem> SupplierOrderItems => Set<SupplierOrderItem>();
+    public DbSet<Expense> Expenses => Set<Expense>();
 
     public static string DatabasePath => HamoPos.Services.NetworkConfigService.Instance.GetEffectiveDatabasePath();
 

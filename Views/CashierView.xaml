@@ -1097,6 +1097,20 @@
 
                         <!-- Quick Cash Adjustment Buttons + Close -->
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Drawer Movements Log Button (📋 حركات الخزنة والدرج) -->
+                            <Button Command="{Binding OpenDrawerMovementsLogCommand}" Cursor="Hand" Height="34" Margin="0,0,6,0" Padding="10,0">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#1E293B" BorderBrush="#38BDF8" BorderThickness="1" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="📋 " FontSize="12" Foreground="#38BDF8" />
+                                                <TextBlock Text="حركات الدرج والخزنة" FontSize="11" FontWeight="Bold" Foreground="#38BDF8" />
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
                             <!-- Quick Deposit / Add Opening Cash Button -->
                             <Button Command="{Binding OpenAddCashPopupCommand}" Cursor="Hand" Height="34" Margin="0,0,6,0" Padding="10,0">
                                 <Button.Template>
@@ -1183,122 +1197,147 @@
                         </Border>
                     </Grid>
 
-                    <!-- 2: Filter Switcher Bar (أزرار عرض المبيعات والمرتجعات والكل) -->
-                    <Border Grid.Row="2" Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" CornerRadius="12" Padding="5" Margin="0,0,0,8">
+                    <!-- 2: Filter Switcher Bar & Date Filter Calendar -->
+                    <Border Grid.Row="2" Background="{DynamicResource BgDarkPrimary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" CornerRadius="12" Padding="6,4" Margin="0,0,0,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
+                                <!-- Filter Tabs -->
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
+                                <!-- Date Picker Calendar -->
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <!-- Button 1: All Invoices (کافة الفواتير) -->
-                            <Button Grid.Column="0" Command="{Binding SetSalesHistoryFilterCommand}" CommandParameter="All" Cursor="Hand" Height="34" Margin="0,0,4,0">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border CornerRadius="8" Padding="10,0">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="Transparent" />
-                                                    <Setter Property="BorderThickness" Value="0" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsAllSalesHistoryFilterActive}" Value="True">
-                                                            <Setter Property="Background" Value="#0284C7" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                <TextBlock Text="🌟 " FontSize="12" />
-                                                <TextBlock Text="هەموو پسوولەکان (كافة الفواتير)" FontSize="11.5" FontWeight="Bold">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#94A3B8" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsAllSalesHistoryFilterActive}" Value="True">
-                                                                    <Setter Property="Foreground" Value="#FFFFFF" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
+                            <Grid Grid.Column="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                            <!-- Button 2: Sales Only (فواتير المبيعات) -->
-                            <Button Grid.Column="1" Command="{Binding SetSalesHistoryFilterCommand}" CommandParameter="Sales" Cursor="Hand" Height="34" Margin="2,0">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border CornerRadius="8" Padding="10,0">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="Transparent" />
-                                                    <Setter Property="BorderThickness" Value="0" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsSalesOnlyFilterActive}" Value="True">
-                                                            <Setter Property="Background" Value="#059669" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                <TextBlock Text="📈 " FontSize="12" />
-                                                <TextBlock Text="پسوولەکانی فرۆشتن (المبيعات)" FontSize="11.5" FontWeight="Bold">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#94A3B8" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsSalesOnlyFilterActive}" Value="True">
-                                                                    <Setter Property="Foreground" Value="#FFFFFF" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
+                                <!-- Button 1: All Invoices (کافة الفواتير) -->
+                                <Button Grid.Column="0" Command="{Binding SetSalesHistoryFilterCommand}" CommandParameter="All" Cursor="Hand" Height="32" Margin="0,0,3,0">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border CornerRadius="8" Padding="8,0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="Transparent" />
+                                                        <Setter Property="BorderThickness" Value="0" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsAllSalesHistoryFilterActive}" Value="True">
+                                                                <Setter Property="Background" Value="#0284C7" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <TextBlock Text="🌟 " FontSize="11" />
+                                                    <TextBlock Text="كافة الفواتير" FontSize="11" FontWeight="Bold">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#94A3B8" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsAllSalesHistoryFilterActive}" Value="True">
+                                                                        <Setter Property="Foreground" Value="#FFFFFF" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
 
-                            <!-- Button 3: Returns Only (فواتير المرتجعات) -->
-                            <Button Grid.Column="2" Command="{Binding SetSalesHistoryFilterCommand}" CommandParameter="Returns" Cursor="Hand" Height="34" Margin="4,0,0,0">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border CornerRadius="8" Padding="10,0">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="Transparent" />
-                                                    <Setter Property="BorderThickness" Value="0" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsReturnsOnlyFilterActive}" Value="True">
-                                                            <Setter Property="Background" Value="#DC2626" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                <TextBlock Text="🔄 " FontSize="12" />
-                                                <TextBlock Text="پسوولە گەڕێنراوەکان (المرتجعات)" FontSize="11.5" FontWeight="Bold">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#94A3B8" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsReturnsOnlyFilterActive}" Value="True">
-                                                                    <Setter Property="Foreground" Value="#FFFFFF" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
+                                <!-- Button 2: Sales Only (فواتير المبيعات) -->
+                                <Button Grid.Column="1" Command="{Binding SetSalesHistoryFilterCommand}" CommandParameter="Sales" Cursor="Hand" Height="32" Margin="2,0">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border CornerRadius="8" Padding="8,0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="Transparent" />
+                                                        <Setter Property="BorderThickness" Value="0" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSalesOnlyFilterActive}" Value="True">
+                                                                <Setter Property="Background" Value="#059669" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <TextBlock Text="📈 " FontSize="11" />
+                                                    <TextBlock Text="المبيعات" FontSize="11" FontWeight="Bold">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#94A3B8" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsSalesOnlyFilterActive}" Value="True">
+                                                                        <Setter Property="Foreground" Value="#FFFFFF" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <!-- Button 3: Returns Only (فواتير المرتجعات) -->
+                                <Button Grid.Column="2" Command="{Binding SetSalesHistoryFilterCommand}" CommandParameter="Returns" Cursor="Hand" Height="32" Margin="3,0,6,0">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border CornerRadius="8" Padding="8,0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="Transparent" />
+                                                        <Setter Property="BorderThickness" Value="0" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsReturnsOnlyFilterActive}" Value="True">
+                                                                <Setter Property="Background" Value="#DC2626" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <TextBlock Text="🔄 " FontSize="11" />
+                                                    <TextBlock Text="المرتجعات" FontSize="11" FontWeight="Bold">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#94A3B8" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsReturnsOnlyFilterActive}" Value="True">
+                                                                        <Setter Property="Foreground" Value="#FFFFFF" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
+
+                            <!-- Date Filter Calendar Controls -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="📅 من:" FontSize="11" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,4,0" />
+                                <DatePicker SelectedDate="{Binding ShiftFilterStartDate, Mode=TwoWay}" Width="110" Height="28" FontSize="11" />
+
+                                <TextBlock Text="إلى:" FontSize="11" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="8,0,4,0" />
+                                <DatePicker SelectedDate="{Binding ShiftFilterEndDate, Mode=TwoWay}" Width="110" Height="28" FontSize="11" />
+
+                                <Button Command="{Binding FilterShiftByDateCommand}" Style="{DynamicResource PrimaryAccentButton}" Height="28" Padding="8,0" Margin="6,0,4,0" ToolTip="بحث بالتاريخ المحدد">
+                                    <TextBlock Text="🔍 عرض" FontSize="11" FontWeight="Bold" />
+                                </Button>
+                                <Button Command="{Binding ResetShiftFilterCommand}" Style="{DynamicResource ActionButton}" Height="28" Padding="6,0" ToolTip="إعادة ضبط لليوم">
+                                    <TextBlock Text="اليوم" FontSize="11" />
+                                </Button>
+                            </StackPanel>
                         </Grid>
                     </Border>
 
@@ -1827,6 +1866,118 @@
                         </Button>
                     </Grid>
                 </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- ======================================================== -->
+        <!-- POPUP MODAL: ALL DRAWER MOVEMENTS LOG (سجل حركات الخزنة والدرج) -->
+        <!-- ======================================================== -->
+        <Border Grid.RowSpan="3" Background="#EE020617" 
+                Visibility="{Binding IsDrawerMovementsLogOpen, Converter={StaticResource BoolToVis}}" 
+                Margin="-18,-10">
+            <Border Width="850" MaxHeight="600" Background="#0B132B" CornerRadius="18" BorderBrush="#38BDF8" BorderThickness="1.5" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="40" Color="#000000" Opacity="0.95" ShadowDepth="12" />
+                </Border.Effect>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- 0: Header -->
+                        <RowDefinition Height="Auto" />
+                        <!-- 1: Movements DataGrid -->
+                        <RowDefinition Height="*" />
+                        <!-- 2: Actions Bar -->
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,14">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="36" Height="36" Background="#0369A1" CornerRadius="10" Margin="0,0,10,0">
+                                <TextBlock Text="📋" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="سجل حركات الخزنة والدرج (الإيداع والسحب)" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Text="استعراض كامل لكافة المبالغ المودعة والمسحوبة مع الأسباب والتواريخ وأسماء الكاشير" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Button HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Command="{Binding CloseDrawerMovementsLogCommand}" Cursor="Hand" Padding="4">
+                            <TextBlock Text="✕" FontSize="20" FontWeight="Black" Foreground="{DynamicResource DangerBrush}" />
+                        </Button>
+                    </Grid>
+
+                    <!-- Movements Table -->
+                    <Border Grid.Row="1" Background="{DynamicResource BgDarkPrimary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="4" Height="380">
+                        <DataGrid ItemsSource="{Binding DrawerMovementsList}" AutoGenerateColumns="False" 
+                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                  Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                  HorizontalGridLinesBrush="{DynamicResource BorderDark}"
+                                  ScrollViewer.CanContentScroll="False"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  VirtualizingPanel.ScrollUnit="Pixel"
+                                  RowHeight="40">
+                            <DataGrid.Columns>
+                                <!-- التاريخ والوقت -->
+                                <DataGridTextColumn Header="التاريخ والوقت" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" Width="165" Foreground="{DynamicResource TextSecondary}" />
+
+                                <!-- نوع الحركة -->
+                                <DataGridTemplateColumn Header="نوع الحركة" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="6" Padding="6,2" HorizontalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#064E3B" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding MovementType}" Value="Withdrawal">
+                                                                <Setter Property="Background" Value="#7F1D1D" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding MovementTypeDisplayName}" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- المبلغ -->
+                                <DataGridTemplateColumn Header="المبلغ" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding FormattedAmount}" FontWeight="Black" FontSize="13" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding MovementType}" Value="Withdrawal">
+                                                                <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- السبب والتفاصيل -->
+                                <DataGridTextColumn Header="السبب / التفاصيل" Binding="{Binding Reason}" Width="*" Foreground="{DynamicResource TextPrimary}" />
+
+                                <!-- الكاشير -->
+                                <DataGridTextColumn Header="الكاشير" Binding="{Binding CashierName}" Width="120" Foreground="{DynamicResource TextSecondary}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- Footer -->
+                    <Grid Grid.Row="2" Margin="0,12,0,0">
+                        <Button HorizontalAlignment="Right" Style="{DynamicResource ActionButton}" Command="{Binding CloseDrawerMovementsLogCommand}" Height="36" Width="120">
+                            <TextBlock Text="إغلاق" FontWeight="SemiBold" />
+                        </Button>
+                    </Grid>
+                </Grid>
             </Border>
         </Border>
     </Grid>
