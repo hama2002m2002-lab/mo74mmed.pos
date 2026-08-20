@@ -1,15 +1,15 @@
 {
-  "updatedAt": "2026-08-20T23:05:28.7869750Z",
+  "updatedAt": "2026-08-20T23:05:43.6918544Z",
   "productsCount": 1,
   "products": [
     {
-      "id": "de6ecde2-dc84-4261-9cb9-88fe672ac4b4",
-      "name": "kek",
-      "barcode": "2002455378538",
-      "price": 2000.0,
-      "wholesalePrice": 1700.0,
-      "cartonPrice": 48000.0,
-      "stock": 216.0,
+      "id": "b0cb59a5-35e9-4037-a8ae-cbd6928640fa",
+      "name": "\u0643\u064A\u0643 \u0647\u0646\u062F\u0631\u064A\u0646",
+      "barcode": "2002454224835",
+      "price": 750.0,
+      "wholesalePrice": 0.0,
+      "cartonPrice": 17000.0,
+      "stock": 97.0,
       "unit": "\u0642\u0637\u0639\u0629",
       "itemsPerCarton": 24.0
     }
