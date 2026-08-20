@@ -630,6 +630,56 @@
                     </Border>
 
                     <!-- ============================================== -->
+                    <!-- SECTION 1: SALES INVOICES (قائمة وسجل المبيعات) -->
+                    <!-- ============================================== -->
+                    <Border Visibility="{Binding IsMasterSalesSectionActive, Converter={StaticResource BoolToVis}}" 
+                            Background="{DynamicResource BgDarkSecondary}" CornerRadius="14" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="14">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="📑 قائمة وسجل كافة فواتير المبيعات" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Background="#064E3B" CornerRadius="6" Padding="8,3" Margin="0,0,6,0">
+                                        <TextBlock Text="{Binding Invoices.Count, StringFormat='{}إجمالي الفواتير: {0}'}" FontSize="11.5" FontWeight="Bold" Foreground="#34D399" />
+                                    </Border>
+                                    <Border Background="#450A0A" CornerRadius="6" Padding="8,3">
+                                        <TextBlock Text="{Binding TotalReturnsAmount, StringFormat='{}المرتجعات: {0:N0} د.ع'}" FontSize="11.5" FontWeight="Bold" Foreground="#FCA5A5" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding Invoices}" AutoGenerateColumns="False" 
+                                      IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                      Background="Transparent" RowBackground="Transparent" BorderThickness="0"
+                                      HorizontalGridLinesBrush="{DynamicResource BorderDark}"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto" RowHeight="38">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="رقم الوصل" Binding="{Binding InvoiceNumber}" Width="150" Foreground="{DynamicResource PrimaryAccent}" FontWeight="Bold" />
+                                    <DataGridTextColumn Header="التاريخ والوقت" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy/MM/dd - hh:mm tt}'}" Width="170" Foreground="{DynamicResource TextSecondary}" />
+                                    <DataGridTextColumn Header="طريقة الدفع" Binding="{Binding PaymentMethod}" Width="110" Foreground="{DynamicResource TextPrimary}" />
+                                    <DataGridTextColumn Header="المجموع" Binding="{Binding TotalAmount, StringFormat='{}{0:N0} د.ع'}" Width="130" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" />
+                                    <DataGridTextColumn Header="المواد والأصناف" Binding="{Binding Items.Count, StringFormat='{}{0} أصناف'}" Width="110" Foreground="{DynamicResource TextSecondary}" />
+                                    <DataGridTemplateColumn Header="معاينة" Width="90">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{DynamicResource ActionButton}" Command="{Binding DataContext.OpenInvoiceDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Padding="8,3" FontSize="11">
+                                                    <TextBlock Text="معاينة" />
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+
+                    <!-- ============================================== -->
                     <!-- SECTION 2: EXPENSES MANAGEMENT (إدارة وتسجيل المصروفات) -->
                     <!-- ============================================== -->
                     <Grid Visibility="{Binding IsMasterExpensesSectionActive, Converter={StaticResource BoolToVis}}">
@@ -678,9 +728,13 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <Grid Grid.Row="0" Margin="0,0,0,10">
-                                    <TextBlock Text="📋 سجل المصروفات المسجلة للفترة" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
-                                    <Border HorizontalAlignment="Left" Background="#450A0A" CornerRadius="6" Padding="8,3">
+                                <Grid Grid.Row="0" Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="📋 سجل المصروفات المسجلة للفترة" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="#450A0A" CornerRadius="6" Padding="8,3">
                                         <TextBlock Text="{Binding TotalExpensesAmount, StringFormat='{}إجمالي المصروفات: {0:N0} د.ع'}" FontSize="12" FontWeight="Bold" Foreground="#FCA5A5" />
                                     </Border>
                                 </Grid>
@@ -721,9 +775,13 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <Grid Grid.Row="0" Margin="0,0,0,10">
-                                <TextBlock Text="⚠️ تقرير المواد التالفة والهالكة ومقدار الضرر والخسائر" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <Grid Grid.Row="0" Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="⚠️ تقرير المواد التالفة والهالكة ومقدار الضرر والخسائر" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Border Background="#450A0A" CornerRadius="6" Padding="10,4" Margin="0,0,8,0">
                                         <TextBlock Text="{Binding TotalDamagedLoss, StringFormat='{}إجمالي خسائر الضرر: {0:N0} د.ع'}" FontSize="12" FontWeight="Black" Foreground="#F87171" />
                                     </Border>
@@ -760,9 +818,13 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <Grid Grid.Row="0" Margin="0,0,0,10">
-                                <TextBlock Text="📦 تقرير المخزون وحالة المواد المتوفرة والنافذة" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <Grid Grid.Row="0" Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="📦 تقرير المخزون وحالة المواد المتوفرة والنافذة" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Border Background="#064E3B" CornerRadius="6" Padding="8,3" Margin="0,0,6,0">
                                         <TextBlock Text="{Binding InStockCount, StringFormat='{}متوفر بكثرة: {0}'}" FontSize="11.5" FontWeight="Bold" Foreground="#34D399" />
                                     </Border>
@@ -786,10 +848,10 @@
                                     <DataGridTextColumn Header="سعر التكلفة" Binding="{Binding UnitCost, StringFormat='{}{0:N0} د.ع'}" Width="110" Foreground="{DynamicResource TextSecondary}" />
                                     <DataGridTextColumn Header="سعر البيع" Binding="{Binding UnitPrice, StringFormat='{}{0:N0} د.ع'}" Width="110" Foreground="{DynamicResource SuccessBrush}" />
                                     <DataGridTextColumn Header="إجمالي قيمة المخزون" Binding="{Binding TotalCostValue, StringFormat='{}{0:N0} د.ع'}" Width="135" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" />
-                                    <DataGridTemplateColumn Header="حالة المخزون" Width="130">
+                                    <DataGridTemplateColumn Header="حالة المخزون" Width="140">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Border CornerRadius="6" Padding="6,2" HorizontalAlignment="Center">
+                                                <Border CornerRadius="6" Padding="8,2" HorizontalAlignment="Center">
                                                     <Border.Style>
                                                         <Style TargetType="Border">
                                                             <Setter Property="Background" Value="#064E3B" />
@@ -820,9 +882,13 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <Grid Grid.Row="0" Margin="0,0,0,10">
-                                <TextBlock Text="👥 تقرير ديون ومستحقات العملاء والآجل" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
-                                <Border HorizontalAlignment="Left" Background="#78350F" CornerRadius="6" Padding="8,3">
+                            <Grid Grid.Row="0" Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="👥 تقرير ديون ومستحقات العملاء والآجل" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
+                                <Border Grid.Column="1" Background="#78350F" CornerRadius="6" Padding="8,3">
                                     <TextBlock Text="{Binding NetOutstandingCustomerDebts, StringFormat='{}إجمالي الديون المتبقية: {0:N0} د.ع'}" FontSize="12" FontWeight="Bold" Foreground="#FCD34D" />
                                 </Border>
                             </Grid>

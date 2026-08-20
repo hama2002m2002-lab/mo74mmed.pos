@@ -46,12 +46,25 @@ public class InventoryValuationItem
     public string Barcode { get; set; } = string.Empty;
     public string ProductName { get; set; } = string.Empty;
     public decimal StockQuantity { get; set; }
+    public decimal MinStockAlert { get; set; } = 5.0m;
     public decimal UnitCost { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal TotalCostValue => StockQuantity * UnitCost;
     public decimal TotalSellingValue => StockQuantity * UnitPrice;
     public decimal PotentialProfit => TotalSellingValue - TotalCostValue;
-    public string StockStatus => StockQuantity <= 0 ? "نفد المخزون ❌" : (StockQuantity <= 5 ? "يوشك على النفاد ⚠️" : "متوفر وممتاز ✔");
+
+    public string StockStatus
+    {
+        get
+        {
+            decimal alertThreshold = MinStockAlert > 0 ? MinStockAlert : 5.0m;
+            if (StockQuantity <= 0)
+                return LocalizationManager.Instance.IsKurdish ? "تەواوبووە ❌" : "نفد المخزون ❌";
+            if (StockQuantity <= alertThreshold)
+                return LocalizationManager.Instance.IsKurdish ? "نزیکە لە تەواوبوون ⚠️" : "يوشك على النفاد ⚠️";
+            return LocalizationManager.Instance.IsKurdish ? "بەردەستە و پڕە ✔" : "متوفر وممتاز ✔";
+        }
+    }
 }
 
 #endregion
@@ -161,8 +174,8 @@ public class ReportsViewModel : BaseViewModel
     public ICommand SaveExpenseCommand { get; }
     public ICommand DeleteExpenseCommand { get; }
 
-    public int InStockCount => InventoryValuationList.Count(p => p.StockQuantity > 5);
-    public int LowStockCount => InventoryValuationList.Count(p => p.StockQuantity > 0 && p.StockQuantity <= 5);
+    public int InStockCount => InventoryValuationList.Count(p => p.StockQuantity > (p.MinStockAlert > 0 ? p.MinStockAlert : 5));
+    public int LowStockCount => InventoryValuationList.Count(p => p.StockQuantity > 0 && p.StockQuantity <= (p.MinStockAlert > 0 ? p.MinStockAlert : 5));
 
     #endregion
 
@@ -785,6 +798,7 @@ public class ReportsViewModel : BaseViewModel
                 Barcode = p.Barcode,
                 ProductName = p.Name,
                 StockQuantity = p.StockQuantity,
+                MinStockAlert = p.MinStockAlert,
                 UnitCost = p.Cost,
                 UnitPrice = p.Price
             };
@@ -797,6 +811,8 @@ public class ReportsViewModel : BaseViewModel
         TotalInventorySellingValue = invSell;
         ExpectedInventoryProfit = Math.Max(0, invSell - invCost);
         OutOfStockCount = outStock;
+        OnPropertyChanged(nameof(InStockCount));
+        OnPropertyChanged(nameof(LowStockCount));
 
         // 5. Customer Debts
         var debts = await _context.CustomerDebts.OrderByDescending(d => d.CreatedAt).ToListAsync();

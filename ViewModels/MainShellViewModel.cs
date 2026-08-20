@@ -479,7 +479,7 @@ public class MainShellViewModel : BaseViewModel
         ShowPurchaseCommand = new AsyncRelayCommand(async () =>
         {
             IsSidebarVisible = true;
-            OpenOrSelectTab("Purchase", Loc["Nav_Purchase"], "🛍️", PurchaseVM);
+            OpenOrSelectTab("Purchase", Loc["Nav_Purchases"], "🛍️", PurchaseVM);
             await PurchaseVM.InitializeAsync();
         });
 
