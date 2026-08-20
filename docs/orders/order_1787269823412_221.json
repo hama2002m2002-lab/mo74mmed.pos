@@ -1,0 +1,20 @@
+{
+  "orderNumber": "ORD-20260820-167",
+  "orderDate": "2026-08-20T23:50:23.411Z",
+  "marketName": "كيك",
+  "marketPhone": "",
+  "marketAddress": "",
+  "representativeName": "مندوب المبيعات",
+  "notes": "",
+  "totalAmount": 48000,
+  "items": [
+    {
+      "productId": "de6ecde2-dc84-4261-9cb9-88fe672ac4b4",
+      "productName": "kek",
+      "barcode": "2002455378538",
+      "quantity": 1,
+      "unitType": "Carton",
+      "unitPrice": 48000
+    }
+  ]
+}
