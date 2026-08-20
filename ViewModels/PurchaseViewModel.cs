@@ -21,13 +21,34 @@ public class PurchaseItemRow : BaseViewModel
     public int ItemsPerCarton { get; set; } = 1;
     public decimal Quantity { get; set; } = 1;
     public decimal OldStockQuantity { get; set; } // الكمية القديمة بالمخزن
-    public decimal OldCost { get; set; } // السعر القديم
-    public decimal NewCost { get; set; } // السعر الجديد
-    public decimal PieceCost { get; set; } // السعر المرجح الجديد للقطعة
-    public decimal CartonCost { get; set; } // السعر المرجح الجديد للكرتون
+    public decimal OldCost { get; set; } // سعر الشراء السابق / القديم
+    public decimal NewCost { get; set; } // سعر الشراء الحالي / الجديد
+    public decimal PieceCost { get; set; } // تكلفة القطعة المرجحة (بالخلف)
+    public decimal CartonCost { get; set; } // تكلفة الكرتون المرجحة (بالخلف)
     public decimal SellingPrice { get; set; }
     public decimal TotalCost => Quantity * NewCost;
     public string PackageText => IsCarton ? $"كرتون ({ItemsPerCarton} قطعة)" : "مفرد (قطعة)";
+
+    public decimal PriceDifference => NewCost - OldCost;
+    public string PriceDifferenceText
+    {
+        get
+        {
+            if (OldCost <= 0) return "جديد 🆕";
+            if (PriceDifference > 0) return $"🔺 (+{PriceDifference:N0} د.ع)";
+            if (PriceDifference < 0) return $"🔻 ({PriceDifference:N0} د.ع)";
+            return "🟢 نفس السعر";
+        }
+    }
+    public string PriceDifferenceColor
+    {
+        get
+        {
+            if (PriceDifference > 0) return "#F87171"; // أحمر/برتقالي لارتفاع السعر
+            if (PriceDifference < 0) return "#34D399"; // أخضر لانخفاض السعر
+            return "#94A3B8"; // رمادي إذا مطابق
+        }
+    }
 }
 
 public class PurchaseViewModel : BaseViewModel
@@ -73,7 +94,59 @@ public class PurchaseViewModel : BaseViewModel
     public Supplier? SelectedSupplier
     {
         get => _selectedSupplier;
-        set => SetProperty(ref _selectedSupplier, value);
+        set
+        {
+            if (SetProperty(ref _selectedSupplier, value))
+            {
+                if (_selectedSupplier != null)
+                {
+                    SupplierPreviousDebt = _selectedSupplier.Balance;
+                    _ = LoadSupplierTransactionsAsync(_selectedSupplier.Id);
+                }
+                else
+                {
+                    SupplierPreviousDebt = 0;
+                    SupplierTransactionsList.Clear();
+                }
+                OnPropertyChanged(nameof(TotalDebtAfterInvoice));
+                OnPropertyChanged(nameof(SupplierBalanceBadgeText));
+            }
+        }
+    }
+
+    private decimal _supplierPreviousDebt;
+    public decimal SupplierPreviousDebt
+    {
+        get => _supplierPreviousDebt;
+        set
+        {
+            if (SetProperty(ref _supplierPreviousDebt, value))
+            {
+                OnPropertyChanged(nameof(TotalDebtAfterInvoice));
+                OnPropertyChanged(nameof(SupplierBalanceBadgeText));
+            }
+        }
+    }
+
+    public decimal TotalDebtAfterInvoice => SupplierPreviousDebt + RemainingDebtAmount;
+    public string SupplierBalanceBadgeText => SupplierPreviousDebt > 0 
+        ? $"دين سابق للمورد: {SupplierPreviousDebt:N0} د.ع ⚠️" 
+        : "رصيد المورد: 0 د.ع (خالص) ✔";
+
+    private bool _isSupplierDebtModalOpen;
+    public bool IsSupplierDebtModalOpen
+    {
+        get => _isSupplierDebtModalOpen;
+        set => SetProperty(ref _isSupplierDebtModalOpen, value);
+    }
+
+    public ObservableCollection<SupplierTransaction> SupplierTransactionsList { get; } = new();
+
+    private string _priceDifferenceBadge = "🟢 نفس سعر الشراء السابق";
+    public string PriceDifferenceBadge
+    {
+        get => _priceDifferenceBadge;
+        set => SetProperty(ref _priceDifferenceBadge, value);
     }
 
     private int _historyCount;
@@ -330,6 +403,8 @@ public class PurchaseViewModel : BaseViewModel
     public ICommand ResetNewInvoiceCommand { get; }
     public ICommand OpenHistoryModalCommand { get; }
     public ICommand CloseHistoryModalCommand { get; }
+    public ICommand OpenSupplierDebtModalCommand { get; }
+    public ICommand CloseSupplierDebtModalCommand { get; }
     public ICommand OpenBarcodePackageModalCommand { get; }
     public ICommand SaveBarcodePackageModalCommand { get; }
     public ICommand CloseBarcodePackageModalCommand { get; }
@@ -396,6 +471,22 @@ public class PurchaseViewModel : BaseViewModel
             IsBarcodePackageModalOpen = false;
         });
 
+        OpenSupplierDebtModalCommand = new RelayCommand(async () =>
+        {
+            if (SelectedSupplier == null)
+            {
+                MessageBox.Show("يرجى اختيار المورد / المندوب أولاً لعرض كشف حسابه والديون المسجلة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            await LoadSupplierTransactionsAsync(SelectedSupplier.Id);
+            IsSupplierDebtModalOpen = true;
+        });
+
+        CloseSupplierDebtModalCommand = new RelayCommand(() =>
+        {
+            IsSupplierDebtModalOpen = false;
+        });
+
         NavigateToCashierCommand = new RelayCommand(() => RequestNavigateToCashier?.Invoke());
         NavigateToReportsCommand = new RelayCommand(() => RequestNavigateToReports?.Invoke());
         NavigateToSuppliersCommand = new RelayCommand(() => RequestNavigateToSuppliers?.Invoke());
@@ -458,23 +549,29 @@ public class PurchaseViewModel : BaseViewModel
 
         ResetNewInvoiceCommand = new RelayCommand(() =>
         {
-            InvoiceNumber = string.Empty;
-            InvoiceDate = DateTime.Today;
             InvoiceItems.Clear();
-            SelectedSupplier = null;
             SelectedProduct = null;
             SearchQuery = string.Empty;
+            CurrentItemBarcode = string.Empty;
             Quantity = 1;
-            NewCost = 12000;
-            OldCost = 12000;
-            SellingPrice = 750;
+            InvoiceNumber = $"PUR-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+            InvoiceDate = DateTime.Today;
+            PaymentType = "Cash";
             RecalculateTotals();
         });
 
-        OpenHistoryModalCommand = new RelayCommand(() => IsHistoryModalOpen = true);
-        CloseHistoryModalCommand = new RelayCommand(() => IsHistoryModalOpen = false);
+        OpenHistoryModalCommand = new RelayCommand(async () =>
+        {
+            await LoadDataAsync();
+            IsHistoryModalOpen = true;
+        });
 
-        CompletePurchaseInvoiceCommand = new AsyncRelayCommand(async () =>
+        CloseHistoryModalCommand = new RelayCommand(() =>
+        {
+            IsHistoryModalOpen = false;
+        });
+
+        CompletePurchaseInvoiceCommand = new RelayCommand(async () =>
         {
             if (SelectedSupplier == null)
             {
@@ -521,7 +618,7 @@ public class PurchaseViewModel : BaseViewModel
                     invoice.Items.Add(item);
 
                     // ===============================================================
-                    // تطبيق معادلة المتوسط المرجح للبضاعة عند التوريد
+                    // تطبيق معادلة المتوسط المرجح للبضاعة عند التوريد في الخلفية
                     // ===============================================================
                     var prod = await _context.Products.FindAsync(row.ProductId);
                     if (prod != null)
@@ -546,7 +643,7 @@ public class PurchaseViewModel : BaseViewModel
 
                         prod.StockQuantity = combinedTotalQty;
                         prod.Cost = weightedAvgUnitCost;
-                        prod.CartonPurchasePrice = Math.Round(weightedAvgUnitCost * perC, 2);
+                        prod.CartonPurchasePrice = row.IsCarton ? row.NewCost : Math.Round(weightedAvgUnitCost * perC, 2);
                         prod.ItemsPerCarton = perC;
                         if (prod.ItemsPerCarton > 0)
                         {
@@ -591,6 +688,14 @@ public class PurchaseViewModel : BaseViewModel
 
                 await _context.PurchaseInvoices.AddAsync(invoice);
 
+                // Update supplier debt balance if there is remaining debt
+                var sup = await _context.Suppliers.FindAsync(SelectedSupplier.Id);
+                if (sup != null)
+                {
+                    sup.Balance += RemainingDebtAmount;
+                    sup.UpdatedAt = DateTime.UtcNow;
+                }
+
                 // Add transaction for supplier ledger
                 var trans = new SupplierTransaction
                 {
@@ -598,7 +703,7 @@ public class PurchaseViewModel : BaseViewModel
                     SupplierId = SelectedSupplier.Id,
                     TransactionType = "فاتورة شراء بضاعة",
                     Amount = TotalInvoiceAmount,
-                    InvoiceNumber = InvoiceNumber,
+                    InvoiceNumber = invoice.InvoiceNumber,
                     Description = $"فاتورة شراء ({InvoiceItems.Count}) أصناف - الدفع: {PaymentType} - المسدد: {PaidAmount:N0} د.ع - المتبقي: {RemainingDebtAmount:N0} د.ع",
                     TransactionDate = DateTime.UtcNow
                 };
@@ -606,8 +711,8 @@ public class PurchaseViewModel : BaseViewModel
 
                 await _context.SaveChangesAsync();
 
-                MessageBox.Show($"تم حفظ واعتماد فاتورة الشراء [{InvoiceNumber}] بنجاح، وتطبيق المتوسط المرجح على تكلفة المواد وتحديث المخزون!",
-                    "تم الشراء وتحديث المخزن بالمتوسط المرجح", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"تم حفظ واعتماد فاتورة الشراء [{invoice.InvoiceNumber}] بنجاح، وتحديث رصيد المورد وحساب التكلفة والمخزون!",
+                    "تم الشراء بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 ResetNewInvoiceCommand.Execute(null);
                 await LoadDataAsync();
@@ -620,6 +725,25 @@ public class PurchaseViewModel : BaseViewModel
         });
 
         BackToMainCommand = new RelayCommand(() => RequestBackToNavigation?.Invoke());
+    }
+
+    public async Task LoadSupplierTransactionsAsync(Guid supplierId)
+    {
+        try
+        {
+            var trans = await _context.SupplierTransactions
+                .Where(t => t.SupplierId == supplierId)
+                .OrderByDescending(t => t.TransactionDate)
+                .Take(20)
+                .ToListAsync();
+
+            SupplierTransactionsList.Clear();
+            foreach (var t in trans)
+            {
+                SupplierTransactionsList.Add(t);
+            }
+        }
+        catch { }
     }
 
     private void OnProductSelected()
@@ -649,11 +773,30 @@ public class PurchaseViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// حساب المتوسط المرجح اللحظي للبضاعة أثناء كتابة الكميات والأسعار
+    /// حساب ومقارنة أسعار الشراء والمتوسط المرجح اللحظي للبضاعة
     /// </summary>
     private void RecalculateCurrentItemMetrics()
     {
         CalculatedItemTotal = Quantity * NewCost;
+
+        // حساب فارق وتغير السعر
+        decimal diff = NewCost - OldCost;
+        if (OldCost <= 0)
+        {
+            PriceDifferenceBadge = "مادة جديدة لأول مرة 🆕";
+        }
+        else if (diff > 0)
+        {
+            PriceDifferenceBadge = $"🔺 ارتفع السعر (+{diff:N0} د.ع)";
+        }
+        else if (diff < 0)
+        {
+            PriceDifferenceBadge = $"🔻 انخفض السعر ({diff:N0} د.ع)";
+        }
+        else
+        {
+            PriceDifferenceBadge = "🟢 نفس سعر الشراء السابق";
+        }
 
         int perC = ItemsPerCarton > 0 ? ItemsPerCarton : 1;
         decimal oldQty = Math.Max(0, CurrentWarehouseStock);
@@ -662,7 +805,7 @@ public class PurchaseViewModel : BaseViewModel
         decimal newAddedPieces = IsCartonMode ? (Quantity * perC) : Quantity;
         decimal newUnitCost = IsCartonMode ? (NewCost / perC) : NewCost;
 
-        // تطبيق خطوات المتوسط المرجح:
+        // تطبيق خطوات المتوسط المرجح بالخلفية:
         // • قيمة الشراء القديم = الكمية القديمة × السعر القديم
         decimal oldTotalValue = oldQty * oldUnitCost;
         // • قيمة الشراء الجديد = الكمية الجديدة × السعر الجديد
