@@ -157,6 +157,7 @@ public class MainShellViewModel : BaseViewModel
             IsSidebarVisible = true;
             CurrentView = AddProductVM;
             AddProductVM.ClearForm();
+            _ = AddProductVM.InitializeAsync();
         };
 
         WarehouseHubVM.RequestOpenDamagedItems += () =>
@@ -201,6 +202,7 @@ public class MainShellViewModel : BaseViewModel
             IsSidebarVisible = true;
             CurrentView = AddProductVM;
             AddProductVM.ClearForm();
+            _ = AddProductVM.InitializeAsync();
         };
 
         // 2. عند النقر على تعديل مادة من المخزن

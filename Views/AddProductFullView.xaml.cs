@@ -18,9 +18,11 @@ public partial class AddProductFullView : UserControl
     {
         if (DataContext is AddProductFullViewModel vm)
         {
-            _ = vm.InitializeAsync();
+            vm.RequestFocusNameField -= FocusNameField;
+            vm.RequestFocusBarcodeField -= FocusBarcodeField;
             vm.RequestFocusNameField += FocusNameField;
             vm.RequestFocusBarcodeField += FocusBarcodeField;
+            _ = vm.InitializeAsync();
         }
     }
 

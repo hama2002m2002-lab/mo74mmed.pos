@@ -189,6 +189,14 @@
                             </StackPanel>
                         </Button>
 
+                        <!-- 4.1. Add Product Button (إضافة مادة جديدة) -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowAddProductCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="➕ " FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource SuccessBrush}" />
+                                <TextBlock Text="{Binding Loc[Nav_AddProduct]}" VerticalAlignment="Center" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
                         <!-- 5. Suppliers / Reps Button -->
                         <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowSuppliersCommand}">
                             <StackPanel Orientation="Horizontal">
