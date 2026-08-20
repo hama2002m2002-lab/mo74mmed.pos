@@ -201,7 +201,113 @@
                 </StackPanel>
             </Border>
 
-            <!-- SECTION 2: AUTO-UPDATER & SYSTEM -->
+            <!-- SECTION 2: STORE, LOGO & RECEIPT SETTINGS (إعدادات المخزن، الشعار، والوصل) -->
+            <Border Background="{DynamicResource BgDarkSecondary}" CornerRadius="16" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="22" Margin="0,0,0,20">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <TextBlock Text="🏢 " FontSize="18" />
+                        <TextBlock Text="إعدادات بيانات المخزن / المحل، الشعار (Logo)، والوصل وفواتير A4" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
+                    </StackPanel>
+
+                    <TextBlock Text="هذه المعلومات وشعار المحل ستظهر تلقائياً في أعلى وأسفل كافة فواتير البيع ووصلات A4 المطبوعة:" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,16" />
+
+                    <!-- Logo and Basic Info Grid -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Logo Picker & Preview -->
+                        <Border Grid.Column="0" Background="#0B132B" BorderBrush="#23334D" BorderThickness="1.5" CornerRadius="12" Padding="8" Margin="0,0,14,0" VerticalAlignment="Top">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="شعار المحل (Logo)" FontSize="11" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                                
+                                <Border Width="110" Height="80" Background="#151D30" CornerRadius="8" BorderBrush="#334155" BorderThickness="1" Margin="0,0,0,8">
+                                    <Grid>
+                                        <TextBlock Text="🖼️ لا يوجد شعار" FontSize="11" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding HasStoreLogo, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}" />
+                                        <Image Source="{Binding StoreLogoPath}" Stretch="Uniform" Visibility="{Binding HasStoreLogo, Converter={StaticResource BoolToVis}}" />
+                                    </Grid>
+                                </Border>
+
+                                <Button Command="{Binding BrowseLogoCommand}" Style="{DynamicResource ActionButton}" Padding="8,5" Margin="0,0,0,4" Cursor="Hand">
+                                    <TextBlock Text="📁 اختيار لوجو" FontSize="11" FontWeight="Bold" />
+                                </Button>
+                                <Button Command="{Binding RemoveLogoCommand}" Style="{DynamicResource ActionButton}" Padding="8,4" Cursor="Hand" Visibility="{Binding HasStoreLogo, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="🗑️ إزالة" FontSize="10.5" Foreground="#EF4444" />
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Fields Col -->
+                        <StackPanel Grid.Column="1">
+                            <!-- Row 1: Store Name & Tagline -->
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                    <TextBlock Text="اسم المخزن / المحل:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding StoreName, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="38" FontSize="13" FontWeight="Bold" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                    <TextBlock Text="وصف النشاط / الشعار النصي:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding StoreTagline, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="38" FontSize="12" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Row 2: Phone 1 & Phone 2 -->
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                    <TextBlock Text="رقم الهاتف الأساسي:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding StorePhone1, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="38" FontSize="13" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                    <TextBlock Text="رقم الهاتف الإضافي (اختياري):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding StorePhone2, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="38" FontSize="13" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Row 3: Address -->
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock Text="عنوان وموقع المخزن / المحل:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding StoreAddress, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="38" FontSize="12.5" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Receipt Footer & A4 Terms -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                            <TextBlock Text="تذييل الوصل الترحيبي (Footer):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding ReceiptFooterNotes, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="38" FontSize="12" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                            <TextBlock Text="شروط وسياسة الإرجاع بفواتير A4:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding A4Terms, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DarkTextBox}" Height="38" FontSize="12" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Save Store Settings Button -->
+                    <Button Style="{DynamicResource PrimarySuccessButton}" Command="{Binding SaveStoreSettingsCommand}" HorizontalAlignment="Right" Padding="24,10" Height="42" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💾 " FontSize="14" />
+                            <TextBlock Text="حفظ إعدادات المخزن واللوجو" FontWeight="Black" FontSize="13" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- SECTION 3: AUTO-UPDATER & SYSTEM -->
             <Border Background="{DynamicResource BgDarkSecondary}" CornerRadius="16" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="22" Margin="0,0,0,20">
                 <Grid>
                     <Grid.ColumnDefinitions>

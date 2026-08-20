@@ -41,7 +41,7 @@ public class CloudSyncService
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
     }
 
-    public void StartBackgroundSync(int intervalSeconds = 20)
+    public void StartBackgroundSync(int intervalSeconds = 5)
     {
         if (_syncTimer != null)
         {
@@ -71,7 +71,6 @@ public class CloudSyncService
 
         try
         {
-            SyncStatusMessage = "جارٍ مزامنة المخزون والطلبيات مع السحابة...";
             await PushProductsToCloudAsync();
             await PullNewOrdersFromCloudAsync();
 
@@ -124,7 +123,6 @@ public class CloudSyncService
             string docsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "docs");
             if (!Directory.Exists(docsPath))
             {
-                // try project root
                 docsPath = Path.Combine(Directory.GetCurrentDirectory(), "docs");
             }
             if (Directory.Exists(docsPath))
@@ -145,8 +143,8 @@ public class CloudSyncService
     {
         try
         {
-            // List files in docs/orders
-            string listUrl = $"https://api.github.com/repos/{GitHubRepo}/contents/docs/orders";
+            // List files in docs/orders with cache busting
+            string listUrl = $"https://api.github.com/repos/{GitHubRepo}/contents/docs/orders?t={DateTime.UtcNow.Ticks}";
             var response = await _httpClient.GetAsync(listUrl).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode) return;
 
@@ -162,14 +160,34 @@ public class CloudSyncService
                 string? downloadUrl = item.TryGetProperty("download_url", out var du) ? du.GetString() : null;
                 string? sha = item.TryGetProperty("sha", out var s) ? s.GetString() : null;
                 string? path = item.TryGetProperty("path", out var p) ? p.GetString() : null;
+                string? contentB64 = item.TryGetProperty("content", out var c) ? c.GetString() : null;
 
-                if (string.IsNullOrEmpty(name) || !name.EndsWith(".json") || string.IsNullOrEmpty(downloadUrl)) continue;
+                if (string.IsNullOrEmpty(name) || !name.EndsWith(".json")) continue;
 
-                // Download order JSON
-                var orderResp = await _httpClient.GetAsync(downloadUrl).ConfigureAwait(false);
-                if (!orderResp.IsSuccessStatusCode) continue;
+                string? orderJson = null;
 
-                string orderJson = await orderResp.Content.ReadAsStringAsync().ConfigureAwait(false);
+                // 1. If content is present in the response
+                if (!string.IsNullOrEmpty(contentB64))
+                {
+                    try
+                    {
+                        orderJson = Encoding.UTF8.GetString(Convert.FromBase64String(contentB64.Replace("\n", "").Replace("\r", "")));
+                    }
+                    catch { }
+                }
+
+                // 2. Otherwise download directly
+                if (string.IsNullOrEmpty(orderJson) && !string.IsNullOrEmpty(downloadUrl))
+                {
+                    var orderResp = await _httpClient.GetAsync(downloadUrl + $"?t={DateTime.UtcNow.Ticks}").ConfigureAwait(false);
+                    if (orderResp.IsSuccessStatusCode)
+                    {
+                        orderJson = await orderResp.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    }
+                }
+
+                if (string.IsNullOrEmpty(orderJson)) continue;
+
                 var orderDto = JsonSerializer.Deserialize<CloudOrderPayload>(orderJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 if (orderDto == null || string.IsNullOrWhiteSpace(orderDto.MarketName) || orderDto.Items == null || !orderDto.Items.Any()) continue;
 

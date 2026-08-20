@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Microsoft.EntityFrameworkCore;
 using HamoPos.Data;
 using HamoPos.Models;
+using HamoPos.Services;
 
 namespace HamoPos.ViewModels;
 
@@ -97,11 +98,15 @@ public class SupplierOrdersViewModel : BaseViewModel
     public ICommand ConvertToInvoiceCommand { get; }
     public ICommand DeleteOrderCommand { get; }
     public ICommand PrintOrderCommand { get; }
+    public ICommand PrintA4InvoiceCommand { get; }
+    public ICommand DeliverAndPrintA4Command { get; }
     public ICommand OpenMobilePortalCommand { get; }
     public ICommand CopyMobilePortalUrlCommand { get; }
     public ICommand OpenCloudPortalCommand { get; }
     public ICommand CopyCloudPortalUrlCommand { get; }
     public ICommand SyncCloudNowCommand { get; }
+
+    private readonly System.Windows.Threading.DispatcherTimer _autoRefreshTimer;
 
     public string PortalUrl => HamoPos.Services.RepWebPortalService.Instance.PortalUrl;
     public string CloudPortalUrl => HamoPos.Services.CloudSyncService.Instance.PublicCloudPortalUrl;
@@ -115,6 +120,9 @@ public class SupplierOrdersViewModel : BaseViewModel
 
         LoadOrdersCommand = new AsyncRelayCommand(LoadOrdersAsync);
         AddNewOrderCommand = new RelayCommand(ExecuteAddNewOrder);
+        PrintOrderCommand = new RelayCommand(ExecutePrintOrder);
+        PrintA4InvoiceCommand = new RelayCommand(ExecutePrintA4Invoice);
+        DeliverAndPrintA4Command = new AsyncRelayCommand(ExecuteDeliverAndPrintA4Async);
         SetFilterCommand = new RelayCommand((param) =>
         {
             if (param is string status)
@@ -185,6 +193,18 @@ public class SupplierOrdersViewModel : BaseViewModel
             }
             catch { }
         });
+
+        // Real-time automatic polling timer every 5 seconds
+        _autoRefreshTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(5)
+        };
+        _autoRefreshTimer.Tick += async (s, e) =>
+        {
+            await HamoPos.Services.CloudSyncService.Instance.PullNewOrdersFromCloudAsync();
+            OnPropertyChanged(nameof(CloudSyncStatus));
+        };
+        _autoRefreshTimer.Start();
 
         SetPendingStatusCommand = new AsyncRelayCommand(async () => await UpdateSelectedOrderStatusAsync(OrderStatus.Pending));
         SetInPrepStatusCommand = new AsyncRelayCommand(async () => await UpdateSelectedOrderStatusAsync(OrderStatus.InPreparation));
@@ -488,6 +508,42 @@ public class SupplierOrdersViewModel : BaseViewModel
         catch (Exception ex)
         {
             MessageBox.Show($"تعذر الطباعة: {ex.Message}", "تنبيه الطباعة", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private void ExecutePrintA4Invoice()
+    {
+        if (SelectedOrder == null)
+        {
+            MessageBox.Show("يرجى تحديد طلبية من القائمة أولاً لطباعة وصل A4 لها.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        A4InvoicePrintService.PrintA4Invoice(SelectedOrder);
+    }
+
+    private async Task ExecuteDeliverAndPrintA4Async()
+    {
+        if (SelectedOrder == null) return;
+
+        try
+        {
+            var dbOrder = await _context.SupplierOrders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == SelectedOrder.Id);
+            if (dbOrder != null)
+            {
+                dbOrder.Status = OrderStatus.Delivered;
+                await _context.SaveChangesAsync();
+                SelectedOrder.Status = OrderStatus.Delivered;
+                ApplyFilter();
+                OnPropertyChanged(nameof(SelectedOrder));
+            }
+
+            // Print A4 Invoice
+            A4InvoicePrintService.PrintA4Invoice(SelectedOrder);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"حدث خطأ أثناء اعتماد وتسليم الطلبية: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

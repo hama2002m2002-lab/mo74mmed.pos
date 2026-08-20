@@ -66,6 +66,43 @@ public class NetworkSettingsViewModel : BaseViewModel
         set => SetProperty(ref _isConnectionSuccessful, value);
     }
 
+    // Store & Receipt Settings
+    private string _storeName = "";
+    public string StoreName { get => _storeName; set => SetProperty(ref _storeName, value); }
+
+    private string _storeTagline = "";
+    public string StoreTagline { get => _storeTagline; set => SetProperty(ref _storeTagline, value); }
+
+    private string _storePhone1 = "";
+    public string StorePhone1 { get => _storePhone1; set => SetProperty(ref _storePhone1, value); }
+
+    private string _storePhone2 = "";
+    public string StorePhone2 { get => _storePhone2; set => SetProperty(ref _storePhone2, value); }
+
+    private string _storeAddress = "";
+    public string StoreAddress { get => _storeAddress; set => SetProperty(ref _storeAddress, value); }
+
+    private string _storeLogoPath = "";
+    public string StoreLogoPath
+    {
+        get => _storeLogoPath;
+        set
+        {
+            if (SetProperty(ref _storeLogoPath, value))
+            {
+                OnPropertyChanged(nameof(HasStoreLogo));
+            }
+        }
+    }
+
+    public bool HasStoreLogo => !string.IsNullOrWhiteSpace(StoreLogoPath) && File.Exists(StoreLogoPath);
+
+    private string _receiptFooterNotes = "";
+    public string ReceiptFooterNotes { get => _receiptFooterNotes; set => SetProperty(ref _receiptFooterNotes, value); }
+
+    private string _a4Terms = "";
+    public string A4Terms { get => _a4Terms; set => SetProperty(ref _a4Terms, value); }
+
     public string ModeDescription => IsServerMode
         ? "هذا الجهاز يعمل كـ (سيرفر رئيسي للمدير). يستضيف قاعدة البيانات ويشاركها مع أجهزة الكاشير على نفس شبكة الواي فاي."
         : "هذا الجهاز يعمل كـ (كاشير فرعي). يتصل بقاعدة بيانات السيرفر الرئيسي عبر مسار الشبكة المشترك.";
@@ -78,6 +115,9 @@ public class NetworkSettingsViewModel : BaseViewModel
     public ICommand CheckUpdatesCommand { get; }
     public ICommand RollbackPreviousVersionCommand { get; }
     public ICommand CopyIpCommand { get; }
+    public ICommand BrowseLogoCommand { get; }
+    public ICommand RemoveLogoCommand { get; }
+    public ICommand SaveStoreSettingsCommand { get; }
 
     public event Action? RequestClose;
 
@@ -91,12 +131,26 @@ public class NetworkSettingsViewModel : BaseViewModel
         _serverIp = config.ServerIpOrPath;
         _localIp = NetworkConfigService.GetLocalIpAddress();
 
+        // Load Store Settings
+        var store = StoreSettingsService.Instance.Settings;
+        _storeName = store.StoreName;
+        _storeTagline = store.Tagline;
+        _storePhone1 = store.Phone1;
+        _storePhone2 = store.Phone2;
+        _storeAddress = store.Address;
+        _storeLogoPath = store.LogoPath;
+        _receiptFooterNotes = store.ReceiptFooterNotes;
+        _a4Terms = store.A4TermsAndConditions;
+
         TestConnectionCommand = new RelayCommand(ExecuteTestConnection);
         SaveSettingsCommand = new RelayCommand(ExecuteSaveSettings);
         BrowseDatabasePathCommand = new RelayCommand(ExecuteBrowseDatabasePath);
         CheckUpdatesCommand = new RelayCommand(ExecuteCheckUpdates);
         RollbackPreviousVersionCommand = new AsyncRelayCommand(async () => await UpdateService.Instance.RollbackToPreviousVersionAsync());
         CopyIpCommand = new RelayCommand(ExecuteCopyIp);
+        BrowseLogoCommand = new RelayCommand(ExecuteBrowseLogo);
+        RemoveLogoCommand = new RelayCommand(ExecuteRemoveLogo);
+        SaveStoreSettingsCommand = new RelayCommand(ExecuteSaveStoreSettings);
     }
 
     private void ExecuteBrowseDatabasePath()
@@ -155,5 +209,45 @@ public class NetworkSettingsViewModel : BaseViewModel
             MessageBox.Show($"تم نسخ عنوان IP ({LocalIp}) إلى الحافظة!", "تم النسخ", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch { }
+    }
+
+    private void ExecuteBrowseLogo()
+    {
+        var openFileDialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "ملفات الصور (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp|كافة الملفات (*.*)|*.*",
+            Title = "اختر صورة شعار المخزن / المحل (Logo)"
+        };
+
+        if (openFileDialog.ShowDialog() == true)
+        {
+            StoreLogoPath = openFileDialog.FileName;
+        }
+    }
+
+    private void ExecuteRemoveLogo()
+    {
+        StoreLogoPath = "";
+    }
+
+    private void ExecuteSaveStoreSettings()
+    {
+        var store = StoreSettingsService.Instance.Settings;
+        store.StoreName = StoreName;
+        store.Tagline = StoreTagline;
+        store.Phone1 = StorePhone1;
+        store.Phone2 = StorePhone2;
+        store.Address = StoreAddress;
+        store.LogoPath = StoreLogoPath;
+        store.ReceiptFooterNotes = ReceiptFooterNotes;
+        store.A4TermsAndConditions = A4Terms;
+
+        StoreSettingsService.Instance.SaveSettings(store);
+
+        MessageBox.Show(
+            "تم حفظ إعدادات المخزن والشعار وبيانات الفاتورة والوصل بنجاح!\nستظهر هذه البيانات في كافة فواتير A4 المطبوعة.",
+            "تم حفظ إعدادات المخزن",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 }

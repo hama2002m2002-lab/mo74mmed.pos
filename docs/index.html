@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>بوابة المندوب والمحلات - 7amo POS (سحابي 24/7)</title>
+    <title>بوابة المندوب وإدارة المحلات - 7amo POS (سحابي 24/7)</title>
     <style>
         :root {
             --primary: #0284c7;
@@ -11,45 +11,56 @@
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
+            --bg-dark: #090d16;
+            --bg-card: #151d30;
+            --bg-card-hover: #1e293b;
             --text-main: #f8fafc;
             --text-sec: #94a3b8;
-            --border: #334155;
+            --border: #23334d;
+            --accent: #38bdf8;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background: var(--bg-dark); color: var(--text-main); padding-bottom: 90px; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Arabic', Helvetica, Arial, sans-serif; }
+        body { background: var(--bg-dark); color: var(--text-main); padding-bottom: 110px; -webkit-tap-highlight-color: transparent; }
         
-        .header { background: var(--bg-card); padding: 14px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+        .header { background: var(--bg-card); padding: 14px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         .brand { font-size: 17px; font-weight: 900; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
         .cloud-badge { font-size: 11px; background: #064e3b; color: #34d399; padding: 4px 10px; border-radius: 20px; font-weight: bold; border: 1px solid #059669; display: flex; align-items: center; gap: 4px; }
         
-        .container { padding: 14px; max-width: 600px; margin: auto; }
+        .container { padding: 14px; max-width: 650px; margin: auto; }
         
-        .tabs { display: flex; gap: 8px; margin-bottom: 14px; background: var(--bg-card); padding: 4px; border-radius: 12px; }
-        .tab-btn { flex: 1; padding: 10px 0; border: none; background: transparent; color: var(--text-sec); font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-        .tab-btn.active { background: var(--primary); color: white; }
+        .rep-strip { display: flex; justify-content: space-between; align-items: center; background: #0c2548; padding: 10px 14px; border-radius: 12px; margin-bottom: 14px; border: 1px solid #1e3a8a; }
+        
+        .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; background: var(--bg-card); padding: 4px; border-radius: 12px; border: 1px solid var(--border); }
+        .tab-btn { padding: 9px 0; border: none; background: transparent; color: var(--text-sec); font-size: 11.5px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; text-align: center; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(2,132,199,0.4); }
 
         .card { background: var(--bg-card); border-radius: 14px; padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); }
-        .card-title { font-size: 14px; font-weight: bold; color: #38bdf8; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .card-title { font-size: 13.5px; font-weight: bold; color: var(--accent); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
-        input, select, textarea { width: 100%; background: #0b132b; border: 1px solid var(--border); color: white; padding: 11px 12px; border-radius: 10px; font-size: 14px; margin-bottom: 10px; outline: none; }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        input, select, textarea { width: 100%; background: #0b132b; border: 1px solid var(--border); color: white; padding: 11px 12px; border-radius: 10px; font-size: 13.5px; margin-bottom: 10px; outline: none; transition: 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #0f1a3a; }
 
-        .search-bar { position: sticky; top: 68px; z-index: 90; margin-bottom: 12px; }
+        .btn-add { background: #0284c7; color: white; border: none; padding: 7px 12px; border-radius: 8px; font-weight: bold; font-size: 11.5px; cursor: pointer; transition: 0.15s; }
+        .btn-add:active { transform: scale(0.96); }
+        .btn-add-carton { background: #d97706; color: white; border: none; padding: 7px 10px; border-radius: 8px; font-weight: bold; font-size: 11.5px; cursor: pointer; }
         
-        .product-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #334155; }
-        .product-item:last-child { border-bottom: none; }
-        .product-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+        .product-card { background: #12192b; border: 1px solid #23334d; border-radius: 12px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .product-card:hover { border-color: #38bdf8; }
+        .product-name { font-size: 13.5px; font-weight: bold; margin-bottom: 4px; }
         .product-stock { font-size: 11px; color: var(--success); }
         .product-price { font-size: 13px; color: #fbbf24; font-weight: bold; }
         
-        .btn-add { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; }
-        .btn-submit { width: 100%; background: var(--success); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 900; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .market-badge { background: #1e3a8a; color: #93c5fd; padding: 3px 8px; border-radius: 6px; font-size: 11px; }
 
-        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0c1b33; border-top: 1px solid #1e3a8a; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 100; max-width: 600px; margin: auto; }
-        .badge { background: #ef4444; color: white; border-radius: 10px; padding: 2px 7px; font-size: 11px; font-weight: bold; }
+        .btn-submit { width: 100%; background: var(--success); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 900; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(16,185,129,0.3); }
+        .btn-submit:active { transform: scale(0.98); }
 
+        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #081224; border-top: 1px solid #1e3a8a; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 100; max-width: 650px; margin: auto; }
+        .cart-indicator { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .badge { background: #ef4444; color: white; border-radius: 10px; padding: 3px 8px; font-size: 11px; font-weight: bold; }
+
+        .market-item { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        
         .order-card { border-right: 4px solid var(--primary); padding: 12px; margin-bottom: 10px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); }
         .order-status { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 6px; }
         .status-Pending { background: #854d0e; color: #fef08a; }
@@ -70,23 +81,33 @@
 
     <div class="container">
         <!-- Rep Profile Strip -->
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #0c2548; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #1e3a8a;">
+        <div class="rep-strip">
             <div style="font-size: 12px; color: #93c5fd;">
                 المندوب: <b id="repNameDisplay" style="color: white;">مندوب المبيعات</b>
             </div>
             <button onclick="changeRepName()" style="background: var(--primary); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;">✏️ تغيير الاسم</button>
         </div>
 
+        <!-- Tab Nav -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('order')">📝 إنشاء طلبية</button>
-            <button class="tab-btn" onclick="switchTab('catalog')">📦 تصفح المخزن</button>
+            <button class="tab-btn active" onclick="switchTab('order')">📝 طلبية</button>
+            <button class="tab-btn" onclick="switchTab('markets')">🏪 المحلات</button>
+            <button class="tab-btn" onclick="switchTab('catalog')">📦 المخزن</button>
             <button class="tab-btn" onclick="switchTab('myOrders')">📋 طلبياتي</button>
         </div>
 
         <!-- TAB 1: ORDER CREATOR -->
         <div id="tabOrder">
             <div class="card">
-                <div class="card-title">🏪 بيانات الماركت / العميل</div>
+                <div class="card-title">
+                    <span>🏪 تحديد الماركت / العميل</span>
+                    <button onclick="switchTab('markets')" style="background: #0284c7; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 11px; cursor: pointer;">➕ إضافة ماركت جديد</button>
+                </div>
+                
+                <select id="marketSelect" onchange="onSelectSavedMarket(this.value)">
+                    <option value="">-- اختر من الماركتات المحفوظة أو اكتب أدناه --</option>
+                </select>
+
                 <input type="text" id="marketName" placeholder="اسم الماركت أو المحل *" required>
                 <input type="tel" id="marketPhone" placeholder="رقم هاتف الماركت">
                 <input type="text" id="marketAddress" placeholder="العنوان / المنطقة">
@@ -94,12 +115,15 @@
             </div>
 
             <div class="card">
-                <div class="card-title">🛒 المواد المضافة للطلبية (<span id="cartCount">0</span>)</div>
-                <div id="cartItemsList">
-                    <p style="color: var(--text-sec); font-size: 12px; text-align: center; padding: 10px;">لم تتم إضافة أي مادة بعد. اختر من قائمة المواد بالأسفل.</p>
+                <div class="card-title">
+                    <span>🛒 المواد المضافة للطلبية (<span id="cartCount">0</span>)</span>
+                    <button onclick="clearCart()" style="background: transparent; color: #ef4444; border: none; font-size: 11.5px; cursor: pointer; font-weight: bold;">🗑️ مسح السلة</button>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 15px; font-weight: bold;">
-                    <span>الإجمالي التقديري:</span>
+                <div id="cartItemsList">
+                    <p style="color: var(--text-sec); font-size: 12px; text-align: center; padding: 12px;">لم تتم إضافة أي مادة بعد. اختر من قائمة المواد بالأسفل.</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 12px; padding-top: 10px; border-top: 1px solid #334155; font-size: 15px; font-weight: bold;">
+                    <span>المجموع الصافي التقديري:</span>
                     <span id="cartGrandTotal" style="color: var(--success);">0 د.ع</span>
                 </div>
             </div>
@@ -108,7 +132,10 @@
 
             <!-- Quick Add Catalog Section -->
             <div class="card" style="margin-top: 14px;">
-                <div class="card-title">🔍 أضف مواد من المخزن</div>
+                <div class="card-title">
+                    <span>🔍 المواد المتوفرة في المخزن</span>
+                    <button onclick="init()" style="background: #1e3a8a; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 11px; cursor: pointer;">🔄 تحديث المواد</button>
+                </div>
                 <input type="text" id="quickSearch" placeholder="ابحث عن مادة أو باركود..." oninput="filterProducts(this.value)">
                 <div id="productsList">
                     <p style="color: var(--text-sec); font-size: 12px; text-align: center; padding: 10px;">جارٍ تحميل المواد من السحابة...</p>
@@ -116,25 +143,58 @@
             </div>
         </div>
 
-        <!-- TAB 2: CATALOG ONLY -->
+        <!-- TAB 2: MARKETS MANAGEMENT -->
+        <div id="tabMarkets" style="display: none;">
+            <div class="card">
+                <div class="card-title">➕ تسجيل حساب ماركت / عميل جديد</div>
+                <input type="text" id="newMarketName" placeholder="اسم الماركت / المحل *">
+                <input type="text" id="newMarketOwner" placeholder="اسم صاحب المحل">
+                <input type="tel" id="newMarketPhone" placeholder="رقم الهاتف">
+                <input type="text" id="newMarketAddress" placeholder="العنوان / المنطقة">
+                <button onclick="saveNewMarket()" style="width: 100%; background: #0284c7; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer;">💾 حفظ الماركت في القائمة</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📋 قائمة الماركتات المحفوظة (<span id="marketsCount">0</span>)</div>
+                <div id="marketsList">
+                    <p style="color: var(--text-sec); text-align: center; font-size: 12px; padding: 10px;">لا توجد ماركتات مسجلة بعد.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: CATALOG ONLY -->
         <div id="tabCatalog" style="display: none;">
             <div class="card">
-                <div class="card-title">📦 المواد المتوفرة في المخزن</div>
+                <div class="card-title">
+                    <span>📦 المواد المتوفرة والأسعار</span>
+                    <button onclick="init()" style="background: #1e3a8a; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 11px; cursor: pointer;">🔄 تحديث</button>
+                </div>
                 <input type="text" placeholder="ابحث عن أي مادة..." oninput="filterProducts(this.value, 'catalogList')">
                 <div id="catalogList"></div>
             </div>
         </div>
 
-        <!-- TAB 3: REP'S ORDERS -->
+        <!-- TAB 4: REP'S ORDERS -->
         <div id="tabMyOrders" style="display: none;">
             <div class="card">
-                <div class="card-title">📋 سجل الطلبيات التي أرسلتها</div>
-                <button onclick="loadMyOrders()" style="background: #1e3a8a; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-bottom: 10px; cursor: pointer;">🔄 تحديث الحالة</button>
+                <div class="card-title">
+                    <span>📋 سجل الطلبيات التي أرسلتها</span>
+                    <button onclick="loadMyOrders()" style="background: #1e3a8a; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">🔄 تحديث الحالة</button>
+                </div>
                 <div id="myOrdersList">
-                    <p style="color: var(--text-sec); text-align: center; font-size: 12px;">لا توجد طلبيات مسجلة بعد.</p>
+                    <p style="color: var(--text-sec); text-align: center; font-size: 12px; padding: 10px;">لا توجد طلبيات مسجلة بعد.</p>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Bottom Cart Floating Bar -->
+    <div class="cart-bar" id="bottomCartBar" onclick="switchTab('order')" style="display: none;">
+        <div class="cart-indicator">
+            <span class="badge" id="bottomBadge">0</span>
+            <span style="font-size: 13px; font-weight: bold;">سلة الطلبية</span>
+        </div>
+        <div style="font-weight: 900; color: #38bdf8; font-size: 14px;" id="bottomTotal">0 د.ع</div>
     </div>
 
     <script>
@@ -143,6 +203,7 @@
         
         let allProducts = [];
         let cart = [];
+        let savedMarkets = JSON.parse(localStorage.getItem('hamo_rep_markets') || '[]');
         let currentRep = localStorage.getItem('hamo_rep_name') || 'مندوب المبيعات';
         let savedOrders = JSON.parse(localStorage.getItem('hamo_rep_orders') || '[]');
 
@@ -160,7 +221,7 @@
         async function init() {
             try {
                 // 1. Fetch directly via GitHub API (Always 100% fresh and instant)
-                let apiRes = await fetch(`https://api.github.com/repos/${REPO}/contents/docs/catalog.json`, {
+                let apiRes = await fetch(`https://api.github.com/repos/${REPO}/contents/docs/catalog.json?t=` + new Date().getTime(), {
                     headers: { 
                         'Authorization': 'token ' + GITHUB_TOKEN,
                         'Accept': 'application/vnd.github.v3+json'
@@ -204,6 +265,7 @@
 
             renderProducts(allProducts, 'productsList', true);
             renderProducts(allProducts, 'catalogList', false);
+            renderMarkets();
             loadMyOrders();
         }
 
@@ -214,14 +276,22 @@
                 container.innerHTML = '<p style="color: var(--text-sec); font-size: 12px; text-align: center; padding: 10px;">لا توجد مواد مسجلة أو جارٍ المزامنة...</p>';
                 return;
             }
-            container.innerHTML = list.slice(0, 50).map(p => `
-                <div class="product-item">
-                    <div>
+            container.innerHTML = list.slice(0, 60).map(p => `
+                <div class="product-card">
+                    <div style="flex: 1;">
                         <div class="product-name">${p.name}</div>
-                        <div class="product-stock">متوفر بالمخزن: ${p.stock} ${p.unit || 'قطعة'}</div>
-                        <div class="product-price">${Number(p.price).toLocaleString()} د.ع</div>
+                        <div class="product-stock">متوفر بالمخزن: ${p.stock} ${p.unit || 'قطعة'} ${p.itemsPerCarton > 1 ? `(${p.itemsPerCarton} بالكرتون)` : ''}</div>
+                        <div style="display: flex; gap: 10px; margin-top: 4px;">
+                            <span class="product-price">${Number(p.price).toLocaleString()} د.ع / قطعة</span>
+                            ${p.cartonPrice > 0 ? `<span style="font-size: 11.5px; color: #f59e0b; font-weight: bold;">📦 ${Number(p.cartonPrice).toLocaleString()} كرتون</span>` : ''}
+                        </div>
                     </div>
-                    ${isOrderTab ? `<button class="btn-add" onclick="addToCart('${p.id}')">➕ إضافة</button>` : ''}
+                    ${isOrderTab ? `
+                        <div style="display: flex; gap: 6px;">
+                            <button class="btn-add" onclick="addToCart('${p.id}', 'Retail')">➕ قطعة</button>
+                            ${p.itemsPerCarton > 1 || p.cartonPrice > 0 ? `<button class="btn-add-carton" onclick="addToCart('${p.id}', 'Carton')">📦 كرتون</button>` : ''}
+                        </div>
+                    ` : ''}
                 </div>
             `).join('');
         }
@@ -232,11 +302,13 @@
             renderProducts(filtered, targetId, targetId === 'productsList');
         }
 
-        function addToCart(productId) {
+        function addToCart(productId, unitType = 'Retail') {
             let product = allProducts.find(p => p.id === productId);
             if (!product) return;
 
-            let existing = cart.find(c => c.productId === productId);
+            let price = (unitType === 'Carton' && product.cartonPrice > 0) ? product.cartonPrice : product.price;
+
+            let existing = cart.find(c => c.productId === productId && c.unitType === unitType);
             if (existing) {
                 existing.quantity += 1;
             } else {
@@ -245,8 +317,8 @@
                     productName: product.name,
                     barcode: product.barcode || '',
                     quantity: 1,
-                    unitType: 'Retail',
-                    unitPrice: product.price
+                    unitType: unitType,
+                    unitPrice: price
                 });
             }
             renderCart();
@@ -254,10 +326,21 @@
 
         function renderCart() {
             let list = document.getElementById('cartItemsList');
-            document.getElementById('cartCount').innerText = cart.length;
+            let count = cart.reduce((sum, i) => sum + i.quantity, 0);
+            document.getElementById('cartCount').innerText = count;
+            document.getElementById('bottomBadge').innerText = count;
+
+            let bar = document.getElementById('bottomCartBar');
+            if (cart.length > 0) {
+                bar.style.display = 'flex';
+            } else {
+                bar.style.display = 'none';
+            }
+
             if (!cart.length) {
-                list.innerHTML = '<p style="color: var(--text-sec); font-size: 12px; text-align: center; padding: 10px;">لم تتم إضافة أي مادة بعد.</p>';
+                list.innerHTML = '<p style="color: var(--text-sec); font-size: 12px; text-align: center; padding: 12px;">لم تتم إضافة أي مادة بعد.</p>';
                 document.getElementById('cartGrandTotal').innerText = '0 د.ع';
+                document.getElementById('bottomTotal').innerText = '0 د.ع';
                 return;
             }
 
@@ -265,23 +348,25 @@
             list.innerHTML = cart.map((item, idx) => {
                 let itemTotal = item.quantity * item.unitPrice;
                 total += itemTotal;
+                let unitText = item.unitType === 'Carton' ? '📦 كرتون' : 'قطعة';
                 return `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #334155;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #23334d;">
                         <div>
-                            <div style="font-weight: bold; font-size: 13px;">${item.productName}</div>
-                            <div style="font-size: 11px; color: var(--text-sec);">${Number(item.unitPrice).toLocaleString()} د.ع × ${item.quantity} = ${Number(itemTotal).toLocaleString()} د.ع</div>
+                            <div style="font-weight: bold; font-size: 13.5px;">${item.productName} <span style="font-size: 11px; color: #38bdf8;">(${unitText})</span></div>
+                            <div style="font-size: 11.5px; color: var(--text-sec);">${Number(item.unitPrice).toLocaleString()} د.ع × ${item.quantity} = <b style="color: #fbbf24;">${Number(itemTotal).toLocaleString()} د.ع</b></div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <button onclick="updateQty(${idx}, -1)" style="background: #334155; color: white; border: none; width: 26px; height: 26px; border-radius: 6px; font-weight: bold;">-</button>
-                            <span style="font-weight: bold; font-size: 13px;">${item.quantity}</span>
-                            <button onclick="updateQty(${idx}, 1)" style="background: #334155; color: white; border: none; width: 26px; height: 26px; border-radius: 6px; font-weight: bold;">+</button>
-                            <button onclick="removeItem(${idx})" style="background: transparent; border: none; font-size: 14px; cursor: pointer; margin-right: 4px;">🗑️</button>
+                            <button onclick="updateQty(${idx}, -1)" style="background: #23334d; color: white; border: none; width: 28px; height: 28px; border-radius: 6px; font-weight: bold; font-size: 14px;">-</button>
+                            <span style="font-weight: bold; font-size: 13.5px; min-width: 18px; text-align: center;">${item.quantity}</span>
+                            <button onclick="updateQty(${idx}, 1)" style="background: #23334d; color: white; border: none; width: 28px; height: 28px; border-radius: 6px; font-weight: bold; font-size: 14px;">+</button>
+                            <button onclick="removeItem(${idx})" style="background: transparent; border: none; font-size: 15px; cursor: pointer; margin-right: 4px;">🗑️</button>
                         </div>
                     </div>
                 `;
             }).join('');
 
             document.getElementById('cartGrandTotal').innerText = Number(total).toLocaleString() + ' د.ع';
+            document.getElementById('bottomTotal').innerText = Number(total).toLocaleString() + ' د.ع';
         }
 
         function updateQty(idx, change) {
@@ -295,10 +380,99 @@
             renderCart();
         }
 
+        function clearCart() {
+            if (!cart.length) return;
+            if (confirm('هل تريد مسح جميع المواد من السلة؟')) {
+                cart = [];
+                renderCart();
+            }
+        }
+
+        // --- MARKETS MANAGEMENT ---
+        function saveNewMarket() {
+            let name = document.getElementById('newMarketName').value.trim();
+            if (!name) {
+                alert('يرجى كتابة اسم الماركت على الأقل!');
+                return;
+            }
+
+            let owner = document.getElementById('newMarketOwner').value.trim();
+            let phone = document.getElementById('newMarketPhone').value.trim();
+            let addr = document.getElementById('newMarketAddress').value.trim();
+
+            savedMarkets.unshift({
+                id: 'MKT-' + new Date().getTime(),
+                name: name,
+                owner: owner,
+                phone: phone,
+                address: addr
+            });
+
+            localStorage.setItem('hamo_rep_markets', JSON.stringify(savedMarkets));
+            document.getElementById('newMarketName').value = '';
+            document.getElementById('newMarketOwner').value = '';
+            document.getElementById('newMarketPhone').value = '';
+            document.getElementById('newMarketAddress').value = '';
+
+            renderMarkets();
+            alert('✔ تم حفظ حساب الماركت بنجاح!');
+        }
+
+        function renderMarkets() {
+            let select = document.getElementById('marketSelect');
+            let list = document.getElementById('marketsList');
+            document.getElementById('marketsCount').innerText = savedMarkets.length;
+
+            select.innerHTML = '<option value="">-- اختر من الماركتات المحفوظة أو اكتب أدناه --</option>' + 
+                savedMarkets.map(m => `<option value="${m.id}">${m.name} ${m.address ? '(' + m.address + ')' : ''}</option>`).join('');
+
+            if (!savedMarkets.length) {
+                list.innerHTML = '<p style="color: var(--text-sec); text-align: center; font-size: 12px; padding: 10px;">لا توجد ماركتات مسجلة بعد.</p>';
+                return;
+            }
+
+            list.innerHTML = savedMarkets.map((m, idx) => `
+                <div class="market-item">
+                    <div>
+                        <div style="font-weight: bold; font-size: 14px;">${m.name} ${m.owner ? `<span style="font-size: 11.5px; color: #94a3b8;">(${m.owner})</span>` : ''}</div>
+                        <div style="font-size: 11.5px; color: var(--text-sec); margin-top: 2px;">📞 ${m.phone || '--'} | 📍 ${m.address || '--'}</div>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button onclick="selectMarketForOrder('${m.id}')" style="background: #0284c7; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 11.5px; cursor: pointer;">📝 طلبية</button>
+                        <button onclick="deleteMarket(${idx})" style="background: #334155; color: #ef4444; border: none; padding: 6px 8px; border-radius: 6px; cursor: pointer;">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectMarketForOrder(marketId) {
+            let m = savedMarkets.find(x => x.id === marketId);
+            if (!m) return;
+            document.getElementById('marketSelect').value = m.id;
+            document.getElementById('marketName').value = m.name;
+            document.getElementById('marketPhone').value = m.phone || '';
+            document.getElementById('marketAddress').value = m.address || '';
+            switchTab('order');
+        }
+
+        function onSelectSavedMarket(marketId) {
+            if (!marketId) return;
+            selectMarketForOrder(marketId);
+        }
+
+        function deleteMarket(idx) {
+            if (confirm('هل أنت متأكد من حذف هذا الماركت من القائمة المحفوظة؟')) {
+                savedMarkets.splice(idx, 1);
+                localStorage.setItem('hamo_rep_markets', JSON.stringify(savedMarkets));
+                renderMarkets();
+            }
+        }
+
+        // --- SUBMIT ORDER ---
         async function submitOrder() {
             let market = document.getElementById('marketName').value.trim();
             if (!market) {
-                alert('يرجى كتابة اسم الماركت أو المحل!');
+                alert('يرجى كتابة أو اختيار اسم الماركت!');
                 return;
             }
             if (!cart.length) {
@@ -327,7 +501,7 @@
 
             let sentSuccess = false;
 
-            // 1. Try sending via Cloud GitHub API Queue
+            // 1. Direct Cloud GitHub API Queue
             try {
                 let fileName = `docs/orders/order_${new Date().getTime()}_${Math.floor(Math.random() * 1000)}.json`;
                 let contentB64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
@@ -367,14 +541,14 @@
             btn.innerText = '🚀 إرسال الطلبية للمحل الآن';
 
             if (sentSuccess || true) {
-                alert('✔ تم إرسال الطلبية بنجاح برقم: ' + orderNumber + '\nستصل إلى لابتوب المحل فوراً!');
+                alert('✔ تم إرسال الطلبية بنجاح برقم: ' + orderNumber + '\nستصل فوراً إلى شاشة اللابتوب في المحل!');
                 
                 // Save locally in Rep's history
                 savedOrders.unshift({
                     orderNumber: orderNumber,
                     marketName: market,
                     totalAmount: total,
-                    itemsCount: cart.length,
+                    itemsCount: cart.reduce((sum, i) => sum + i.quantity, 0),
                     status: 'Pending',
                     date: new Date().toLocaleString('ar')
                 });
@@ -382,6 +556,7 @@
 
                 cart = [];
                 renderCart();
+                document.getElementById('marketSelect').value = '';
                 document.getElementById('marketName').value = '';
                 document.getElementById('marketPhone').value = '';
                 document.getElementById('marketAddress').value = '';
@@ -400,11 +575,11 @@
             list.innerHTML = savedOrders.map(o => `
                 <div class="order-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-weight: bold; font-size: 13px;">${o.marketName}</span>
+                        <span style="font-weight: bold; font-size: 14px;">${o.marketName}</span>
                         <span class="order-status status-${o.status}">${o.status === 'Pending' ? '⏳ قيد الانتظار' : (o.status === 'InPreparation' ? '📦 جاري التجهيز' : '✔ تم التوصيل')}</span>
                     </div>
-                    <div style="font-size: 11px; color: var(--text-sec); display: flex; justify-content: space-between;">
-                        <span>رقم: ${o.orderNumber} (${o.itemsCount} مواد)</span>
+                    <div style="font-size: 11.5px; color: var(--text-sec); display: flex; justify-content: space-between;">
+                        <span>رقم: ${o.orderNumber} (${o.itemsCount} قطعة/كرتون)</span>
                         <span style="color: var(--success); font-weight: bold;">${Number(o.totalAmount).toLocaleString()} د.ع</span>
                     </div>
                 </div>
@@ -414,13 +589,18 @@
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('tabOrder').style.display = tab === 'order' ? 'block' : 'none';
+            document.getElementById('tabMarkets').style.display = tab === 'markets' ? 'block' : 'none';
             document.getElementById('tabCatalog').style.display = tab === 'catalog' ? 'block' : 'none';
             document.getElementById('tabMyOrders').style.display = tab === 'myOrders' ? 'block' : 'none';
 
-            if (tab === 'order') event.target.classList.add('active');
-            if (tab === 'catalog') event.target.classList.add('active');
+            if (tab === 'order') document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            if (tab === 'markets') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                renderMarkets();
+            }
+            if (tab === 'catalog') document.querySelectorAll('.tab-btn')[2].classList.add('active');
             if (tab === 'myOrders') {
-                event.target.classList.add('active');
+                document.querySelectorAll('.tab-btn')[3].classList.add('active');
                 loadMyOrders();
             }
         }
