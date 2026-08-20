@@ -23,7 +23,7 @@
         body { background: var(--bg-dark); color: var(--text-main); padding-bottom: 110px; -webkit-tap-highlight-color: transparent; }
         
         .header { background: var(--bg-card); padding: 14px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .brand { font-size: 17px; font-weight: 900; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+        .brand { font-size: 16px; font-weight: 900; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
         .cloud-badge { font-size: 11px; background: #064e3b; color: #34d399; padding: 4px 10px; border-radius: 20px; font-weight: bold; border: 1px solid #059669; display: flex; align-items: center; gap: 4px; }
         
         .container { padding: 14px; max-width: 650px; margin: auto; }
@@ -49,8 +49,6 @@
         .product-name { font-size: 13.5px; font-weight: bold; margin-bottom: 4px; }
         .product-stock { font-size: 11px; color: var(--success); }
         .product-price { font-size: 13px; color: #fbbf24; font-weight: bold; }
-        
-        .market-badge { background: #1e3a8a; color: #93c5fd; padding: 3px 8px; border-radius: 6px; font-size: 11px; }
 
         .btn-submit { width: 100%; background: var(--success); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 900; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(16,185,129,0.3); }
         .btn-submit:active { transform: scale(0.98); }
@@ -66,13 +64,43 @@
         .status-Pending { background: #854d0e; color: #fef08a; }
         .status-InPreparation { background: #1e40af; color: #93c5fd; }
         .status-Delivered { background: #065f46; color: #6ee7b7; }
+
+        /* Login Modal / Screen */
+        .login-overlay { position: fixed; inset: 0; background: rgba(9, 13, 22, 0.95); z-index: 999; display: flex; justify-content: center; align-items: center; padding: 16px; }
+        .login-box { background: #151d30; border: 1.5px solid #0284c7; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); text-align: center; }
     </style>
 </head>
 <body>
 
+    <!-- REP PIN LOGIN SCREEN -->
+    <div id="loginScreen" class="login-overlay" style="display: none;">
+        <div class="login-box">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
+            <h2 style="color: #38bdf8; font-size: 18px; font-weight: 900; margin-bottom: 4px;" id="loginStoreTitle">تسجيل دخول المندوب</h2>
+            <p style="color: var(--text-sec); font-size: 12px; margin-bottom: 16px;" id="loginStoreSubtitle">مخزن ومبيعات 7amo POS</p>
+
+            <div style="text-align: right; margin-bottom: 4px; font-size: 12px; color: #93c5fd; font-weight: bold;">اختر حسابك:</div>
+            <select id="loginRepSelect" style="margin-bottom: 12px;">
+                <option value="">-- اختر اسم المندوب --</option>
+            </select>
+
+            <div style="text-align: right; margin-bottom: 4px; font-size: 12px; color: #93c5fd; font-weight: bold;">رمز الدخول السري (PIN):</div>
+            <input type="password" id="loginPinInput" placeholder="أدخل رمز الـ PIN (مثلاً: 1234)" maxlength="8" style="text-align: center; font-size: 18px; letter-spacing: 4px; font-weight: bold;">
+
+            <button onclick="attemptLogin()" style="width: 100%; background: #0284c7; color: white; border: none; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 900; cursor: pointer; margin-top: 6px;">دخول للبوابة 🚀</button>
+
+            <div style="margin-top: 14px; font-size: 11px; color: var(--text-sec);">
+                كود المخزن: <b id="displayStoreId" style="color: #fbbf24;">--</b>
+                <br>
+                <a href="javascript:void(0)" onclick="promptChangeStore()" style="color: #38bdf8; text-decoration: none; font-size: 11px;">(تغيير كود المخزن)</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP HEADER -->
     <div class="header">
         <div class="brand">
-            <span>📦</span> 7amo POS
+            <span>📦</span> <span id="appStoreName">7amo POS</span>
         </div>
         <div class="cloud-badge">
             <span>☁️</span> سحابي 24/7
@@ -82,10 +110,13 @@
     <div class="container">
         <!-- Rep Profile Strip -->
         <div class="rep-strip">
-            <div style="font-size: 12px; color: #93c5fd;">
-                المندوب: <b id="repNameDisplay" style="color: white;">مندوب المبيعات</b>
+            <div>
+                <div style="font-size: 12px; color: #93c5fd;">
+                    المندوب: <b id="repNameDisplay" style="color: white;">مندوب المبيعات</b>
+                </div>
+                <div style="font-size: 10.5px; color: #64748b;" id="repStoreCodeDisplay">كود المخزن: ST-0000</div>
             </div>
-            <button onclick="changeRepName()" style="background: var(--primary); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;">✏️ تغيير الاسم</button>
+            <button onclick="logoutRep()" style="background: #334155; color: #f87171; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold;">🔒 خروج</button>
         </div>
 
         <!-- Tab Nav -->
@@ -134,7 +165,7 @@
             <div class="card" style="margin-top: 14px;">
                 <div class="card-title">
                     <span>🔍 المواد المتوفرة في المخزن</span>
-                    <button onclick="init()" style="background: #1e3a8a; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 11px; cursor: pointer;">🔄 تحديث المواد</button>
+                    <button onclick="fetchCatalog()" style="background: #1e3a8a; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 11px; cursor: pointer;">🔄 تحديث المواد</button>
                 </div>
                 <input type="text" id="quickSearch" placeholder="ابحث عن مادة أو باركود..." oninput="filterProducts(this.value)">
                 <div id="productsList">
@@ -167,7 +198,7 @@
             <div class="card">
                 <div class="card-title">
                     <span>📦 المواد المتوفرة والأسعار</span>
-                    <button onclick="init()" style="background: #1e3a8a; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 11px; cursor: pointer;">🔄 تحديث</button>
+                    <button onclick="fetchCatalog()" style="background: #1e3a8a; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 11px; cursor: pointer;">🔄 تحديث</button>
                 </div>
                 <input type="text" placeholder="ابحث عن أي مادة..." oninput="filterProducts(this.value, 'catalogList')">
                 <div id="catalogList"></div>
@@ -201,72 +232,171 @@
         const REPO = 'hama2002m2002-lab/mo74mmed.pos';
         const GITHUB_TOKEN = ['gh', 'p_h49O', 'qCLRAr', 'H5jKq3', 'Nu5COy', 'QCZ1dU', 'aR2b9gIB'].join('');
         
+        let storeId = getParam('store') || localStorage.getItem('hamo_store_id') || 'ST-DEFAULT';
+        if (getParam('store')) {
+            localStorage.setItem('hamo_store_id', getParam('store'));
+        }
+
+        let storeReps = [];
+        let currentRep = JSON.parse(localStorage.getItem(`hamo_active_rep_${storeId}`) || 'null');
         let allProducts = [];
         let cart = [];
-        let savedMarkets = JSON.parse(localStorage.getItem('hamo_rep_markets') || '[]');
-        let currentRep = localStorage.getItem('hamo_rep_name') || 'مندوب المبيعات';
-        let savedOrders = JSON.parse(localStorage.getItem('hamo_rep_orders') || '[]');
+        let savedMarkets = JSON.parse(localStorage.getItem(`hamo_markets_${storeId}`) || '[]');
+        let savedOrders = JSON.parse(localStorage.getItem(`hamo_orders_${storeId}`) || '[]');
 
-        document.getElementById('repNameDisplay').innerText = currentRep;
+        function getParam(name) {
+            let u = new URLSearchParams(window.location.search);
+            return u.get(name);
+        }
 
-        function changeRepName() {
-            let name = prompt('أدخل اسمك كمندوب:', currentRep);
-            if (name && name.trim()) {
-                currentRep = name.trim();
-                localStorage.setItem('hamo_rep_name', currentRep);
-                document.getElementById('repNameDisplay').innerText = currentRep;
+        function promptChangeStore() {
+            let s = prompt('أدخل كود المخزن التابع له:', storeId);
+            if (s && s.trim()) {
+                localStorage.setItem('hamo_store_id', s.trim());
+                window.location.search = '?store=' + encodeURIComponent(s.trim());
             }
         }
 
         async function init() {
+            document.getElementById('displayStoreId').innerText = storeId;
+            document.getElementById('repStoreCodeDisplay').innerText = 'كود المخزن: ' + storeId;
+
+            // Load Store Catalog & Reps
+            await fetchCatalog();
+
+            // Check Login
+            if (!currentRep) {
+                showLoginModal();
+            } else {
+                hideLoginModal();
+                document.getElementById('repNameDisplay').innerText = currentRep.name;
+            }
+
+            renderMarkets();
+            loadMyOrders();
+        }
+
+        async function fetchCatalog() {
+            let loaded = false;
+
+            // 1. Try Store Specific Catalog on GitHub API
             try {
-                // 1. Fetch directly via GitHub API (Always 100% fresh and instant)
-                let apiRes = await fetch(`https://api.github.com/repos/${REPO}/contents/docs/catalog.json?t=` + new Date().getTime(), {
-                    headers: { 
-                        'Authorization': 'token ' + GITHUB_TOKEN,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
+                let apiRes = await fetch(`https://api.github.com/repos/${REPO}/contents/docs/stores/${storeId}/catalog.json?t=` + new Date().getTime(), {
+                    headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
                 });
                 if (apiRes.ok) {
                     let apiData = await apiRes.json();
                     if (apiData.content) {
                         let decodedStr = decodeURIComponent(escape(atob(apiData.content.replace(/\s/g, ''))));
                         let parsed = JSON.parse(decodedStr);
-                        allProducts = parsed.products || parsed || [];
+                        applyCatalogData(parsed);
+                        loaded = true;
                     }
                 }
             } catch (e) {
-                console.warn('API catalog fetch error:', e);
+                console.warn('Store API fetch:', e);
             }
 
-            // 2. Fallback: Try raw URL
-            if (!allProducts.length) {
+            // 2. Fallback: Try root catalog
+            if (!loaded) {
                 try {
-                    let rawUrl = `https://raw.githubusercontent.com/${REPO}/main/docs/catalog.json?t=` + new Date().getTime();
-                    let res = await fetch(rawUrl);
-                    if (res.ok) {
-                        let data = await res.json();
-                        allProducts = data.products || data || [];
-                    }
-                } catch (e) {
-                    console.warn('Cloud catalog fetch note:', e);
-                }
-            }
-
-            // 3. Fallback: If on local WiFi server
-            if (!allProducts.length) {
-                try {
-                    let locRes = await fetch('/api/products');
-                    if (locRes.ok) {
-                        allProducts = await locRes.json();
+                    let apiRes = await fetch(`https://api.github.com/repos/${REPO}/contents/docs/catalog.json?t=` + new Date().getTime(), {
+                        headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
+                    });
+                    if (apiRes.ok) {
+                        let apiData = await apiRes.json();
+                        if (apiData.content) {
+                            let decodedStr = decodeURIComponent(escape(atob(apiData.content.replace(/\s/g, ''))));
+                            let parsed = JSON.parse(decodedStr);
+                            applyCatalogData(parsed);
+                            loaded = true;
+                        }
                     }
                 } catch (e) {}
             }
 
+            // 3. Fallback: Local WiFi server
+            if (!loaded) {
+                try {
+                    let locRes = await fetch('/api/products');
+                    if (locRes.ok) {
+                        allProducts = await locRes.json();
+                        renderProducts(allProducts, 'productsList', true);
+                        renderProducts(allProducts, 'catalogList', false);
+                    }
+                } catch (e) {}
+            }
+        }
+
+        function applyCatalogData(data) {
+            allProducts = data.products || [];
+            storeReps = data.reps || [{ id: '1', name: 'المندوب العام', pin: '1234' }];
+
+            if (data.storeName) {
+                document.getElementById('appStoreName').innerText = data.storeName;
+                document.getElementById('loginStoreTitle').innerText = data.storeName;
+                document.getElementById('loginStoreSubtitle').innerText = data.tagline || 'بوابة المناديب 24/7';
+            }
+
+            populateLoginReps();
             renderProducts(allProducts, 'productsList', true);
             renderProducts(allProducts, 'catalogList', false);
-            renderMarkets();
-            loadMyOrders();
+        }
+
+        function showLoginModal() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            populateLoginReps();
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginScreen').style.display = 'none';
+        }
+
+        function populateLoginReps() {
+            let select = document.getElementById('loginRepSelect');
+            if (!select) return;
+            select.innerHTML = '<option value="">-- اختر اسم المندوب --</option>' +
+                storeReps.map(r => `<option value="${r.id}">${r.name} (${r.phone || 'مندوب'})</option>`).join('');
+        }
+
+        function attemptLogin() {
+            let repId = document.getElementById('loginRepSelect').value;
+            let pin = document.getElementById('loginPinInput').value.trim();
+
+            if (!repId) {
+                alert('يرجى اختيار اسم المندوب!');
+                return;
+            }
+            if (!pin) {
+                alert('يرجى إدخال رمز الـ PIN السري الخاص بك!');
+                return;
+            }
+
+            let rep = storeReps.find(r => r.id === repId);
+            if (!rep) {
+                alert('حساب المندوب غير موجود!');
+                return;
+            }
+
+            if (rep.pin && rep.pin.trim() !== pin) {
+                alert('❌ رمز الـ PIN غير صحيح! تأكد من الرمز وحاول ثانية.');
+                return;
+            }
+
+            // Success login
+            currentRep = rep;
+            localStorage.setItem(`hamo_active_rep_${storeId}`, JSON.stringify(rep));
+            document.getElementById('repNameDisplay').innerText = rep.name;
+            hideLoginModal();
+            alert(`✔ مرحباً بك يا ${rep.name}! تم تسجيل الدخول بنجاح.`);
+        }
+
+        function logoutRep() {
+            if (confirm('هل تريد تسجيل الخروج من حساب المندوب؟')) {
+                localStorage.removeItem(`hamo_active_rep_${storeId}`);
+                currentRep = null;
+                showLoginModal();
+            }
         }
 
         function renderProducts(list, containerId, isOrderTab) {
@@ -408,7 +538,7 @@
                 address: addr
             });
 
-            localStorage.setItem('hamo_rep_markets', JSON.stringify(savedMarkets));
+            localStorage.setItem(`hamo_markets_${storeId}`, JSON.stringify(savedMarkets));
             document.getElementById('newMarketName').value = '';
             document.getElementById('newMarketOwner').value = '';
             document.getElementById('newMarketPhone').value = '';
@@ -463,13 +593,19 @@
         function deleteMarket(idx) {
             if (confirm('هل أنت متأكد من حذف هذا الماركت من القائمة المحفوظة؟')) {
                 savedMarkets.splice(idx, 1);
-                localStorage.setItem('hamo_rep_markets', JSON.stringify(savedMarkets));
+                localStorage.setItem(`hamo_markets_${storeId}`, JSON.stringify(savedMarkets));
                 renderMarkets();
             }
         }
 
         // --- SUBMIT ORDER ---
         async function submitOrder() {
+            if (!currentRep) {
+                alert('يرجى تسجيل الدخول كـ مندوب أولاً!');
+                showLoginModal();
+                return;
+            }
+
             let market = document.getElementById('marketName').value.trim();
             if (!market) {
                 alert('يرجى كتابة أو اختيار اسم الماركت!');
@@ -488,12 +624,13 @@
             let total = cart.reduce((sum, i) => sum + (i.quantity * i.unitPrice), 0);
 
             let payload = {
+                storeId: storeId,
                 orderNumber: orderNumber,
                 orderDate: new Date().toISOString(),
                 marketName: market,
                 marketPhone: document.getElementById('marketPhone').value.trim(),
                 marketAddress: document.getElementById('marketAddress').value.trim(),
-                representativeName: currentRep,
+                representativeName: currentRep.name,
                 notes: document.getElementById('orderNotes').value.trim(),
                 totalAmount: total,
                 items: cart
@@ -501,9 +638,9 @@
 
             let sentSuccess = false;
 
-            // 1. Direct Cloud GitHub API Queue
+            // 1. Direct Cloud GitHub API Queue into Store Folder
             try {
-                let fileName = `docs/orders/order_${new Date().getTime()}_${Math.floor(Math.random() * 1000)}.json`;
+                let fileName = `docs/stores/${storeId}/orders/order_${new Date().getTime()}_${Math.floor(Math.random() * 1000)}.json`;
                 let contentB64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
                 
                 let ghRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${fileName}`, {
@@ -513,7 +650,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        message: `cloud order: ${orderNumber} for ${market}`,
+                        message: `cloud order: ${orderNumber} for store ${storeId} - ${market}`,
                         content: contentB64
                     })
                 });
@@ -552,7 +689,7 @@
                     status: 'Pending',
                     date: new Date().toLocaleString('ar')
                 });
-                localStorage.setItem('hamo_rep_orders', JSON.stringify(savedOrders));
+                localStorage.setItem(`hamo_orders_${storeId}`, JSON.stringify(savedOrders));
 
                 cart = [];
                 renderCart();

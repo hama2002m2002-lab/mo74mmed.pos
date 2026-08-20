@@ -87,7 +87,48 @@ public class SupplierOrdersViewModel : BaseViewModel
     private decimal _totalOrdersValue;
     public decimal TotalOrdersValue { get => _totalOrdersValue; set => SetProperty(ref _totalOrdersValue, value); }
 
+    // Tab Navigation within Supplier Orders
+    private string _activeSubTab = "Orders";
+    public string ActiveSubTab
+    {
+        get => _activeSubTab;
+        set
+        {
+            if (SetProperty(ref _activeSubTab, value))
+            {
+                OnPropertyChanged(nameof(IsOrdersTabActive));
+                OnPropertyChanged(nameof(IsRepsTabActive));
+            }
+        }
+    }
+
+    public bool IsOrdersTabActive => ActiveSubTab == "Orders";
+    public bool IsRepsTabActive => ActiveSubTab == "Reps";
+
+    // Reps Management
+    public ObservableCollection<StoreRepAccount> RepAccounts { get; } = new();
+
+    private StoreRepAccount? _selectedRepAccount;
+    public StoreRepAccount? SelectedRepAccount
+    {
+        get => _selectedRepAccount;
+        set => SetProperty(ref _selectedRepAccount, value);
+    }
+
+    private string _newRepName = "";
+    public string NewRepName { get => _newRepName; set => SetProperty(ref _newRepName, value); }
+
+    private string _newRepPhone = "";
+    public string NewRepPhone { get => _newRepPhone; set => SetProperty(ref _newRepPhone, value); }
+
+    private string _newRepPin = "1234";
+    public string NewRepPin { get => _newRepPin; set => SetProperty(ref _newRepPin, value); }
+
     // Commands
+    public ICommand SwitchSubTabCommand { get; }
+    public ICommand AddRepAccountCommand { get; }
+    public ICommand DeleteRepAccountCommand { get; }
+    public ICommand SaveRepsCommand { get; }
     public ICommand LoadOrdersCommand { get; }
     public ICommand AddNewOrderCommand { get; }
     public ICommand SetFilterCommand { get; }
@@ -108,6 +149,7 @@ public class SupplierOrdersViewModel : BaseViewModel
 
     private readonly System.Windows.Threading.DispatcherTimer _autoRefreshTimer;
 
+    public string StoreId => StoreSettingsService.Instance.Settings.StoreId;
     public string PortalUrl => HamoPos.Services.RepWebPortalService.Instance.PortalUrl;
     public string CloudPortalUrl => HamoPos.Services.CloudSyncService.Instance.PublicCloudPortalUrl;
     public string CloudSyncStatus => HamoPos.Services.CloudSyncService.Instance.SyncStatusMessage;
@@ -117,6 +159,20 @@ public class SupplierOrdersViewModel : BaseViewModel
     public SupplierOrdersViewModel()
     {
         _context = new AppDbContext();
+
+        LoadRepAccounts();
+
+        SwitchSubTabCommand = new RelayCommand((p) =>
+        {
+            if (p is string tab)
+            {
+                ActiveSubTab = tab;
+            }
+        });
+
+        AddRepAccountCommand = new RelayCommand(ExecuteAddRepAccount);
+        DeleteRepAccountCommand = new RelayCommand(ExecuteDeleteRepAccount);
+        SaveRepsCommand = new RelayCommand(ExecuteSaveReps);
 
         LoadOrdersCommand = new AsyncRelayCommand(LoadOrdersAsync);
         AddNewOrderCommand = new RelayCommand(ExecuteAddNewOrder);
@@ -545,5 +601,71 @@ public class SupplierOrdersViewModel : BaseViewModel
         {
             MessageBox.Show($"حدث خطأ أثناء اعتماد وتسليم الطلبية: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private void LoadRepAccounts()
+    {
+        RepAccounts.Clear();
+        var store = StoreSettingsService.Instance.Settings;
+        foreach (var rep in store.RepAccounts)
+        {
+            RepAccounts.Add(rep);
+        }
+    }
+
+    private void ExecuteAddRepAccount()
+    {
+        if (string.IsNullOrWhiteSpace(NewRepName))
+        {
+            MessageBox.Show("يرجى كتابة اسم المندوب على الأقل!", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var rep = new StoreRepAccount
+        {
+            Name = NewRepName.Trim(),
+            Phone = NewRepPhone.Trim(),
+            PinCode = string.IsNullOrWhiteSpace(NewRepPin) ? "1234" : NewRepPin.Trim(),
+            IsActive = true
+        };
+
+        var store = StoreSettingsService.Instance.Settings;
+        store.RepAccounts.Add(rep);
+        StoreSettingsService.Instance.SaveSettings(store);
+
+        RepAccounts.Add(rep);
+        NewRepName = "";
+        NewRepPhone = "";
+        NewRepPin = "1234";
+
+        _ = CloudSyncService.Instance.PushProductsToCloudAsync();
+
+        MessageBox.Show($"تم إنشاء حساب المندوب ({rep.Name}) برمز PIN: ({rep.PinCode}) بنجاح!\nتمت مزامنة حسابه مع بوابة الموبايل السحابية.", "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void ExecuteDeleteRepAccount(object? param)
+    {
+        if (param is StoreRepAccount rep)
+        {
+            var confirm = MessageBox.Show($"هل أنت متأكد من حذف حساب المندوب ({rep.Name})؟", "تأكيد الحذف", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirm == MessageBoxResult.Yes)
+            {
+                var store = StoreSettingsService.Instance.Settings;
+                store.RepAccounts.RemoveAll(r => r.Id == rep.Id);
+                StoreSettingsService.Instance.SaveSettings(store);
+
+                RepAccounts.Remove(rep);
+                _ = CloudSyncService.Instance.PushProductsToCloudAsync();
+            }
+        }
+    }
+
+    private void ExecuteSaveReps()
+    {
+        var store = StoreSettingsService.Instance.Settings;
+        store.RepAccounts = RepAccounts.ToList();
+        StoreSettingsService.Instance.SaveSettings(store);
+        _ = CloudSyncService.Instance.PushProductsToCloudAsync();
+        MessageBox.Show("تم حفظ وتحديث بيانات حسابات المناديب بنجاح!", "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 }

@@ -1,11 +1,23 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
 namespace HamoPos.Services;
 
+public class StoreRepAccount
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Name { get; set; } = "";
+    public string Phone { get; set; } = "";
+    public string PinCode { get; set; } = "1234";
+    public bool IsActive { get; set; } = true;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+}
+
 public class StoreSettings
 {
+    public string StoreId { get; set; } = "";
     public string StoreName { get; set; } = "مخزن ومبيعات 7amo POS";
     public string Tagline { get; set; } = "لتجارة المواد الغذائية والسلع العامة بالجملة والمفرد";
     public string Phone1 { get; set; } = "0770 000 0000";
@@ -15,6 +27,7 @@ public class StoreSettings
     public string ReceiptFooterNotes { get; set; } = "شكراً لتعاملكم معنا - يرجى فحص البضاعة عند الاستلام";
     public string A4TermsAndConditions { get; set; } = "البضاعة المباعة لا تُرد ولا تُستبدل إلا بموجب هذا الوصل وخلال 48 ساعة من تاريخ الاستلام.";
     public bool AutoPrintA4OnDelivery { get; set; } = true;
+    public List<StoreRepAccount> RepAccounts { get; set; } = new();
 }
 
 public class StoreSettingsService
@@ -46,18 +59,50 @@ public class StoreSettingsService
             {
                 string json = File.ReadAllText(_settingsFilePath);
                 var loaded = JsonSerializer.Deserialize<StoreSettings>(json);
-                if (loaded != null) return loaded;
+                if (loaded != null)
+                {
+                    EnsureDefaults(loaded);
+                    return loaded;
+                }
             }
         }
         catch { }
 
-        return new StoreSettings();
+        var fresh = new StoreSettings();
+        EnsureDefaults(fresh);
+        SaveSettings(fresh);
+        return fresh;
+    }
+
+    private void EnsureDefaults(StoreSettings s)
+    {
+        if (string.IsNullOrWhiteSpace(s.StoreId))
+        {
+            s.StoreId = "ST-" + new Random().Next(1000, 9999);
+        }
+
+        if (s.RepAccounts == null)
+        {
+            s.RepAccounts = new List<StoreRepAccount>();
+        }
+
+        if (s.RepAccounts.Count == 0)
+        {
+            s.RepAccounts.Add(new StoreRepAccount
+            {
+                Name = "المندوب الأول",
+                Phone = "0770 000 0000",
+                PinCode = "1234",
+                IsActive = true
+            });
+        }
     }
 
     public void SaveSettings(StoreSettings settings)
     {
         try
         {
+            EnsureDefaults(settings);
             Settings = settings;
             string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(_settingsFilePath, json);
