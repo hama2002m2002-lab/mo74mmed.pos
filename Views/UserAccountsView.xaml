@@ -42,7 +42,7 @@
                          ToolTip="ابحث باسم الكاشير أو اسم المستخدم..." />
 
                 <!-- Add New Cashier Button -->
-                <Button Style="{StaticResource PrimarySuccessButton}" Command="{Binding OpenAddUserModalCommand}" Padding="16,8">
+                <Button Click="AddUser_Click" Style="{StaticResource PrimarySuccessButton}" Padding="16,8" Cursor="Hand">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="➕ " FontSize="13" />
                         <TextBlock Text="إنشاء حساب كاشير جديد" FontWeight="Bold" />
@@ -403,7 +403,7 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Style="{StaticResource ActionButton}" Command="{Binding OpenEditUserModalCommand}" CommandParameter="{Binding SelectedCashier}" Padding="12,6">
+                        <Button Click="EditUser_Click" Style="{StaticResource ActionButton}" Padding="12,6" Cursor="Hand">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="✏️ " FontSize="12" />
                                 <TextBlock Text="تعديل الحساب" />
@@ -500,9 +500,9 @@
                             <DataGridTemplateColumn Header="تفاصيل الفاتورة" Width="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Style="{StaticResource PrimaryAccentButton}" 
-                                                Command="{Binding DataContext.OpenSaleItemsModalCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                CommandParameter="{Binding}" Padding="10,4" FontSize="11" HorizontalAlignment="Center">
+                                        <Button Click="ViewSaleItems_Click"
+                                                Style="{StaticResource PrimaryAccentButton}" 
+                                                Padding="10,4" FontSize="11" HorizontalAlignment="Center" Cursor="Hand">
                                             <TextBlock Text="👁 عرض المواد" />
                                         </Button>
                                     </DataTemplate>
@@ -513,114 +513,5 @@
                 </Grid>
             </Border>
         </Grid>
-
-        <!-- ======================================================== -->
-        <!-- POPUP MODAL 1: ADD / EDIT CASHIER ACCOUNT -->
-        <!-- ======================================================== -->
-        <Border Grid.RowSpan="4" Background="#DD000000" 
-                Visibility="{Binding IsAddEditModalOpen, Converter={StaticResource BoolToVis}}" 
-                Margin="-20,-16">
-            <Border Width="480" Background="{DynamicResource BgDarkSecondary}" CornerRadius="16" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <StackPanel>
-                    <!-- Modal Header -->
-                    <Grid Margin="0,0,0,18">
-                        <TextBlock Text="{Binding ModalTitle}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center" />
-                        <Button HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Command="{Binding CloseAddEditModalCommand}" Cursor="Hand" Padding="4">
-                            <TextBlock Text="✕" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" />
-                        </Button>
-                    </Grid>
-
-                    <!-- Full Name -->
-                    <TextBlock Text="الاسم الكامل للكاشير / الموظف:" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,6" />
-                    <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}" Padding="10,8" FontSize="14" Margin="0,0,0,12" />
-
-                    <!-- Username -->
-                    <TextBlock Text="اسم الدخول (Username):" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,6" />
-                    <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Padding="10,8" FontSize="14" Margin="0,0,0,12" />
-
-                    <!-- Password / PIN -->
-                    <TextBlock Text="الرمز السري / كلمة المرور (PIN):" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,6" />
-                    <TextBox Style="{StaticResource ModernDarkTextBox}" Text="{Binding PinPassword, UpdateSourceTrigger=PropertyChanged}" Padding="10,8" FontSize="14" Margin="0,0,0,12" />
-
-                    <!-- Role -->
-                    <TextBlock Text="الصلاحية / الدور:" FontSize="12" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,6" />
-                    <ComboBox SelectedValue="{Binding Role, Mode=TwoWay}" SelectedValuePath="Content" Height="38" Background="{DynamicResource BgDarkPrimary}" Foreground="{DynamicResource TextPrimary}" FontSize="13" Margin="0,0,0,14">
-                        <ComboBoxItem Content="Cashier" />
-                        <ComboBoxItem Content="Admin" />
-                        <ComboBoxItem Content="Manager" />
-                    </ComboBox>
-
-                    <!-- Active Toggle -->
-                    <CheckBox IsChecked="{Binding IsActive}" Content="الحساب نشط ومفعل" Foreground="{DynamicResource TextPrimary}" FontSize="13" Margin="0,0,0,20" />
-
-                    <!-- Save & Cancel Buttons -->
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Style="{StaticResource PrimarySuccessButton}" Command="{Binding SaveUserCommand}" Height="42" Margin="0,0,6,0">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="💾 " FontSize="14" />
-                                <TextBlock Text="حفظ الحساب" FontWeight="Bold" />
-                            </StackPanel>
-                        </Button>
-                        <Button Grid.Column="1" Style="{StaticResource ActionButton}" Command="{Binding CloseAddEditModalCommand}" Height="42" Margin="6,0,0,0">
-                            <TextBlock Text="إلغاء" />
-                        </Button>
-                    </Grid>
-                </StackPanel>
-            </Border>
-        </Border>
-
-        <!-- ======================================================== -->
-        <!-- POPUP MODAL 2: INVOICE ITEMS DETAILS -->
-        <!-- ======================================================== -->
-        <Border Grid.RowSpan="4" Background="#DD000000" 
-                Visibility="{Binding IsInvoiceItemsModalOpen, Converter={StaticResource BoolToVis}}" 
-                Margin="-20,-16">
-            <Border Width="650" Background="{DynamicResource BgDarkSecondary}" CornerRadius="16" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="22" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <!-- Header -->
-                    <Grid Grid.Row="0" Margin="0,0,0,14">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="🧾 " FontSize="20" />
-                            <TextBlock Text="{Binding SelectedSale.InvoiceNumber, StringFormat='محتويات الفاتورة: {0}'}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
-                        </StackPanel>
-                        <Button HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Command="{Binding CloseSaleItemsModalCommand}" Cursor="Hand" Padding="4">
-                            <TextBlock Text="✕" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" />
-                        </Button>
-                    </Grid>
-
-                    <!-- Items List -->
-                    <Border Grid.Row="1" Background="{DynamicResource BgDarkPrimary}" CornerRadius="8" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="6" Height="280">
-                        <DataGrid ItemsSource="{Binding SelectedSaleItems}" AutoGenerateColumns="False" 
-                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                                  Background="Transparent" RowBackground="Transparent" BorderThickness="0"
-                                  CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False"
-                                  HorizontalGridLinesBrush="{DynamicResource BorderDark}"
-                                  RowHeight="38">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="المادة" Binding="{Binding ProductName}" Width="2*" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" />
-                                <DataGridTextColumn Header="سعر الوحدة" Binding="{Binding UnitPrice, StringFormat='{}{0:N0} د.ع'}" Width="120" Foreground="{DynamicResource SuccessBrush}" />
-                                <DataGridTextColumn Header="الكمية" Binding="{Binding Quantity, StringFormat='{}{0:0}'}" Width="90" Foreground="{DynamicResource WarningBrush}" FontWeight="Bold" />
-                                <DataGridTextColumn Header="الإجمالي" Binding="{Binding TotalPrice, StringFormat='{}{0:N0} د.ع'}" Width="120" Foreground="{DynamicResource PrimaryAccent}" FontWeight="Black" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Border>
-
-                    <!-- Close Button -->
-                    <Button Grid.Row="2" Style="{StaticResource ActionButton}" Command="{Binding CloseSaleItemsModalCommand}" Height="38" Margin="0,14,0,0">
-                        <TextBlock Text="إغلاق" FontWeight="Bold" />
-                    </Button>
-                </Grid>
-            </Border>
-        </Border>
     </Grid>
 </UserControl>
