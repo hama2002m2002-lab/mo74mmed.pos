@@ -1,0 +1,21 @@
+{
+  "storeId": "ST-9038",
+  "orderNumber": "ORD-20260821-198",
+  "orderDate": "2026-08-21T01:03:29.645Z",
+  "marketName": "محمد",
+  "marketPhone": "",
+  "marketAddress": "",
+  "representativeName": "نن",
+  "notes": "",
+  "totalAmount": 203500,
+  "items": [
+    {
+      "productId": "4dc1f029-b0df-4d10-bf59-f3ccb5823838",
+      "productName": "ب",
+      "barcode": "2002454022881",
+      "quantity": 37,
+      "unitType": "Carton",
+      "unitPrice": 5500
+    }
+  ]
+}
