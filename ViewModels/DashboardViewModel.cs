@@ -59,10 +59,6 @@ public class HourlyActivityItem : BaseViewModel
 
 public class DashboardViewModel : BaseViewModel
 {
-    private readonly AppDbContext _context;
-    private readonly ISaleService _saleService;
-    private readonly IProductService _productService;
-
     public decimal TodayRevenue { get => _todayRevenue; set => SetProperty(ref _todayRevenue, value); }
     private decimal _todayRevenue;
 
@@ -84,9 +80,9 @@ public class DashboardViewModel : BaseViewModel
     public decimal DailyAverageRevenue { get => _dailyAverageRevenue; set => SetProperty(ref _dailyAverageRevenue, value); }
     private decimal _dailyAverageRevenue;
 
-    // Charts Collections
+    // Visual Charts Collections
     public ObservableCollection<WeeklySalesBarItem> WeeklySalesBars { get; } = new();
-    public ObservableCollection<PaymentDistributionItem> PaymentDistributions { get; } = new();
+    public ObservableCollection<PaymentDistributionItem> PaymentDistribution { get; } = new();
     public ObservableCollection<TopProductBarItem> TopProductsChart { get; } = new();
     public ObservableCollection<HourlyActivityItem> HourlyActivities { get; } = new();
 
@@ -98,10 +94,6 @@ public class DashboardViewModel : BaseViewModel
 
     public DashboardViewModel()
     {
-        _context = new AppDbContext();
-        _saleService = new SaleService(_context);
-        _productService = new ProductService(_context);
-
         RefreshCommand = new AsyncRelayCommand(async () => await LoadDashboardDataAsync());
     }
 
@@ -109,17 +101,21 @@ public class DashboardViewModel : BaseViewModel
     {
         try
         {
+            using var db = new AppDbContext();
+            var saleService = new SaleService(db);
+            var productService = new ProductService(db);
+
             // 1. KPI Top Stats
-            var todayStats = await _saleService.GetTodayStatsAsync();
+            var todayStats = await saleService.GetTodayStatsAsync();
             TodayRevenue = todayStats.TotalRevenue;
             TodayInvoicesCount = todayStats.TotalSalesCount;
 
-            var monthStats = await _saleService.GetMonthlyStatsAsync();
+            var monthStats = await saleService.GetMonthlyStatsAsync();
             MonthlyRevenue = monthStats.MonthlyRevenue;
 
-            TotalProductsCount = await _productService.GetTotalProductsCountAsync();
+            TotalProductsCount = await productService.GetTotalProductsCountAsync();
 
-            var lowStockList = await _productService.GetLowStockProductsAsync(6);
+            var lowStockList = await productService.GetLowStockProductsAsync(6);
             LowStockCount = lowStockList.Count;
             LowStockProducts.Clear();
             foreach (var item in lowStockList)
@@ -127,7 +123,7 @@ public class DashboardViewModel : BaseViewModel
                 LowStockProducts.Add(item);
             }
 
-            var recentSalesList = await _saleService.GetRecentSalesAsync(5);
+            var recentSalesList = await saleService.GetRecentSalesAsync(5);
             RecentSales.Clear();
             foreach (var s in recentSalesList)
             {
@@ -135,16 +131,16 @@ public class DashboardViewModel : BaseViewModel
             }
 
             // 2. Chart 1: Last 7 Days Sales Trend
-            await LoadWeeklySalesChartAsync();
+            await LoadWeeklySalesChartAsync(db);
 
             // 3. Chart 2: Payment Distribution Breakdown
-            await LoadPaymentDistributionChartAsync();
+            await LoadPaymentDistributionChartAsync(db);
 
             // 4. Chart 3: Top 5 Best Selling Products
-            await LoadTopSellingProductsChartAsync();
+            await LoadTopSellingProductsChartAsync(db);
 
             // 5. Chart 4: Peak Hours Activity
-            await LoadHourlyActivityChartAsync();
+            await LoadHourlyActivityChartAsync(db);
         }
         catch (Exception ex)
         {
@@ -152,12 +148,12 @@ public class DashboardViewModel : BaseViewModel
         }
     }
 
-    private async Task LoadWeeklySalesChartAsync()
+    private async Task LoadWeeklySalesChartAsync(AppDbContext db)
     {
         var today = DateTime.UtcNow.Date;
         var sevenDaysAgo = today.AddDays(-6);
 
-        var pastWeekSales = await _context.Sales
+        var pastWeekSales = await db.Sales
             .AsNoTracking()
             .Where(s => s.CreatedAt >= sevenDaysAgo && s.Status == "Completed")
             .ToListAsync();
@@ -242,142 +238,182 @@ public class DashboardViewModel : BaseViewModel
         _ => "شەممە"
     };
 
-    private async Task LoadPaymentDistributionChartAsync()
+    private async Task LoadPaymentDistributionChartAsync(AppDbContext db)
     {
         var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-        var sales = await _context.Sales
+        var sales = await db.Sales
             .AsNoTracking()
             .Where(s => s.CreatedAt >= startOfMonth && s.Status == "Completed")
             .ToListAsync();
 
-        decimal totalSalesAmount = sales.Sum(s => s.TotalAmount);
-        decimal cashTotal = sales.Where(s => s.PaymentMethod == "Cash").Sum(s => s.TotalAmount);
-        decimal cardTotal = sales.Where(s => s.PaymentMethod == "Card").Sum(s => s.TotalAmount);
-        decimal debtTotal = sales.Where(s => s.PaymentMethod == "Debt" || s.PaymentMethod == "Partial").Sum(s => s.TotalAmount);
+        PaymentDistribution.Clear();
+        decimal totalMonth = sales.Sum(s => s.TotalAmount);
 
-        PaymentDistributions.Clear();
+        var cashSales = sales.Where(s => s.PaymentMethod == "Cash").Sum(s => s.TotalAmount);
+        var debtSales = sales.Where(s => s.PaymentMethod == "Debt").Sum(s => s.TotalAmount);
+        var cardSales = sales.Where(s => s.PaymentMethod == "Card" || s.PaymentMethod == "Visa" || s.PaymentMethod == "MasterCard").Sum(s => s.TotalAmount);
+        var partialSales = sales.Where(s => s.PaymentMethod == "Partial").Sum(s => s.TotalAmount);
 
-        if (totalSalesAmount > 0)
+        if (totalMonth == 0)
         {
-            PaymentDistributions.Add(new PaymentDistributionItem
+            PaymentDistribution.Add(new PaymentDistributionItem
             {
-                MethodName = "نقد (Cash)",
-                Amount = cashTotal,
-                Percentage = (double)(cashTotal / totalSalesAmount) * 100.0,
+                MethodName = Loc.IsKurdish ? "نەقد (کاش)" : "نقداً (كاش)",
+                Amount = 0,
+                Percentage = 0,
                 ColorHex = "#10B981",
                 Icon = "💵"
             });
-
-            PaymentDistributions.Add(new PaymentDistributionItem
+            PaymentDistribution.Add(new PaymentDistributionItem
             {
-                MethodName = "بطاقة (Card)",
-                Amount = cardTotal,
-                Percentage = (double)(cardTotal / totalSalesAmount) * 100.0,
+                MethodName = Loc.IsKurdish ? "قەرز (آجل)" : "آجل (ذمم ديون)",
+                Amount = 0,
+                Percentage = 0,
+                ColorHex = "#F59E0B",
+                Icon = "📝"
+            });
+            return;
+        }
+
+        if (cashSales > 0 || totalMonth == 0)
+        {
+            PaymentDistribution.Add(new PaymentDistributionItem
+            {
+                MethodName = Loc.IsKurdish ? "نەقد (کاش)" : "نقداً (كاش)",
+                Amount = cashSales,
+                Percentage = (double)(cashSales / totalMonth) * 100.0,
+                ColorHex = "#10B981",
+                Icon = "💵"
+            });
+        }
+
+        if (debtSales > 0)
+        {
+            PaymentDistribution.Add(new PaymentDistributionItem
+            {
+                MethodName = Loc.IsKurdish ? "قەرز (آجل)" : "آجل (ذمم ديون)",
+                Amount = debtSales,
+                Percentage = (double)(debtSales / totalMonth) * 100.0,
+                ColorHex = "#F59E0B",
+                Icon = "📝"
+            });
+        }
+
+        if (cardSales > 0)
+        {
+            PaymentDistribution.Add(new PaymentDistributionItem
+            {
+                MethodName = Loc.IsKurdish ? "کارتی ئەلیکترۆنی" : "بطاقة دفع إلكتروني",
+                Amount = cardSales,
+                Percentage = (double)(cardSales / totalMonth) * 100.0,
                 ColorHex = "#3B82F6",
                 Icon = "💳"
             });
-
-            PaymentDistributions.Add(new PaymentDistributionItem
-            {
-                MethodName = "آجل (Debt)",
-                Amount = debtTotal,
-                Percentage = (double)(debtTotal / totalSalesAmount) * 100.0,
-                ColorHex = "#F59E0B",
-                Icon = "⏳"
-            });
         }
-        else
+
+        if (partialSales > 0)
         {
-            PaymentDistributions.Add(new PaymentDistributionItem { MethodName = "نقد (Cash)", Amount = 0, Percentage = 0, ColorHex = "#10B981", Icon = "💵" });
-            PaymentDistributions.Add(new PaymentDistributionItem { MethodName = "بطاقة (Card)", Amount = 0, Percentage = 0, ColorHex = "#3B82F6", Icon = "💳" });
-            PaymentDistributions.Add(new PaymentDistributionItem { MethodName = "آجل (Debt)", Amount = 0, Percentage = 0, ColorHex = "#F59E0B", Icon = "⏳" });
+            PaymentDistribution.Add(new PaymentDistributionItem
+            {
+                MethodName = Loc.IsKurdish ? "پارەی بەشەکی" : "دفع جزئي",
+                Amount = partialSales,
+                Percentage = (double)(partialSales / totalMonth) * 100.0,
+                ColorHex = "#8B5CF6",
+                Icon = "⚖️"
+            });
         }
     }
 
-    private async Task LoadTopSellingProductsChartAsync()
-    {
-        var topItems = await _saleService.GetTopSellingProductsAsync(5);
-        TopProductsChart.Clear();
-
-        decimal maxQty = topItems.Count > 0 ? topItems.Max(x => x.TotalQuantity) : 1;
-        if (maxQty == 0) maxQty = 1;
-
-        string[] colors = { "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EC4899" };
-        string[] badges = { "🥇", "🥈", "🥉", "4", "5" };
-
-        int rank = 1;
-        foreach (var item in topItems)
-        {
-            double pct = Math.Max(15.0, (double)(item.TotalQuantity / maxQty) * 100.0);
-            TopProductsChart.Add(new TopProductBarItem
-            {
-                Rank = rank,
-                RankBadge = badges[Math.Min(rank - 1, badges.Length - 1)],
-                ProductName = item.ProductName,
-                Quantity = item.TotalQuantity,
-                TotalAmount = item.TotalAmount,
-                BarPercent = pct,
-                BarColor = colors[(rank - 1) % colors.Length]
-            });
-            rank++;
-        }
-    }
-
-    private async Task LoadHourlyActivityChartAsync()
+    private async Task LoadTopSellingProductsChartAsync(AppDbContext db)
     {
         var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-        var sales = await _context.Sales
+        var items = await db.SaleItems
             .AsNoTracking()
-            .Where(s => s.CreatedAt >= startOfMonth && s.Status == "Completed")
+            .Include(i => i.Sale)
+            .Where(i => i.Sale != null && i.Sale.CreatedAt >= startOfMonth && i.Sale.Status == "Completed")
+            .GroupBy(i => i.ProductName)
+            .Select(g => new
+            {
+                Name = g.Key,
+                Qty = g.Sum(x => x.Quantity),
+                Total = g.Sum(x => x.TotalPrice)
+            })
+            .OrderByDescending(x => x.Total)
+            .Take(5)
             .ToListAsync();
 
-        var morningSales = sales.Where(s => s.CreatedAt.ToLocalTime().Hour >= 8 && s.CreatedAt.ToLocalTime().Hour < 12).ToList();
-        var noonSales = sales.Where(s => s.CreatedAt.ToLocalTime().Hour >= 12 && s.CreatedAt.ToLocalTime().Hour < 16).ToList();
-        var eveningSales = sales.Where(s => s.CreatedAt.ToLocalTime().Hour >= 16 && s.CreatedAt.ToLocalTime().Hour < 20).ToList();
-        var nightSales = sales.Where(s => s.CreatedAt.ToLocalTime().Hour >= 20 || s.CreatedAt.ToLocalTime().Hour < 8).ToList();
+        TopProductsChart.Clear();
+        if (!items.Any()) return;
 
-        int maxCount = Math.Max(1, Math.Max(Math.Max(morningSales.Count, noonSales.Count), Math.Max(eveningSales.Count, nightSales.Count)));
+        decimal maxTotal = items.Max(x => x.Total);
+        string[] colors = { "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EC4899" };
+        string[] badges = { "🥇 #1", "🥈 #2", "🥉 #3", "4️⃣ #4", "5️⃣ #5" };
+
+        for (int i = 0; i < items.Count; i++)
+        {
+            var p = items[i];
+            double percent = maxTotal > 0 ? (double)(p.Total / maxTotal) * 100.0 : 20.0;
+            TopProductsChart.Add(new TopProductBarItem
+            {
+                Rank = i + 1,
+                RankBadge = badges[Math.Min(i, badges.Length - 1)],
+                ProductName = p.Name,
+                Quantity = p.Qty,
+                TotalAmount = p.Total,
+                BarPercent = Math.Max(12.0, percent),
+                BarColor = colors[i % colors.Length]
+            });
+        }
+    }
+
+    private async Task LoadHourlyActivityChartAsync(AppDbContext db)
+    {
+        var today = DateTime.UtcNow.Date;
+        var todaySales = await db.Sales
+            .AsNoTracking()
+            .Where(s => s.CreatedAt >= today && s.Status == "Completed")
+            .ToListAsync();
 
         HourlyActivities.Clear();
 
-        HourlyActivities.Add(new HourlyActivityItem
+        // 4 Time slots
+        var slots = new[]
         {
-            TimeSlotName = "الصباح (8ص - 12ظ)",
-            Icon = "🌅",
-            SalesCount = morningSales.Count,
-            TotalAmount = morningSales.Sum(s => s.TotalAmount),
-            ActivityPercent = Math.Max(10.0, ((double)morningSales.Count / maxCount) * 100.0),
-            ColorHex = "#F59E0B"
-        });
+            new { NameAr = "الصباح الباكر (06:00 - 12:00)", NameKu = "بەیانی زوو (06:00 - 12:00)", From = 6, To = 12, Icon = "🌅", Color = "#06B6D4" },
+            new { NameAr = "فترة الظهيرة (12:00 - 17:00)", NameKu = "نیوەڕۆ (12:00 - 17:00)", From = 12, To = 17, Icon = "☀️", Color = "#F59E0B" },
+            new { NameAr = "فترة المساء (17:00 - 22:00)", NameKu = "ئێوارە (17:00 - 22:00)", From = 17, To = 22, Icon = "🌇", Color = "#3B82F6" },
+            new { NameAr = "الليل المتأخر (22:00 - 06:00)", NameKu = "شەوی درەنگ (22:00 - 06:00)", From = 22, To = 6, Icon = "🌙", Color = "#8B5CF6" }
+        };
 
-        HourlyActivities.Add(new HourlyActivityItem
-        {
-            TimeSlotName = "الظهيرة (12ظ - 4ع)",
-            Icon = "☀️",
-            SalesCount = noonSales.Count,
-            TotalAmount = noonSales.Sum(s => s.TotalAmount),
-            ActivityPercent = Math.Max(10.0, ((double)noonSales.Count / maxCount) * 100.0),
-            ColorHex = "#EF4444"
-        });
+        decimal maxSlotAmount = 0;
+        var results = new List<HourlyActivityItem>();
 
-        HourlyActivities.Add(new HourlyActivityItem
+        foreach (var slot in slots)
         {
-            TimeSlotName = "المساء (4ع - 8م)",
-            Icon = "🌆",
-            SalesCount = eveningSales.Count,
-            TotalAmount = eveningSales.Sum(s => s.TotalAmount),
-            ActivityPercent = Math.Max(10.0, ((double)eveningSales.Count / maxCount) * 100.0),
-            ColorHex = "#3B82F6"
-        });
+            var matched = todaySales.Where(s =>
+            {
+                int h = s.CreatedAt.Hour;
+                if (slot.From < slot.To) return h >= slot.From && h < slot.To;
+                return h >= slot.From || h < slot.To;
+            }).ToList();
 
-        HourlyActivities.Add(new HourlyActivityItem
+            decimal sum = matched.Sum(x => x.TotalAmount);
+            if (sum > maxSlotAmount) maxSlotAmount = sum;
+
+            results.Add(new HourlyActivityItem
+            {
+                TimeSlotName = Loc.IsKurdish ? slot.NameKu : slot.NameAr,
+                Icon = slot.Icon,
+                SalesCount = matched.Count,
+                TotalAmount = sum,
+                ColorHex = slot.Color
+            });
+        }
+
+        foreach (var r in results)
         {
-            TimeSlotName = "الليل (8م - 12ل)",
-            Icon = "🌙",
-            SalesCount = nightSales.Count,
-            TotalAmount = nightSales.Sum(s => s.TotalAmount),
-            ActivityPercent = Math.Max(10.0, ((double)nightSales.Count / maxCount) * 100.0),
-            ColorHex = "#8B5CF6"
-        });
+            r.ActivityPercent = maxSlotAmount > 0 ? Math.Max(12.0, (double)(r.TotalAmount / maxSlotAmount) * 100.0) : 15.0;
+            HourlyActivities.Add(r);
+        }
     }
 }
