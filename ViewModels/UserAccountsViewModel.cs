@@ -658,17 +658,22 @@ public class UserAccountsViewModel : BaseViewModel
 
     private async Task LoadDrawerMovementsAsync()
     {
-        var movements = await _context.CashDrawerMovements
-            .AsNoTracking()
-            .OrderByDescending(m => m.CreatedAt)
-            .Take(50)
-            .ToListAsync();
-
-        DrawerMovements.Clear();
-        foreach (var m in movements)
+        try
         {
-            DrawerMovements.Add(m);
+            using var db = new AppDbContext();
+            var movements = await db.CashDrawerMovements
+                .AsNoTracking()
+                .OrderByDescending(m => m.CreatedAt)
+                .Take(50)
+                .ToListAsync();
+
+            DrawerMovements.Clear();
+            foreach (var m in movements)
+            {
+                DrawerMovements.Add(m);
+            }
         }
+        catch { }
     }
 
     public async Task LoadUsersAsync()
@@ -678,187 +683,207 @@ public class UserAccountsViewModel : BaseViewModel
 
     private async Task LoadCashierFilterOptionsAsync()
     {
-        var users = await _context.Users
-            .AsNoTracking()
-            .Where(u => u.IsActive && !string.IsNullOrWhiteSpace(u.Username))
-            .OrderBy(u => u.FullName)
-            .ToListAsync();
-        
-        Guid? currentSelectedId = SelectedCashierFilter?.Id;
-        
-        CashierFilterOptions.Clear();
-        CashierFilterOptions.Add(new CashierFilterOption { Id = null, DisplayName = "👥 جميع الكاشير والموظفين (الكل)" });
-        
-        foreach (var u in users)
+        try
         {
-            CashierFilterOptions.Add(new CashierFilterOption { Id = u.Id, DisplayName = $"👤 {u.FullName} (@{u.Username})" });
-        }
+            using var db = new AppDbContext();
+            var users = await db.Users
+                .AsNoTracking()
+                .Where(u => u.IsActive && !string.IsNullOrWhiteSpace(u.Username))
+                .OrderBy(u => u.FullName)
+                .ToListAsync();
+            
+            Guid? currentSelectedId = SelectedCashierFilter?.Id;
+            
+            CashierFilterOptions.Clear();
+            CashierFilterOptions.Add(new CashierFilterOption { Id = null, DisplayName = "👥 جميع الكاشير والموظفين (الكل)" });
+            
+            foreach (var u in users)
+            {
+                CashierFilterOptions.Add(new CashierFilterOption { Id = u.Id, DisplayName = $"👤 {u.FullName} (@{u.Username})" });
+            }
 
-        if (currentSelectedId.HasValue && CashierFilterOptions.Any(o => o.Id == currentSelectedId.Value))
-        {
-            _selectedCashierFilter = CashierFilterOptions.FirstOrDefault(o => o.Id == currentSelectedId.Value);
+            if (currentSelectedId.HasValue && CashierFilterOptions.Any(o => o.Id == currentSelectedId.Value))
+            {
+                _selectedCashierFilter = CashierFilterOptions.FirstOrDefault(o => o.Id == currentSelectedId.Value);
+            }
+            else
+            {
+                _selectedCashierFilter = CashierFilterOptions.First();
+            }
+            OnPropertyChanged(nameof(SelectedCashierFilter));
         }
-        else
-        {
-            _selectedCashierFilter = CashierFilterOptions.First();
-        }
-        OnPropertyChanged(nameof(SelectedCashierFilter));
+        catch { }
     }
 
     private async Task CalculateTopSummaryAsync()
     {
-        var query = _context.Sales
-            .Include(s => s.Items)
-            .ThenInclude(i => i.Product)
-            .AsNoTracking()
-            .AsQueryable();
-
-        // Cashier filter
-        if (SelectedCashierFilter != null && SelectedCashierFilter.Id.HasValue)
+        try
         {
-            Guid cashierId = SelectedCashierFilter.Id.Value;
-            query = query.Where(s => s.UserId == cashierId);
+            using var db = new AppDbContext();
+            var query = db.Sales
+                .Include(s => s.Items)
+                .ThenInclude(i => i.Product)
+                .AsNoTracking()
+                .AsQueryable();
+
+            // Cashier filter
+            if (SelectedCashierFilter != null && SelectedCashierFilter.Id.HasValue)
+            {
+                Guid cashierId = SelectedCashierFilter.Id.Value;
+                query = query.Where(s => s.UserId == cashierId);
+            }
+
+            // Date range filter
+            if (SummaryDateFrom.HasValue)
+            {
+                DateTime dfUtc = DateTime.SpecifyKind(SummaryDateFrom.Value.Date, DateTimeKind.Utc);
+                query = query.Where(s => s.CreatedAt >= dfUtc);
+            }
+
+            if (SummaryDateTo.HasValue)
+            {
+                DateTime dtUtc = DateTime.SpecifyKind(SummaryDateTo.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
+                query = query.Where(s => s.CreatedAt <= dtUtc);
+            }
+
+            var salesList = await query.ToListAsync();
+
+            var completedSales = salesList.Where(s => s.Status != "Returned" && s.Status != "Refunded").ToList();
+            var returnedSales = salesList.Where(s => s.Status == "Returned" || s.Status == "Refunded").ToList();
+
+            decimal totalSales = completedSales.Sum(s => s.TotalAmount);
+            decimal totalReturns = returnedSales.Sum(s => s.TotalAmount);
+            decimal netSales = totalSales - totalReturns;
+
+            decimal netProfit = 0m;
+            foreach (var s in completedSales)
+            {
+                netProfit += s.InvoiceNetProfit;
+            }
+
+            TopTotalSales = totalSales;
+            TopTotalReturns = totalReturns;
+            TopNetSales = netSales;
+            TopNetProfit = netProfit;
+            TopInvoicesCount = completedSales.Count;
+            TopReturnedCount = returnedSales.Count;
         }
-
-        // Date range filter
-        if (SummaryDateFrom.HasValue)
-        {
-            DateTime dfUtc = DateTime.SpecifyKind(SummaryDateFrom.Value.Date, DateTimeKind.Utc);
-            query = query.Where(s => s.CreatedAt >= dfUtc);
-        }
-
-        if (SummaryDateTo.HasValue)
-        {
-            DateTime dtUtc = DateTime.SpecifyKind(SummaryDateTo.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
-            query = query.Where(s => s.CreatedAt <= dtUtc);
-        }
-
-        var salesList = await query.ToListAsync();
-
-        var completedSales = salesList.Where(s => s.Status != "Returned" && s.Status != "Refunded").ToList();
-        var returnedSales = salesList.Where(s => s.Status == "Returned" || s.Status == "Refunded").ToList();
-
-        decimal totalSales = completedSales.Sum(s => s.TotalAmount);
-        decimal totalReturns = returnedSales.Sum(s => s.TotalAmount);
-        decimal netSales = totalSales - totalReturns;
-
-        decimal netProfit = 0m;
-        foreach (var s in completedSales)
-        {
-            netProfit += s.InvoiceNetProfit;
-        }
-
-        TopTotalSales = totalSales;
-        TopTotalReturns = totalReturns;
-        TopNetSales = netSales;
-        TopNetProfit = netProfit;
-        TopInvoicesCount = completedSales.Count;
-        TopReturnedCount = returnedSales.Count;
+        catch { }
     }
 
     public async Task LoadCashierCardsAsync()
     {
-        var query = _context.Users
-            .AsNoTracking()
-            .Where(u => u.IsActive && !string.IsNullOrWhiteSpace(u.Username))
-            .AsQueryable();
-        
-        // If specific cashier filter is selected, filter cards
-        if (SelectedCashierFilter != null && SelectedCashierFilter.Id.HasValue)
+        try
         {
-            query = query.Where(u => u.Id == SelectedCashierFilter.Id.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(SearchQuery))
-        {
-            string q = SearchQuery.Trim().ToLower();
-            query = query.Where(u => u.FullName.ToLower().Contains(q) || u.Username.ToLower().Contains(q));
-        }
-
-        var users = await query.OrderBy(u => u.FullName).ToListAsync();
-        
-        var allSalesQuery = _context.Sales.Include(s => s.Items).ThenInclude(i => i.Product).AsNoTracking().AsQueryable();
-        
-        if (SummaryDateFrom.HasValue)
-        {
-            DateTime dfUtc = DateTime.SpecifyKind(SummaryDateFrom.Value.Date, DateTimeKind.Utc);
-            allSalesQuery = allSalesQuery.Where(s => s.CreatedAt >= dfUtc);
-        }
-        if (SummaryDateTo.HasValue)
-        {
-            DateTime dtUtc = DateTime.SpecifyKind(SummaryDateTo.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
-            allSalesQuery = allSalesQuery.Where(s => s.CreatedAt <= dtUtc);
-        }
-
-        var allFilteredSales = await allSalesQuery.ToListAsync();
-
-        CashierCards.Clear();
-        foreach (var u in users)
-        {
-            var userSales = allFilteredSales.Where(s => s.UserId == u.Id || (s.UserId == null && u.Role == "Admin")).ToList();
-            var userCompleted = userSales.Where(s => s.Status != "Returned" && s.Status != "Refunded").ToList();
-            var userReturned = userSales.Where(s => s.Status == "Returned" || s.Status == "Refunded").ToList();
-
-            decimal userProfit = 0m;
-            foreach (var s in userCompleted)
+            using var db = new AppDbContext();
+            var query = db.Users
+                .AsNoTracking()
+                .Where(u => u.IsActive && !string.IsNullOrWhiteSpace(u.Username))
+                .AsQueryable();
+            
+            // If specific cashier filter is selected, filter cards
+            if (SelectedCashierFilter != null && SelectedCashierFilter.Id.HasValue)
             {
-                userProfit += s.InvoiceNetProfit;
+                query = query.Where(u => u.Id == SelectedCashierFilter.Id.Value);
             }
 
-            var card = new CashierCardItem
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                Id = u.Id,
-                Username = u.Username,
-                FullName = u.FullName,
-                Role = u.Role,
-                IsActive = u.IsActive,
-                PasswordHash = u.PasswordHash,
-                CreatedAt = u.CreatedAt,
-                TotalInvoicesCount = userCompleted.Count,
-                TotalSalesAmount = userCompleted.Sum(s => s.TotalAmount),
-                TodaySalesAmount = userCompleted.Sum(s => s.TotalAmount),
-                TodayReturnsAmount = userReturned.Sum(s => s.TotalAmount),
-                TodayNetProfit = userProfit
-            };
-            CashierCards.Add(card);
+                string q = SearchQuery.Trim().ToLower();
+                query = query.Where(u => u.FullName.ToLower().Contains(q) || u.Username.ToLower().Contains(q));
+            }
+
+            var users = await query.OrderBy(u => u.FullName).ToListAsync();
+            
+            var allSalesQuery = db.Sales.Include(s => s.Items).ThenInclude(i => i.Product).AsNoTracking().AsQueryable();
+            
+            if (SummaryDateFrom.HasValue)
+            {
+                DateTime dfUtc = DateTime.SpecifyKind(SummaryDateFrom.Value.Date, DateTimeKind.Utc);
+                allSalesQuery = allSalesQuery.Where(s => s.CreatedAt >= dfUtc);
+            }
+            if (SummaryDateTo.HasValue)
+            {
+                DateTime dtUtc = DateTime.SpecifyKind(SummaryDateTo.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
+                allSalesQuery = allSalesQuery.Where(s => s.CreatedAt <= dtUtc);
+            }
+
+            var allFilteredSales = await allSalesQuery.ToListAsync();
+
+            CashierCards.Clear();
+            foreach (var u in users)
+            {
+                var userSales = allFilteredSales.Where(s => s.UserId == u.Id || (s.UserId == null && u.Role == "Admin")).ToList();
+                var userCompleted = userSales.Where(s => s.Status != "Returned" && s.Status != "Refunded").ToList();
+                var userReturned = userSales.Where(s => s.Status == "Returned" || s.Status == "Refunded").ToList();
+
+                decimal userProfit = 0m;
+                foreach (var s in userCompleted)
+                {
+                    userProfit += s.InvoiceNetProfit;
+                }
+
+                var card = new CashierCardItem
+                {
+                    Id = u.Id,
+                    Username = u.Username,
+                    FullName = u.FullName,
+                    Role = u.Role,
+                    IsActive = u.IsActive,
+                    PasswordHash = u.PasswordHash,
+                    CreatedAt = u.CreatedAt,
+                    TotalInvoicesCount = userCompleted.Count,
+                    TotalSalesAmount = userCompleted.Sum(s => s.TotalAmount),
+                    TodaySalesAmount = userCompleted.Sum(s => s.TotalAmount),
+                    TodayReturnsAmount = userReturned.Sum(s => s.TotalAmount),
+                    TodayNetProfit = userProfit
+                };
+                CashierCards.Add(card);
+            }
         }
+        catch { }
     }
 
     public async Task FilterCashierSalesAsync()
     {
         if (SelectedCashier == null) return;
 
-        var salesQuery = _context.Sales
-            .Include(s => s.Items)
-            .AsNoTracking()
-            .Where(s => s.UserId == SelectedCashier.Id || (s.UserId == null && SelectedCashier.Role == "Admin"))
-            .AsQueryable();
-
-        if (DateFrom.HasValue)
+        try
         {
-            DateTime dfUtc = DateTime.SpecifyKind(DateFrom.Value.Date, DateTimeKind.Utc);
-            salesQuery = salesQuery.Where(s => s.CreatedAt >= dfUtc);
+            using var db = new AppDbContext();
+            var salesQuery = db.Sales
+                .Include(s => s.Items)
+                .AsNoTracking()
+                .Where(s => s.UserId == SelectedCashier.Id || (s.UserId == null && SelectedCashier.Role == "Admin"))
+                .AsQueryable();
+
+            if (DateFrom.HasValue)
+            {
+                DateTime dfUtc = DateTime.SpecifyKind(DateFrom.Value.Date, DateTimeKind.Utc);
+                salesQuery = salesQuery.Where(s => s.CreatedAt >= dfUtc);
+            }
+
+            if (DateTo.HasValue)
+            {
+                DateTime dtUtc = DateTime.SpecifyKind(DateTo.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
+                salesQuery = salesQuery.Where(s => s.CreatedAt <= dtUtc);
+            }
+
+            var list = await salesQuery.OrderByDescending(s => s.CreatedAt).ToListAsync();
+
+            CashierSalesHistory.Clear();
+            foreach (var s in list)
+            {
+                CashierSalesHistory.Add(s);
+            }
+
+            var completed = list.Where(s => s.Status != "Returned" && s.Status != "Refunded").ToList();
+            CashierPeriodInvoicesCount = completed.Count;
+            CashierPeriodTotalSales = completed.Sum(s => s.TotalAmount);
+            CashierPeriodCashSales = completed.Where(s => s.PaymentMethod == "Cash").Sum(s => s.TotalAmount);
+            CashierPeriodCardSales = completed.Where(s => s.PaymentMethod != "Cash").Sum(s => s.TotalAmount);
         }
-
-        if (DateTo.HasValue)
-        {
-            DateTime dtUtc = DateTime.SpecifyKind(DateTo.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
-            salesQuery = salesQuery.Where(s => s.CreatedAt <= dtUtc);
-        }
-
-        var list = await salesQuery.OrderByDescending(s => s.CreatedAt).ToListAsync();
-
-        CashierSalesHistory.Clear();
-        foreach (var s in list)
-        {
-            CashierSalesHistory.Add(s);
-        }
-
-        var completed = list.Where(s => s.Status != "Returned" && s.Status != "Refunded").ToList();
-        CashierPeriodInvoicesCount = completed.Count;
-        CashierPeriodTotalSales = completed.Sum(s => s.TotalAmount);
-        CashierPeriodCashSales = completed.Where(s => s.PaymentMethod == "Cash").Sum(s => s.TotalAmount);
-        CashierPeriodCardSales = completed.Where(s => s.PaymentMethod != "Cash").Sum(s => s.TotalAmount);
+        catch { }
     }
 
     public void ClearForm()

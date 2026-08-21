@@ -29,9 +29,6 @@ public class SupplierCardItem : BaseViewModel
 
 public class SuppliersViewModel : BaseViewModel
 {
-    private readonly AppDbContext _context;
-    private readonly ISupplierService _supplierService;
-
     #region Cards Grid State
 
     public ObservableCollection<SupplierCardItem> SupplierCards { get; } = new();
@@ -66,7 +63,7 @@ public class SuppliersViewModel : BaseViewModel
 
     #endregion
 
-    #region Active Supplier Details
+    #region Selected Supplier Details State
 
     private Supplier? _selectedSupplier;
     public Supplier? SelectedSupplier
@@ -79,42 +76,21 @@ public class SuppliersViewModel : BaseViewModel
     public ObservableCollection<PurchaseInvoice> SupplierInvoices { get; } = new();
     public ObservableCollection<SupplierTransaction> SupplierTransactions { get; } = new();
 
-    private decimal _supplierTotalStockValue;
-    public decimal SupplierTotalStockValue
-    {
-        get => _supplierTotalStockValue;
-        set => SetProperty(ref _supplierTotalStockValue, value);
-    }
-
-    private decimal _supplierTotalPaid;
-    public decimal SupplierTotalPaid
-    {
-        get => _supplierTotalPaid;
-        set => SetProperty(ref _supplierTotalPaid, value);
-    }
-
-    private decimal _supplierNetBalance;
-    public decimal SupplierNetBalance
-    {
-        get => _supplierNetBalance;
-        set => SetProperty(ref _supplierNetBalance, value);
-    }
-
     private int _supplierProductsCount;
-    public int SupplierProductsCount
-    {
-        get => _supplierProductsCount;
-        set => SetProperty(ref _supplierProductsCount, value);
-    }
+    public int SupplierProductsCount { get => _supplierProductsCount; set => SetProperty(ref _supplierProductsCount, value); }
 
     private int _supplierInvoicesCount;
-    public int SupplierInvoicesCount
-    {
-        get => _supplierInvoicesCount;
-        set => SetProperty(ref _supplierInvoicesCount, value);
-    }
+    public int SupplierInvoicesCount { get => _supplierInvoicesCount; set => SetProperty(ref _supplierInvoicesCount, value); }
 
-    // Detail Tabs ("Invoices", "Products", "Ledger")
+    private decimal _supplierTotalStockValue;
+    public decimal SupplierTotalStockValue { get => _supplierTotalStockValue; set => SetProperty(ref _supplierTotalStockValue, value); }
+
+    private decimal _supplierTotalPaid;
+    public decimal SupplierTotalPaid { get => _supplierTotalPaid; set => SetProperty(ref _supplierTotalPaid, value); }
+
+    private decimal _supplierNetBalance;
+    public decimal SupplierNetBalance { get => _supplierNetBalance; set => SetProperty(ref _supplierNetBalance, value); }
+
     private string _activeSupplierTab = "Invoices";
     public string ActiveSupplierTab
     {
@@ -249,9 +225,6 @@ public class SuppliersViewModel : BaseViewModel
 
     public SuppliersViewModel()
     {
-        _context = new AppDbContext();
-        _supplierService = new SupplierService(_context);
-
         RefreshCommand = new AsyncRelayCommand(async () =>
         {
             if (IsSupplierDetailsActive && SelectedSupplier != null)
@@ -296,7 +269,12 @@ public class SuppliersViewModel : BaseViewModel
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _supplierService.SaveSupplierAsync(supplier);
+            using (var db = new AppDbContext())
+            {
+                var service = new SupplierService(db);
+                await service.SaveSupplierAsync(supplier);
+            }
+
             ClearNewSupplierForm();
             IsAddSupplierModalOpen = false;
             await LoadSuppliersAsync();
@@ -326,7 +304,11 @@ public class SuppliersViewModel : BaseViewModel
             var res = MessageBox.Show($"هل ترغب في حذف المندوب '{SelectedSupplier.Name}'؟", "تأكيد الحذف", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (res == MessageBoxResult.Yes)
             {
-                await _supplierService.DeleteSupplierAsync(SelectedSupplier.Id);
+                using (var db = new AppDbContext())
+                {
+                    var service = new SupplierService(db);
+                    await service.DeleteSupplierAsync(SelectedSupplier.Id);
+                }
                 IsSupplierDetailsActive = false;
                 await LoadSuppliersAsync();
             }
@@ -362,7 +344,12 @@ public class SuppliersViewModel : BaseViewModel
                 return;
             }
 
-            await _supplierService.AddTransactionAsync(SelectedSupplier.Id, "Payment", PaymentAmount, PaymentNotes, PaymentReceiptNumber);
+            using (var db = new AppDbContext())
+            {
+                var service = new SupplierService(db);
+                await service.AddTransactionAsync(SelectedSupplier.Id, "Payment", PaymentAmount, PaymentNotes, PaymentReceiptNumber);
+            }
+
             IsPaymentModalOpen = false;
             await LoadSupplierDetailsAsync(SelectedSupplier.Id);
             MessageBox.Show($"تم تسجيل دفعة بقيمة {PaymentAmount:N0} د.ع بنجاح للمندوب '{SelectedSupplier.Name}'.", "نجاح السداد", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -396,12 +383,15 @@ public class SuppliersViewModel : BaseViewModel
 
                         invoice.ReceiptImagePath = destPath;
 
-                        var dbInvoice = await _context.PurchaseInvoices.FindAsync(invoice.Id);
-                        if (dbInvoice != null)
+                        using (var db = new AppDbContext())
                         {
-                            dbInvoice.ReceiptImagePath = destPath;
-                            dbInvoice.UpdatedAt = DateTime.UtcNow;
-                            await _context.SaveChangesAsync();
+                            var dbInvoice = await db.PurchaseInvoices.FindAsync(invoice.Id);
+                            if (dbInvoice != null)
+                            {
+                                dbInvoice.ReceiptImagePath = destPath;
+                                dbInvoice.UpdatedAt = DateTime.UtcNow;
+                                await db.SaveChangesAsync();
+                            }
                         }
 
                         if (SelectedSupplier != null)
@@ -444,11 +434,14 @@ public class SuppliersViewModel : BaseViewModel
                 if (res == MessageBoxResult.Yes)
                 {
                     invoice.ReceiptImagePath = null;
-                    var dbInvoice = await _context.PurchaseInvoices.FindAsync(invoice.Id);
-                    if (dbInvoice != null)
+                    using (var db = new AppDbContext())
                     {
-                        dbInvoice.ReceiptImagePath = null;
-                        await _context.SaveChangesAsync();
+                        var dbInvoice = await db.PurchaseInvoices.FindAsync(invoice.Id);
+                        if (dbInvoice != null)
+                        {
+                            dbInvoice.ReceiptImagePath = null;
+                            await db.SaveChangesAsync();
+                        }
                     }
                     IsReceiptImageModalOpen = false;
                     if (SelectedSupplier != null) await LoadSupplierDetailsAsync(SelectedSupplier.Id);
@@ -475,81 +468,93 @@ public class SuppliersViewModel : BaseViewModel
 
     public async Task LoadSuppliersAsync()
     {
-        var suppliers = await _supplierService.GetSuppliersAsync(SearchQuery);
-        var invoices = await _context.PurchaseInvoices.AsNoTracking().ToListAsync();
-
-        SupplierCards.Clear();
-        foreach (var s in suppliers)
+        try
         {
-            decimal totalStockVal = s.Products.Where(p => !p.IsDeleted).Sum(p => p.Cost * p.StockQuantity);
-            int invCount = invoices.Count(i => i.SupplierId == s.Id || (i.SupplierName != null && i.SupplierName.Equals(s.Name, StringComparison.OrdinalIgnoreCase)));
+            using var db = new AppDbContext();
+            var service = new SupplierService(db);
+            var suppliers = await service.GetSuppliersAsync(SearchQuery);
+            var invoices = await db.PurchaseInvoices.AsNoTracking().ToListAsync();
 
-            SupplierCards.Add(new SupplierCardItem
+            SupplierCards.Clear();
+            foreach (var s in suppliers)
             {
-                Id = s.Id,
-                Name = s.Name,
-                Company = string.IsNullOrWhiteSpace(s.Company) ? "غير محدد" : s.Company,
-                Phone = string.IsNullOrWhiteSpace(s.Phone) ? "--" : s.Phone,
-                Address = string.IsNullOrWhiteSpace(s.Address) ? "--" : s.Address,
-                Notes = s.Notes ?? string.Empty,
-                ProductsCount = s.Products.Count(p => !p.IsDeleted),
-                InvoicesCount = invCount,
-                Balance = s.Balance,
-                TotalStockValue = totalStockVal
-            });
+                decimal totalStockVal = s.Products.Where(p => !p.IsDeleted).Sum(p => p.Cost * p.StockQuantity);
+                int invCount = invoices.Count(i => i.SupplierId == s.Id || (i.SupplierName != null && i.SupplierName.Equals(s.Name, StringComparison.OrdinalIgnoreCase)));
+
+                SupplierCards.Add(new SupplierCardItem
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Company = string.IsNullOrWhiteSpace(s.Company) ? "غير محدد" : s.Company,
+                    Phone = string.IsNullOrWhiteSpace(s.Phone) ? "--" : s.Phone,
+                    Address = string.IsNullOrWhiteSpace(s.Address) ? "--" : s.Address,
+                    Notes = s.Notes ?? string.Empty,
+                    ProductsCount = s.Products.Count(p => !p.IsDeleted),
+                    InvoicesCount = invCount,
+                    Balance = s.Balance,
+                    TotalStockValue = totalStockVal
+                });
+            }
         }
+        catch { }
     }
 
     public async Task LoadSupplierDetailsAsync(Guid supplierId)
     {
-        SupplierProducts.Clear();
-        SupplierInvoices.Clear();
-        SupplierTransactions.Clear();
-
-        var fullSupplier = await _supplierService.GetSupplierByIdAsync(supplierId);
-        if (fullSupplier == null)
+        try
         {
-            SelectedSupplier = null;
-            return;
+            SupplierProducts.Clear();
+            SupplierInvoices.Clear();
+            SupplierTransactions.Clear();
+
+            using var db = new AppDbContext();
+            var service = new SupplierService(db);
+            var fullSupplier = await service.GetSupplierByIdAsync(supplierId);
+            if (fullSupplier == null)
+            {
+                SelectedSupplier = null;
+                return;
+            }
+
+            SelectedSupplier = fullSupplier;
+
+            // 1. Products
+            decimal totalGoodsValue = 0;
+            foreach (var p in fullSupplier.Products.Where(p => !p.IsDeleted))
+            {
+                SupplierProducts.Add(p);
+                totalGoodsValue += (p.Cost * p.StockQuantity);
+            }
+
+            // 2. Invoices
+            var invList = await db.PurchaseInvoices
+                .AsNoTracking()
+                .Where(pi => !pi.IsDeleted && (pi.SupplierId == fullSupplier.Id || pi.SupplierName == fullSupplier.Name))
+                .Include(pi => pi.Items)
+                .OrderByDescending(pi => pi.CreatedAt)
+                .ToListAsync();
+
+            foreach (var inv in invList)
+            {
+                SupplierInvoices.Add(inv);
+            }
+
+            // 3. Transactions
+            var txs = await service.GetSupplierTransactionsAsync(fullSupplier.Id);
+            decimal totalPaid = 0;
+            foreach (var t in txs)
+            {
+                SupplierTransactions.Add(t);
+                if (t.TransactionType == "Payment") totalPaid += t.Amount;
+            }
+
+            SupplierProductsCount = SupplierProducts.Count;
+            SupplierInvoicesCount = SupplierInvoices.Count;
+            SupplierTotalStockValue = totalGoodsValue;
+            SupplierTotalPaid = totalPaid;
+            SupplierNetBalance = fullSupplier.OpeningBalance + totalGoodsValue - totalPaid;
         }
-
-        SelectedSupplier = fullSupplier;
-
-        // 1. Products
-        decimal totalGoodsValue = 0;
-        foreach (var p in fullSupplier.Products.Where(p => !p.IsDeleted))
-        {
-            SupplierProducts.Add(p);
-            totalGoodsValue += (p.Cost * p.StockQuantity);
-        }
-
-        // 2. Invoices
-        var invList = await _context.PurchaseInvoices
-            .AsNoTracking()
-            .Where(pi => !pi.IsDeleted && (pi.SupplierId == fullSupplier.Id || pi.SupplierName == fullSupplier.Name))
-            .Include(pi => pi.Items)
-            .OrderByDescending(pi => pi.CreatedAt)
-            .ToListAsync();
-
-        foreach (var inv in invList)
-        {
-            SupplierInvoices.Add(inv);
-        }
-
-        // 3. Transactions
-        var txs = await _supplierService.GetSupplierTransactionsAsync(fullSupplier.Id);
-        decimal totalPaid = 0;
-        foreach (var t in txs)
-        {
-            SupplierTransactions.Add(t);
-            if (t.TransactionType == "Payment") totalPaid += t.Amount;
-        }
-
-        SupplierProductsCount = SupplierProducts.Count;
-        SupplierInvoicesCount = SupplierInvoices.Count;
-        SupplierTotalStockValue = totalGoodsValue;
-        SupplierTotalPaid = totalPaid;
-        SupplierNetBalance = fullSupplier.OpeningBalance + totalGoodsValue - totalPaid;
+        catch { }
     }
 
     private void ClearNewSupplierForm()

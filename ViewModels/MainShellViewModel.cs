@@ -131,6 +131,90 @@ public class MainShellViewModel : BaseViewModel
 
         ActiveTab = tabId;
         CurrentView = viewModel;
+
+        // Auto-refresh and clean up open modals when switching tabs
+        CloseAllModalsAndRefresh(tabId);
+    }
+
+    public void CloseAllModalsAndRefresh(string activeTabId)
+    {
+        try
+        {
+            // 1. Reset all modal states across all ViewModels so no ghost popups remain on screen
+            if (SuppliersVM != null)
+            {
+                SuppliersVM.IsAddSupplierModalOpen = false;
+                SuppliersVM.IsPaymentModalOpen = false;
+                SuppliersVM.IsReceiptImageModalOpen = false;
+            }
+
+            if (UserAccountsVM != null)
+            {
+                UserAccountsVM.IsAddEditModalOpen = false;
+                UserAccountsVM.IsInvoiceItemsModalOpen = false;
+            }
+
+            if (CashierVM != null)
+            {
+                CashierVM.IsWarehouseModalOpen = false;
+                CashierVM.IsSalesHistoryModalOpen = false;
+                CashierVM.IsInvoiceDetailsModalOpen = false;
+                CashierVM.IsDrawerActionPopupOpen = false;
+                CashierVM.IsCashMovementVoucherOpen = false;
+                CashierVM.IsDirectReturnModalOpen = false;
+            }
+
+            // 2. Refresh active ViewModel data
+            switch (activeTabId)
+            {
+                case "Dashboard":
+                    _ = DashboardVM?.LoadDashboardDataAsync();
+                    break;
+                case "Cashier":
+                    _ = CashierVM?.InitializeAsync();
+                    break;
+                case "Suppliers":
+                    _ = SuppliersVM?.LoadSuppliersAsync();
+                    break;
+                case "SupplierOrders":
+                    _ = SupplierOrdersVM?.LoadOrdersAsync();
+                    break;
+                case "UserAccounts":
+                    _ = UserAccountsVM?.RefreshDataAsync();
+                    break;
+                case "Inventory":
+                    _ = InventoryVM?.LoadProductsAsync();
+                    break;
+                case "Stock":
+                    _ = StockVM?.LoadStockAsync();
+                    break;
+                case "DamagedItems":
+                    _ = DamagedItemsVM?.LoadDataAsync();
+                    break;
+                case "StockAudit":
+                    _ = StockAuditVM?.LoadAllForAuditAsync();
+                    break;
+                case "Purchase":
+                    _ = PurchaseVM?.InitializeAsync();
+                    break;
+                case "Reports":
+                    _ = ReportsVM?.LoadReportAsync();
+                    break;
+                case "SalesHistory":
+                    _ = SalesHistoryVM?.LoadSalesDataAsync();
+                    break;
+                case "WarehouseHub":
+                    _ = WarehouseHubVM?.LoadHubDataAsync();
+                    break;
+                case "Printing":
+                    _ = PrintingVM?.InitializeAsync();
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"CloseAllModalsAndRefresh error: {ex.Message}");
+        }
     }
 
     public void CloseTab(ShellTabItem tab)
