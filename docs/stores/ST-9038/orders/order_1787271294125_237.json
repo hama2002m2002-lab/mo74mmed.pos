@@ -1,0 +1,21 @@
+{
+  "storeId": "ST-9038",
+  "orderNumber": "ORD-20260821-226",
+  "orderDate": "2026-08-21T00:14:54.125Z",
+  "marketName": "محمد",
+  "marketPhone": "",
+  "marketAddress": "",
+  "representativeName": "نن",
+  "notes": "",
+  "totalAmount": 1000,
+  "items": [
+    {
+      "productId": "86817976-9dad-4f50-b196-88776b363a9a",
+      "productName": "12",
+      "barcode": "2002456335633",
+      "quantity": 4,
+      "unitType": "Retail",
+      "unitPrice": 250
+    }
+  ]
+}
