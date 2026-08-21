@@ -123,10 +123,10 @@
 
             <!-- Tab Nav -->
             <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('order')">📝 طلبية</button>
+                <button class="tab-btn active" onclick="switchTab('order')">🛒 إنشاء طلبية</button>
                 <button class="tab-btn" onclick="switchTab('markets')">🏪 المحلات</button>
-                <button class="tab-btn" onclick="switchTab('catalog')">📦 المخزن</button>
-                <button class="tab-btn" onclick="switchTab('myOrders')">📋 طلبياتي</button>
+                <button class="tab-btn" onclick="switchTab('catalog')">📦 قائمة المواد</button>
+                <button class="tab-btn" onclick="switchTab('myOrders')">📋 طلبياتي المرسلة</button>
             </div>
 
         <!-- TAB 1: ORDER CREATOR -->
@@ -645,12 +645,14 @@
 
             let sentSuccess = false;
 
-            // 1. Direct Cloud GitHub API Queue into Store Folder
+            // 1. Direct Cloud GitHub API Queue into Store Folder & Global Queue
             try {
-                let fileName = `docs/stores/${storeId}/orders/order_${new Date().getTime()}_${Math.floor(Math.random() * 1000)}.json`;
+                let timeKey = new Date().getTime() + '_' + Math.floor(Math.random() * 1000);
+                let fileNameStore = `docs/stores/${storeId}/orders/order_${timeKey}.json`;
+                let fileNameGlobal = `docs/orders/order_${timeKey}.json`;
                 let contentB64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
                 
-                let ghRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${fileName}`, {
+                let ghRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${fileNameStore}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': 'token ' + GITHUB_TOKEN,
@@ -661,6 +663,19 @@
                         content: contentB64
                     })
                 });
+
+                // Also push to global queue
+                fetch(`https://api.github.com/repos/${REPO}/contents/${fileNameGlobal}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'token ' + GITHUB_TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `cloud order global: ${orderNumber} - ${market}`,
+                        content: contentB64
+                    })
+                }).catch(() => {});
 
                 if (ghRes.ok || ghRes.status === 201) {
                     sentSuccess = true;

@@ -388,6 +388,7 @@
                                         <!-- Close Tab Button (✕) -->
                                         <Button Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 CommandParameter="{Binding}"
+                                                Click="CloseTab_Click"
                                                 Background="Transparent" BorderThickness="0"
                                                 Padding="2" VerticalAlignment="Center" Margin="2,0,0,0"
                                                 Cursor="Hand" ToolTip="إغلاق التبويب">

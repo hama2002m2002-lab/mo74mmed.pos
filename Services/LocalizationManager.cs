@@ -119,7 +119,7 @@ public class LocalizationManager : INotifyPropertyChanged
         _ar["Nav_AddProduct"] = "إضافة مادة جديدة";
         _ar["Nav_Suppliers"] = "إدارة المناديب والموردين";
         _ar["Nav_SupplierOrders"] = "طلبيات المناديب والمحلات";
-        _ar["Nav_UserAccounts"] = "حسابات الكاشير";
+        _ar["Nav_UserAccounts"] = "إدارة مستخدمي الكاشير والصلاحيات";
         _ar["Nav_Printing"] = "الطباعة والملصقات";
         _ar["Nav_Reports"] = "مركز التقارير الشامل";
         _ar["Nav_Settings"] = "الإعدادات والشبكة";

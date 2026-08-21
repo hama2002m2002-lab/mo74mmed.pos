@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Controls;
+using HamoPos.Models;
 using HamoPos.ViewModels;
 
 namespace HamoPos;
@@ -16,5 +18,14 @@ public partial class MainWindow : Window
                 await vm.InitializeAsync();
             }
         };
+    }
+
+    private void CloseTab_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (sender is Button btn && btn.DataContext is ShellTabItem tab && DataContext is MainShellViewModel vm)
+        {
+            vm.CloseTab(tab);
+        }
     }
 }
