@@ -11,11 +11,10 @@ public partial class SupplierOrdersView : UserControl
         InitializeComponent();
     }
 
-    private void CloseModal_Click(object sender, RoutedEventArgs e)
+    private void OpenRepsWindow_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is SupplierOrdersViewModel vm)
-        {
-            vm.IsRepsModalOpen = false;
-        }
+        var win = new RepsManagementWindow();
+        win.Owner = Window.GetWindow(this);
+        win.ShowDialog();
     }
 }

@@ -529,8 +529,15 @@ public class MainShellViewModel : BaseViewModel
                 });
             };
 
-            // Start 24/7 Background Cloud Sync (every 30 seconds)
-            CloudSyncService.Instance.StartBackgroundSync(30);
+            // Start 24/7 Background Cloud Sync (every 3 seconds)
+            CloudSyncService.Instance.CloudOrdersImported += () =>
+            {
+                System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
+                {
+                    _ = SupplierOrdersVM.LoadOrdersAsync();
+                });
+            };
+            CloudSyncService.Instance.StartBackgroundSync(3);
         }
         catch { }
 
