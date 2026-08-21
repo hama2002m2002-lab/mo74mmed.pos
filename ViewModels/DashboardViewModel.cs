@@ -95,6 +95,7 @@ public class DashboardViewModel : BaseViewModel
     public DashboardViewModel()
     {
         RefreshCommand = new AsyncRelayCommand(async () => await LoadDashboardDataAsync());
+        _ = LoadDashboardDataAsync();
     }
 
     public async Task LoadDashboardDataAsync()
