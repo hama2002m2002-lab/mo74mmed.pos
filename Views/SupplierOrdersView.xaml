@@ -50,6 +50,18 @@
 
             <!-- Actions Top Right -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <!-- Notifications Button with Badge -->
+                <Button Click="NotificationsButton_Click" Style="{DynamicResource ActionButton}" Padding="12,8" Margin="0,0,8,0" Cursor="Hand" Background="#0C2548" BorderBrush="#F59E0B" ToolTip="عرض إشعارات الطلبيات الجديدة الواردة من المناديب">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="🔔 " FontSize="14" />
+                        <TextBlock Text="الإشعارات" FontWeight="Bold" FontSize="12" Foreground="#F59E0B" />
+                        <!-- Badge Count -->
+                        <Border Background="#EF4444" CornerRadius="10" Padding="6,1" Margin="6,0,0,0" Visibility="{Binding HasPendingOrders, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding PendingOrdersCount}" FontSize="11" FontWeight="Black" Foreground="White" />
+                        </Border>
+                    </StackPanel>
+                </Button>
+
                 <!-- Manage Reps Button -->
                 <Button Click="OpenRepsWindow_Click" Style="{DynamicResource ActionButton}" Padding="12,8" Margin="0,0,8,0" Cursor="Hand" Background="#0C2548" BorderBrush="#38BDF8" ToolTip="إنشاء وإدارة حسابات المناديب ورموز الدخول PIN">
                     <StackPanel Orientation="Horizontal">
@@ -72,17 +84,10 @@
                 </Button>
 
                 <!-- Invoices PDF Folder Button -->
-                <Button Click="OpenPdfFolder_Click" Style="{DynamicResource ActionButton}" Padding="11,8" Margin="0,0,8,0" Cursor="Hand" Background="#1E293B" ToolTip="فتح مجلد فواتير PDF المحفوظة في المستندات">
+                <Button Click="OpenPdfFolder_Click" Style="{DynamicResource ActionButton}" Padding="11,8" Cursor="Hand" Background="#1E293B" ToolTip="فتح مجلد فواتير PDF المحفوظة في المستندات">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="📂 " FontSize="13" />
                         <TextBlock Text="مجلد فواتير PDF" FontWeight="Bold" FontSize="11.5" />
-                    </StackPanel>
-                </Button>
-
-                <Button Style="{DynamicResource PrimarySuccessButton}" Command="{Binding AddNewOrderCommand}" Padding="16,8" Cursor="Hand">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="➕ " FontSize="14" />
-                        <TextBlock Text="تسجيل طلبية جديدة" FontWeight="Bold" FontSize="13" />
                     </StackPanel>
                 </Button>
             </StackPanel>
@@ -151,30 +156,31 @@
         </Grid>
 
         <!-- ======================================================== -->
-        <!-- 2: FILTERS & SEARCH TOOLBAR -->
+        <!-- 2: FILTERS & COMPACT SEARCH TOOLBAR -->
         <!-- ======================================================== -->
         <Grid Grid.Row="2" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,16,0">
+            <!-- Filter Tabs on the Right -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <RadioButton Content="جميع الطلبيات" IsChecked="{Binding IsFilterAll}" Command="{Binding SetFilterCommand}" CommandParameter="All" Style="{DynamicResource FilterTabRadioButton}" />
                 <RadioButton Content="⏳ قيد الانتظار" IsChecked="{Binding IsFilterPending}" Command="{Binding SetFilterCommand}" CommandParameter="Pending" Style="{DynamicResource FilterTabRadioButton}" Margin="6,0,0,0" />
                 <RadioButton Content="📦 جاري التجهيز" IsChecked="{Binding IsFilterInPrep}" Command="{Binding SetFilterCommand}" CommandParameter="InPreparation" Style="{DynamicResource FilterTabRadioButton}" Margin="6,0,0,0" />
                 <RadioButton Content="✔ تم التوصيل" IsChecked="{Binding IsFilterDelivered}" Command="{Binding SetFilterCommand}" CommandParameter="Delivered" Style="{DynamicResource FilterTabRadioButton}" Margin="6,0,0,0" />
             </StackPanel>
 
-            <!-- Search Box -->
-            <Border Grid.Column="1" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,0">
+            <!-- Compact Search Box on the Left (داخل الخط الأحمر أصبح صغيراً وأنيقاً) -->
+            <Border Grid.Column="1" Width="260" Background="{DynamicResource BgDarkSecondary}" CornerRadius="10" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1" Padding="10,0" VerticalAlignment="Center">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="🔍" FontSize="13" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" Foreground="{DynamicResource TextPrimary}" BorderThickness="0" VerticalAlignment="Center" FontSize="12.5" Height="34" VerticalContentAlignment="Center" CaretBrush="White" />
+                    <TextBlock Text="🔍" FontSize="12.5" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" Foreground="{DynamicResource TextPrimary}" BorderThickness="0" VerticalAlignment="Center" FontSize="12" Height="32" VerticalContentAlignment="Center" CaretBrush="White" />
                 </Grid>
             </Border>
         </Grid>

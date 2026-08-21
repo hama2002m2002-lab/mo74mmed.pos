@@ -87,6 +87,8 @@ public class SupplierOrdersViewModel : BaseViewModel
     private decimal _totalOrdersValue;
     public decimal TotalOrdersValue { get => _totalOrdersValue; set => SetProperty(ref _totalOrdersValue, value); }
 
+    public bool HasPendingOrders => PendingOrdersCount > 0;
+
     // Reps Modal Popup State
     private bool _isRepsModalOpen = false;
     public bool IsRepsModalOpen
@@ -289,6 +291,7 @@ public class SupplierOrdersViewModel : BaseViewModel
             InPrepOrdersCount = AllOrders.Count(o => o.Status == OrderStatus.InPreparation);
             DeliveredOrdersCount = AllOrders.Count(o => o.Status == OrderStatus.Delivered);
             TotalOrdersValue = AllOrders.Sum(o => o.TotalAmount);
+            OnPropertyChanged(nameof(HasPendingOrders));
 
             ApplyFilter();
 

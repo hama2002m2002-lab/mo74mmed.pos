@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using HamoPos.Data;
 using HamoPos.Models;
@@ -14,6 +15,28 @@ public partial class SupplierOrdersView : UserControl
     public SupplierOrdersView()
     {
         InitializeComponent();
+    }
+
+    private void NotificationsButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is SupplierOrdersViewModel vm)
+        {
+            vm.StatusFilter = "Pending";
+            
+            if (vm.PendingOrdersCount > 0)
+            {
+                var latestPending = vm.FilteredOrders.FirstOrDefault(o => o.Status == OrderStatus.Pending) 
+                                   ?? vm.AllOrders.FirstOrDefault(o => o.Status == OrderStatus.Pending);
+                if (latestPending != null)
+                {
+                    OpenDetailsWindow(latestPending);
+                }
+            }
+            else
+            {
+                MessageBox.Show("لا توجد طلبيات جديدة قيد الانتظار حالياً.\nجميع الطلبيات السابقة تم تجهيزها أو تسليمها بنجاح!", "إشعارات الطلبيات", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
     }
 
     private void OpenRepsWindow_Click(object sender, RoutedEventArgs e)
