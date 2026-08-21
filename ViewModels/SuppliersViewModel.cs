@@ -239,6 +239,8 @@ public class SuppliersViewModel : BaseViewModel
 
         OpenAddSupplierModalCommand = new RelayCommand(() =>
         {
+            IsPaymentModalOpen = false;
+            IsReceiptImageModalOpen = false;
             ClearNewSupplierForm();
             IsAddSupplierModalOpen = true;
         });
@@ -325,6 +327,8 @@ public class SuppliersViewModel : BaseViewModel
                 MessageBox.Show("يرجى اختيار مندوب أولاً لتسجيل الدفعة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+            IsAddSupplierModalOpen = false;
+            IsReceiptImageModalOpen = false;
             PaymentAmount = 0;
             PaymentNotes = $"سداد دفعة نقدية للمندوب {SelectedSupplier.Name}";
             PaymentReceiptNumber = $"PAY-{DateTime.Now:yyyyMMdd}-{new Random().Next(100, 999)}";
@@ -419,6 +423,8 @@ public class SuppliersViewModel : BaseViewModel
                     return;
                 }
 
+                IsAddSupplierModalOpen = false;
+                IsPaymentModalOpen = false;
                 SelectedInvoiceForImage = invoice;
                 CurrentReceiptImagePath = invoice.ReceiptImagePath;
                 CurrentReceiptInvoiceNumber = invoice.InvoiceNumber;

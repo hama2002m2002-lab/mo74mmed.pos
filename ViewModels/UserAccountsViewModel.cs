@@ -429,6 +429,7 @@ public class UserAccountsViewModel : BaseViewModel
 
         OpenAddUserModalCommand = new RelayCommand(() =>
         {
+            IsInvoiceItemsModalOpen = false;
             ClearForm();
             ModalTitle = "➕ إنشاء حساب كاشير / موظف جديد";
             IsAddEditModalOpen = true;
@@ -439,6 +440,7 @@ public class UserAccountsViewModel : BaseViewModel
             CashierCardItem? target = param as CashierCardItem ?? SelectedCashier;
             if (target != null)
             {
+                IsInvoiceItemsModalOpen = false;
                 EditingUserId = target.Id;
                 Username = target.Username;
                 FullName = target.FullName;
@@ -625,6 +627,7 @@ public class UserAccountsViewModel : BaseViewModel
         {
             if (param is Sale s)
             {
+                IsAddEditModalOpen = false;
                 SelectedSale = s;
                 SelectedSaleItems.Clear();
                 foreach (var item in s.Items)
