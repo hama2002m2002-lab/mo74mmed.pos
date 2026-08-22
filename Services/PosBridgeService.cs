@@ -427,37 +427,7 @@ public class PosBridgeService
                 }
 
                 // ==========================================
-                // 7. SALES HISTORY & REPORTS
-                // ==========================================
-                case "get_sales_history":
-                {
-                    var sales = await db.Sales
-                        .Include(s => s.Items)
-                        .OrderByDescending(s => s.CreatedAt)
-                        .Take(100)
-                        .ToListAsync();
-
-                    return JsonSerializer.Serialize(new
-                    {
-                        success = true,
-                        sales = sales.Select(s => new
-                        {
-                            s.Id,
-                            s.InvoiceNumber,
-                            s.CustomerName,
-                            s.PaymentMethod,
-                            s.TotalAmount,
-                            s.DiscountAmount,
-                            s.Status,
-                            createdAt = s.CreatedAt.ToString("yyyy/MM/dd hh:mm tt"),
-                            itemsCount = s.Items.Count,
-                            items = s.Items.Select(i => new { i.ProductName, i.Quantity, i.UnitPrice, i.TotalPrice })
-                        })
-                    });
-                }
-
-                // ==========================================
-                // 8. APP INFO & SYSTEM STATUS
+                // 7. APP INFO & SYSTEM STATUS
                 // ==========================================
                 case "get_app_info":
                 {

@@ -1,116 +1,116 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 
 :root {
-  --bg-app: #0d1322;
-  --bg-sidebar: #111a2e;
-  --bg-card: #16223b;
-  --bg-card-hover: #1c2b4a;
-  --bg-input: #0a0f1d;
-  --border-color: #233559;
-  --border-focus: #3b82f6;
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --success: #10b981;
-  --success-hover: #059669;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --bg-main: #0B0F19;
+  --bg-card: rgba(17, 24, 39, 0.75);
+  --bg-card-hover: rgba(31, 41, 55, 0.85);
+  --border-glow: rgba(59, 130, 246, 0.25);
+  --primary: #3B82F6;
+  --primary-glow: rgba(59, 130, 246, 0.4);
+  --success: #10B981;
+  --success-glow: rgba(16, 185, 129, 0.35);
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --text-main: #F9FAFB;
+  --text-muted: #9CA3AF;
+  --glass-blur: blur(16px);
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Cairo', sans-serif;
+  font-family: 'Cairo', 'Plus Jakarta Sans', sans-serif;
   user-select: none;
 }
 
 body {
-  background-color: var(--bg-app);
+  background-color: var(--bg-main);
   color: var(--text-main);
   overflow: hidden;
   height: 100vh;
   width: 100vw;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
 }
 
-/* Neat Card Style */
-.clean-card {
+/* Glassmorphism Classes */
+.glass-panel {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  transition: all 0.2s ease-in-out;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
-.clean-card:hover {
-  border-color: rgba(59, 130, 246, 0.5);
+.glass-card {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.clean-input {
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  color: #fff;
-  transition: border-color 0.2s ease;
+.glass-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary-glow);
+  box-shadow: 0 12px 24px -6px var(--primary-glow);
 }
 
-.clean-input:focus {
-  outline: none;
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
-/* Buttons */
-.btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: #fff;
-  border-radius: 10px;
-  font-weight: 700;
+.glow-btn {
   transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.btn-primary:hover {
-  opacity: 0.95;
+.glow-btn:hover {
+  box-shadow: 0 0 20px var(--primary-glow);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
-.btn-success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #fff;
-  border-radius: 10px;
-  font-weight: 700;
-  transition: all 0.2s ease;
+.glow-btn:active {
+  transform: scale(0.98);
 }
 
-.btn-success:hover {
-  opacity: 0.95;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-/* Custom Scrollbars */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(15, 23, 42, 0.6);
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a3d66;
-  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6;
+  background: var(--primary);
 }
 
-/* Tab Fade Transition */
-.tab-pane {
-  animation: tabFadeIn 0.2s ease-out forwards;
+/* Tab Animation */
+.tab-content {
+  animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-@keyframes tabFadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Badge Pulse */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
