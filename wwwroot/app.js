@@ -83,6 +83,76 @@ function setupGlobalKeyboardShortcuts() {
 }
 
 // ========================================================
+// I18N LOCALIZATION DICTIONARY (ARABIC & KURDISH)
+// ========================================================
+const i18n = {
+  ar: {
+    ap_back: "العودة للرئيسية",
+    ap_title: "إضافة وتعديل مادة جديدة بالمخزن",
+    ap_subtitle: "انقر مرتين على حقل الباركود للتوليد التلقائي (200245) بدون تكرار",
+    ap_clear: "مسح الحقول",
+    ap_save: "حفظ المادة",
+    ap_sec1_title: "1. بيانات المادة والباركود والتعبئة",
+    ap_sec1_tag: "نقر مزدوج للباركود ⚡",
+    ap_lbl_barcode: "1. حقل الباركود (انقر مرتين للتوليد 200245) *",
+    ap_btn_gen: "توليد",
+    ap_lbl_name: "2. اسم المادة *",
+    ap_name_ph: "اسم المادة",
+    ap_lbl_cat: "3. تصنيف المادة",
+    ap_lbl_sup: "4. اسم المندوب / الشركة الموردة",
+    ap_lbl_cartons: "عدد الكراتين",
+    ap_lbl_pieces: "المواد بالكرتون",
+    ap_lbl_total: "مجموع كل المواد",
+    ap_lbl_alert: "تنبيه النواقص عند وصول الرصيد إلى (قطع):",
+    ap_sec2_title: "2. التكلفة وأسعار البيع والأرباح المحسوبة",
+    ap_lbl_carton_purchase: "سعر شراء الكرتون (د.ع)",
+    ap_lbl_piece_cost_calc: "تكلفة القطعة من الكرتون (للقراءة فقط)",
+    ap_lbl_cost: "تكلفة القطعة المعتمدة (د.ع) *",
+    ap_lbl_retail_price: "سعر بيع المفرد للقطعة (د.ع) *",
+    ap_r_profit: "ربح القطعة:",
+    ap_r_total: "بيع الكرتون بالمفرد:",
+    ap_r_c_profit: "ربح الكرتون بالمفرد:",
+    ap_lbl_wholesale_price: "سعر بيع الجملة للقطعة (د.ع)",
+    ap_w_profit: "ربح قطعة الجملة:",
+    ap_w_c_profit: "ربح الكرتون بالجملة:",
+    ap_lbl_carton_sell: "سعر بيع الكرتون كاملاً (د.ع)",
+    ap_c_profit: "ربح بيع الكرتون كاملاً:"
+  },
+  ku: {
+    ap_back: "گەڕانەوە بۆ سەرەکی",
+    ap_title: "زیادکردن و دەستکاریکردنی کاڵا لە کۆگا",
+    ap_subtitle: "دووجار کلیک لەسەر خانەی بارکۆد بکە بۆ دروستکردنی بارکۆد (200245) بەبێ دووبارەبوونەوە",
+    ap_clear: "سڕینەوەی خانەکان",
+    ap_save: "پاشەکەوتکردنی کاڵا",
+    ap_sec1_title: "١. زانیاری کاڵا، بارکۆد و پاکێج",
+    ap_sec1_tag: "دووجار کلیک بۆ بارکۆد ⚡",
+    ap_lbl_barcode: "١. خانەی بارکۆد (دووجار کلیک بکە بۆ ٢٠٠٢٤٥) *",
+    ap_btn_gen: "دروستکردن",
+    ap_lbl_name: "٢. ناوی کاڵا *",
+    ap_name_ph: "ناوی کاڵا",
+    ap_lbl_cat: "٣. پۆلێنی کاڵا (جۆر)",
+    ap_lbl_sup: "٤. ناوی مەندوب / کۆمپانیا",
+    ap_lbl_cartons: "ژمارەی کارتۆن",
+    ap_lbl_pieces: "دانە لە کارتۆندا",
+    ap_lbl_total: "کۆی گشتی هەموو کاڵاکان",
+    ap_lbl_alert: "ئاگادارکردنەوە لە کەمی کاڵا لە (دانە):",
+    ap_sec2_title: "٢. تێچوون، نرخەکانی فرۆشتن و قازانجەکان",
+    ap_lbl_carton_purchase: "نرخی کڕینی کارتۆن (د.ع)",
+    ap_lbl_piece_cost_calc: "تێچووی دانە لە کارتۆندا (تەنها خوێندنەوە)",
+    ap_lbl_cost: "تێچووی پەسەندکراوی دانە (د.ع) *",
+    ap_lbl_retail_price: "نرخی فرۆشتنی تاک بۆ دانە (د.ع) *",
+    ap_r_profit: "قازانجی دانە:",
+    ap_r_total: "فرۆشتنی کارتۆن بە تاک:",
+    ap_r_c_profit: "قازانجی کارتۆن بە تاک:",
+    ap_lbl_wholesale_price: "نرخی فرۆشتنی کۆ بۆ دانە (د.ع)",
+    ap_w_profit: "قازانجی دانە بە کۆ:",
+    ap_w_c_profit: "قازانجی کارتۆن بە کۆ:",
+    ap_lbl_carton_sell: "نرخی فرۆشتنی تەواوی کارتۆن (د.ع)",
+    ap_c_profit: "قازانجی فرۆشتنی کارتۆن:"
+  }
+};
+
+// ========================================================
 // TAB NAVIGATION
 // ========================================================
 function switchTab(tabId) {
@@ -96,7 +166,17 @@ function switchTab(tabId) {
     el.classList.remove('sidebar-item-active');
   });
 
-  // 3. Activate selected tab
+  // 3. Auto-hide sidebar when opening Add Product view as requested
+  const sidebar = document.getElementById('appSidebar');
+  if (sidebar) {
+    if (tabId === 'addProduct') {
+      sidebar.classList.add('hidden');
+    } else {
+      sidebar.classList.remove('hidden');
+    }
+  }
+
+  // 4. Activate selected tab
   const tabEl = document.getElementById(`tab-${tabId}`);
   if (tabEl) tabEl.classList.remove('hidden');
 
@@ -109,6 +189,7 @@ function switchTab(tabId) {
   if (tabId === 'addProduct') {
     loadCategoriesList();
     recalcAddProduct();
+    document.getElementById('ap-barcode')?.focus();
   }
   if (tabId === 'dashboard') loadDashboard();
   if (tabId === 'inventory') loadInventory();
@@ -120,7 +201,7 @@ function switchTab(tabId) {
 }
 
 // ========================================================
-// THEME SWITCHER
+// THEME & LANGUAGE SWITCHER
 // ========================================================
 function toggleTheme() {
   state.theme = state.theme === 'dark' ? 'light' : 'dark';
@@ -145,6 +226,22 @@ function applyTheme(theme) {
 function toggleLanguage() {
   state.language = state.language === 'ar' ? 'ku' : 'ar';
   document.getElementById('langBtnText').innerText = state.language === 'ar' ? 'العربية' : 'کوردی';
+  applyLanguage(state.language);
+}
+
+function applyLanguage(lang) {
+  const dict = i18n[lang] || i18n.ar;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key]) {
+      el.innerText = dict[key];
+    }
+  });
+
+  const nameInput = document.getElementById('ap-name');
+  if (nameInput) {
+    nameInput.placeholder = dict.ap_name_ph || "اسم المادة";
+  }
 }
 
 // ========================================================
