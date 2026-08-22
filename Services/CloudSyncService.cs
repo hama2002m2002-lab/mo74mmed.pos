@@ -175,11 +175,39 @@ public class CloudSyncService
         try
         {
             string currentStoreId = StoreSettingsService.Instance.Settings.StoreId;
-            var pathsToScan = new List<string>
+            var pathsToScan = new List<string> { "docs/orders" };
+            if (!string.IsNullOrWhiteSpace(currentStoreId))
             {
-                $"docs/stores/{currentStoreId}/orders",
-                "docs/orders"
-            };
+                pathsToScan.Add($"docs/stores/{currentStoreId}/orders");
+            }
+
+            // Also dynamically discover all other stores' order folders
+            try
+            {
+                string storesUrl = $"https://api.github.com/repos/{GitHubRepo}/contents/docs/stores?t={DateTime.UtcNow.Ticks}";
+                var storesResp = await _httpClient.GetAsync(storesUrl).ConfigureAwait(false);
+                if (storesResp.IsSuccessStatusCode)
+                {
+                    string storesJson = await storesResp.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    using var sDoc = JsonDocument.Parse(storesJson);
+                    if (sDoc.RootElement.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var stElem in sDoc.RootElement.EnumerateArray())
+                        {
+                            string? stName = stElem.TryGetProperty("name", out var sn) ? sn.GetString() : null;
+                            if (!string.IsNullOrEmpty(stName))
+                            {
+                                string stOrderPath = $"docs/stores/{stName}/orders";
+                                if (!pathsToScan.Contains(stOrderPath))
+                                {
+                                    pathsToScan.Add(stOrderPath);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
 
             bool hasNewOrders = false;
 

@@ -431,8 +431,16 @@
               <div class="flex gap-2 mb-3">
                 <div class="relative flex-1">
                   <i data-lucide="barcode" class="w-5 h-5 text-emerald-600 absolute right-3.5 top-2.5"></i>
-                  <input id="cashierBarcodeInput" onkeydown="handleBarcodeKeyDown(event)" type="text" placeholder="امسح الباركود أو ابحث عن المادة (اضغط Enter للإضافة السريعة)..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pr-11 pl-4 py-2.5 text-xs text-slate-800 dark:text-white font-mono">
+                  <input id="cashierBarcodeInput" oninput="handleCashierSearchInput()" onkeydown="handleBarcodeKeyDown(event)" type="text" placeholder="امسح الباركود أو ابحث عن المادة (اضغط Enter للإضافة السريعة)..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pr-11 pl-4 py-2.5 text-xs text-slate-800 dark:text-white font-mono">
+                  
+                  <!-- LIVE AUTOCOMPLETE SEARCH RESULTS DROPDOWN -->
+                  <div id="cashierSearchResults" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-30 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+                  </div>
                 </div>
+                <button onclick="loadProducts(true)" class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1.5" title="تحديث قائمة المواد من المخزن">
+                  <span>🔄</span>
+                  <span>تحديث المواد</span>
+                </button>
               </div>
 
               <div class="flex-1 overflow-y-auto border border-slate-100 dark:border-slate-800 rounded-xl">

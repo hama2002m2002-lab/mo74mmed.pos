@@ -120,6 +120,48 @@ public class PosBridgeService
                     });
                 }
 
+                case "find_product":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    string query = doc.RootElement.TryGetProperty("query", out var qp) ? qp.GetString()?.Trim() ?? "" : "";
+                    if (string.IsNullOrEmpty(query)) return JsonSerializer.Serialize(new { success = false, found = false });
+
+                    var prod = await db.Products
+                        .Include(p => p.Category)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(p => !p.IsDeleted && (
+                            p.Barcode == query ||
+                            (p.Barcode != null && p.Barcode.Trim() == query) ||
+                            p.Name.ToLower() == query.ToLower() ||
+                            p.Name.Contains(query) ||
+                            (p.Barcode != null && p.Barcode.Contains(query))
+                        ));
+
+                    if (prod != null)
+                    {
+                        return JsonSerializer.Serialize(new
+                        {
+                            success = true,
+                            found = true,
+                            product = new
+                            {
+                                prod.Id,
+                                prod.Name,
+                                prod.Barcode,
+                                prod.Price,
+                                prod.WholesalePrice,
+                                prod.Cost,
+                                prod.StockQuantity,
+                                prod.Unit,
+                                piecesPerCarton = prod.ItemsPerCarton,
+                                category = prod.Category?.Name ?? "عام",
+                                imagePath = prod.ImageUrl
+                            }
+                        });
+                    }
+                    return JsonSerializer.Serialize(new { success = true, found = false });
+                }
+
                 case "complete_sale":
                 {
                     using var doc = JsonDocument.Parse(payloadJson);

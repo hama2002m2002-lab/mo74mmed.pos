@@ -402,94 +402,113 @@ function renderActivitySplineChart() {
 // ========================================================
 // CASHIER / POS SYSTEM (RAPID CHECKOUT)
 // ========================================================
-async function loadProducts() {
+async function loadProducts(showAlert = false) {
   const res = await callBackend('get_pos_products');
   if (res && res.success) {
     state.products = res.products || [];
-  }
-}
-
-async function loadSuppliersList() {
-  const res = await callBackend('get_suppliers');
-  if (res && res.success) {
-    state.suppliers = res.suppliers || [];
-    const supSelect = document.getElementById('ap-supplier');
-    if (supSelect) {
-      supSelect.innerHTML = '<option value="">بدون مندوب (مباشر)</option>';
-      state.suppliers.forEach(s => {
-        supSelect.innerHTML += `<option value="${s.name}">${s.name} (${s.company || 'شركة'})</option>`;
-      });
+    if (showAlert) {
+      alert(`✔ تم تحديث قائمة المواد من المخزن بنجاح! (${state.products.length} مادة جاهزة للبيع)`);
     }
   }
 }
 
-function getCurrentTab() {
-  return state.invoiceTabs.find(t => t.id === state.selectedInvoiceTabId) || state.invoiceTabs[0];
-}
-
-function renderInvoiceTabs() {
-  const container = document.getElementById('invoiceTabsContainer');
-  if (!container) return;
-
-  container.innerHTML = '';
-  state.invoiceTabs.forEach(t => {
-    const isSel = t.id === state.selectedInvoiceTabId;
-    const tabEl = document.createElement('div');
-    tabEl.className = `flex items-center gap-2 px-3.5 py-1.5 rounded-xl cursor-pointer text-xs font-bold transition ${isSel ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`;
-    tabEl.onclick = () => selectInvoiceTab(t.id);
-    tabEl.innerHTML = `
-      <span>${t.title}</span>
-      <span class="bg-white/20 px-1.5 py-0.2 rounded-full text-[10px]">${t.items.length}</span>
-      ${state.invoiceTabs.length > 1 ? `<button onclick="event.stopPropagation(); closeInvoiceTab(${t.id})" class="text-rose-200 hover:text-white px-1">✕</button>` : ''}
-    `;
-    container.appendChild(tabEl);
-  });
-}
-
-function addNewInvoiceTab() {
-  const newId = (state.invoiceTabs.length > 0 ? Math.max(...state.invoiceTabs.map(t => t.id)) : 0) + 1;
-  state.invoiceTabs.push({
-    id: newId,
-    title: `فاتورة ${newId}`,
-    items: [],
-    discount: 0,
-    paid: 0,
-    paymentMethod: 'Cash'
-  });
-  selectInvoiceTab(newId);
-}
-
-function selectInvoiceTab(id) {
-  state.selectedInvoiceTabId = id;
-  renderInvoiceTabs();
-  renderCashierCart();
-  document.getElementById('cashierBarcodeInput')?.focus();
-}
-
-function closeInvoiceTab(id) {
-  if (state.invoiceTabs.length <= 1) return;
-  state.invoiceTabs = state.invoiceTabs.filter(t => t.id !== id);
-  if (state.selectedInvoiceTabId === id) {
-    state.selectedInvoiceTabId = state.invoiceTabs[0].id;
-  }
-  renderInvoiceTabs();
-  renderCashierCart();
-}
-
-function handleBarcodeKeyDown(e) {
+async function handleBarcodeKeyDown(e) {
   if (e.key === 'Enter') {
+    e.preventDefault();
     const input = document.getElementById('cashierBarcodeInput');
-    const query = input.value.trim();
+    const rawQuery = input ? input.value : '';
+    const query = rawQuery.replace(/[\r\n]/g, '').trim();
     if (!query) return;
 
-    const matched = state.products.find(p => p.barcode === query || p.name.toLowerCase() === query.toLowerCase());
+    hideCashierSearchResults();
+
+    // 1. Check local state.products (exact barcode or name)
+    let matched = state.products.find(p => 
+      (p.barcode && p.barcode.trim().toLowerCase() === query.toLowerCase()) ||
+      (p.name && p.name.trim().toLowerCase() === query.toLowerCase())
+    );
+
+    // 2. Check local state.products (partial match or contains)
+    if (!matched) {
+      matched = state.products.find(p => 
+        (p.barcode && p.barcode.includes(query)) ||
+        (p.name && p.name.toLowerCase().includes(query.toLowerCase()))
+      );
+    }
+
+    // 3. Fallback: Search directly in database via backend RPC
+    if (!matched) {
+      const res = await callBackend('find_product', { query });
+      if (res && res.success && res.found && res.product) {
+        matched = res.product;
+        if (!state.products.some(p => p.id === matched.id)) {
+          state.products.push(matched);
+        }
+      }
+    }
+
     if (matched) {
       addItemToCurrentCart(matched);
-      input.value = '';
+      if (input) input.value = '';
     } else {
-      alert(`لم يتم العثور على مادة بالباركود: ${query}`);
+      alert(`لم يتم العثور على مادة بالباركود أو الاسم: "${query}"\nيرجى التأكد من إضافة المادة في شاشة (إضافة وتعديل مادة).`);
     }
   }
+}
+
+function handleCashierSearchInput() {
+  const input = document.getElementById('cashierBarcodeInput');
+  const query = input ? input.value.trim().toLowerCase() : '';
+  const resultsContainer = document.getElementById('cashierSearchResults');
+  if (!resultsContainer) return;
+
+  if (!query || query.length < 1) {
+    resultsContainer.classList.add('hidden');
+    resultsContainer.innerHTML = '';
+    return;
+  }
+
+  const matches = state.products.filter(p => 
+    (p.barcode && p.barcode.toLowerCase().includes(query)) ||
+    (p.name && p.name.toLowerCase().includes(query))
+  ).slice(0, 8);
+
+  if (matches.length === 0) {
+    resultsContainer.classList.add('hidden');
+    return;
+  }
+
+  resultsContainer.innerHTML = '';
+  matches.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'p-2.5 hover:bg-emerald-50 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between border-b border-slate-100 dark:border-slate-800 transition';
+    item.onclick = () => {
+      addItemToCurrentCart(p);
+      input.value = '';
+      resultsContainer.classList.add('hidden');
+      input.focus();
+    };
+    item.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="text-base">🏷</span>
+        <div>
+          <div class="font-bold text-xs text-slate-800 dark:text-white">${p.name}</div>
+          <div class="text-[10px] font-mono text-slate-400">باركود: ${p.barcode || '--'}</div>
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="font-black text-xs text-emerald-600 dark:text-emerald-400">${Number(p.price).toLocaleString()} د.ع</div>
+        <div class="text-[10px] text-slate-400 font-bold">الرصيد: ${p.stockQuantity || 0} قطعة</div>
+      </div>
+    `;
+    resultsContainer.appendChild(item);
+  });
+  resultsContainer.classList.remove('hidden');
+}
+
+function hideCashierSearchResults() {
+  const rc = document.getElementById('cashierSearchResults');
+  if (rc) rc.classList.add('hidden');
 }
 
 function addItemToCurrentCart(product) {
