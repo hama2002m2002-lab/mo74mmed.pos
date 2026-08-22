@@ -775,16 +775,23 @@ async function saveProductFull() {
   const itemsPerCarton = Math.max(1, Number(document.getElementById('ap-itemsPerCarton')?.value || 1));
   const cartonsCount = Math.max(0, Number(document.getElementById('ap-cartonsCount')?.value || 0));
   const totalStock = itemsPerCarton * cartonsCount;
+  const cartonPurchase = Number(document.getElementById('ap-cartonPurchase')?.value || 0);
+  const cartonSelling = Number(document.getElementById('ap-cartonSelling')?.value || 0);
+  const supplierName = document.getElementById('ap-supplier')?.value || '';
 
   const payload = {
     id: document.getElementById('ap-id')?.value || undefined,
     name: name,
     barcode: barcode || undefined,
     category: document.getElementById('ap-categorySelect')?.value || 'عام',
+    supplierName: supplierName,
     cost: Number(document.getElementById('ap-cost')?.value || 0),
     price: Number(document.getElementById('ap-price')?.value || 0),
     wholesalePrice: Number(document.getElementById('ap-wholesalePrice')?.value || 0),
+    cartonPurchasePrice: cartonPurchase,
+    cartonSellingPrice: cartonSelling,
     stockQuantity: totalStock,
+    cartonsCount: cartonsCount,
     piecesPerCarton: itemsPerCarton,
     minStockAlert: Number(document.getElementById('ap-minStockAlert')?.value || 5)
   };
@@ -794,51 +801,232 @@ async function saveProductFull() {
     alert('✔ تم حفظ المادة وتفاصيل الكرتون والأسعار بنجاح في قاعدة البيانات!');
     clearAddProductForm();
     await loadProducts();
+    await loadInventory();
     switchTab('inventory');
   }
 }
 
 // ========================================================
-// INVENTORY, SUPPLIERS & USERS
+// INVENTORY & WAREHOUSE MANAGEMENT (FULL DETAILS)
 // ========================================================
+let inventoryData = [];
+
 async function loadInventory() {
   const res = await callBackend('get_inventory');
   if (!res || !res.success) return;
 
+  inventoryData = res.products || [];
+
+  // 1. Update KPI Summary Cards
+  const totalProdsEl = document.getElementById('invTotalProducts');
+  if (totalProdsEl) totalProdsEl.innerText = `${inventoryData.length} مادة`;
+
+  const totalCostEl = document.getElementById('invTotalCostValue');
+  if (totalCostEl) totalCostEl.innerText = `${Number(res.totalCostValue || 0).toLocaleString()} د.ع`;
+
+  const totalSellEl = document.getElementById('invTotalSellingValue');
+  if (totalSellEl) totalSellEl.innerText = `${Number(res.totalSellingValue || 0).toLocaleString()} د.ع`;
+
+  const totalProfitEl = document.getElementById('invTotalProfitValue');
+  if (totalProfitEl) totalProfitEl.innerText = `+${Number(res.expectedProfit || 0).toLocaleString()} د.ع`;
+
+  // 2. Update Categories Filter Dropdown
+  const catFilter = document.getElementById('invCategoryFilter');
+  if (catFilter) {
+    const cats = [...new Set(inventoryData.map(p => p.category).filter(Boolean))];
+    const currentVal = catFilter.value;
+    catFilter.innerHTML = '<option value="">جميع التصنيفات</option>';
+    cats.forEach(c => {
+      catFilter.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+    if (cats.includes(currentVal)) catFilter.value = currentVal;
+  }
+
+  filterInventoryTable();
+}
+
+function filterInventoryTable() {
+  const query = (document.getElementById('invSearchInput')?.value || '').toLowerCase().trim();
+  const selCat = document.getElementById('invCategoryFilter')?.value || '';
+  const lowStockOnly = document.getElementById('invLowStockOnly')?.checked || false;
+
   const tbody = document.getElementById('inventoryTableBody');
   if (!tbody) return;
 
+  const filtered = inventoryData.filter(p => {
+    const matchesSearch = !query || 
+      (p.name && p.name.toLowerCase().includes(query)) || 
+      (p.barcode && p.barcode.toLowerCase().includes(query)) ||
+      (p.category && p.category.toLowerCase().includes(query)) ||
+      (p.supplierName && p.supplierName.toLowerCase().includes(query));
+    
+    const matchesCat = !selCat || p.category === selCat;
+    const matchesLowStock = !lowStockOnly || (p.stockQuantity <= (p.minStockAlert || 5));
+
+    return matchesSearch && matchesCat && matchesLowStock;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="text-center py-12 text-slate-400 font-bold">لا توجد مواد مطابقة للبحث أو الفلترة</td></tr>`;
+    return;
+  }
+
   tbody.innerHTML = '';
-  (res.products || []).forEach(p => {
+  filtered.forEach((p, idx) => {
+    const isLow = p.stockQuantity <= (p.minStockAlert || 5);
+    const isOutOfStock = p.stockQuantity <= 0;
+    const rProfit = (p.price || 0) - (p.cost || 0);
+    const wProfit = (p.wholesalePrice || 0) - (p.cost || 0);
+    const cProfit = (p.cartonSellingPrice || 0) - (p.cartonPurchasePrice || 0);
+
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer';
+    tr.onclick = (e) => {
+      if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+        openProductDetailModal(p.id);
+      }
+    };
+
     tr.innerHTML = `
-      <td class="p-3.5 font-bold">${p.name}</td>
-      <td class="p-3.5 font-mono text-slate-400">${p.barcode || '--'}</td>
-      <td class="p-3.5 text-slate-500">${p.category || 'عام'}</td>
-      <td class="p-3.5 font-bold text-blue-500">${Number(p.cost).toLocaleString()} د.ع</td>
-      <td class="p-3.5 font-bold text-emerald-500">${Number(p.price).toLocaleString()} د.ع</td>
-      <td class="p-3.5 font-black ${p.stockQuantity <= p.minStockAlert ? 'text-rose-500 font-black' : ''}">${p.stockQuantity}</td>
-      <td class="p-3.5 text-center">
-        <button onclick="editProductFromInventory('${p.id}')" class="px-2.5 py-1 bg-sky-100 dark:bg-sky-950/60 text-sky-600 font-bold text-xs rounded-lg">✏ تعديل</button>
+      <td class="p-2.5 text-center text-slate-400 font-bold">${idx + 1}</td>
+      <td class="p-2.5">
+        <div class="font-black text-slate-800 dark:text-white text-xs">${p.name}</div>
+        <div class="text-[10px] font-mono text-sky-500 font-bold flex items-center gap-1">
+          <span>🏷</span><span>${p.barcode || 'بدون باركود'}</span>
+        </div>
+      </td>
+      <td class="p-2.5">
+        <span class="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300 mb-0.5">${p.category || 'عام'}</span>
+        ${p.supplierName ? `<div class="text-[10px] text-slate-400 font-semibold">🏢 ${p.supplierName}</div>` : ''}
+      </td>
+      <td class="p-2.5 text-center">
+        <div class="font-bold text-slate-700 dark:text-slate-200 text-xs">${p.cartonsCount || 0} كرتون</div>
+        <div class="text-[10px] text-slate-400 font-semibold">(${p.piecesPerCarton || 1} قطعة/كرتون)</div>
+      </td>
+      <td class="p-2.5 text-center">
+        <div class="font-black text-xs ${isOutOfStock ? 'text-rose-500' : isLow ? 'text-amber-500' : 'text-slate-800 dark:text-white'}">
+          ${p.stockQuantity} قطعة
+        </div>
+      </td>
+      <td class="p-2.5 text-center">
+        <div class="font-black text-blue-600 dark:text-blue-400 text-xs">${Number(p.cost).toLocaleString()} د.ع</div>
+        ${p.cartonPurchasePrice > 0 ? `<div class="text-[10px] text-slate-400 font-semibold">شراء كرتون: ${Number(p.cartonPurchasePrice).toLocaleString()} د.ع</div>` : ''}
+      </td>
+      <td class="p-2.5 text-center space-y-0.5">
+        <div class="text-xs font-black text-emerald-600 dark:text-emerald-400">مفرد: ${Number(p.price).toLocaleString()} د.ع</div>
+        <div class="text-[10px] font-bold text-sky-600 dark:text-sky-400">جملة: ${Number(p.wholesalePrice || 0).toLocaleString()} د.ع</div>
+        ${p.cartonSellingPrice > 0 ? `<div class="text-[10px] font-bold text-purple-600 dark:text-purple-400">كرتون: ${Number(p.cartonSellingPrice).toLocaleString()} د.ع</div>` : ''}
+      </td>
+      <td class="p-2.5 text-center space-y-0.5">
+        <div class="text-[10px] font-black text-emerald-600 dark:text-emerald-400">ربح مفرد: +${Number(rProfit).toLocaleString()} د.ع</div>
+        <div class="text-[10px] font-bold text-sky-600 dark:text-sky-400">ربح جملة: +${Number(wProfit).toLocaleString()} د.ع</div>
+        ${cProfit > 0 ? `<div class="text-[10px] font-bold text-purple-600 dark:text-purple-400">ربح كرتون: +${Number(cProfit).toLocaleString()} د.ع</div>` : ''}
+      </td>
+      <td class="p-2.5 text-center">
+        ${isOutOfStock 
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400">نفذ الرصيد</span>` 
+          : isLow 
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400">نواقص (${p.stockQuantity})</span>` 
+          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">متوفر ✔</span>`}
+      </td>
+      <td class="p-2.5 text-center">
+        <div class="flex items-center justify-center gap-1.5">
+          <button onclick="openProductDetailModal('${p.id}')" class="p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs" title="عرض التفاصيل الكاملة">👁</button>
+          <button onclick="editProductFromInventory('${p.id}')" class="p-1.5 bg-sky-100 hover:bg-sky-200 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 rounded-lg text-xs font-bold" title="تعديل">✏</button>
+          <button onclick="deleteProductFromInventory('${p.id}')" class="p-1.5 bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-lg text-xs font-bold" title="حذف">🗑</button>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
   });
 }
 
+function openProductDetailModal(id) {
+  const prod = inventoryData.find(p => p.id === id);
+  if (!prod) return;
+
+  document.getElementById('pdm-title').innerText = prod.name;
+  
+  const content = document.getElementById('pdm-content');
+  if (content) {
+    const rProfit = (prod.price || 0) - (prod.cost || 0);
+    const rCartonProfit = rProfit * (prod.piecesPerCarton || 1);
+    const wProfit = (prod.wholesalePrice || 0) - (prod.cost || 0);
+    const cProfit = (prod.cartonSellingPrice || 0) - (prod.cartonPurchasePrice || 0);
+
+    content.innerHTML = `
+      <div class="grid grid-cols-2 gap-2 p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl">
+        <div><span class="text-slate-400 block text-[10px]">الباركود:</span><span class="font-mono font-bold text-sky-500">${prod.barcode || 'بدون باركود'}</span></div>
+        <div><span class="text-slate-400 block text-[10px]">التصنيف:</span><span class="font-bold">${prod.category || 'عام'}</span></div>
+        <div><span class="text-slate-400 block text-[10px]">المندوب / الشركة:</span><span class="font-bold">${prod.supplierName || 'بدون مندوب'}</span></div>
+        <div><span class="text-slate-400 block text-[10px]">تاريخ التسجيل:</span><span class="font-bold text-slate-500">${prod.createdAt || '--'}</span></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 p-3 bg-sky-50/60 dark:bg-sky-950/30 rounded-2xl border border-sky-500/20 text-center">
+        <div><span class="text-slate-400 block text-[10px]">عدد الكراتين:</span><span class="font-black text-sky-600">${prod.cartonsCount || 0} كرتون</span></div>
+        <div><span class="text-slate-400 block text-[10px]">المواد بالكرتون:</span><span class="font-black text-sky-600">${prod.piecesPerCarton || 1} قطعة</span></div>
+        <div><span class="text-slate-400 block text-[10px]">إجمالي الرصيد:</span><span class="font-black text-emerald-600 text-sm">${prod.stockQuantity} قطعة</span></div>
+      </div>
+
+      <div class="space-y-1.5 p-3 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-2xl border border-emerald-500/20">
+        <div class="flex justify-between font-bold"><span>تكلفة القطعة المعتمدة:</span><span class="text-blue-600 font-black">${Number(prod.cost).toLocaleString()} د.ع</span></div>
+        <div class="flex justify-between font-bold"><span>سعر بيع المفرد:</span><span class="text-emerald-600 font-black">${Number(prod.price).toLocaleString()} د.ع</span></div>
+        <div class="flex justify-between font-bold"><span>ربح القطعة المفردة:</span><span class="text-emerald-600 font-black">+${Number(rProfit).toLocaleString()} د.ع</span></div>
+        <div class="flex justify-between font-bold"><span>ربح الكرتون كاملاً بالمفرد:</span><span class="text-emerald-600 font-black">+${Number(rCartonProfit).toLocaleString()} د.ع</span></div>
+      </div>
+
+      <div class="space-y-1.5 p-3 bg-purple-50/60 dark:bg-purple-950/30 rounded-2xl border border-purple-500/20">
+        <div class="flex justify-between font-bold"><span>سعر شراء الكرتون:</span><span class="text-slate-700 dark:text-slate-200">${Number(prod.cartonPurchasePrice || 0).toLocaleString()} د.ع</span></div>
+        <div class="flex justify-between font-bold"><span>سعر بيع الكرتون كاملاً:</span><span class="text-purple-600 font-black">${Number(prod.cartonSellingPrice || 0).toLocaleString()} د.ع</span></div>
+        <div class="flex justify-between font-bold"><span>ربح بيع الكرتون:</span><span class="text-purple-600 font-black">+${Number(cProfit).toLocaleString()} د.ع</span></div>
+      </div>
+    `;
+  }
+
+  const editBtn = document.getElementById('pdm-editBtn');
+  if (editBtn) {
+    editBtn.onclick = () => {
+      closeProductDetailModal();
+      editProductFromInventory(prod.id);
+    };
+  }
+
+  document.getElementById('productDetailModal')?.classList.remove('hidden');
+}
+
+function closeProductDetailModal() {
+  document.getElementById('productDetailModal')?.classList.add('hidden');
+}
+
+async function deleteProductFromInventory(id) {
+  const prod = inventoryData.find(p => p.id === id);
+  const name = prod ? prod.name : 'هذه المادة';
+  if (confirm(`هل أنت متأكد من حذف: "${name}" من المخزن؟`)) {
+    const res = await callBackend('delete_product', { id });
+    if (res && res.success) {
+      await loadProducts();
+      await loadInventory();
+    }
+  }
+}
+
 function editProductFromInventory(id) {
-  const prod = state.products.find(p => p.id === id);
+  const prod = inventoryData.find(p => p.id === id) || state.products.find(p => p.id === id);
   if (prod) {
     switchTab('addProduct');
     document.getElementById('ap-id').value = prod.id;
     document.getElementById('ap-name').value = prod.name;
     document.getElementById('ap-barcode').value = prod.barcode || '';
-    document.getElementById('ap-category').value = prod.category || 'عام';
+    document.getElementById('ap-categorySelect').value = prod.category || 'عام';
+    document.getElementById('ap-supplier').value = prod.supplierName || '';
     document.getElementById('ap-cost').value = prod.cost;
     document.getElementById('ap-price').value = prod.price;
+    document.getElementById('ap-wholesalePrice').value = prod.wholesalePrice || 0;
+    document.getElementById('ap-cartonPurchase').value = prod.cartonPurchasePrice || 0;
+    document.getElementById('ap-cartonSelling').value = prod.cartonSellingPrice || 0;
     document.getElementById('ap-itemsPerCarton').value = prod.piecesPerCarton || 1;
-    document.getElementById('ap-cartonsCount').value = Math.floor(prod.stockQuantity / (prod.piecesPerCarton || 1));
+    document.getElementById('ap-cartonsCount').value = prod.cartonsCount || Math.floor((prod.stockQuantity || 0) / (prod.piecesPerCarton || 1));
+    document.getElementById('ap-minStockAlert').value = prod.minStockAlert || 5;
     document.getElementById('addProductFormTitle').innerText = 'تعديل بيانات المادة';
     recalcAddProduct();
   }

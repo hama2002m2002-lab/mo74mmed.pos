@@ -208,7 +208,7 @@ public class PosBridgeService
                         .Include(p => p.Category)
                         .AsNoTracking()
                         .Where(p => !p.IsDeleted)
-                        .OrderBy(p => p.Name)
+                        .OrderByDescending(p => p.CreatedAt)
                         .ToListAsync();
 
                     decimal totalCostVal = prods.Sum(p => p.Cost * p.StockQuantity);
@@ -229,14 +229,22 @@ public class PosBridgeService
                             p.Name,
                             p.Barcode,
                             category = p.Category?.Name ?? "عام",
-                            p.Cost,
-                            p.Price,
-                            p.WholesalePrice,
-                            p.StockQuantity,
-                            p.MinStockAlert,
-                            p.Unit,
+                            supplierName = p.SupplierName ?? "",
+                            cartonsCount = p.CartonsCount > 0 ? p.CartonsCount : (p.ItemsPerCarton > 0 ? Math.Floor(p.StockQuantity / p.ItemsPerCarton) : 0),
                             piecesPerCarton = p.ItemsPerCarton,
-                            totalCost = p.Cost * p.StockQuantity
+                            stockQuantity = p.StockQuantity,
+                            minStockAlert = p.MinStockAlert,
+                            cartonPurchasePrice = p.CartonPurchasePrice,
+                            cost = p.Cost,
+                            price = p.Price,
+                            wholesalePrice = p.WholesalePrice,
+                            cartonSellingPrice = p.CartonSellingPrice,
+                            retailProfit = p.RetailProfit,
+                            wholesaleProfit = p.WholesaleProfit,
+                            cartonProfit = p.CartonProfit,
+                            totalCost = p.Cost * p.StockQuantity,
+                            totalRetailValue = p.Price * p.StockQuantity,
+                            createdAt = p.CreatedAt.ToString("yyyy/MM/dd")
                         })
                     });
                 }
@@ -250,10 +258,14 @@ public class PosBridgeService
                     string name = r.GetProperty("name").GetString() ?? "";
                     string barcode = r.TryGetProperty("barcode", out var bp) ? bp.GetString() ?? "" : "";
                     string categoryName = r.TryGetProperty("category", out var cp) ? cp.GetString() ?? "عام" : "عام";
+                    string supplierName = r.TryGetProperty("supplierName", out var supProp) ? supProp.GetString() ?? "" : "";
                     decimal cost = r.TryGetProperty("cost", out var cst) ? cst.GetDecimal() : 0m;
                     decimal price = r.TryGetProperty("price", out var prc) ? prc.GetDecimal() : 0m;
                     decimal wholesale = r.TryGetProperty("wholesalePrice", out var wp) ? wp.GetDecimal() : 0m;
+                    decimal cartonPurchase = r.TryGetProperty("cartonPurchasePrice", out var cpp) ? cpp.GetDecimal() : 0m;
+                    decimal cartonSelling = r.TryGetProperty("cartonSellingPrice", out var csp) ? csp.GetDecimal() : 0m;
                     decimal stock = r.TryGetProperty("stockQuantity", out var sq) ? sq.GetDecimal() : 0m;
+                    decimal cartonsCount = r.TryGetProperty("cartonsCount", out var ccp) ? ccp.GetDecimal() : 0m;
                     decimal minAlert = r.TryGetProperty("minStockAlert", out var ma) ? ma.GetDecimal() : 5m;
                     decimal itemsPerCarton = r.TryGetProperty("piecesPerCarton", out var ppc) ? ppc.GetDecimal() : 1m;
 
@@ -274,10 +286,14 @@ public class PosBridgeService
                             existing.Name = name;
                             existing.Barcode = barcode;
                             existing.CategoryId = category.Id;
+                            existing.SupplierName = supplierName;
                             existing.Cost = cost;
                             existing.Price = price;
                             existing.WholesalePrice = wholesale;
+                            existing.CartonPurchasePrice = cartonPurchase;
+                            existing.CartonSellingPrice = cartonSelling;
                             existing.StockQuantity = stock;
+                            existing.CartonsCount = cartonsCount;
                             existing.MinStockAlert = minAlert;
                             existing.ItemsPerCarton = itemsPerCarton;
                             existing.UpdatedAt = DateTime.UtcNow;
@@ -291,10 +307,14 @@ public class PosBridgeService
                             Name = name,
                             Barcode = string.IsNullOrWhiteSpace(barcode) ? DateTime.Now.Ticks.ToString() : barcode,
                             CategoryId = category.Id,
+                            SupplierName = supplierName,
                             Cost = cost,
                             Price = price,
                             WholesalePrice = wholesale,
+                            CartonPurchasePrice = cartonPurchase,
+                            CartonSellingPrice = cartonSelling,
                             StockQuantity = stock,
+                            CartonsCount = cartonsCount,
                             MinStockAlert = minAlert,
                             ItemsPerCarton = itemsPerCarton,
                             CreatedAt = DateTime.UtcNow
