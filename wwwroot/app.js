@@ -1090,8 +1090,10 @@ async function loadUsers() {
 }
 
 // ========================================================
-// REP CLOUD ORDERS
+// REP CLOUD ORDERS & INTERACTIVE INVOICE MANAGEMENT
 // ========================================================
+let activeOrderModalData = null;
+
 async function loadRepOrders() {
   const res = await callBackend('get_supplier_orders');
   if (!res || !res.success) return;
@@ -1101,40 +1103,236 @@ async function loadRepOrders() {
 
   const sideBadge = document.getElementById('repBadgeSidebar');
   const bellBadge = document.getElementById('repBellBadge');
+  const notifBadge = document.getElementById('repNotificationCountBadge');
 
   if (pendingCount > 0) {
     if (sideBadge) { sideBadge.innerText = pendingCount; sideBadge.classList.remove('hidden'); }
     if (bellBadge) { bellBadge.classList.remove('hidden'); }
+    if (notifBadge) { notifBadge.innerText = pendingCount; notifBadge.classList.remove('hidden'); }
   } else {
     if (sideBadge) sideBadge.classList.add('hidden');
     if (bellBadge) bellBadge.classList.add('hidden');
+    if (notifBadge) notifBadge.classList.add('hidden');
   }
 
   const tbody = document.getElementById('repOrdersTableBody');
   if (!tbody) return;
 
+  if (orders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-slate-400 font-bold">لا توجد طلبيات سحابية واردة حتى الآن</td></tr>`;
+    return;
+  }
+
   tbody.innerHTML = '';
   orders.forEach(o => {
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition';
+    
+    let badgeClass = 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400';
+    let statusText = 'قيد الانتظار';
+    if (o.status === 'InPreparation') {
+      badgeClass = 'bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-400';
+      statusText = 'جاري التجهيز';
+    } else if (o.status === 'Delivered') {
+      badgeClass = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
+      statusText = 'تم التسليم ✔';
+    } else if (o.status === 'Cancelled') {
+      badgeClass = 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400';
+      statusText = 'ملغية ✕';
+    }
+
     tr.innerHTML = `
       <td class="p-3 font-mono font-bold text-sky-500">${o.orderNumber}</td>
-      <td class="p-3 font-bold">${o.marketName || '--'}</td>
-      <td class="p-3 text-slate-500">${o.representativeName || '--'}</td>
-      <td class="p-3 font-bold text-amber-500">${o.itemsCount} مواد</td>
-      <td class="p-3 font-black text-slate-800 dark:text-white">${Number(o.totalAmount).toLocaleString()} د.ع</td>
-      <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${o.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">${o.status === 'Pending' ? 'قيد الانتظار' : o.status}</span></td>
+      <td class="p-3 font-bold">
+        <div>${o.marketName || 'ماركت'}</div>
+        <div class="text-[10px] text-slate-400 font-normal">${o.marketPhone || ''} ${o.marketCity ? '• ' + o.marketCity : ''}</div>
+      </td>
+      <td class="p-3 font-bold text-slate-600 dark:text-slate-300">👤 ${o.representativeName || '--'}</td>
+      <td class="p-3 text-center font-bold text-amber-500">${o.itemsCount} مواد</td>
+      <td class="p-3 text-center font-black text-slate-800 dark:text-white">${Number(o.totalAmount).toLocaleString()} د.ع</td>
+      <td class="p-3 text-center text-slate-400 text-[11px] font-mono">${o.date}</td>
+      <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-black ${badgeClass}">${statusText}</span></td>
       <td class="p-3 text-center">
-        <button onclick="updateOrderStatus('${o.id}', 'Delivered')" class="px-3 py-1 bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs rounded-xl shadow-sm">تسليم</button>
+        <div class="flex items-center justify-center gap-1.5">
+          <button onclick="openRepOrderInvoiceModal('${o.id}')" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-sm flex items-center gap-1">
+            <span>🧾</span>
+            <span>فتح الوصل وتعديل الأسعار</span>
+          </button>
+          <button onclick="updateOrderStatus('${o.id}', 'Delivered')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-sm" title="تسليم سريع">
+            ✔
+          </button>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
   });
 }
 
+// ========================================================
+// CREATE REP ACCOUNT MODAL
+// ========================================================
+function openCreateRepAccountModal() {
+  document.getElementById('newRep-name').value = '';
+  document.getElementById('newRep-company').value = '';
+  document.getElementById('newRep-phone').value = '';
+  document.getElementById('newRep-balance').value = '0';
+  document.getElementById('newRep-address').value = '';
+  document.getElementById('createRepAccountModal')?.classList.remove('hidden');
+}
+
+function closeCreateRepAccountModal() {
+  document.getElementById('createRepAccountModal')?.classList.add('hidden');
+}
+
+async function saveNewRepAccount() {
+  const name = document.getElementById('newRep-name')?.value.trim();
+  const company = document.getElementById('newRep-company')?.value.trim();
+  if (!name || !company) {
+    alert('يرجى كتابة اسم المندوب واسم الشركة أولاً!');
+    return;
+  }
+
+  const payload = {
+    name: name,
+    company: company,
+    phone: document.getElementById('newRep-phone')?.value.trim() || '',
+    balance: Number(document.getElementById('newRep-balance')?.value || 0),
+    address: document.getElementById('newRep-address')?.value.trim() || ''
+  };
+
+  const res = await callBackend('create_rep_account', payload);
+  if (res && res.success) {
+    alert(`✔ تم إنشاء حساب المندوب (${name}) بنجاح!`);
+    closeCreateRepAccountModal();
+    await loadSuppliersList();
+    await loadSuppliers();
+  }
+}
+
+// ========================================================
+// INTERACTIVE ORDER INVOICE MODAL (PRICE & QTY EDITOR)
+// ========================================================
+async function openRepOrderInvoiceModal(orderId) {
+  const res = await callBackend('get_rep_order_details', { id: orderId });
+  if (!res || !res.success || !res.order) {
+    alert('تعذر تحميل تفاصيل الوصل');
+    return;
+  }
+
+  activeOrderModalData = res.order;
+  const o = res.order;
+
+  document.getElementById('oim-orderNumber').innerText = o.orderNumber;
+  document.getElementById('oim-marketName').innerText = o.marketName || 'ماركت';
+  document.getElementById('oim-marketContact').innerText = `${o.marketPhone || '--'} | ${o.marketAddress || 'العراق'}`;
+  document.getElementById('oim-repName').innerText = o.representativeName || o.supplierName || 'مندوب عام';
+  document.getElementById('oim-notes').value = o.notes || '';
+  document.getElementById('oim-statusSelect').value = o.status || 'Pending';
+
+  renderOrderModalItemsTable();
+  recalcOrderModalInvoice();
+
+  document.getElementById('orderInvoiceModal')?.classList.remove('hidden');
+}
+
+function closeOrderInvoiceModal() {
+  document.getElementById('orderInvoiceModal')?.classList.add('hidden');
+  activeOrderModalData = null;
+}
+
+function renderOrderModalItemsTable() {
+  const tbody = document.getElementById('oim-itemsTableBody');
+  if (!tbody || !activeOrderModalData) return;
+
+  tbody.innerHTML = '';
+  (activeOrderModalData.items || []).forEach((item, idx) => {
+    const tr = document.createElement('tr');
+    tr.id = `oim-row-${item.id}`;
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
+    tr.innerHTML = `
+      <td class="p-2.5">
+        <div class="font-bold text-slate-800 dark:text-white text-xs">${item.productName}</div>
+        <div class="text-[10px] text-slate-400 font-mono">${item.barcode || '--'}</div>
+      </td>
+      <td class="p-2.5 text-center">
+        <input type="number" step="1" min="1" value="${item.quantity}" oninput="updateOrderModalItemValue('${item.id}', 'quantity', this.value)" class="w-20 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-center font-bold text-sky-500">
+      </td>
+      <td class="p-2.5 text-center">
+        <input type="number" step="250" min="0" value="${item.unitPrice}" oninput="updateOrderModalItemValue('${item.id}', 'unitPrice', this.value)" class="w-24 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-center font-bold text-emerald-600">
+      </td>
+      <td class="p-2.5 text-center font-black text-slate-800 dark:text-white text-xs" id="oim-item-total-${item.id}">
+        ${Number(item.quantity * item.unitPrice).toLocaleString()} د.ع
+      </td>
+      <td class="p-2.5 text-center">
+        <button onclick="removeOrderModalItem('${item.id}')" class="text-rose-500 hover:text-rose-600 font-black text-xs">🗑</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateOrderModalItemValue(itemId, field, value) {
+  if (!activeOrderModalData) return;
+  const item = activeOrderModalData.items.find(i => i.id === itemId);
+  if (item) {
+    item[field] = Math.max(0, Number(value) || 0);
+    const totalEl = document.getElementById(`oim-item-total-${itemId}`);
+    if (totalEl) {
+      totalEl.innerText = `${Number(item.quantity * item.unitPrice).toLocaleString()} د.ع`;
+    }
+    recalcOrderModalInvoice();
+  }
+}
+
+function removeOrderModalItem(itemId) {
+  if (!activeOrderModalData) return;
+  activeOrderModalData.items = activeOrderModalData.items.filter(i => i.id !== itemId);
+  renderOrderModalItemsTable();
+  recalcOrderModalInvoice();
+}
+
+function recalcOrderModalInvoice() {
+  if (!activeOrderModalData) return;
+
+  const currentOrderTotal = activeOrderModalData.items.reduce((sum, i) => sum + (i.quantity * i.unitPrice), 0);
+  const prevDebt = Number(activeOrderModalData.previousDebt || 0);
+  const grandTotal = prevDebt + currentOrderTotal;
+
+  document.getElementById('oim-previousDebt').innerText = `${Number(prevDebt).toLocaleString()} د.ع`;
+  document.getElementById('oim-currentTotal').innerText = `${Number(currentOrderTotal).toLocaleString()} د.ع`;
+  document.getElementById('oim-grandTotal').innerText = `${Number(grandTotal).toLocaleString()} د.ع`;
+}
+
+async function saveEditedRepOrder() {
+  if (!activeOrderModalData) return;
+
+  const payload = {
+    id: activeOrderModalData.id,
+    status: document.getElementById('oim-statusSelect')?.value || 'InPreparation',
+    notes: document.getElementById('oim-notes')?.value || '',
+    items: activeOrderModalData.items.map(i => ({
+      id: i.id,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice
+    }))
+  };
+
+  const res = await callBackend('save_rep_order_items', payload);
+  if (res && res.success) {
+    alert('✔ تم حفظ التعديلات وتحديث الوصل بنجاح!');
+    closeOrderInvoiceModal();
+    await loadRepOrders();
+  }
+}
+
+function printRepOrderInvoice() {
+  if (!activeOrderModalData) return;
+  window.print();
+}
+
 async function updateOrderStatus(id, status) {
-  await callBackend('update_order_status', { id, status });
-  loadRepOrders();
+  await callBackend('save_rep_order_items', { id, status });
+  await loadRepOrders();
 }
 
 function openRepPortalModal() {
@@ -1144,3 +1342,4 @@ function openRepPortalModal() {
 function closeRepPortalModal() {
   document.getElementById('repModal')?.classList.add('hidden');
 }
+

@@ -829,31 +829,223 @@
         </div>
 
         <!-- ======================================================== -->
-        <!-- VIEW 5: REP ORDERS (NOTICE) -->
+        <!-- VIEW 5: REP ORDERS & INVOICE MANAGEMENT (LIVE & EDITABLE) -->
         <!-- ======================================================== -->
-        <div id="tab-repOrders" class="tab-content hidden space-y-4">
-          <div class="flex items-center justify-between sh-card p-4">
-            <div>
-              <h2 class="text-xl font-black">طلبيات المناديب والمحلات السحابية</h2>
-              <p class="text-xs text-slate-400">الطلبيات الواردة مباشرة من تطبيق المندوب للموبايل</p>
+        <div id="tab-repOrders" class="tab-content hidden space-y-3.5">
+          
+          <!-- Top Header Bar with Action Buttons -->
+          <div class="flex items-center justify-between sh-card px-4 py-2.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-lg">
+                🚚
+              </div>
+              <div>
+                <h2 class="text-base font-black text-slate-800 dark:text-white">طلبيات المناديب والمحلات السحابية</h2>
+                <p class="text-[11px] text-slate-400">استقبال وتعديل طلبيات تطبيق المندوب للموبايل وكشف حسابات الماركت</p>
+              </div>
             </div>
-            <button onclick="loadRepOrders()" class="px-4 py-2 bg-sky-500 text-white text-xs font-bold rounded-xl">تحديث</button>
+            
+            <div class="flex items-center gap-2">
+              <!-- Create Rep Account Button -->
+              <button onclick="openCreateRepAccountModal()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5">
+                <span>➕</span>
+                <span>إنشاء حساب مندوب جديد</span>
+              </button>
+
+              <!-- Notifications Button with Live Badge -->
+              <button onclick="loadRepOrders()" class="relative px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1.5">
+                <span>🔔</span>
+                <span>الإشعارات والطلبيات</span>
+                <span id="repNotificationCountBadge" class="hidden px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse">0</span>
+              </button>
+
+              <!-- Rep Cloud App QR Portal Button -->
+              <button onclick="openRepPortalModal()" class="px-3.5 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5">
+                <span>📲</span>
+                <span>باركود وتطبيق المندوب</span>
+              </button>
+            </div>
           </div>
+
+          <!-- Orders Table Container -->
           <div class="sh-card overflow-hidden">
-            <table class="w-full text-right text-xs">
-              <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
-                <tr>
-                  <th class="p-3.5">رقم الطلبية</th>
-                  <th class="p-3.5">اسم المحل</th>
-                  <th class="p-3.5">المندوب</th>
-                  <th class="p-3.5">المواد</th>
-                  <th class="p-3.5">الإجمالي</th>
-                  <th class="p-3.5">الحالة</th>
-                  <th class="p-3.5 text-center">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="repOrdersTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-            </table>
+            <div class="overflow-x-auto max-h-[calc(100vh-220px)]">
+              <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800 sticky top-0 z-10">
+                  <tr>
+                    <th class="p-3">رقم الطلبية</th>
+                    <th class="p-3">اسم المحل / الماركت</th>
+                    <th class="p-3">المندوب المسؤول</th>
+                    <th class="p-3 text-center">المواد المطلوبة</th>
+                    <th class="p-3 text-center">مبلغ الطلبية</th>
+                    <th class="p-3 text-center">التاريخ والوقت</th>
+                    <th class="p-3 text-center">الحالة</th>
+                    <th class="p-3 text-center">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="repOrdersTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold">
+                  <!-- Dynamically populated via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- MODAL 1: INTERACTIVE ORDER INVOICE & PRICE/QTY EDITOR -->
+        <!-- ======================================================== -->
+        <div id="orderInvoiceModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+          <div class="sh-card max-w-2xl w-full p-5 space-y-4 animate-in fade-in zoom-in duration-150 max-h-[92vh] flex flex-col justify-between">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-base">
+                  🧾
+                </div>
+                <div>
+                  <h3 class="font-black text-base text-slate-800 dark:text-white flex items-center gap-2">
+                    <span>وصل وتجهيز الطلبية:</span>
+                    <span id="oim-orderNumber" class="font-mono text-sky-500">--</span>
+                  </h3>
+                  <p class="text-[11px] text-slate-400">يمكنك تعديل الأسعار والكميات ومتابعة الحساب المالي للماركت مباشرة</p>
+                </div>
+              </div>
+              <button onclick="closeOrderInvoiceModal()" class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 font-black hover:text-rose-500">✕</button>
+            </div>
+
+            <div class="space-y-3 overflow-y-auto pr-1">
+              
+              <!-- Market & Rep Details Banner -->
+              <div class="grid grid-cols-3 gap-2.5 p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl text-xs">
+                <div>
+                  <span class="text-slate-400 block text-[10px] font-bold">اسم الماركت:</span>
+                  <span id="oim-marketName" class="font-black text-slate-800 dark:text-white">--</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[10px] font-bold">الهاتف والعنوان:</span>
+                  <span id="oim-marketContact" class="font-bold text-slate-600 dark:text-slate-300">--</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[10px] font-bold">المندوب:</span>
+                  <span id="oim-repName" class="font-bold text-sky-500">--</span>
+                </div>
+              </div>
+
+              <!-- Market Financial Balance Banner (رؤية مال باقي لعند ماركيت) -->
+              <div class="grid grid-cols-3 gap-2.5 p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-2xl border border-amber-500/20 text-center text-xs">
+                <div>
+                  <span class="text-slate-400 block text-[10px] font-bold">الديون السابقة على الماركت:</span>
+                  <span id="oim-previousDebt" class="font-black text-slate-800 dark:text-white">0 د.ع</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[10px] font-bold">مجموع هذه الطلبية:</span>
+                  <span id="oim-currentTotal" class="font-black text-amber-600 dark:text-amber-400">0 د.ع</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[10px] font-bold">المجموع الكلي المطلوب:</span>
+                  <span id="oim-grandTotal" class="font-black text-emerald-600 dark:text-emerald-400 text-sm">0 د.ع</span>
+                </div>
+              </div>
+
+              <!-- Editable Items Table -->
+              <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <table class="w-full text-right text-xs">
+                  <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800">
+                    <tr>
+                      <th class="p-2.5">المادة</th>
+                      <th class="p-2.5 text-center w-24">الكمية</th>
+                      <th class="p-2.5 text-center w-28">سعر الوحدة (د.ع)</th>
+                      <th class="p-2.5 text-center w-28">المجموع (د.ع)</th>
+                      <th class="p-2.5 text-center w-12">حذف</th>
+                    </tr>
+                  </thead>
+                  <tbody id="oim-itemsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold">
+                    <!-- Injected via JS with live calculation inputs -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Status Selector & Notes -->
+              <div class="grid grid-cols-2 gap-3 pt-1 text-xs">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-400 mb-1">حالة الطلبية:</label>
+                  <select id="oim-statusSelect" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 font-bold text-slate-800 dark:text-white">
+                    <option value="Pending">قيد الانتظار (جديدة)</option>
+                    <option value="InPreparation">جاري التجهيز والتحضير</option>
+                    <option value="Delivered">تم التوصيل والتسليم (معتمدة)</option>
+                    <option value="Cancelled">ملغية / مرفوضة</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-400 mb-1">ملاحظات الطلبية:</label>
+                  <input id="oim-notes" type="text" placeholder="أي ملاحظات خاصة بالتوصيل أو الدفع..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 font-bold text-slate-800 dark:text-white">
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button onclick="closeOrderInvoiceModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold rounded-xl">إغلاق</button>
+              
+              <div class="flex items-center gap-2">
+                <button onclick="printRepOrderInvoice()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-black rounded-xl flex items-center gap-1.5">
+                  <span>🖨</span>
+                  <span>طباعة الوصل</span>
+                </button>
+                <button onclick="saveEditedRepOrder()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5">
+                  <i data-lucide="check" class="w-4 h-4"></i>
+                  <span>حفظ التعديلات واعتماد الوصل</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- MODAL 2: CREATE NEW REPRESENTATIVE ACCOUNT -->
+        <!-- ======================================================== -->
+        <div id="createRepAccountModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+          <div class="sh-card max-w-md w-full p-5 space-y-4 animate-in fade-in zoom-in duration-150">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">👤</span>
+                <h3 class="font-black text-base">إنشاء حساب مندوب / مورد جديد</h3>
+              </div>
+              <button onclick="closeCreateRepAccountModal()" class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 font-black hover:text-rose-500">✕</button>
+            </div>
+
+            <div class="space-y-2.5 text-xs">
+              <div>
+                <label class="block font-bold text-slate-500 mb-1">اسم المندوب الرباعي *</label>
+                <input id="newRep-name" type="text" placeholder="اسم المندوب" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 font-bold">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-500 mb-1">اسم الشركة / المعمل المورد *</label>
+                <input id="newRep-company" type="text" placeholder="مثال: شركة بيبسي، شركة الألبان..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 font-bold">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-bold text-slate-500 mb-1">رقم الهاتف</label>
+                  <input id="newRep-phone" type="text" placeholder="07xxxxxxxxx" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 font-mono font-bold">
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-500 mb-1">الرصيد الافتتاحي (د.ع)</label>
+                  <input id="newRep-balance" type="number" value="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 font-bold">
+                </div>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-500 mb-1">المحافظة / العنوان</label>
+                <input id="newRep-address" type="text" placeholder="بغداد، أربيل، السليمانية..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 font-bold">
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button onclick="closeCreateRepAccountModal()" class="px-4 py-1.5 bg-slate-100 dark:bg-slate-800 text-xs font-bold rounded-xl">إلغاء</button>
+              <button onclick="saveNewRepAccount()" class="px-6 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-md">حفظ الحساب</button>
+            </div>
           </div>
         </div>
 

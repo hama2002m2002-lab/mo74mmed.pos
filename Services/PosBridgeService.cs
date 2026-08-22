@@ -410,17 +410,118 @@ public class PosBridgeService
                     });
                 }
 
-                case "update_order_status":
+                case "create_rep_account":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var r = doc.RootElement;
+                    string name = r.GetProperty("name").GetString()?.Trim() ?? "";
+                    string phone = r.TryGetProperty("phone", out var pp) ? pp.GetString() ?? "" : "";
+                    string company = r.TryGetProperty("company", out var cp) ? cp.GetString() ?? "" : "";
+                    string address = r.TryGetProperty("address", out var ap) ? ap.GetString() ?? "" : "";
+                    decimal balance = r.TryGetProperty("balance", out var bp) ? bp.GetDecimal() : 0m;
+                    string notes = r.TryGetProperty("notes", out var np) ? np.GetString() ?? "" : "";
+
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        var sup = new Supplier
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = name,
+                            Phone = phone,
+                            Company = company,
+                            Address = address,
+                            OpeningBalance = balance,
+                            Balance = balance,
+                            Notes = notes,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await db.Suppliers.AddAsync(sup);
+                        await db.SaveChangesAsync();
+                    }
+                    return JsonSerializer.Serialize(new { success = true });
+                }
+
+                case "get_rep_order_details":
                 {
                     using var doc = JsonDocument.Parse(payloadJson);
                     var orderId = doc.RootElement.GetProperty("id").GetGuid();
-                    string statusStr = doc.RootElement.GetProperty("status").GetString() ?? "Pending";
+                    var ord = await db.SupplierOrders
+                        .Include(o => o.Items)
+                        .Include(o => o.Supplier)
+                        .FirstOrDefaultAsync(o => o.Id == orderId);
 
-                    var ord = await db.SupplierOrders.FindAsync(orderId);
-                    if (ord != null && Enum.TryParse<OrderStatus>(statusStr, out var status))
+                    if (ord == null) return JsonSerializer.Serialize(new { success = false, message = "الطلبية غير موجودة" });
+
+                    decimal previousMarketDebt = ord.Supplier?.Balance ?? 0m;
+                    decimal totalWithDebt = previousMarketDebt + ord.TotalAmount;
+
+                    return JsonSerializer.Serialize(new
                     {
-                        ord.Status = status;
+                        success = true,
+                        order = new
+                        {
+                            ord.Id,
+                            ord.OrderNumber,
+                            ord.MarketName,
+                            ord.MarketPhone,
+                            ord.MarketAddress,
+                            ord.RepresentativeName,
+                            ord.SupplierName,
+                            ord.TotalAmount,
+                            status = ord.Status.ToString(),
+                            date = ord.OrderDate.ToString("yyyy/MM/dd hh:mm tt"),
+                            notes = ord.Notes ?? "",
+                            previousDebt = previousMarketDebt,
+                            totalWithDebt = totalWithDebt,
+                            items = ord.Items.Select(i => new
+                            {
+                                i.Id,
+                                i.ProductName,
+                                i.Barcode,
+                                i.Quantity,
+                                i.UnitPrice,
+                                totalPrice = i.Quantity * i.UnitPrice
+                            })
+                        }
+                    });
+                }
+
+                case "save_rep_order_items":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var r = doc.RootElement;
+                    var orderId = r.GetProperty("id").GetGuid();
+                    string statusStr = r.TryGetProperty("status", out var stp) ? stp.GetString() ?? "InPreparation" : "InPreparation";
+                    string notes = r.TryGetProperty("notes", out var ntp) ? ntp.GetString() ?? "" : "";
+
+                    var ord = await db.SupplierOrders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == orderId);
+                    if (ord != null)
+                    {
+                        if (Enum.TryParse<OrderStatus>(statusStr, out var status)) ord.Status = status;
+                        ord.Notes = notes;
                         ord.UpdatedAt = DateTime.UtcNow;
+
+                        if (r.TryGetProperty("items", out var itemsProp) && itemsProp.ValueKind == JsonValueKind.Array)
+                        {
+                            decimal newTotal = 0;
+                            foreach (var it in itemsProp.EnumerateArray())
+                            {
+                                var itemId = it.GetProperty("id").GetGuid();
+                                var qty = it.GetProperty("quantity").GetDecimal();
+                                var price = it.GetProperty("unitPrice").GetDecimal();
+
+                                var item = ord.Items.FirstOrDefault(i => i.Id == itemId);
+                                if (item != null)
+                                {
+                                    item.Quantity = qty;
+                                    item.UnitPrice = price;
+                                    item.UpdatedAt = DateTime.UtcNow;
+                                }
+                                newTotal += (qty * price);
+                            }
+                            ord.TotalAmount = newTotal;
+                        }
+
                         await db.SaveChangesAsync();
                     }
                     return JsonSerializer.Serialize(new { success = true });
