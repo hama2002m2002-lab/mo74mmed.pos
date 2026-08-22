@@ -652,6 +652,233 @@ public class PosBridgeService
                 }
 
                 // ==========================================
+                // 5. SUPPLIERS, CUSTOMERS, AUDIT, DAMAGED & REPORTS
+                // ==========================================
+                case "get_customers":
+                {
+                    var debts = await db.CustomerDebts
+                        .OrderByDescending(d => d.CreatedAt)
+                        .ToListAsync();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        customers = debts.Select(d => new
+                        {
+                            customerName = d.CustomerName,
+                            phone = d.PhoneNumber ?? "",
+                            totalDebt = d.RemainingBalance,
+                            totalPaid = d.TotalPaid,
+                            lastDebtDate = d.CreatedAt.ToString("yyyy/MM/dd"),
+                            lastType = d.LastTransactionType,
+                            notes = d.Notes ?? ""
+                        })
+                    });
+                }
+
+                case "add_customer_debt":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var r = doc.RootElement;
+                    string cName = r.GetProperty("name").GetString()?.Trim() ?? "";
+                    string phone = r.TryGetProperty("phone", out var pp) ? pp.GetString()?.Trim() ?? "" : "";
+                    decimal amount = r.GetProperty("amount").GetDecimal();
+                    string notes = r.TryGetProperty("notes", out var np) ? np.GetString()?.Trim() ?? "" : "";
+
+                    var existing = await db.CustomerDebts.FirstOrDefaultAsync(d => d.CustomerName == cName);
+                    if (existing != null)
+                    {
+                        existing.TotalDebt += amount;
+                        if (!string.IsNullOrEmpty(phone)) existing.PhoneNumber = phone;
+                        existing.LastTransactionType = "دين جديد";
+                        existing.Notes = notes;
+                        existing.UpdatedAt = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        var newDebt = new CustomerDebt
+                        {
+                            Id = Guid.NewGuid(),
+                            CustomerName = cName,
+                            PhoneNumber = phone,
+                            TotalDebt = amount,
+                            TotalPaid = 0m,
+                            LastTransactionType = "دين مشتريات",
+                            Notes = notes,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await db.CustomerDebts.AddAsync(newDebt);
+                    }
+                    await db.SaveChangesAsync();
+                    return JsonSerializer.Serialize(new { success = true });
+                }
+
+                case "pay_customer_debt":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var r = doc.RootElement;
+                    string cName = r.GetProperty("customerName").GetString()?.Trim() ?? "";
+                    decimal payAmount = r.GetProperty("amount").GetDecimal();
+
+                    var debt = await db.CustomerDebts.FirstOrDefaultAsync(d => d.CustomerName == cName);
+                    if (debt != null)
+                    {
+                        debt.TotalPaid += payAmount;
+                        debt.LastTransactionType = "سداد دفعة";
+                        debt.UpdatedAt = DateTime.UtcNow;
+                        await db.SaveChangesAsync();
+                    }
+                    return JsonSerializer.Serialize(new { success = true });
+                }
+
+                case "get_damaged_items":
+                {
+                    var items = await db.DamagedItems
+                        .OrderByDescending(d => d.CreatedAt)
+                        .ToListAsync();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        totalLoss = items.Sum(i => i.TotalLossAmount),
+                        items = items.Select(i => new
+                        {
+                            i.Id,
+                            productName = i.ProductName,
+                            barcode = i.Barcode ?? "",
+                            i.Quantity,
+                            lossAmount = i.TotalLossAmount,
+                            reason = i.Reason,
+                            actionTaken = i.Notes ?? "إتلاف",
+                            date = i.CreatedAt.ToString("yyyy/MM/dd hh:mm tt")
+                        })
+                    });
+                }
+
+                case "add_damaged_item":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var r = doc.RootElement;
+                    var prodId = r.GetProperty("productId").GetGuid();
+                    decimal qty = r.GetProperty("quantity").GetDecimal();
+                    string reasonStr = r.TryGetProperty("reason", out var rp) ? rp.GetString() ?? "تالف" : "تالف";
+                    string actionStr = r.TryGetProperty("actionTaken", out var ap) ? ap.GetString() ?? "إتلاف" : "إتلاف";
+
+                    var prod = await db.Products.FindAsync(prodId);
+                    if (prod != null)
+                    {
+                        prod.StockQuantity = Math.Max(0, prod.StockQuantity - qty);
+                        if (prod.ItemsPerCarton > 0) prod.CartonsCount = Math.Floor(prod.StockQuantity / prod.ItemsPerCarton);
+
+                        var damaged = new DamagedItem
+                        {
+                            Id = Guid.NewGuid(),
+                            ProductId = prod.Id,
+                            ProductName = prod.Name,
+                            Barcode = prod.Barcode ?? "",
+                            Quantity = qty,
+                            UnitCost = prod.Cost,
+                            Reason = reasonStr,
+                            Notes = actionStr,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await db.DamagedItems.AddAsync(damaged);
+                        await db.SaveChangesAsync();
+                    }
+                    return JsonSerializer.Serialize(new { success = true });
+                }
+
+                case "get_stock_audit":
+                {
+                    var prods = await db.Products
+                        .Include(p => p.Category)
+                        .Where(p => !p.IsDeleted)
+                        .OrderBy(p => p.Name)
+                        .ToListAsync();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        products = prods.Select(p => new
+                        {
+                            p.Id,
+                            p.Name,
+                            p.Barcode,
+                            category = p.Category?.Name ?? "عام",
+                            p.StockQuantity,
+                            p.CartonsCount,
+                            p.ItemsPerCarton,
+                            p.Cost,
+                            p.Price
+                        })
+                    });
+                }
+
+                case "update_stock_audit":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var r = doc.RootElement;
+                    var prodId = r.GetProperty("productId").GetGuid();
+                    decimal actualStock = r.GetProperty("actualStock").GetDecimal();
+
+                    var prod = await db.Products.FindAsync(prodId);
+                    if (prod != null)
+                    {
+                        prod.StockQuantity = actualStock;
+                        if (prod.ItemsPerCarton > 0)
+                        {
+                            prod.CartonsCount = Math.Floor(actualStock / prod.ItemsPerCarton);
+                        }
+                        prod.UpdatedAt = DateTime.UtcNow;
+                        await db.SaveChangesAsync();
+                    }
+                    return JsonSerializer.Serialize(new { success = true });
+                }
+
+                case "get_reports":
+                {
+                    var today = DateTime.Today;
+                    var sales = await db.Sales
+                        .Include(s => s.Items)
+                        .ThenInclude(i => i.Product)
+                        .AsNoTracking()
+                        .ToListAsync();
+
+                    var todaySales = sales.Where(s => s.CreatedAt.Date == today).ToList();
+                    var monthSales = sales.Where(s => s.CreatedAt.Year == today.Year && s.CreatedAt.Month == today.Month).ToList();
+
+                    decimal todayTotal = todaySales.Sum(s => s.TotalAmount);
+                    decimal todayProfit = todaySales.Sum(s => s.InvoiceNetProfit);
+
+                    decimal monthTotal = monthSales.Sum(s => s.TotalAmount);
+                    decimal monthProfit = monthSales.Sum(s => s.InvoiceNetProfit);
+
+                    var topItems = sales.SelectMany(s => s.Items)
+                        .GroupBy(i => i.ProductName)
+                        .Select(g => new
+                        {
+                            name = g.Key,
+                            qty = g.Sum(x => x.Quantity),
+                            total = g.Sum(x => x.TotalPrice)
+                        })
+                        .OrderByDescending(x => x.qty)
+                        .Take(6)
+                        .ToList();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        todayTotal,
+                        todayProfit,
+                        todayInvoicesCount = todaySales.Count,
+                        monthTotal,
+                        monthProfit,
+                        monthInvoicesCount = monthSales.Count,
+                        topItems
+                    });
+                }
+
+                // ==========================================
                 // 5. SUPPLIERS & DEBT
                 // ==========================================
                 case "get_suppliers":

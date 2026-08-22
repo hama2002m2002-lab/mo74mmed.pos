@@ -214,7 +214,12 @@ function switchTab(tabId) {
   if (tabId === 'inventory') loadInventory();
   if (tabId === 'repOrders') loadRepOrders();
   if (tabId === 'suppliers') loadSuppliers();
+  if (tabId === 'customers') loadCustomers();
+  if (tabId === 'stockAudit') loadStockAudit();
+  if (tabId === 'damagedItems') loadDamagedItems();
+  if (tabId === 'reports') loadReports();
   if (tabId === 'users') loadUsers();
+  if (tabId === 'printing') loadPrintingSettings();
   if (tabId === 'settings') loadSettingsInfo();
 
   lucide.createIcons();
@@ -1671,9 +1676,9 @@ async function checkForAppUpdates() {
   await callBackend('check_for_updates');
 }
 
-// --------------------------------------------------------
-// EXCEL / CSV FILE UPLOAD & PARSING
-// --------------------------------------------------------
+// ========================================================
+// 1. SMART ROBUST EXCEL & CSV BULK IMPORTER (FOOLPROOF)
+// ========================================================
 async function handleExcelFileUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -1689,10 +1694,11 @@ async function handleExcelFileUpload(event) {
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
-          const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-          processExcelRows(jsonRows);
+          // Get raw 2D array of all rows & columns
+          const raw2D = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+          processExcel2DArray(raw2D);
         } else {
-          alert('تعذر تحميل مكتبة معالجة الإكسل، يرجى حفظ الملف كـ CSV وإعادة المحاولة.');
+          alert('تعذر تحميل محرك الإكسل، يرجى حفظ الملف كـ CSV وإعادة اختياره.');
         }
       } catch (err) {
         alert('حدث خطأ أثناء قراءة ملف الإكسل: ' + err.message);
@@ -1700,12 +1706,12 @@ async function handleExcelFileUpload(event) {
     };
     reader.readAsArrayBuffer(file);
   } else {
-    // CSV Text reader
+    // CSV / TXT reader
     reader.onload = (e) => {
       try {
         const text = e.target.result;
-        const rows = parseCSVText(text);
-        processExcelRows(rows);
+        const raw2D = parseCSVTo2DArray(text);
+        processExcel2DArray(raw2D);
       } catch (err) {
         alert('حدث خطأ أثناء قراءة ملف CSV: ' + err.message);
       }
@@ -1717,76 +1723,181 @@ async function handleExcelFileUpload(event) {
   event.target.value = '';
 }
 
-function parseCSVText(text) {
+function parseCSVTo2DArray(text) {
   const lines = text.split(/\r\n|\n/).filter(l => l.trim().length > 0);
-  if (lines.length < 2) return [];
-
-  const headers = lines[0].split(',').map(h => h.replace(/^["']|["']$/g, '').trim());
-  const rows = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
-    const rowObj = {};
-    headers.forEach((h, idx) => {
-      rowObj[h] = cols[idx] || '';
-    });
-    rows.push(rowObj);
-  }
-  return rows;
+  return lines.map(line => {
+    return line.split(',').map(cell => cell.replace(/^["']|["']$/g, '').trim());
+  });
 }
 
-function processExcelRows(rawRows) {
-  parsedExcelProductsList = [];
-
-  rawRows.forEach((row, index) => {
-    // Smart Column Header Mapping (Arabic & English)
-    const name = row['اسم المادة'] || row['اسم_المادة'] || row['Name'] || row['name'] || row['المادة'] || '';
-    if (!name || !String(name).trim()) return;
-
-    const barcode = String(row['الباركود'] || row['باركود'] || row['Barcode'] || row['barcode'] || '').trim();
-    const category = String(row['التصنيف'] || row['تصنيف'] || row['Category'] || row['category'] || 'عام').trim();
-    const supplierName = String(row['المندوب'] || row['اسم المندوب'] || row['Supplier'] || row['supplier'] || '').trim();
-
-    const cost = parseFloat(row['التكلفة'] || row['سعر الشراء'] || row['Cost'] || row['cost'] || 0) || 0;
-    const price = parseFloat(row['سعر المفرد'] || row['سعر البيع'] || row['Price'] || row['price'] || 0) || 0;
-    const wholesalePrice = parseFloat(row['سعر الجملة'] || row['Wholesale'] || row['wholesale'] || price) || price;
-    const cartonPurchasePrice = parseFloat(row['سعر شراء الكرتون'] || row['شراء كرتون'] || row['CartonCost'] || 0) || 0;
-    const cartonSellingPrice = parseFloat(row['سعر بيع الكرتون'] || row['بيع كرتون'] || row['CartonPrice'] || 0) || 0;
-
-    const piecesPerCarton = parseInt(row['عدد القطع بالكرتون'] || row['قطع بالكرتون'] || row['PiecesPerCarton'] || 1) || 1;
-    const cartonsCount = parseInt(row['عدد الكراتين'] || row['كراتين'] || row['Cartons'] || 0) || 0;
-    let stockQuantity = parseInt(row['الرصيد'] || row['الكمية'] || row['Stock'] || row['stock'] || (cartonsCount * piecesPerCarton)) || 0;
-    if (stockQuantity <= 0 && cartonsCount > 0) {
-      stockQuantity = cartonsCount * piecesPerCarton;
-    }
-
-    parsedExcelProductsList.push({
-      name: String(name).trim(),
-      barcode: barcode,
-      category: category || 'عام',
-      supplierName: supplierName,
-      cost: cost,
-      price: price,
-      wholesalePrice: wholesalePrice,
-      cartonPurchasePrice: cartonPurchasePrice,
-      cartonSellingPrice: cartonSellingPrice,
-      piecesPerCarton: piecesPerCarton,
-      cartonsCount: cartonsCount,
-      stockQuantity: stockQuantity,
-      minStockAlert: 5
-    });
-  });
-
-  if (parsedExcelProductsList.length === 0) {
-    alert('لم يتم العثور على أي صفوف صالحة للمواد داخل الملف!\nتأكد من وجود عمود (اسم المادة) في الملف.');
+function processExcel2DArray(raw2D) {
+  if (!raw2D || raw2D.length === 0) {
+    alert('الملف فارغ ولا يحتوي على أي بيانات!');
     return;
   }
 
-  // Update UI Status Box
+  // 1. Find Header Row index or determine column mapping
+  let headerRowIndex = -1;
+  let nameCol = -1, barcodeCol = -1, catCol = -1, costCol = -1, priceCol = -1, wholesaleCol = -1;
+  let cartonCostCol = -1, cartonPriceCol = -1, piecesPerCartonCol = -1, cartonsCol = -1, stockCol = -1, supCol = -1;
+
+  for (let r = 0; r < Math.min(6, raw2D.length); r++) {
+    const row = raw2D[r].map(c => String(c).toLowerCase().trim());
+    for (let c = 0; c < row.length; c++) {
+      const val = row[c];
+      if (val.includes('اسم') || val.includes('مادة') || val.includes('صنف') || val.includes('منتج') || val.includes('name') || val.includes('item') || val.includes('title')) {
+        headerRowIndex = r;
+        break;
+      }
+    }
+    if (headerRowIndex !== -1) break;
+  }
+
+  if (headerRowIndex !== -1) {
+    const headerRow = raw2D[headerRowIndex].map(c => String(c).toLowerCase().trim());
+    headerRow.forEach((h, idx) => {
+      if (h.includes('اسم') || h.includes('مادة') || h.includes('صنف') || h.includes('منتج') || h.includes('name') || h.includes('item')) nameCol = idx;
+      else if (h.includes('باركود') || h.includes('barcode') || h.includes('كود') || h.includes('code')) barcodeCol = idx;
+      else if (h.includes('تصنيف') || h.includes('قسم') || h.includes('category')) catCol = idx;
+      else if (h.includes('شراء كرتون') || h.includes('cartoncost') || h.includes('carton_cost')) cartonCostCol = idx;
+      else if (h.includes('بيع كرتون') || h.includes('cartonprice') || h.includes('carton_price')) cartonPriceCol = idx;
+      else if (h.includes('تكلفة') || h.includes('شراء') || h.includes('cost') || h.includes('buy')) costCol = idx;
+      else if (h.includes('مفرد') || h.includes('بيع') || h.includes('price') || h.includes('sell')) priceCol = idx;
+      else if (h.includes('جملة') || h.includes('wholesale')) wholesaleCol = idx;
+      else if (h.includes('قطع بالكرتون') || h.includes('تعبئة') || h.includes('pieces')) piecesPerCartonCol = idx;
+      else if (h.includes('كراتين') || h.includes('عدد كراتين') || h.includes('cartons')) cartonsCol = idx;
+      else if (h.includes('رصيد') || h.includes('كمية') || h.includes('stock') || h.includes('qty')) stockCol = idx;
+      else if (h.includes('مندوب') || h.includes('مورد') || h.includes('شركة') || h.includes('supplier')) supCol = idx;
+    });
+  }
+
+  // Default fallback column mapping if no explicit header row was found
+  if (nameCol === -1) nameCol = 0;
+  if (barcodeCol === -1 && raw2D[0].length > 1) barcodeCol = 1;
+  if (catCol === -1 && raw2D[0].length > 2) catCol = 2;
+  if (costCol === -1 && raw2D[0].length > 3) costCol = 3;
+  if (priceCol === -1 && raw2D[0].length > 4) priceCol = 4;
+
+  const startRow = headerRowIndex !== -1 ? headerRowIndex + 1 : 0;
+  parsedExcelProductsList = [];
+  let barcodeCounter = Date.now().toString().slice(-6);
+
+  for (let r = startRow; r < raw2D.length; r++) {
+    const row = raw2D[r];
+    if (!row || row.length === 0) continue;
+
+    // Extract product name from designated column or first non-empty text cell
+    let name = nameCol !== -1 && row[nameCol] ? String(row[nameCol]).trim() : '';
+    if (!name) {
+      for (let c = 0; c < row.length; c++) {
+        const text = String(row[c] || '').trim();
+        if (text && isNaN(text) && text.length > 1) {
+          name = text;
+          break;
+        }
+      }
+    }
+    if (!name) continue; // Skip completely blank row
+
+    // Extract or generate barcode
+    let barcode = barcodeCol !== -1 && row[barcodeCol] ? String(row[barcodeCol]).replace(/[^0-9a-zA-Z]/g, '').trim() : '';
+    if (!barcode) {
+      barcode = '200245' + String(barcodeCounter++).padStart(6, '0');
+    }
+
+    const category = catCol !== -1 && row[catCol] ? String(row[catCol]).trim() : 'عام';
+    const supplierName = supCol !== -1 && row[supCol] ? String(row[supCol]).trim() : '';
+
+    const cost = costCol !== -1 ? parseFloat(String(row[costCol]).replace(/[^0-9.]/g, '')) || 0 : 0;
+    let price = priceCol !== -1 ? parseFloat(String(row[priceCol]).replace(/[^0-9.]/g, '')) || 0 : 0;
+    if (price === 0 && cost > 0) price = cost * 1.2;
+
+    const wholesalePrice = wholesaleCol !== -1 ? parseFloat(String(row[wholesaleCol]).replace(/[^0-9.]/g, '')) || price : price;
+    const cartonPurchasePrice = cartonCostCol !== -1 ? parseFloat(String(row[cartonCostCol]).replace(/[^0-9.]/g, '')) || 0 : 0;
+    const cartonSellingPrice = cartonPriceCol !== -1 ? parseFloat(String(row[cartonPriceCol]).replace(/[^0-9.]/g, '')) || 0 : 0;
+
+    const piecesPerCarton = piecesPerCartonCol !== -1 ? parseInt(String(row[piecesPerCartonCol]).replace(/[^0-9]/g, '')) || 1 : 1;
+    const cartonsCount = cartonsCol !== -1 ? parseInt(String(row[cartonsCol]).replace(/[^0-9]/g, '')) || 0 : 0;
+    let stockQuantity = stockCol !== -1 ? parseInt(String(row[stockCol]).replace(/[^0-9]/g, '')) || (cartonsCount * piecesPerCarton) : (cartonsCount * piecesPerCarton);
+    if (stockQuantity <= 0 && cartonsCount > 0) stockQuantity = cartonsCount * piecesPerCarton;
+
+    parsedExcelProductsList.push({
+      name,
+      barcode,
+      category: category || 'عام',
+      supplierName,
+      cost,
+      price,
+      wholesalePrice,
+      cartonPurchasePrice,
+      cartonSellingPrice,
+      piecesPerCarton: Math.max(1, piecesPerCarton),
+      cartonsCount: Math.max(0, cartonsCount),
+      stockQuantity: stockQuantity,
+      minStockAlert: 5
+    });
+  }
+
+  if (parsedExcelProductsList.length === 0) {
+    alert('لم يتم العثور على أي صفوف صالحة للمواد داخل الملف!\nيرجى التأكد من أن الملف يحتوي على أسماء المواد.');
+    return;
+  }
+
+  // Update Settings preview summary box
   const statusBox = document.getElementById('excelImportStatusBox');
   const countEl = document.getElementById('excelParsedCount');
   if (statusBox) statusBox.classList.remove('hidden');
   if (countEl) countEl.innerText = `${parsedExcelProductsList.length} مادة جاهزة للاستيراد`;
+
+  // Open Preview Modal
+  openExcelPreviewModal();
+}
+
+function openExcelPreviewModal() {
+  const modal = document.getElementById('excelPreviewModal');
+  const summary = document.getElementById('epm-summary');
+  if (summary) summary.innerText = `تم اكتشاف (${parsedExcelProductsList.length}) مادة جاهزة للحفظ في المخزن`;
+  renderExcelPreviewTable(parsedExcelProductsList);
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeExcelPreviewModal() {
+  document.getElementById('excelPreviewModal')?.classList.add('hidden');
+}
+
+function renderExcelPreviewTable(list) {
+  const tbody = document.getElementById('epm-tableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+  list.slice(0, 100).forEach((p, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/50';
+    tr.innerHTML = `
+      <td class="p-2.5 text-center text-slate-400 font-bold">${idx + 1}</td>
+      <td class="p-2.5 font-bold text-slate-800 dark:text-white font-sans">${p.name}</td>
+      <td class="p-2.5 text-sky-500 font-bold">${p.barcode}</td>
+      <td class="p-2.5 font-sans">${p.category}</td>
+      <td class="p-2.5 text-center text-slate-500">${Number(p.cost).toLocaleString()}</td>
+      <td class="p-2.5 text-center text-emerald-500 font-bold">${Number(p.price).toLocaleString()}</td>
+      <td class="p-2.5 text-center text-blue-500">${Number(p.wholesalePrice).toLocaleString()}</td>
+      <td class="p-2.5 text-center font-bold">${p.stockQuantity}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterExcelPreviewTable() {
+  const q = (document.getElementById('epm-search')?.value || '').toLowerCase().trim();
+  const filtered = parsedExcelProductsList.filter(p => 
+    p.name.toLowerCase().includes(q) || p.barcode.includes(q) || p.category.toLowerCase().includes(q)
+  );
+  renderExcelPreviewTable(filtered);
+}
+
+async function confirmExcelImportFromModal() {
+  closeExcelPreviewModal();
+  await confirmExcelImport();
 }
 
 async function confirmExcelImport() {
@@ -1813,7 +1924,6 @@ async function confirmExcelImport() {
     parsedExcelProductsList = [];
     document.getElementById('excelImportStatusBox')?.classList.add('hidden');
     
-    // Refresh inventory and products across the app
     await loadInventory();
     await loadProducts();
     await loadDashboard();
@@ -1867,5 +1977,393 @@ async function backupDatabase() {
   } else {
     alert('تعذر أخذ نسخة احتياطية: ' + (res?.message || 'خطأ غير معروف'));
   }
+}
+
+// ========================================================
+// 2. CUSTOMERS & CREDIT DEBTS (الزبائن وحسابات الآجل)
+// ========================================================
+let customersList = [];
+let selectedCustomerForPayment = null;
+
+async function loadCustomers() {
+  const res = await callBackend('get_customers');
+  if (res && res.success) {
+    customersList = res.customers || [];
+    renderCustomersTable(customersList);
+
+    const totalDebts = customersList.reduce((acc, c) => acc + (c.totalDebt || 0), 0);
+    const totalDebtsEl = document.getElementById('cust-totalDebts');
+    if (totalDebtsEl) totalDebtsEl.innerText = `${Number(totalDebts).toLocaleString()} د.ع`;
+
+    const totalCountEl = document.getElementById('cust-totalCount');
+    if (totalCountEl) totalCountEl.innerText = `${customersList.length} زبون`;
+  }
+}
+
+function renderCustomersTable(list) {
+  const tbody = document.getElementById('customersTableBody');
+  if (!tbody) return;
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400 font-bold">لا يوجد زبائن أو ديون مسجلة حالياً</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  list.forEach((c, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition';
+    tr.innerHTML = `
+      <td class="p-3 text-center text-slate-400 font-bold">${idx + 1}</td>
+      <td class="p-3 font-bold text-slate-800 dark:text-white">${c.customerName}</td>
+      <td class="p-3 font-mono text-slate-500">${c.phone || 'بدون هاتف'}</td>
+      <td class="p-3 text-center font-black font-mono text-rose-500">${Number(c.totalDebt).toLocaleString()} د.ع</td>
+      <td class="p-3 text-center text-slate-400 font-mono text-[11px]">${c.lastDebtDate || '--'}</td>
+      <td class="p-3 text-center">
+        <button onclick="openPayCustomerDebtModal('${c.customerName}', ${c.totalDebt})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg shadow-sm">
+          💵 سداد دين
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterCustomersTable() {
+  const q = (document.getElementById('cust-searchInput')?.value || '').toLowerCase().trim();
+  const filtered = customersList.filter(c => 
+    c.customerName.toLowerCase().includes(q) || (c.phone && c.phone.includes(q))
+  );
+  renderCustomersTable(filtered);
+}
+
+function openAddCustomerDebtModal() {
+  document.getElementById('acd-name').value = '';
+  document.getElementById('acd-phone').value = '';
+  document.getElementById('acd-amount').value = '';
+  document.getElementById('acd-notes').value = '';
+  document.getElementById('addCustomerDebtModal')?.classList.remove('hidden');
+}
+
+function closeAddCustomerDebtModal() {
+  document.getElementById('addCustomerDebtModal')?.classList.add('hidden');
+}
+
+async function saveNewCustomerDebt() {
+  const name = document.getElementById('acd-name')?.value.trim();
+  const phone = document.getElementById('acd-phone')?.value.trim();
+  const amount = parseFloat(document.getElementById('acd-amount')?.value) || 0;
+  const notes = document.getElementById('acd-notes')?.value.trim();
+
+  if (!name || amount <= 0) {
+    alert('يرجى إدخال اسم الزبون ومبلغ الدين بشكل صحيح!');
+    return;
+  }
+
+  const res = await callBackend('add_customer_debt', { name, phone, amount, notes });
+  if (res && res.success) {
+    alert('✔ تم تسجيل دين الزبون بنجاح!');
+    closeAddCustomerDebtModal();
+    await loadCustomers();
+  }
+}
+
+function openPayCustomerDebtModal(customerName, currentDebt) {
+  selectedCustomerForPayment = customerName;
+  const nameEl = document.getElementById('pcd-customerName');
+  const debtEl = document.getElementById('pcd-currentDebt');
+  const payInput = document.getElementById('pcd-payAmount');
+
+  if (nameEl) nameEl.innerText = customerName;
+  if (debtEl) debtEl.innerText = `${Number(currentDebt).toLocaleString()} د.ع`;
+  if (payInput) {
+    payInput.value = currentDebt;
+    payInput.max = currentDebt;
+  }
+
+  document.getElementById('payCustomerDebtModal')?.classList.remove('hidden');
+}
+
+function closePayCustomerDebtModal() {
+  document.getElementById('payCustomerDebtModal')?.classList.add('hidden');
+}
+
+async function confirmCustomerPayment() {
+  if (!selectedCustomerForPayment) return;
+  const amount = parseFloat(document.getElementById('pcd-payAmount')?.value) || 0;
+  if (amount <= 0) {
+    alert('يرجى إدخال مبلغ سداد صحيح!');
+    return;
+  }
+
+  const res = await callBackend('pay_customer_debt', { customerName: selectedCustomerForPayment, amount });
+  if (res && res.success) {
+    alert('✔ تم تسجيل سداد الزبون بنجاح!');
+    closePayCustomerDebtModal();
+    await loadCustomers();
+  }
+}
+
+// ========================================================
+// 3. STOCK AUDIT (الجرد ومطابقة الرفوف)
+// ========================================================
+let auditProductsList = [];
+
+async function loadStockAudit(showAlert = false) {
+  const res = await callBackend('get_stock_audit');
+  if (res && res.success) {
+    auditProductsList = res.products || [];
+    renderAuditTable(auditProductsList);
+    if (showAlert) alert('✔ تم تحديث قائمة جرد الرفوف بنجاح!');
+  }
+}
+
+function renderAuditTable(list) {
+  const tbody = document.getElementById('auditTableBody');
+  if (!tbody) return;
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold">لا توجد مواد مسجلة للجرد</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  list.forEach((p, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition';
+    tr.innerHTML = `
+      <td class="p-3 text-center text-slate-400 font-bold">${idx + 1}</td>
+      <td class="p-3 font-bold text-slate-800 dark:text-white">${p.name || p.Name}</td>
+      <td class="p-3 text-sky-500 font-mono font-bold">${p.barcode || p.Barcode || '--'}</td>
+      <td class="p-3 text-center font-black font-mono">${p.stockQuantity} قطعة</td>
+      <td class="p-3 text-center">
+        <input id="audit-input-${p.id || p.Id}" type="number" value="${p.stockQuantity}" oninput="calcAuditDiff('${p.id || p.Id}', ${p.stockQuantity})" class="w-24 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1 text-center font-black font-mono text-xs">
+      </td>
+      <td class="p-3 text-center font-bold font-mono text-xs" id="audit-diff-${p.id || p.Id}">0</td>
+      <td class="p-3 text-center">
+        <button onclick="quickSaveAuditStock('${p.id || p.Id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg shadow-sm">
+          💾 حفظ
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function calcAuditDiff(id, sysStock) {
+  const input = document.getElementById(`audit-input-${id}`);
+  const diffEl = document.getElementById(`audit-diff-${id}`);
+  if (!input || !diffEl) return;
+
+  const actual = parseFloat(input.value) || 0;
+  const diff = actual - sysStock;
+
+  if (diff === 0) {
+    diffEl.innerText = '0 (مطابق)';
+    diffEl.className = 'p-3 text-center font-bold font-mono text-xs text-slate-400';
+  } else if (diff > 0) {
+    diffEl.innerText = `+${diff} (زيادة)`;
+    diffEl.className = 'p-3 text-center font-bold font-mono text-xs text-emerald-500';
+  } else {
+    diffEl.innerText = `${diff} (نقص)`;
+    diffEl.className = 'p-3 text-center font-bold font-mono text-xs text-rose-500';
+  }
+}
+
+async function quickSaveAuditStock(id) {
+  const input = document.getElementById(`audit-input-${id}`);
+  if (!input) return;
+  const actualStock = parseFloat(input.value) || 0;
+
+  const res = await callBackend('update_stock_audit', { productId: id, actualStock });
+  if (res && res.success) {
+    alert('✔ تم تحديث رصيد المادة الفعلي بالمخزن بنجاح!');
+    await loadInventory();
+    await loadProducts();
+  }
+}
+
+function filterAuditTable() {
+  const q = (document.getElementById('audit-searchInput')?.value || '').toLowerCase().trim();
+  const filtered = auditProductsList.filter(p => 
+    (p.name && p.name.toLowerCase().includes(q)) || (p.barcode && p.barcode.includes(q))
+  );
+  renderAuditTable(filtered);
+}
+
+// ========================================================
+// 4. DAMAGED & EXPIRED ITEMS (المواد التالفة والمنتهية)
+// ========================================================
+let damagedItemsList = [];
+
+async function loadDamagedItems() {
+  const res = await callBackend('get_damaged_items');
+  if (res && res.success) {
+    damagedItemsList = res.items || [];
+    renderDamagedTable(damagedItemsList);
+
+    const lossEl = document.getElementById('damaged-totalLoss');
+    if (lossEl) lossEl.innerText = `${Number(res.totalLoss || 0).toLocaleString()} د.ع`;
+
+    const countEl = document.getElementById('damaged-totalCount');
+    if (countEl) countEl.innerText = `${damagedItemsList.length} مادة`;
+  }
+}
+
+function renderDamagedTable(list) {
+  const tbody = document.getElementById('damagedTableBody');
+  if (!tbody) return;
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400 font-bold">لا توجد مواد تالفة مسجلة</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  list.forEach((d, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition';
+    tr.innerHTML = `
+      <td class="p-3 text-center text-slate-400 font-bold">${idx + 1}</td>
+      <td class="p-3 font-bold text-slate-800 dark:text-white">${d.productName}</td>
+      <td class="p-3 font-mono text-sky-500">${d.barcode || '--'}</td>
+      <td class="p-3 text-center font-bold text-rose-500 font-mono">${d.quantity} قطعة</td>
+      <td class="p-3 text-center font-bold text-rose-500 font-mono">${Number(d.lossAmount).toLocaleString()} د.ع</td>
+      <td class="p-3 text-slate-600 dark:text-slate-300">${d.reason}</td>
+      <td class="p-3 text-center"><span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold">${d.actionTaken}</span></td>
+      <td class="p-3 text-center text-slate-400 font-mono text-[11px]">${d.date}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function openAddDamagedModal() {
+  const select = document.getElementById('adm-productSelect');
+  if (select) {
+    select.innerHTML = '<option value="">-- اختر مادة من المخزن --</option>';
+    state.products.forEach(p => {
+      select.innerHTML += `<option value="${p.id}">${p.name} (رصيد: ${p.stockQuantity})</option>`;
+    });
+  }
+  document.getElementById('adm-quantity').value = '1';
+  document.getElementById('addDamagedModal')?.classList.remove('hidden');
+}
+
+function closeAddDamagedModal() {
+  document.getElementById('addDamagedModal')?.classList.add('hidden');
+}
+
+async function saveNewDamagedItem() {
+  const prodId = document.getElementById('adm-productSelect')?.value;
+  const qty = parseFloat(document.getElementById('adm-quantity')?.value) || 0;
+  const reason = document.getElementById('adm-reason')?.value;
+  const actionTaken = document.getElementById('adm-action')?.value;
+
+  if (!prodId || qty <= 0) {
+    alert('يرجى اختيار مادة وإدخال كمية صحيحة!');
+    return;
+  }
+
+  const res = await callBackend('add_damaged_item', { productId: prodId, quantity: qty, reason, actionTaken });
+  if (res && res.success) {
+    alert('✔ تم تسجيل المادة التالفة وخصمها من رصيد المخزن بنجاح!');
+    closeAddDamagedModal();
+    await loadDamagedItems();
+    await loadInventory();
+    await loadProducts();
+  }
+}
+
+// ========================================================
+// 5. REPORTS & FINANCIAL ANALYTICS (التقارير والأرباح)
+// ========================================================
+async function loadReports() {
+  const res = await callBackend('get_reports');
+  if (res && res.success) {
+    const todaySalesEl = document.getElementById('rep-todaySales');
+    if (todaySalesEl) todaySalesEl.innerText = `${Number(res.todayTotal || 0).toLocaleString()} د.ع`;
+
+    const todayProfitEl = document.getElementById('rep-todayProfit');
+    if (todayProfitEl) todayProfitEl.innerText = `+${Number(res.todayProfit || 0).toLocaleString()} د.ع`;
+
+    const todayInvoicesEl = document.getElementById('rep-todayInvoices');
+    if (todayInvoicesEl) todayInvoicesEl.innerText = `${res.todayInvoicesCount || 0} فواتير`;
+
+    const monthSalesEl = document.getElementById('rep-monthSales');
+    if (monthSalesEl) monthSalesEl.innerText = `${Number(res.monthTotal || 0).toLocaleString()} د.ع`;
+
+    const monthProfitEl = document.getElementById('rep-monthProfit');
+    if (monthProfitEl) monthProfitEl.innerText = `+${Number(res.monthProfit || 0).toLocaleString()} د.ع`;
+
+    const monthInvoicesEl = document.getElementById('rep-monthInvoices');
+    if (monthInvoicesEl) monthInvoicesEl.innerText = `${res.monthInvoicesCount || 0} فواتير`;
+
+    // Render Top Items
+    const topTbody = document.getElementById('rep-topItemsTable');
+    if (topTbody) {
+      if (!res.topItems || res.topItems.length === 0) {
+        topTbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400">لا توجد مبيعات مسجلة حتى الآن</td></tr>';
+      } else {
+        topTbody.innerHTML = '';
+        res.topItems.forEach((it, idx) => {
+          topTbody.innerHTML += `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+              <td class="p-3 text-center text-slate-400 font-bold">${idx + 1}</td>
+              <td class="p-3 font-bold text-slate-800 dark:text-white">${it.name}</td>
+              <td class="p-3 text-center font-bold text-emerald-500 font-mono">${it.qty} قطعة</td>
+              <td class="p-3 text-center font-black text-sky-500 font-mono">${Number(it.total).toLocaleString()} د.ع</td>
+            </tr>
+          `;
+        });
+      }
+    }
+  }
+}
+
+// ========================================================
+// 6. PRINTING & RECEIPT SETTINGS (إعدادات الطابعة والوصل)
+// ========================================================
+function loadPrintingSettings() {
+  const saved = localStorage.getItem('pos_printer_settings');
+  if (saved) {
+    try {
+      const config = JSON.parse(saved);
+      if (config.marketName) document.getElementById('pr-marketName').value = config.marketName;
+      if (config.marketSub) document.getElementById('pr-marketSub').value = config.marketSub;
+      if (config.marketPhone) document.getElementById('pr-marketPhone').value = config.marketPhone;
+      if (config.marketFooter) document.getElementById('pr-marketFooter').value = config.marketFooter;
+      if (config.paperType) document.getElementById('pr-paperType').value = config.paperType;
+    } catch { }
+  }
+  updateReceiptLivePreview();
+}
+
+function updateReceiptLivePreview() {
+  const name = document.getElementById('pr-marketName')?.value || '7amo Market';
+  const sub = document.getElementById('pr-marketSub')?.value || 'نظام إدارة السوبرماركت';
+  const phone = document.getElementById('pr-marketPhone')?.value || '0750 000 0000';
+  const footer = document.getElementById('pr-marketFooter')?.value || 'شكراً لزيارتكم!';
+
+  const pName = document.getElementById('prev-marketName');
+  const pSub = document.getElementById('prev-marketSub');
+  const pPhone = document.getElementById('prev-marketPhone');
+  const pFooter = document.getElementById('prev-marketFooter');
+
+  if (pName) pName.innerText = name;
+  if (pSub) pSub.innerText = sub;
+  if (pPhone) pPhone.innerText = `هاتف: ${phone}`;
+  if (pFooter) pFooter.innerText = footer;
+}
+
+function savePrintingSettings() {
+  const config = {
+    marketName: document.getElementById('pr-marketName')?.value,
+    marketSub: document.getElementById('pr-marketSub')?.value,
+    marketPhone: document.getElementById('pr-marketPhone')?.value,
+    marketFooter: document.getElementById('pr-marketFooter')?.value,
+    paperType: document.getElementById('pr-paperType')?.value
+  };
+  localStorage.setItem('pos_printer_settings', JSON.stringify(config));
+  alert('✔ تم حفظ إعدادات وترويسة وصل البيع بنجاح!');
 }
 

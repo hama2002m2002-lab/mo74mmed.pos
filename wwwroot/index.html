@@ -1074,48 +1074,272 @@
         </div>
 
         <!-- ======================================================== -->
-        <!-- VIEW 7 TO 11: CUSTOMIZABLE MARKET SECTIONS FOR USER BUTTONS -->
+        <!-- VIEW 7: CUSTOMERS & CREDIT DEBTS (الزبائن وحسابات الآجل) -->
         <!-- ======================================================== -->
         <div id="tab-customers" class="tab-content hidden space-y-4">
-          <div class="sh-card p-6 text-center space-y-3">
-            <h2 class="text-xl font-black">قسم الزبائن وحسابات الآجل والديون</h2>
-            <p class="text-xs text-slate-400">واجهة مخصصة لإضافة أزرار وقوائم ديون الزبائن يدوياً.</p>
-            <div class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2">
-              <span class="text-3xl text-slate-300">➕</span>
-              <button class="px-5 py-2 bg-sky-500 text-white font-bold text-xs rounded-xl">+ إضافة زر زبون / دين جديد</button>
+          <!-- Summary Header -->
+          <div class="grid grid-cols-3 gap-3.5">
+            <div class="sh-card p-4 flex items-center justify-between border-r-4 border-rose-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">إجمالي ديون الزبائن للماركت</span>
+                <span id="cust-totalDebts" class="text-xl font-black text-rose-500 font-mono">0 د.ع</span>
+              </div>
+              <div class="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center font-bold text-lg">💳</div>
+            </div>
+            <div class="sh-card p-4 flex items-center justify-between border-r-4 border-sky-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">عدد الزبائن الآجل</span>
+                <span id="cust-totalCount" class="text-xl font-black text-sky-500 font-mono">0 زبون</span>
+              </div>
+              <div class="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold text-lg">👥</div>
+            </div>
+            <div class="sh-card p-4 flex items-center justify-between">
+              <button onclick="openAddCustomerDebtModal()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2">
+                <span>➕</span>
+                <span>تسجيل دين / زبون جديد</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="sh-card p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-black text-sm text-slate-800 dark:text-white">قائمة حسابات الزبائن والديون المعلقة</h3>
+              <input id="cust-searchInput" oninput="filterCustomersTable()" type="text" placeholder="بحث باسم الزبون أو الهاتف..." class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-white w-64">
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                  <tr>
+                    <th class="p-3">#</th>
+                    <th class="p-3">اسم الزبون</th>
+                    <th class="p-3">رقم الهاتف</th>
+                    <th class="p-3 text-center">المبلغ المتبقي بذمته</th>
+                    <th class="p-3 text-center">تاريخ آخر حركة</th>
+                    <th class="p-3 text-center">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="customersTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tr><td colspan="6" class="text-center py-8 text-slate-400">جاري تحميل سجل ديون الزبائن...</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
+        <!-- ======================================================== -->
+        <!-- VIEW 8: STOCK AUDIT (الجرد ومطابقة الرفوف) -->
+        <!-- ======================================================== -->
         <div id="tab-stockAudit" class="tab-content hidden space-y-4">
-          <div class="sh-card p-6 text-center space-y-3">
-            <h2 class="text-xl font-black">قسم الجرد ومطابقة الرفوف</h2>
-            <p class="text-xs text-slate-400">واجهة مخصصة لإضافة أزرار جرد المواد والنواقص يدوياً.</p>
-            <div class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2">
-              <span class="text-3xl text-slate-300">➕</span>
-              <button class="px-5 py-2 bg-sky-500 text-white font-bold text-xs rounded-xl">+ إضافة زر جرد رفوف جديد</button>
+          <div class="sh-card p-4 flex items-center justify-between">
+            <div>
+              <h2 class="text-base font-black text-slate-800 dark:text-white">جرد ومطابقة أرصدة الرفوف بالمخزن</h2>
+              <p class="text-xs text-slate-400">فحص الكميات الفعلية ومطابقتها مع رصيد النظام فورياً</p>
             </div>
+            <div class="flex items-center gap-2">
+              <input id="audit-searchInput" oninput="filterAuditTable()" type="text" placeholder="بحث عن مادة للجرد..." class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-white w-60">
+              <button onclick="loadStockAudit(true)" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-xs font-bold rounded-xl flex items-center gap-1">
+                <span>🔄</span>
+                <span>تحديث القائمة</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="sh-card p-4 overflow-x-auto">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                <tr>
+                  <th class="p-3">#</th>
+                  <th class="p-3">اسم المادة</th>
+                  <th class="p-3">الباركود</th>
+                  <th class="p-3 text-center">الرصيد بالنظام</th>
+                  <th class="p-3 text-center">الكمية الفعلية على الرف</th>
+                  <th class="p-3 text-center">الفارق</th>
+                  <th class="p-3 text-center">تحديث الرصيد</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr><td colspan="7" class="text-center py-8 text-slate-400">جاري تحميل بيانات الجرد...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
+        <!-- ======================================================== -->
+        <!-- VIEW 9: DAMAGED ITEMS (المواد التالفة والمنتهية) -->
+        <!-- ======================================================== -->
         <div id="tab-damagedItems" class="tab-content hidden space-y-4">
-          <div class="sh-card p-6 text-center space-y-3">
-            <h2 class="text-xl font-black">قسم المواد التالفة والمنتهية الصلاحية</h2>
-            <p class="text-xs text-slate-400">واجهة مخصصة لإضافة أزرار تسجيل التوالف وإرجاعها للموردين.</p>
-            <div class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2">
-              <span class="text-3xl text-slate-300">➕</span>
-              <button class="px-5 py-2 bg-rose-500 text-white font-bold text-xs rounded-xl">+ إضافة زر تسجيل مادة تالفة</button>
+          <div class="grid grid-cols-3 gap-3.5">
+            <div class="sh-card p-4 flex items-center justify-between border-r-4 border-rose-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">إجمالي خسائر التوالف المالية</span>
+                <span id="damaged-totalLoss" class="text-xl font-black text-rose-500 font-mono">0 د.ع</span>
+              </div>
+              <div class="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center font-bold text-lg">⚠️</div>
+            </div>
+            <div class="sh-card p-4 flex items-center justify-between border-r-4 border-amber-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">عدد المواد التالفة المسجلة</span>
+                <span id="damaged-totalCount" class="text-xl font-black text-amber-500 font-mono">0 مادة</span>
+              </div>
+              <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-lg">📦</div>
+            </div>
+            <div class="sh-card p-4 flex items-center justify-between">
+              <button onclick="openAddDamagedModal()" class="w-full py-3 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2">
+                <span>➕</span>
+                <span>تسجيل مادة تالفة جديدة</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="sh-card p-4 overflow-x-auto">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                <tr>
+                  <th class="p-3">#</th>
+                  <th class="p-3">اسم المادة</th>
+                  <th class="p-3">الباركود</th>
+                  <th class="p-3 text-center">الكمية التالفة</th>
+                  <th class="p-3 text-center">قيمة الخسارة</th>
+                  <th class="p-3">سبب التلف</th>
+                  <th class="p-3 text-center">الإجراء المتخذ</th>
+                  <th class="p-3 text-center">التاريخ</th>
+                </tr>
+              </thead>
+              <tbody id="damagedTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr><td colspan="8" class="text-center py-8 text-slate-400">جاري تحميل سجل المواد التالفة...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- VIEW 10: REPORTS & PROFITS (التقارير والأرباح) -->
+        <!-- ======================================================== -->
+        <div id="tab-reports" class="tab-content hidden space-y-4">
+          <div class="grid grid-cols-4 gap-3.5">
+            <div class="sh-card p-4 border-r-4 border-emerald-500">
+              <span class="text-xs text-slate-400 font-bold block">مبيعات اليوم الإجمالية</span>
+              <span id="rep-todaySales" class="text-lg font-black text-emerald-500 font-mono">0 د.ع</span>
+              <span id="rep-todayInvoices" class="text-[10px] text-slate-400 font-bold block mt-1">0 فواتير</span>
+            </div>
+            <div class="sh-card p-4 border-r-4 border-teal-500">
+              <span class="text-xs text-slate-400 font-bold block">أرباح اليوم الصافية</span>
+              <span id="rep-todayProfit" class="text-lg font-black text-teal-500 font-mono">+0 د.ع</span>
+              <span class="text-[10px] text-emerald-400 font-bold block mt-1">صافي بعد خصم التكلفة</span>
+            </div>
+            <div class="sh-card p-4 border-r-4 border-sky-500">
+              <span class="text-xs text-slate-400 font-bold block">مبيعات هذا الشهر</span>
+              <span id="rep-monthSales" class="text-lg font-black text-sky-500 font-mono">0 د.ع</span>
+              <span id="rep-monthInvoices" class="text-[10px] text-slate-400 font-bold block mt-1">0 فواتير</span>
+            </div>
+            <div class="sh-card p-4 border-r-4 border-indigo-500">
+              <span class="text-xs text-slate-400 font-bold block">أرباح هذا الشهر الصافية</span>
+              <span id="rep-monthProfit" class="text-lg font-black text-indigo-500 font-mono">+0 د.ع</span>
+              <span class="text-[10px] text-indigo-400 font-bold block mt-1">أرباح الماركت الصافية</span>
+            </div>
+          </div>
+
+          <div class="sh-card p-4 space-y-3">
+            <h3 class="font-black text-sm text-slate-800 dark:text-white">المواد الأكثر مبيعاً في الماركت (Top Selling)</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                  <tr>
+                    <th class="p-3">#</th>
+                    <th class="p-3">اسم المادة</th>
+                    <th class="p-3 text-center">الكمية المباعة</th>
+                    <th class="p-3 text-center">إجمالي المبيعات</th>
+                  </tr>
+                </thead>
+                <tbody id="rep-topItemsTable" class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tr><td colspan="4" class="text-center py-6 text-slate-400">جاري تحميل إحصائيات المبيعات...</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
-        <div id="tab-reports" class="tab-content hidden space-y-4">
-          <div class="sh-card p-6 text-center space-y-3">
-            <h2 class="text-xl font-black">قسم التقارير والأرباح وحركة الصندوق</h2>
-            <p class="text-xs text-slate-400">واجهة مخصصة لإضافة أزرار تقارير المبيعات اليومية والشهرية.</p>
-            <div class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2">
-              <span class="text-3xl text-slate-300">➕</span>
-              <button class="px-5 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl">+ إضافة زر تقرير جديد</button>
+        <!-- ======================================================== -->
+        <!-- VIEW 11: PRINTING & RECEIPT SETTINGS (إعدادات الطابعة والوصل) -->
+        <!-- ======================================================== -->
+        <div id="tab-printing" class="tab-content hidden space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Printing Form -->
+            <div class="sh-card p-5 space-y-3.5">
+              <h2 class="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
+                <span>🖨</span>
+                <span>تخصيص ترويسة وبيانات وصل البيع (Receipt Layout)</span>
+              </h2>
+
+              <div class="space-y-3 text-xs">
+                <div>
+                  <label class="font-bold text-slate-400 block mb-1">اسم الماركت / السوبرماركت:</label>
+                  <input id="pr-marketName" oninput="updateReceiptLivePreview()" type="text" value="7amo Market" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-white font-bold">
+                </div>
+                <div>
+                  <label class="font-bold text-slate-400 block mb-1">الوصف الفرعي / العنوان:</label>
+                  <input id="pr-marketSub" oninput="updateReceiptLivePreview()" type="text" value="نظام إدارة السوبرماركت ونقاط البيع" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-white font-bold">
+                </div>
+                <div>
+                  <label class="font-bold text-slate-400 block mb-1">رقم الهاتف / خدمة الزبائن:</label>
+                  <input id="pr-marketPhone" oninput="updateReceiptLivePreview()" type="text" value="0750 000 0000" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-white font-bold font-mono">
+                </div>
+                <div>
+                  <label class="font-bold text-slate-400 block mb-1">ملاحظة أسفل الوصل (Footer Note):</label>
+                  <input id="pr-marketFooter" oninput="updateReceiptLivePreview()" type="text" value="شكراً لزيارتكم! البضاعة المباعة تستبدل خلال 3 أيام." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-white font-bold">
+                </div>
+                <div class="flex items-center justify-between pt-2">
+                  <span class="font-bold text-slate-400">نوع ورق الطباعة:</span>
+                  <select id="pr-paperType" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-white font-bold">
+                    <option value="80mm">حراري 80mm (Thermal POS)</option>
+                    <option value="58mm">حراري 58mm (Mini POS)</option>
+                    <option value="A4">طابعة عادية (A4 Paper)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="pt-2 flex gap-2">
+                <button onclick="savePrintingSettings()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md">
+                  💾 حفظ إعدادات الوصل
+                </button>
+                <button onclick="window.print()" class="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-1">
+                  <span>🖨</span>
+                  <span>طباعة تجريبية</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Live Receipt Preview Box -->
+            <div class="sh-card p-5 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+              <div class="w-64 bg-white text-slate-900 p-4 rounded-xl shadow-xl font-mono text-[11px] space-y-2 border border-slate-200">
+                <div class="text-center border-b border-dashed border-slate-300 pb-2">
+                  <div id="prev-marketName" class="font-black text-sm">7amo Market</div>
+                  <div id="prev-marketSub" class="text-[9px] text-slate-500">نظام إدارة السوبرماركت</div>
+                  <div id="prev-marketPhone" class="text-[9px] text-slate-500">هاتف: 0750 000 0000</div>
+                </div>
+                <div class="flex justify-between text-[10px] text-slate-500">
+                  <span>فاتورة: #INV-2026</span>
+                  <span>12:30 م</span>
+                </div>
+                <div class="border-y border-dashed border-slate-300 py-1.5 space-y-1">
+                  <div class="flex justify-between font-bold text-[10px]">
+                    <span>عصير راني برتقال (x2)</span>
+                    <span>1,000</span>
+                  </div>
+                  <div class="flex justify-between font-bold text-[10px]">
+                    <span>بسكويت دايجستف (x1)</span>
+                    <span>1,500</span>
+                  </div>
+                </div>
+                <div class="flex justify-between font-black text-xs pt-1">
+                  <span>المجموع الكلي:</span>
+                  <span>2,500 د.ع</span>
+                </div>
+                <div id="prev-marketFooter" class="text-center text-[8px] text-slate-500 border-t border-dashed border-slate-300 pt-2">
+                  شكراً لزيارتكم! البضاعة المباعة تستبدل خلال 3 أيام.
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1123,13 +1347,6 @@
         <div id="tab-users" class="tab-content hidden space-y-4">
           <h2 class="text-xl font-black">حسابات الكاشير والموظفين</h2>
           <div id="usersGrid" class="grid grid-cols-3 gap-4"></div>
-        </div>
-
-        <div id="tab-printing" class="tab-content hidden space-y-4">
-          <div class="sh-card p-6 text-center space-y-3">
-            <h2 class="text-xl font-black">إعدادات الطابعة ووصل البيع</h2>
-            <p class="text-xs text-slate-400">تخصيص طابعة الوصولات A4 / 80mm حراري والشعار.</p>
-          </div>
         </div>
 
         <div id="tab-settings" class="tab-content hidden space-y-4">
@@ -1279,6 +1496,192 @@
 
   <!-- FLOATING REAL-TIME ORDER NOTIFICATION TOAST CONTAINER -->
   <div id="orderNotificationToastContainer" class="fixed top-5 left-5 z-[9999] flex flex-col gap-3 pointer-events-none max-w-md w-full"></div>
+
+  <!-- ADD CUSTOMER DEBT MODAL -->
+  <div id="addCustomerDebtModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
+    <div class="sh-card w-[420px] p-5 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="font-black text-sm text-slate-800 dark:text-white flex items-center gap-2">
+          <span>➕</span>
+          <span>تسجيل دين / حساب زبون جديد</span>
+        </h3>
+        <button onclick="closeAddCustomerDebtModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-400 block mb-1">اسم الزبون: *</label>
+          <input id="acd-name" type="text" placeholder="مثال: كاك ريبوار / أبو أحمد" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-white font-bold">
+        </div>
+        <div>
+          <label class="font-bold text-slate-400 block mb-1">رقم الهاتف (اختياري):</label>
+          <input id="acd-phone" type="text" placeholder="0750 xxx xxxx" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-white font-mono">
+        </div>
+        <div>
+          <label class="font-bold text-slate-400 block mb-1">مبلغ الدين (د.ع): *</label>
+          <input id="acd-amount" type="number" placeholder="مثال: 25000" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-rose-500 font-black font-mono">
+        </div>
+        <div>
+          <label class="font-bold text-slate-400 block mb-1">تفاصيل وملاحظات الدين:</label>
+          <input id="acd-notes" type="text" placeholder="مثال: باقي حساب مسواك الأسبوع" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-white">
+        </div>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button onclick="saveNewCustomerDebt()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md">
+          ✔ حفظ الدين
+        </button>
+        <button onclick="closeAddCustomerDebtModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl">
+          إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAY CUSTOMER DEBT MODAL -->
+  <div id="payCustomerDebtModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
+    <div class="sh-card w-[380px] p-5 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="font-black text-sm text-slate-800 dark:text-white flex items-center gap-2">
+          <span>💵</span>
+          <span>سداد / قبض دفعة من دين الزبون</span>
+        </h3>
+        <button onclick="closePayCustomerDebtModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl space-y-1">
+          <div class="flex justify-between">
+            <span class="text-slate-400 font-bold">اسم الزبون:</span>
+            <span id="pcd-customerName" class="font-black text-slate-800 dark:text-white">--</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400 font-bold">إجمالي الدين الحالي:</span>
+            <span id="pcd-currentDebt" class="font-mono font-black text-rose-500">0 د.ع</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-400 block mb-1">المبلغ المقبوض / المسدد (د.ع): *</label>
+          <input id="pcd-payAmount" type="number" placeholder="أدخل المبلغ المسدد" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-emerald-600 font-black font-mono">
+        </div>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button onclick="confirmCustomerPayment()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md">
+          ✔ تأكيد القبض والتسديد
+        </button>
+        <button onclick="closePayCustomerDebtModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl">
+          إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD DAMAGED ITEM MODAL -->
+  <div id="addDamagedModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
+    <div class="sh-card w-[420px] p-5 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="font-black text-sm text-slate-800 dark:text-white flex items-center gap-2">
+          <span>⚠️</span>
+          <span>تسجيل مادة تالفة / منتهية الصلاحية</span>
+        </h3>
+        <button onclick="closeAddDamagedModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-400 block mb-1">اختر المادة من المخزن: *</label>
+          <select id="adm-productSelect" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-white font-bold">
+            <option value="">-- اختر مادة من القائمة --</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold text-slate-400 block mb-1">الكمية التالفة (بالقطع): *</label>
+          <input id="adm-quantity" type="number" value="1" min="1" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-rose-500 font-black font-mono">
+        </div>
+        <div>
+          <label class="font-bold text-slate-400 block mb-1">سبب التلف:</label>
+          <select id="adm-reason" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-white font-bold">
+            <option value="انتهاء صلاحية (Exp Date)">انتهاء صلاحية (Exp Date)</option>
+            <option value="كسر / تلف أثناء النقل">كسر / تلف أثناء النقل</option>
+            <option value="عيب مصنعي / انتفاخ">عيب مصنعي / انتفاخ</option>
+            <option value="سوء تخزين">سوء تخزين</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold text-slate-400 block mb-1">الإجراء المتخذ:</label>
+          <select id="adm-action" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-white font-bold">
+            <option value="إتلاف وتنزيل من المخزن">إتلاف وتنزيل من المخزن</option>
+            <option value="إرجاع للمندوب / الشركة">إرجاع للمندوب / الشركة</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button onclick="saveNewDamagedItem()" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs rounded-xl shadow-md">
+          ✔ تسجيل وخصم من المخزن
+        </button>
+        <button onclick="closeAddDamagedModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl">
+          إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXCEL IMPORT PREVIEW MODAL -->
+  <div id="excelPreviewModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-6">
+    <div class="sh-card w-full max-w-4xl max-h-[90vh] flex flex-col p-5 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div>
+          <h3 class="font-black text-base text-slate-800 dark:text-white flex items-center gap-2">
+            <span>📊</span>
+            <span>معاينة المواد المقروءة من ملف الإكسل</span>
+          </h3>
+          <p id="epm-summary" class="text-xs text-slate-400 font-bold">تم اكتشاف 0 مادة جاهزة للاستيراد</p>
+        </div>
+        <button onclick="closeExcelPreviewModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- Search in preview -->
+      <div class="flex items-center justify-between gap-3">
+        <input id="epm-search" oninput="filterExcelPreviewTable()" type="text" placeholder="بحث وتصفية في المواد المستوردة..." class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white">
+      </div>
+
+      <!-- Preview Table -->
+      <div class="flex-1 overflow-y-auto border border-slate-100 dark:border-slate-800 rounded-xl">
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800 sticky top-0">
+            <tr>
+              <th class="p-2.5">#</th>
+              <th class="p-2.5">اسم المادة</th>
+              <th class="p-2.5">الباركود</th>
+              <th class="p-2.5">التصنيف</th>
+              <th class="p-2.5 text-center">التكلفة</th>
+              <th class="p-2.5 text-center">سعر المفرد</th>
+              <th class="p-2.5 text-center">سعر الجملة</th>
+              <th class="p-2.5 text-center">الرصيد بالقطع</th>
+            </tr>
+          </thead>
+          <tbody id="epm-tableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
+        <span class="text-xs text-slate-400">سيتم حفظ كافة المواد تلقائياً في قاعدة البيانات وتحديث المخزن فورياً.</span>
+        <div class="flex gap-2">
+          <button onclick="confirmExcelImportFromModal()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-1.5">
+            <span>✔</span>
+            <span>استيراد وتوريد كافة المواد إلى المخزن</span>
+          </button>
+          <button onclick="closeExcelPreviewModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl">
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
