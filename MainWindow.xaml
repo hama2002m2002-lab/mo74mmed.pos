@@ -3,17 +3,419 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        xmlns:vm="clr-namespace:HamoPos.ViewModels"
+        xmlns:views="clr-namespace:HamoPos.Views"
         mc:Ignorable="d"
-        Title="7amo.pos PRO - نظام نقاط البيع والمخازن فائق السرعة" 
+        Title="7amo.pos - نظام نقاط البيع والمخازن المتكامل" 
         Height="850" Width="1400"
         MinHeight="720" MinWidth="1080"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="#0B0F19"
-        FlowDirection="RightToLeft">
+        Background="{DynamicResource BgDarkPrimary}"
+        FlowDirection="RightToLeft"
+        FontFamily="Times New Roman, Segoe UI, Tahoma, Arial">
 
-    <Grid Background="#0B0F19">
-        <wv2:WebView2 x:Name="posWebView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+    <Window.DataContext>
+        <vm:MainShellViewModel />
+    </Window.DataContext>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- DataTemplates for Dynamic View Switching -->
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MainCashierViewModel}">
+            <views:CashierView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:InventoryViewModel}">
+            <views:InventoryView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StockViewModel}">
+            <views:StockView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StockAuditViewModel}">
+            <views:StockAuditView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DamagedItemsViewModel}">
+            <views:DamagedItemsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PurchaseViewModel}">
+            <views:PurchaseView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AddProductFullViewModel}">
+            <views:AddProductFullView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SuppliersViewModel}">
+            <views:SuppliersView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SupplierOrdersViewModel}">
+            <views:SupplierOrdersView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UserAccountsViewModel}">
+            <views:UserAccountsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ReportsViewModel}">
+            <views:ReportsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:WarehouseHubViewModel}">
+            <views:WarehouseHubView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PrintingViewModel}">
+            <views:PrintingView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SalesHistoryViewModel}">
+            <views:SalesHistoryView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:NetworkSettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
+
+        <!-- Modern Sidebar Navigation Button Style -->
+        <Style x:Key="SidebarNavButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="16,11" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource BgDarkHover}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource PrimaryAccent}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- 0: Sidebar Navigation -->
+            <ColumnDefinition Width="Auto" />
+            <!-- 1: Main Content Container -->
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ======================================================== -->
+        <!-- SIDEBAR NAVIGATION PANEL -->
+        <!-- ======================================================== -->
+        <Border Grid.Column="0" Width="260"
+                Visibility="{Binding IsSidebarVisible, Converter={StaticResource BoolToVis}}"
+                Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,1,0" Padding="16,18">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <!-- Brand / Logo -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Navigation Menu Items -->
+                    <RowDefinition Height="*" />
+                    <!-- Footer / User Info -->
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Brand Header -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,18">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="44" Height="44" Background="{DynamicResource PrimaryAccent}" CornerRadius="12" Margin="0,0,12,0">
+                            <TextBlock Text="⚡" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="7amo" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Text=".pos" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource PrimaryAccent}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding Loc[App_Subtitle]}" FontSize="11" Foreground="{DynamicResource TextSecondary}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Separator Background="{DynamicResource BorderDark}" Margin="0,14,0,0" />
+                </StackPanel>
+
+                <!-- Sidebar Buttons Menu -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- 1. Dashboard Button -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowDashboardCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📊 " FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{Binding Loc[Nav_Dashboard]}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 2. Cashier POS Button -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowCashierCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🛒 " FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{Binding Loc[Nav_Cashier]}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 3. Sales History Button -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowSalesHistoryCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="💰 " FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource SuccessBrush}" />
+                                <TextBlock Text="{Binding Loc[Nav_SalesHistory]}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 4. Purchase Goods from Supplier Button -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowPurchaseCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🛍️ " FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource SuccessBrush}" />
+                                <TextBlock Text="{Binding Loc[Nav_Purchases]}" VerticalAlignment="Center" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 4. Warehouse Hub Button (المخزن) -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowWarehouseHubCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📦 " FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource PrimaryAccent}" />
+                                <TextBlock Text="{Binding Loc[Nav_Warehouse]}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryAccent}" FontWeight="Bold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 4.1. Add Product Button (إضافة مادة جديدة) -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowAddProductCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="➕ " FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource SuccessBrush}" />
+                                <TextBlock Text="{Binding Loc[Nav_AddProduct]}" VerticalAlignment="Center" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 5. Suppliers / Reps Button -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowSuppliersCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🤝 " FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{Binding Loc[Nav_Suppliers]}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 5.1. Supplier / Market Orders Button -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowSupplierOrdersCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📦 " FontSize="16" Margin="0,0,10,0" Foreground="#38BDF8" />
+                                <TextBlock Text="{Binding Loc[Nav_SupplierOrders]}" VerticalAlignment="Center" Foreground="#38BDF8" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 6. User Accounts Button -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowUserAccountsCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="👤 " FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{Binding Loc[Nav_UserAccounts]}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 7. Printing Button -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowPrintingCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🖨️ " FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{Binding Loc[Nav_Printing]}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 8. Reports Button -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowReportsCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📑 " FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{Binding Loc[Nav_Reports]}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 9. Settings & Network Button -->
+                        <Button Style="{StaticResource SidebarNavButton}" Command="{Binding ShowSettingsCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚙️ " FontSize="16" Margin="0,0,10,0" />
+                                <TextBlock Text="{Binding Loc[Nav_Settings]}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Footer: Cashier Profile & Offline Status -->
+                <Border Grid.Row="2" Background="{DynamicResource BgDarkPrimary}" CornerRadius="12" Padding="12" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- User Profile -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="32" Height="32" Background="{DynamicResource PrimaryAccent}" CornerRadius="16" Margin="0,0,10,0">
+                                <TextBlock Text="👤" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding CurrentCashierName}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                                <TextBlock Text="{Binding Loc[App_Active_Cashier]}" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Offline Status Pill -->
+                        <Border Grid.Row="1" Background="#064E3B" CornerRadius="8" Padding="8,4" Margin="0,10,0,0">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Ellipse Width="7" Height="7" Fill="{DynamicResource SuccessBrush}" Margin="0,0,6,0" />
+                                <TextBlock Text="{Binding Loc[App_Offline_Mode]}" FontSize="10" FontWeight="Bold" Foreground="#6EE7B7" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ======================================================== -->
+        <!-- MAIN CONTENT WORKSPACE -->
+        <!-- ======================================================== -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <!-- Top Mini-Header -->
+                <RowDefinition Height="46" />
+                <!-- 1: Chrome-Style Browser Tabs Bar -->
+                <RowDefinition Height="Auto" />
+                <!-- Dynamic View Switcher -->
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Top Header Bar -->
+            <Border Grid.Row="0" Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="16,0">
+                <Grid VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Sidebar Toggle Hamburger Button -->
+                        <Button Style="{StaticResource ActionButton}" Command="{Binding ToggleSidebarCommand}" Padding="8,4" Margin="0,0,12,0" ToolTip="إظهار / إخفاء القائمة الجانبية">
+                            <TextBlock Text="☰" FontSize="14" FontWeight="Bold" />
+                        </Button>
+
+                        <TextBlock Text="العملة الرسمية: " FontSize="12" Foreground="{DynamicResource TextSecondary}" />
+                        <Border Background="{DynamicResource BgDarkPrimary}" CornerRadius="4" Padding="6,2" Margin="4,0,0,0">
+                            <TextBlock Text="{Binding Loc[App_Currency]}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" />
+                        </Border>
+
+                        <!-- Language Switcher Pill (Arabic <-> Kurdish) -->
+                        <Button Style="{StaticResource PrimaryAccentButton}" Command="{Binding ToggleLanguageCommand}" 
+                                Padding="10,4" Margin="14,0,0,0" ToolTip="گۆڕینی زمان / تبديل اللغة">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🌐 " FontSize="12" />
+                                <TextBlock Text="{Binding Loc.CurrentLanguageDisplayName}" FontWeight="Bold" FontSize="11" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Theme Switcher Pill (Dark <-> Light) -->
+                        <Button Style="{StaticResource ActionButton}" Command="{Binding ToggleThemeCommand}" 
+                                Padding="10,4" Margin="10,0,0,0" ToolTip="گۆڕینی دۆخی شەو و رۆژ / التبديل بين الوضع الليلي والنهاري">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Theme.ThemeIcon, StringFormat='{}{0} '}" FontSize="12" />
+                                <TextBlock Text="{Binding Theme.ThemeToggleDisplayName}" FontWeight="Bold" FontSize="11" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <TextBlock HorizontalAlignment="Right" Text="{Binding CurrentDateTimeString}" FontSize="12.5" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <!-- 1: Chrome-Style Browser Tabs Bar -->
+            <Border Grid.Row="1" Background="{DynamicResource BgDarkSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="8,4,8,0">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Focusable="False">
+                    <ItemsControl ItemsSource="{Binding OpenTabs}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,4,0" CornerRadius="8,8,0,0" Cursor="Hand" BorderThickness="1.2,1.2,1.2,0">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Setter Property="BorderBrush" Value="Transparent" />
+                                            <Setter Property="Padding" Value="12,5" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource BgDarkPrimary}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryAccent}" />
+                                                </DataTrigger>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsSelected}" Value="False" />
+                                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Background" Value="{DynamicResource BgDarkHover}" />
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" 
+                                                      Command="{Binding DataContext.SelectTabCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                      CommandParameter="{Binding}" />
+                                    </Border.InputBindings>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <!-- Icon -->
+                                        <TextBlock Text="{Binding Icon}" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        
+                                        <!-- Title -->
+                                        <TextBlock Text="{Binding Title}" FontSize="11.5" VerticalAlignment="Center" Margin="0,0,8,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                                    <Setter Property="FontWeight" Value="Normal" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryAccent}" />
+                                                            <Setter Property="FontWeight" Value="Bold" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <!-- Close Tab Button (✕) -->
+                                        <Button Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Click="CloseTab_Click"
+                                                Background="Transparent" BorderThickness="0"
+                                                Padding="2" VerticalAlignment="Center" Margin="2,0,0,0"
+                                                Cursor="Hand" ToolTip="إغلاق التبويب">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CanClose}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                            <Border CornerRadius="8" Width="16" Height="16" Background="Transparent" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <TextBlock Text="✕" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Dynamic View Switcher -->
+            <ContentControl Grid.Row="2" Content="{Binding CurrentView}" />
+        </Grid>
     </Grid>
 </Window>
