@@ -1,5 +1,5 @@
 // ========================================================
-// SchoolHub Modern Dashboard & POS App Logic
+// 7amo Market - Modern Supermarket & POS Core Logic
 // ========================================================
 
 const state = {
@@ -11,6 +11,7 @@ const state = {
   ],
   selectedInvoiceTabId: 1,
   products: [],
+  suppliers: [],
   attendanceChart: null,
   performanceChart: null,
   activityChart: null
@@ -52,6 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupGlobalKeyboardShortcuts();
   
   await loadProducts();
+  await loadSuppliersList();
   renderInvoiceTabs();
   renderCashierCart();
   await loadDashboard();
@@ -100,7 +102,10 @@ function switchTab(tabId) {
     document.getElementById('cashierBarcodeInput')?.focus();
   }
   if (tabId === 'dashboard') loadDashboard();
-  if (tabId === 'notice') loadRepOrders();
+  if (tabId === 'inventory') loadInventory();
+  if (tabId === 'repOrders') loadRepOrders();
+  if (tabId === 'suppliers') loadSuppliers();
+  if (tabId === 'users') loadUsers();
 
   lucide.createIcons();
 }
@@ -134,14 +139,15 @@ function toggleLanguage() {
 }
 
 // ========================================================
-// DASHBOARD CHARTS (EXACT REPLICA FROM IMAGE)
+// DASHBOARD CHARTS
 // ========================================================
 async function loadDashboard() {
   const res = await callBackend('get_dashboard_data');
   if (res && res.success) {
-    const totalInc = Number(res.monthlyRevenue || 1682500);
-    const incEl = document.getElementById('kpiTotalIncome');
-    if (incEl) incEl.innerText = '$' + totalInc.toLocaleString();
+    document.getElementById('kpiTodayRevenue').innerText = Number(res.todayRevenue || 0).toLocaleString() + ' د.ع';
+    document.getElementById('kpiTodayInvoices').innerText = Number(res.todayInvoices || 0).toLocaleString();
+    document.getElementById('kpiMonthlyRevenue').innerText = Number(res.monthlyRevenue || 0).toLocaleString() + ' د.ع';
+    document.getElementById('kpiLowStockCount').innerText = Number(res.lowStockCount || 0).toLocaleString();
   }
 
   renderAttendanceChart();
@@ -158,7 +164,7 @@ function renderAttendanceChart() {
   state.attendanceChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Present', 'Absent'],
+      labels: ['نقداً', 'آجل'],
       datasets: [{
         data: [80, 20],
         backgroundColor: ['#A78BFA', '#FBBF24'],
@@ -185,24 +191,24 @@ function renderPerformanceChart() {
   state.performanceChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      labels: ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء'],
       datasets: [
         {
-          label: 'Class 10',
+          label: 'غذائية',
           data: [95, 60, 75, 90, 65],
           backgroundColor: '#38BDF8',
           borderRadius: 6,
           barPercentage: 0.7
         },
         {
-          label: 'Class 11',
+          label: 'منظفات',
           data: [65, 80, 60, 75, 45],
           backgroundColor: '#FBBF24',
           borderRadius: 6,
           barPercentage: 0.7
         },
         {
-          label: 'Class 12',
+          label: 'مشروبات',
           data: [75, 65, 80, 70, 50],
           backgroundColor: '#A78BFA',
           borderRadius: 6,
@@ -236,14 +242,12 @@ function renderActivitySplineChart() {
 
   if (state.activityChart) state.activityChart.destroy();
 
-  const isDark = state.theme === 'dark';
-
   state.activityChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['1', '5', '10', '15', '20', '25', '30'],
+      labels: ['8ص', '11ص', '2ظ', '5ع', '8م', '11م'],
       datasets: [{
-        data: [50, 115, 65, 120, 75, 118, 85],
+        data: [45, 95, 60, 110, 140, 85],
         borderColor: '#FBBF24',
         backgroundColor: 'rgba(251, 191, 36, 0.12)',
         tension: 0.45,
@@ -259,14 +263,14 @@ function renderActivitySplineChart() {
       plugins: { legend: { display: false } },
       scales: {
         y: { 
-          min: 40,
+          min: 20,
           max: 160,
-          ticks: { stepSize: 40, color: isDark ? '#94A3B8' : '#94A3B8', font: { size: 10 } },
-          grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }
+          ticks: { stepSize: 40, color: '#94A3B8', font: { size: 10 } },
+          grid: { color: 'rgba(255,255,255,0.04)' }
         },
         x: { 
           grid: { display: false },
-          ticks: { display: false }
+          ticks: { color: '#94A3B8', font: { size: 10 } }
         }
       }
     }
@@ -283,6 +287,20 @@ async function loadProducts() {
   }
 }
 
+async function loadSuppliersList() {
+  const res = await callBackend('get_suppliers');
+  if (res && res.success) {
+    state.suppliers = res.suppliers || [];
+    const supSelect = document.getElementById('ap-supplier');
+    if (supSelect) {
+      supSelect.innerHTML = '<option value="">بدون مندوب (مباشر)</option>';
+      state.suppliers.forEach(s => {
+        supSelect.innerHTML += `<option value="${s.name}">${s.name} (${s.company || 'شركة'})</option>`;
+      });
+    }
+  }
+}
+
 function getCurrentTab() {
   return state.invoiceTabs.find(t => t.id === state.selectedInvoiceTabId) || state.invoiceTabs[0];
 }
@@ -295,7 +313,7 @@ function renderInvoiceTabs() {
   state.invoiceTabs.forEach(t => {
     const isSel = t.id === state.selectedInvoiceTabId;
     const tabEl = document.createElement('div');
-    tabEl.className = `flex items-center gap-2 px-3.5 py-1.5 rounded-xl cursor-pointer text-xs font-bold transition ${isSel ? 'bg-sky-500 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`;
+    tabEl.className = `flex items-center gap-2 px-3.5 py-1.5 rounded-xl cursor-pointer text-xs font-bold transition ${isSel ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`;
     tabEl.onclick = () => selectInvoiceTab(t.id);
     tabEl.innerHTML = `
       <span>${t.title}</span>
@@ -411,7 +429,7 @@ function renderCashierCart() {
     tr.innerHTML = `
       <td class="p-3 font-bold text-slate-400">${index + 1}</td>
       <td class="p-3 font-bold">${item.name}</td>
-      <td class="p-3 font-bold text-sky-500">${Number(item.price).toLocaleString()} د.ع</td>
+      <td class="p-3 font-bold text-emerald-600 dark:text-emerald-400">${Number(item.price).toLocaleString()} د.ع</td>
       <td class="p-3 text-center">
         <div class="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-xl">
           <button onclick="updateCartItemQty('${item.id}', -1)" class="w-5 h-5 rounded text-rose-500 font-bold">-</button>
@@ -459,7 +477,7 @@ function setPaymentMethod(pm) {
     const btn = document.getElementById(`pm-${m}`);
     if (btn) {
       if (m === pm) {
-        btn.className = 'flex-1 py-1.5 bg-sky-500 text-white font-bold text-xs rounded-xl shadow-md';
+        btn.className = 'flex-1 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md';
       } else {
         btn.className = 'flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-xs rounded-xl';
       }
@@ -491,6 +509,183 @@ async function submitCashierSale() {
     renderCashierCart();
     loadDashboard();
   }
+}
+
+// ========================================================
+// ADD / EDIT PRODUCT FULL FORM
+// ========================================================
+function generateRandomBarcode() {
+  const barcodeInput = document.getElementById('ap-barcode');
+  if (barcodeInput) {
+    barcodeInput.value = '628' + Math.floor(100000000 + Math.random() * 900000000);
+  }
+}
+
+function recalcAddProduct() {
+  const itemsPerCarton = Math.max(1, Number(document.getElementById('ap-itemsPerCarton')?.value || 1));
+  const cartonsCount = Math.max(0, Number(document.getElementById('ap-cartonsCount')?.value || 0));
+  const cost = Number(document.getElementById('ap-cost')?.value || 0);
+  const price = Number(document.getElementById('ap-price')?.value || 0);
+  const cartonPurchase = Number(document.getElementById('ap-cartonPurchase')?.value || 0);
+  const cartonSelling = Number(document.getElementById('ap-cartonSelling')?.value || 0);
+
+  const totalPieces = itemsPerCarton * cartonsCount;
+  const retailProfit = Math.max(0, price - cost);
+  const cartonProfit = Math.max(0, cartonSelling - cartonPurchase);
+
+  document.getElementById('ap-totalStockDisplay').innerText = `${totalPieces} قطعة`;
+  document.getElementById('ap-retailProfitDisplay').innerText = `${Number(retailProfit).toLocaleString()} د.ع`;
+  document.getElementById('ap-cartonProfitDisplay').innerText = `${Number(cartonProfit).toLocaleString()} د.ع`;
+}
+
+function clearAddProductForm() {
+  document.getElementById('ap-id').value = '';
+  document.getElementById('ap-name').value = '';
+  document.getElementById('ap-barcode').value = '';
+  document.getElementById('ap-category').value = '';
+  document.getElementById('ap-itemsPerCarton').value = '12';
+  document.getElementById('ap-cartonsCount').value = '5';
+  document.getElementById('ap-cost').value = '1000';
+  document.getElementById('ap-price').value = '1250';
+  document.getElementById('ap-cartonPurchase').value = '12000';
+  document.getElementById('ap-cartonSelling').value = '15000';
+  document.getElementById('addProductFormTitle').innerText = 'إضافة وتعديل مادة بالمخزن';
+  recalcAddProduct();
+}
+
+async function saveProductFull() {
+  const name = document.getElementById('ap-name')?.value.trim();
+  if (!name) {
+    alert('يرجى كتابة اسم المادة!');
+    return;
+  }
+
+  const itemsPerCarton = Math.max(1, Number(document.getElementById('ap-itemsPerCarton')?.value || 1));
+  const cartonsCount = Math.max(0, Number(document.getElementById('ap-cartonsCount')?.value || 0));
+  const totalStock = itemsPerCarton * cartonsCount;
+
+  const payload = {
+    id: document.getElementById('ap-id')?.value || undefined,
+    name: name,
+    barcode: document.getElementById('ap-barcode')?.value.trim() || undefined,
+    category: document.getElementById('ap-category')?.value.trim() || 'عام',
+    cost: Number(document.getElementById('ap-cost')?.value || 0),
+    price: Number(document.getElementById('ap-price')?.value || 0),
+    stockQuantity: totalStock,
+    piecesPerCarton: itemsPerCarton,
+    minStockAlert: Number(document.getElementById('ap-minStockAlert')?.value || 5)
+  };
+
+  const res = await callBackend('save_product', payload);
+  if (res && res.success) {
+    alert('✔ تم حفظ المادة بنجاح في قاعدة البيانات!');
+    clearAddProductForm();
+    await loadProducts();
+    switchTab('inventory');
+  }
+}
+
+// ========================================================
+// INVENTORY, SUPPLIERS & USERS
+// ========================================================
+async function loadInventory() {
+  const res = await callBackend('get_inventory');
+  if (!res || !res.success) return;
+
+  const tbody = document.getElementById('inventoryTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+  (res.products || []).forEach(p => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
+    tr.innerHTML = `
+      <td class="p-3.5 font-bold">${p.name}</td>
+      <td class="p-3.5 font-mono text-slate-400">${p.barcode || '--'}</td>
+      <td class="p-3.5 text-slate-500">${p.category || 'عام'}</td>
+      <td class="p-3.5 font-bold text-blue-500">${Number(p.cost).toLocaleString()} د.ع</td>
+      <td class="p-3.5 font-bold text-emerald-500">${Number(p.price).toLocaleString()} د.ع</td>
+      <td class="p-3.5 font-black ${p.stockQuantity <= p.minStockAlert ? 'text-rose-500 font-black' : ''}">${p.stockQuantity}</td>
+      <td class="p-3.5 text-center">
+        <button onclick="editProductFromInventory('${p.id}')" class="px-2.5 py-1 bg-sky-100 dark:bg-sky-950/60 text-sky-600 font-bold text-xs rounded-lg">✏ تعديل</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function editProductFromInventory(id) {
+  const prod = state.products.find(p => p.id === id);
+  if (prod) {
+    switchTab('addProduct');
+    document.getElementById('ap-id').value = prod.id;
+    document.getElementById('ap-name').value = prod.name;
+    document.getElementById('ap-barcode').value = prod.barcode || '';
+    document.getElementById('ap-category').value = prod.category || 'عام';
+    document.getElementById('ap-cost').value = prod.cost;
+    document.getElementById('ap-price').value = prod.price;
+    document.getElementById('ap-itemsPerCarton').value = prod.piecesPerCarton || 1;
+    document.getElementById('ap-cartonsCount').value = Math.floor(prod.stockQuantity / (prod.piecesPerCarton || 1));
+    document.getElementById('addProductFormTitle').innerText = 'تعديل بيانات المادة';
+    recalcAddProduct();
+  }
+}
+
+async function loadSuppliers() {
+  const res = await callBackend('get_suppliers');
+  if (!res || !res.success) return;
+
+  const grid = document.getElementById('suppliersCardsGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  (res.suppliers || []).forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'sh-card p-5 flex flex-col justify-between';
+    card.innerHTML = `
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="font-black text-base">${s.name}</h4>
+          <span class="text-[10px] bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-400 px-2.5 py-0.5 rounded-full font-bold">مندوب</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-1">الشركة: ${s.company || 'غير محدد'}</p>
+        <p class="text-xs text-slate-400">الهاتف: ${s.phone || '--'}</p>
+      </div>
+      <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <span class="text-xs text-slate-400 font-bold">الرصيد المستحق:</span>
+        <span class="text-sm font-black text-amber-500">${Number(s.balance).toLocaleString()} د.ع</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function loadUsers() {
+  const res = await callBackend('get_users');
+  if (!res || !res.success) return;
+
+  const grid = document.getElementById('usersGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  (res.users || []).forEach(u => {
+    const card = document.createElement('div');
+    card.className = 'sh-card p-5';
+    card.innerHTML = `
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 rounded-2xl bg-sky-100 dark:bg-sky-950/60 text-sky-600 flex items-center justify-center font-bold text-lg">👤</div>
+        <div>
+          <h4 class="font-black text-sm">${u.fullName}</h4>
+          <span class="text-[10px] text-slate-400 font-mono">@${u.username} (${u.role})</span>
+        </div>
+      </div>
+      <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800">
+        <span class="text-slate-400">الحالة:</span>
+        <span class="font-bold ${u.isActive ? 'text-emerald-600' : 'text-rose-500'}">${u.isActive ? 'نشط ومفعل ✔' : 'معطل ✕'}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
 }
 
 // ========================================================
