@@ -952,6 +952,9 @@ async function saveProductFull() {
 // INVENTORY & WAREHOUSE MANAGEMENT (FULL DETAILS)
 // ========================================================
 let inventoryData = [];
+let invCurrentPage = 1;
+const invPageSize = 50;
+let invFilteredData = [];
 
 async function loadInventory() {
   const res = await callBackend('get_inventory');
@@ -961,7 +964,7 @@ async function loadInventory() {
 
   // 1. Update KPI Summary Cards
   const totalProdsEl = document.getElementById('invTotalProducts');
-  if (totalProdsEl) totalProdsEl.innerText = `${inventoryData.length} مادة`;
+  if (totalProdsEl) totalProdsEl.innerText = `${inventoryData.length.toLocaleString()} مادة`;
 
   const totalCostEl = document.getElementById('invTotalCostValue');
   if (totalCostEl) totalCostEl.innerText = `${Number(res.totalCostValue || 0).toLocaleString()} د.ع`;
@@ -984,6 +987,7 @@ async function loadInventory() {
     if (cats.includes(currentVal)) catFilter.value = currentVal;
   }
 
+  invCurrentPage = 1;
   filterInventoryTable();
 }
 
@@ -992,10 +996,7 @@ function filterInventoryTable() {
   const selCat = document.getElementById('invCategoryFilter')?.value || '';
   const lowStockOnly = document.getElementById('invLowStockOnly')?.checked || false;
 
-  const tbody = document.getElementById('inventoryTableBody');
-  if (!tbody) return;
-
-  const filtered = inventoryData.filter(p => {
+  invFilteredData = inventoryData.filter(p => {
     const pName = (p.name || p.Name || '').toLowerCase();
     const pBar = (p.barcode || p.Barcode || '').toLowerCase();
     const pCat = (p.category || p.Category || '').toLowerCase();
@@ -1013,13 +1014,32 @@ function filterInventoryTable() {
     return matchesSearch && matchesCat && matchesLowStock;
   });
 
-  if (filtered.length === 0) {
+  invCurrentPage = 1;
+  renderInventoryTablePage();
+}
+
+function renderInventoryTablePage() {
+  const tbody = document.getElementById('inventoryTableBody');
+  if (!tbody) return;
+
+  if (invFilteredData.length === 0) {
     tbody.innerHTML = `<tr><td colspan="10" class="text-center py-12 text-slate-400 font-bold">لا توجد مواد مطابقة للبحث أو الفلترة</td></tr>`;
+    updateInventoryPaginationControls(0, 0);
     return;
   }
 
-  tbody.innerHTML = '';
-  filtered.forEach((p, idx) => {
+  const totalPages = Math.max(1, Math.ceil(invFilteredData.length / invPageSize));
+  if (invCurrentPage > totalPages) invCurrentPage = totalPages;
+  if (invCurrentPage < 1) invCurrentPage = 1;
+
+  const startIndex = (invCurrentPage - 1) * invPageSize;
+  const endIndex = Math.min(startIndex + invPageSize, invFilteredData.length);
+  const pageItems = invFilteredData.slice(startIndex, endIndex);
+
+  let rowsHtml = '';
+  for (let i = 0; i < pageItems.length; i++) {
+    const p = pageItems[i];
+    const itemNum = startIndex + i + 1;
     const isLow = p.stockQuantity <= (p.minStockAlert || 5);
     const isOutOfStock = p.stockQuantity <= 0;
     const rProfit = (p.price || 0) - (p.cost || 0);
@@ -1028,66 +1048,104 @@ function filterInventoryTable() {
     const displayName = p.name || p.Name || 'مادة بدون اسم';
     const displayBarcode = p.barcode || p.Barcode || 'بدون باركود';
 
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer';
-    tr.onclick = (e) => {
-      if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
-        openProductDetailModal(p.id || p.Id);
-      }
-    };
-
-    tr.innerHTML = `
-      <td class="p-2.5 text-center text-slate-400 font-bold">${idx + 1}</td>
-      <td class="p-2.5">
-        <div class="font-black text-slate-800 dark:text-white text-xs">${displayName}</div>
-        <div class="text-[10px] font-mono text-sky-500 font-bold flex items-center gap-1">
-          <span>🏷</span><span>${displayBarcode}</span>
-        </div>
-      </td>
-      <td class="p-2.5">
-        <span class="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300 mb-0.5">${p.category || 'عام'}</span>
-        ${p.supplierName ? `<div class="text-[10px] text-slate-400 font-semibold">🏢 ${p.supplierName}</div>` : ''}
-      </td>
-      <td class="p-2.5 text-center">
-        <div class="font-bold text-slate-700 dark:text-slate-200 text-xs">${p.cartonsCount || 0} كرتون</div>
-        <div class="text-[10px] text-slate-400 font-semibold">(${p.piecesPerCarton || 1} قطعة/كرتون)</div>
-      </td>
-      <td class="p-2.5 text-center">
-        <div class="font-black text-xs ${isOutOfStock ? 'text-rose-500' : isLow ? 'text-amber-500' : 'text-slate-800 dark:text-white'}">
-          ${p.stockQuantity} قطعة
-        </div>
-      </td>
-      <td class="p-2.5 text-center">
-        <div class="font-black text-blue-600 dark:text-blue-400 text-xs">${Number(p.cost).toLocaleString()} د.ع</div>
-        ${p.cartonPurchasePrice > 0 ? `<div class="text-[10px] text-slate-400 font-semibold">شراء كرتون: ${Number(p.cartonPurchasePrice).toLocaleString()} د.ع</div>` : ''}
-      </td>
-      <td class="p-2.5 text-center space-y-0.5">
-        <div class="text-xs font-black text-emerald-600 dark:text-emerald-400">مفرد: ${Number(p.price).toLocaleString()} د.ع</div>
-        <div class="text-[10px] font-bold text-sky-600 dark:text-sky-400">جملة: ${Number(p.wholesalePrice || 0).toLocaleString()} د.ع</div>
-        ${p.cartonSellingPrice > 0 ? `<div class="text-[10px] font-bold text-purple-600 dark:text-purple-400">كرتون: ${Number(p.cartonSellingPrice).toLocaleString()} د.ع</div>` : ''}
-      </td>
-      <td class="p-2.5 text-center space-y-0.5">
-        <div class="text-[10px] font-black text-emerald-600 dark:text-emerald-400">ربح مفرد: +${Number(rProfit).toLocaleString()} د.ع</div>
-        <div class="text-[10px] font-bold text-sky-600 dark:text-sky-400">ربح جملة: +${Number(wProfit).toLocaleString()} د.ع</div>
-        ${cProfit > 0 ? `<div class="text-[10px] font-bold text-purple-600 dark:text-purple-400">ربح كرتون: +${Number(cProfit).toLocaleString()} د.ع</div>` : ''}
-      </td>
-      <td class="p-2.5 text-center">
-        ${isOutOfStock 
-          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400">نفذ الرصيد</span>` 
-          : isLow 
-          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400">نواقص (${p.stockQuantity})</span>` 
-          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">متوفر ✔</span>`}
-      </td>
-      <td class="p-2.5 text-center">
-        <div class="flex items-center justify-center gap-1.5">
-          <button onclick="openProductDetailModal('${p.id}')" class="p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs" title="عرض التفاصيل الكاملة">👁</button>
-          <button onclick="editProductFromInventory('${p.id}')" class="p-1.5 bg-sky-100 hover:bg-sky-200 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 rounded-lg text-xs font-bold" title="تعديل">✏</button>
-          <button onclick="deleteProductFromInventory('${p.id}')" class="p-1.5 bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-lg text-xs font-bold" title="حذف">🗑</button>
-        </div>
-      </td>
+    rowsHtml += `
+      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer" onclick="handleInventoryRowClick(event, '${p.id || p.Id}')">
+        <td class="p-2.5 text-center text-slate-400 font-bold">${itemNum}</td>
+        <td class="p-2.5">
+          <div class="font-black text-slate-800 dark:text-white text-xs">${displayName}</div>
+          <div class="text-[10px] font-mono text-sky-500 font-bold flex items-center gap-1">
+            <span>🏷</span><span>${displayBarcode}</span>
+          </div>
+        </td>
+        <td class="p-2.5">
+          <span class="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300 mb-0.5">${p.category || 'عام'}</span>
+          ${p.supplierName ? `<div class="text-[10px] text-slate-400 font-semibold">🏢 ${p.supplierName}</div>` : ''}
+        </td>
+        <td class="p-2.5 text-center">
+          <div class="font-bold text-slate-700 dark:text-slate-200 text-xs">${p.cartonsCount || 0} كرتون</div>
+          <div class="text-[10px] text-slate-400 font-semibold">(${p.piecesPerCarton || 1} قطعة/كرتون)</div>
+        </td>
+        <td class="p-2.5 text-center">
+          <div class="font-black text-xs ${isOutOfStock ? 'text-rose-500' : isLow ? 'text-amber-500' : 'text-slate-800 dark:text-white'}">
+            ${p.stockQuantity} قطعة
+          </div>
+        </td>
+        <td class="p-2.5 text-center">
+          <div class="font-black text-blue-600 dark:text-blue-400 text-xs">${Number(p.cost).toLocaleString()} د.ع</div>
+          ${p.cartonPurchasePrice > 0 ? `<div class="text-[10px] text-slate-400 font-semibold">شراء كرتون: ${Number(p.cartonPurchasePrice).toLocaleString()} د.ع</div>` : ''}
+        </td>
+        <td class="p-2.5 text-center space-y-0.5">
+          <div class="text-xs font-black text-emerald-600 dark:text-emerald-400">مفرد: ${Number(p.price).toLocaleString()} د.ع</div>
+          <div class="text-[10px] font-bold text-sky-600 dark:text-sky-400">جملة: ${Number(p.wholesalePrice || 0).toLocaleString()} د.ع</div>
+          ${p.cartonSellingPrice > 0 ? `<div class="text-[10px] font-bold text-purple-600 dark:text-purple-400">كرتون: ${Number(p.cartonSellingPrice).toLocaleString()} د.ع</div>` : ''}
+        </td>
+        <td class="p-2.5 text-center space-y-0.5">
+          <div class="text-[10px] font-black text-emerald-600 dark:text-emerald-400">ربح مفرد: +${Number(rProfit).toLocaleString()} د.ع</div>
+          <div class="text-[10px] font-bold text-sky-600 dark:text-sky-400">ربح جملة: +${Number(wProfit).toLocaleString()} د.ع</div>
+          ${cProfit > 0 ? `<div class="text-[10px] font-bold text-purple-600 dark:text-purple-400">ربح كرتون: +${Number(cProfit).toLocaleString()} د.ع</div>` : ''}
+        </td>
+        <td class="p-2.5 text-center">
+          ${isOutOfStock 
+            ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400">نفذ الرصيد</span>` 
+            : isLow 
+            ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400">نواقص (${p.stockQuantity})</span>` 
+            : `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">متوفر ✔</span>`}
+        </td>
+        <td class="p-2.5 text-center">
+          <div class="flex items-center justify-center gap-1.5">
+            <button onclick="openProductDetailModal('${p.id || p.Id}')" class="p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs" title="عرض التفاصيل الكاملة">👁</button>
+            <button onclick="editProductFromInventory('${p.id || p.Id}')" class="p-1.5 bg-sky-100 hover:bg-sky-200 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 rounded-lg text-xs font-bold" title="تعديل">✏</button>
+            <button onclick="deleteProductFromInventory('${p.id || p.Id}')" class="p-1.5 bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-lg text-xs font-bold" title="حذف">🗑</button>
+          </div>
+        </td>
+      </tr>
     `;
-    tbody.appendChild(tr);
-  });
+  }
+
+  tbody.innerHTML = rowsHtml;
+  updateInventoryPaginationControls(startIndex, endIndex);
+}
+
+function handleInventoryRowClick(event, id) {
+  if (event.target.tagName !== 'BUTTON' && !event.target.closest('button')) {
+    openProductDetailModal(id);
+  }
+}
+
+function updateInventoryPaginationControls(startIndex, endIndex) {
+  const summaryEl = document.getElementById('invPaginationSummary');
+  const indicatorEl = document.getElementById('invPageIndicator');
+  const btnPrev = document.getElementById('invBtnPrev');
+  const btnNext = document.getElementById('invBtnNext');
+
+  const total = invFilteredData.length;
+  const totalPages = Math.max(1, Math.ceil(total / invPageSize));
+
+  if (summaryEl) {
+    summaryEl.innerText = total === 0 ? 'عرض 0 من 0 مادة' : `عرض ${startIndex + 1} - ${endIndex} من إجمالي ${total.toLocaleString()} مادة`;
+  }
+  if (indicatorEl) {
+    indicatorEl.innerText = `${invCurrentPage} / ${totalPages}`;
+  }
+  if (btnPrev) btnPrev.disabled = (invCurrentPage <= 1);
+  if (btnNext) btnNext.disabled = (invCurrentPage >= totalPages);
+}
+
+function nextInventoryPage() {
+  const totalPages = Math.max(1, Math.ceil(invFilteredData.length / invPageSize));
+  if (invCurrentPage < totalPages) {
+    invCurrentPage++;
+    renderInventoryTablePage();
+    document.querySelector('#tab-inventory .overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function prevInventoryPage() {
+  if (invCurrentPage > 1) {
+    invCurrentPage--;
+    renderInventoryTablePage();
+    document.querySelector('#tab-inventory .overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 }
 
 function openProductDetailModal(id) {
@@ -2108,46 +2166,108 @@ async function confirmCustomerPayment() {
 // 3. STOCK AUDIT (الجرد ومطابقة الرفوف)
 // ========================================================
 let auditProductsList = [];
+let auditCurrentPage = 1;
+const auditPageSize = 50;
+let auditFilteredList = [];
 
 async function loadStockAudit(showAlert = false) {
   const res = await callBackend('get_stock_audit');
   if (res && res.success) {
     auditProductsList = res.products || [];
-    renderAuditTable(auditProductsList);
+    filterAuditTable();
     if (showAlert) alert('✔ تم تحديث قائمة جرد الرفوف بنجاح!');
   }
 }
 
-function renderAuditTable(list) {
+function filterAuditTable() {
+  const q = (document.getElementById('audit-searchInput')?.value || '').toLowerCase().trim();
+  auditFilteredList = auditProductsList.filter(p => 
+    (p.name && p.name.toLowerCase().includes(q)) || (p.barcode && p.barcode.includes(q))
+  );
+  auditCurrentPage = 1;
+  renderAuditTablePage();
+}
+
+function renderAuditTablePage() {
   const tbody = document.getElementById('auditTableBody');
   if (!tbody) return;
 
-  if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold">لا توجد مواد مسجلة للجرد</td></tr>';
+  if (auditFilteredList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold">لا توجد مواد مطابقة للبحث للجرد</td></tr>';
+    updateAuditPaginationControls(0, 0);
     return;
   }
 
-  tbody.innerHTML = '';
-  list.forEach((p, idx) => {
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition';
-    tr.innerHTML = `
-      <td class="p-3 text-center text-slate-400 font-bold">${idx + 1}</td>
-      <td class="p-3 font-bold text-slate-800 dark:text-white">${p.name || p.Name}</td>
-      <td class="p-3 text-sky-500 font-mono font-bold">${p.barcode || p.Barcode || '--'}</td>
-      <td class="p-3 text-center font-black font-mono">${p.stockQuantity} قطعة</td>
-      <td class="p-3 text-center">
-        <input id="audit-input-${p.id || p.Id}" type="number" value="${p.stockQuantity}" oninput="calcAuditDiff('${p.id || p.Id}', ${p.stockQuantity})" class="w-24 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1 text-center font-black font-mono text-xs">
-      </td>
-      <td class="p-3 text-center font-bold font-mono text-xs" id="audit-diff-${p.id || p.Id}">0</td>
-      <td class="p-3 text-center">
-        <button onclick="quickSaveAuditStock('${p.id || p.Id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg shadow-sm">
-          💾 حفظ
-        </button>
-      </td>
+  const totalPages = Math.max(1, Math.ceil(auditFilteredList.length / auditPageSize));
+  if (auditCurrentPage > totalPages) auditCurrentPage = totalPages;
+  if (auditCurrentPage < 1) auditCurrentPage = 1;
+
+  const startIndex = (auditCurrentPage - 1) * auditPageSize;
+  const endIndex = Math.min(startIndex + auditPageSize, auditFilteredList.length);
+  const pageItems = auditFilteredList.slice(startIndex, endIndex);
+
+  let rowsHtml = '';
+  for (let i = 0; i < pageItems.length; i++) {
+    const p = pageItems[i];
+    const itemNum = startIndex + i + 1;
+    const prodId = p.id || p.Id;
+    rowsHtml += `
+      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+        <td class="p-3 text-center text-slate-400 font-bold">${itemNum}</td>
+        <td class="p-3 font-bold text-slate-800 dark:text-white">${p.name || p.Name}</td>
+        <td class="p-3 text-sky-500 font-mono font-bold">${p.barcode || p.Barcode || '--'}</td>
+        <td class="p-3 text-center font-black font-mono">${p.stockQuantity} قطعة</td>
+        <td class="p-3 text-center">
+          <input id="audit-input-${prodId}" type="number" value="${p.stockQuantity}" oninput="calcAuditDiff('${prodId}', ${p.stockQuantity})" class="w-24 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1 text-center font-black font-mono text-xs">
+        </td>
+        <td class="p-3 text-center font-bold font-mono text-xs" id="audit-diff-${prodId}">0 (مطابق)</td>
+        <td class="p-3 text-center">
+          <button onclick="quickSaveAuditStock('${prodId}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg shadow-sm">
+            💾 حفظ
+          </button>
+        </td>
+      </tr>
     `;
-    tbody.appendChild(tr);
-  });
+  }
+
+  tbody.innerHTML = rowsHtml;
+  updateAuditPaginationControls(startIndex, endIndex);
+}
+
+function updateAuditPaginationControls(startIndex, endIndex) {
+  const summaryEl = document.getElementById('auditPaginationSummary');
+  const indicatorEl = document.getElementById('auditPageIndicator');
+  const btnPrev = document.getElementById('auditBtnPrev');
+  const btnNext = document.getElementById('auditBtnNext');
+
+  const total = auditFilteredList.length;
+  const totalPages = Math.max(1, Math.ceil(total / auditPageSize));
+
+  if (summaryEl) {
+    summaryEl.innerText = total === 0 ? 'عرض 0 من 0 مادة' : `عرض ${startIndex + 1} - ${endIndex} من إجمالي ${total.toLocaleString()} مادة`;
+  }
+  if (indicatorEl) {
+    indicatorEl.innerText = `${auditCurrentPage} / ${totalPages}`;
+  }
+  if (btnPrev) btnPrev.disabled = (auditCurrentPage <= 1);
+  if (btnNext) btnNext.disabled = (auditCurrentPage >= totalPages);
+}
+
+function nextAuditPage() {
+  const totalPages = Math.max(1, Math.ceil(auditFilteredList.length / auditPageSize));
+  if (auditCurrentPage < totalPages) {
+    auditCurrentPage++;
+    renderAuditTablePage();
+    document.querySelector('#tab-stockAudit .overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function prevAuditPage() {
+  if (auditCurrentPage > 1) {
+    auditCurrentPage--;
+    renderAuditTablePage();
+    document.querySelector('#tab-stockAudit .overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 }
 
 function calcAuditDiff(id, sysStock) {
