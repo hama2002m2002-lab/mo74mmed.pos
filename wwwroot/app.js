@@ -952,8 +952,6 @@ async function saveProductFull() {
 // INVENTORY & WAREHOUSE MANAGEMENT (FULL DETAILS)
 // ========================================================
 let inventoryData = [];
-let invCurrentPage = 1;
-const invPageSize = 50;
 let invFilteredData = [];
 
 async function loadInventory() {
@@ -987,7 +985,6 @@ async function loadInventory() {
     if (cats.includes(currentVal)) catFilter.value = currentVal;
   }
 
-  invCurrentPage = 1;
   filterInventoryTable();
 }
 
@@ -1014,32 +1011,33 @@ function filterInventoryTable() {
     return matchesSearch && matchesCat && matchesLowStock;
   });
 
-  invCurrentPage = 1;
-  renderInventoryTablePage();
+  renderInventoryTable();
 }
 
-function renderInventoryTablePage() {
+function renderInventoryTable() {
   const tbody = document.getElementById('inventoryTableBody');
+  const summaryEl = document.getElementById('invCountSummary');
+  const showAllBtn = document.getElementById('invShowAllBtn');
   if (!tbody) return;
 
   if (invFilteredData.length === 0) {
     tbody.innerHTML = `<tr><td colspan="10" class="text-center py-12 text-slate-400 font-bold">لا توجد مواد مطابقة للبحث أو الفلترة</td></tr>`;
-    updateInventoryPaginationControls(0, 0);
+    if (summaryEl) summaryEl.innerText = 'يتم عرض 0 مادة';
+    if (showAllBtn) showAllBtn.classList.add('hidden');
     return;
   }
 
-  const totalPages = Math.max(1, Math.ceil(invFilteredData.length / invPageSize));
-  if (invCurrentPage > totalPages) invCurrentPage = totalPages;
-  if (invCurrentPage < 1) invCurrentPage = 1;
+  const limitVal = document.getElementById('invDisplayLimit')?.value || '1000';
+  let limit = invFilteredData.length;
+  if (limitVal !== 'all') {
+    limit = parseInt(limitVal, 10) || 1000;
+  }
 
-  const startIndex = (invCurrentPage - 1) * invPageSize;
-  const endIndex = Math.min(startIndex + invPageSize, invFilteredData.length);
-  const pageItems = invFilteredData.slice(startIndex, endIndex);
+  const displayItems = invFilteredData.slice(0, limit);
 
   let rowsHtml = '';
-  for (let i = 0; i < pageItems.length; i++) {
-    const p = pageItems[i];
-    const itemNum = startIndex + i + 1;
+  for (let i = 0; i < displayItems.length; i++) {
+    const p = displayItems[i];
     const isLow = p.stockQuantity <= (p.minStockAlert || 5);
     const isOutOfStock = p.stockQuantity <= 0;
     const rProfit = (p.price || 0) - (p.cost || 0);
@@ -1050,7 +1048,7 @@ function renderInventoryTablePage() {
 
     rowsHtml += `
       <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer" onclick="handleInventoryRowClick(event, '${p.id || p.Id}')">
-        <td class="p-2.5 text-center text-slate-400 font-bold">${itemNum}</td>
+        <td class="p-2.5 text-center text-slate-400 font-bold">${i + 1}</td>
         <td class="p-2.5">
           <div class="font-black text-slate-800 dark:text-white text-xs">${displayName}</div>
           <div class="text-[10px] font-mono text-sky-500 font-bold flex items-center gap-1">
@@ -1103,48 +1101,30 @@ function renderInventoryTablePage() {
   }
 
   tbody.innerHTML = rowsHtml;
-  updateInventoryPaginationControls(startIndex, endIndex);
+
+  if (summaryEl) {
+    summaryEl.innerText = `يتم عرض ${displayItems.length.toLocaleString()} مادة من إجمالي ${invFilteredData.length.toLocaleString()} مادة`;
+  }
+
+  if (showAllBtn) {
+    if (invFilteredData.length > displayItems.length) {
+      showAllBtn.innerText = `👁 عرض كافة المواد (${invFilteredData.length.toLocaleString()} مادة) دفعة واحدة`;
+      showAllBtn.classList.remove('hidden');
+    } else {
+      showAllBtn.classList.add('hidden');
+    }
+  }
+}
+
+function showAllInventoryItems() {
+  const limitSelect = document.getElementById('invDisplayLimit');
+  if (limitSelect) limitSelect.value = 'all';
+  renderInventoryTable();
 }
 
 function handleInventoryRowClick(event, id) {
   if (event.target.tagName !== 'BUTTON' && !event.target.closest('button')) {
     openProductDetailModal(id);
-  }
-}
-
-function updateInventoryPaginationControls(startIndex, endIndex) {
-  const summaryEl = document.getElementById('invPaginationSummary');
-  const indicatorEl = document.getElementById('invPageIndicator');
-  const btnPrev = document.getElementById('invBtnPrev');
-  const btnNext = document.getElementById('invBtnNext');
-
-  const total = invFilteredData.length;
-  const totalPages = Math.max(1, Math.ceil(total / invPageSize));
-
-  if (summaryEl) {
-    summaryEl.innerText = total === 0 ? 'عرض 0 من 0 مادة' : `عرض ${startIndex + 1} - ${endIndex} من إجمالي ${total.toLocaleString()} مادة`;
-  }
-  if (indicatorEl) {
-    indicatorEl.innerText = `${invCurrentPage} / ${totalPages}`;
-  }
-  if (btnPrev) btnPrev.disabled = (invCurrentPage <= 1);
-  if (btnNext) btnNext.disabled = (invCurrentPage >= totalPages);
-}
-
-function nextInventoryPage() {
-  const totalPages = Math.max(1, Math.ceil(invFilteredData.length / invPageSize));
-  if (invCurrentPage < totalPages) {
-    invCurrentPage++;
-    renderInventoryTablePage();
-    document.querySelector('#tab-inventory .overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-}
-
-function prevInventoryPage() {
-  if (invCurrentPage > 1) {
-    invCurrentPage--;
-    renderInventoryTablePage();
-    document.querySelector('#tab-inventory .overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 
@@ -2166,8 +2146,6 @@ async function confirmCustomerPayment() {
 // 3. STOCK AUDIT (الجرد ومطابقة الرفوف)
 // ========================================================
 let auditProductsList = [];
-let auditCurrentPage = 1;
-const auditPageSize = 50;
 let auditFilteredList = [];
 
 async function loadStockAudit(showAlert = false) {
@@ -2184,36 +2162,37 @@ function filterAuditTable() {
   auditFilteredList = auditProductsList.filter(p => 
     (p.name && p.name.toLowerCase().includes(q)) || (p.barcode && p.barcode.includes(q))
   );
-  auditCurrentPage = 1;
-  renderAuditTablePage();
+  renderAuditTable();
 }
 
-function renderAuditTablePage() {
+function renderAuditTable() {
   const tbody = document.getElementById('auditTableBody');
+  const summaryEl = document.getElementById('auditCountSummary');
+  const showAllBtn = document.getElementById('auditShowAllBtn');
   if (!tbody) return;
 
   if (auditFilteredList.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold">لا توجد مواد مطابقة للبحث للجرد</td></tr>';
-    updateAuditPaginationControls(0, 0);
+    if (summaryEl) summaryEl.innerText = 'يتم عرض 0 مادة';
+    if (showAllBtn) showAllBtn.classList.add('hidden');
     return;
   }
 
-  const totalPages = Math.max(1, Math.ceil(auditFilteredList.length / auditPageSize));
-  if (auditCurrentPage > totalPages) auditCurrentPage = totalPages;
-  if (auditCurrentPage < 1) auditCurrentPage = 1;
+  const limitVal = document.getElementById('auditDisplayLimit')?.value || '1000';
+  let limit = auditFilteredList.length;
+  if (limitVal !== 'all') {
+    limit = parseInt(limitVal, 10) || 1000;
+  }
 
-  const startIndex = (auditCurrentPage - 1) * auditPageSize;
-  const endIndex = Math.min(startIndex + auditPageSize, auditFilteredList.length);
-  const pageItems = auditFilteredList.slice(startIndex, endIndex);
+  const displayItems = auditFilteredList.slice(0, limit);
 
   let rowsHtml = '';
-  for (let i = 0; i < pageItems.length; i++) {
-    const p = pageItems[i];
-    const itemNum = startIndex + i + 1;
+  for (let i = 0; i < displayItems.length; i++) {
+    const p = displayItems[i];
     const prodId = p.id || p.Id;
     rowsHtml += `
       <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-        <td class="p-3 text-center text-slate-400 font-bold">${itemNum}</td>
+        <td class="p-3 text-center text-slate-400 font-bold">${i + 1}</td>
         <td class="p-3 font-bold text-slate-800 dark:text-white">${p.name || p.Name}</td>
         <td class="p-3 text-sky-500 font-mono font-bold">${p.barcode || p.Barcode || '--'}</td>
         <td class="p-3 text-center font-black font-mono">${p.stockQuantity} قطعة</td>
@@ -2231,43 +2210,25 @@ function renderAuditTablePage() {
   }
 
   tbody.innerHTML = rowsHtml;
-  updateAuditPaginationControls(startIndex, endIndex);
-}
-
-function updateAuditPaginationControls(startIndex, endIndex) {
-  const summaryEl = document.getElementById('auditPaginationSummary');
-  const indicatorEl = document.getElementById('auditPageIndicator');
-  const btnPrev = document.getElementById('auditBtnPrev');
-  const btnNext = document.getElementById('auditBtnNext');
-
-  const total = auditFilteredList.length;
-  const totalPages = Math.max(1, Math.ceil(total / auditPageSize));
 
   if (summaryEl) {
-    summaryEl.innerText = total === 0 ? 'عرض 0 من 0 مادة' : `عرض ${startIndex + 1} - ${endIndex} من إجمالي ${total.toLocaleString()} مادة`;
+    summaryEl.innerText = `يتم عرض ${displayItems.length.toLocaleString()} مادة من إجمالي ${auditFilteredList.length.toLocaleString()} مادة`;
   }
-  if (indicatorEl) {
-    indicatorEl.innerText = `${auditCurrentPage} / ${totalPages}`;
-  }
-  if (btnPrev) btnPrev.disabled = (auditCurrentPage <= 1);
-  if (btnNext) btnNext.disabled = (auditCurrentPage >= totalPages);
-}
 
-function nextAuditPage() {
-  const totalPages = Math.max(1, Math.ceil(auditFilteredList.length / auditPageSize));
-  if (auditCurrentPage < totalPages) {
-    auditCurrentPage++;
-    renderAuditTablePage();
-    document.querySelector('#tab-stockAudit .overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
+  if (showAllBtn) {
+    if (auditFilteredList.length > displayItems.length) {
+      showAllBtn.innerText = `👁 عرض كافة المواد (${auditFilteredList.length.toLocaleString()} مادة) دفعة واحدة`;
+      showAllBtn.classList.remove('hidden');
+    } else {
+      showAllBtn.classList.add('hidden');
+    }
   }
 }
 
-function prevAuditPage() {
-  if (auditCurrentPage > 1) {
-    auditCurrentPage--;
-    renderAuditTablePage();
-    document.querySelector('#tab-stockAudit .overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+function showAllAuditItems() {
+  const limitSelect = document.getElementById('auditDisplayLimit');
+  if (limitSelect) limitSelect.value = 'all';
+  renderAuditTable();
 }
 
 function calcAuditDiff(id, sysStock) {
