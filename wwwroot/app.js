@@ -58,10 +58,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderInvoiceTabs();
   renderCashierCart();
   await loadDashboard();
-  await loadRepOrders();
+  await loadRepOrders(false); // Initial load without sound alert
+
+  // Setup C# Push Event Listener
+  if (window.chrome && window.chrome.webview) {
+    window.chrome.webview.addEventListener('message', (event) => {
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (data && data._event === 'new_order_received') {
+          loadRepOrders(true);
+        }
+      } catch (e) {}
+    });
+  }
+
+  // Periodic automatic sync for incoming rep orders every 6 seconds
+  setInterval(() => {
+    loadRepOrders(true);
+  }, 6000);
+
   recalcAddProduct();
-  
-  setInterval(loadRepOrders, 4000);
 });
 
 function setupGlobalKeyboardShortcuts() {
@@ -1090,16 +1106,126 @@ async function loadUsers() {
 }
 
 // ========================================================
-// REP CLOUD ORDERS & INTERACTIVE INVOICE MANAGEMENT
+// REP CLOUD ORDERS & LIVE NOTIFICATION SYSTEM
 // ========================================================
 let activeOrderModalData = null;
+let knownPendingOrderIds = new Set();
+let isFirstRepOrdersLoad = true;
 
-async function loadRepOrders() {
+// Synthesize pleasant two-tone notification sound (Web Audio API)
+function playOrderNotificationSound() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+
+    // Tone 1 (High bell chime)
+    const osc1 = audioCtx.createOscillator();
+    const gain1 = audioCtx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(587.33, now); // D5
+    osc1.frequency.exponentialRampToValueAtTime(880.00, now + 0.15); // A5
+    gain1.gain.setValueAtTime(0.35, now);
+    gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    osc1.connect(gain1);
+    gain1.connect(audioCtx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.5);
+
+    // Tone 2 (Sparkle chime)
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(1174.66, now + 0.18); // D6
+    gain2.gain.setValueAtTime(0.4, now + 0.18);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+    osc2.connect(gain2);
+    gain2.connect(audioCtx.destination);
+    osc2.start(now + 0.18);
+    osc2.stop(now + 0.8);
+  } catch (e) {
+    console.log('[Audio] Notification sound skipped:', e);
+  }
+}
+
+// Show floating interactive notification card
+function showOrderNotificationToast(order) {
+  const container = document.getElementById('orderNotificationToastContainer');
+  if (!container) return;
+
+  const toastId = 'toast_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+  const toast = document.createElement('div');
+  toast.id = toastId;
+  toast.className = 'pointer-events-auto sh-card p-4 rounded-2xl shadow-2xl border-2 border-amber-500/80 bg-slate-900/95 text-white animate-in slide-in-from-top duration-300 flex items-start gap-3 backdrop-blur-md';
+  
+  toast.innerHTML = `
+    <div class="w-10 h-10 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-black text-xl flex-shrink-0 animate-bounce">
+      🔔
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center justify-between gap-2 mb-1">
+        <h4 class="font-black text-sm text-amber-400">وصلت طلبية جديدة الآن!</h4>
+        <span class="text-[10px] font-mono text-slate-400">${order.orderNumber}</span>
+      </div>
+      <p class="text-xs font-bold text-slate-200 truncate">🏬 ${order.marketName || 'ماركت'}</p>
+      <div class="flex items-center justify-between text-xs mt-1 text-slate-300">
+        <span>👤 المندوب: <b class="text-sky-400">${order.representativeName || 'عام'}</b></span>
+        <span class="font-black text-emerald-400">${Number(order.totalAmount).toLocaleString()} د.ع</span>
+      </div>
+      <div class="flex items-center gap-2 mt-3 pt-2 border-t border-slate-800">
+        <button onclick="openRepOrderFromToast('${order.id}', '${toastId}')" class="flex-1 py-1.5 px-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-1">
+          <span>🧾</span>
+          <span>فتح الوصل والتجهيز</span>
+        </button>
+        <button onclick="dismissOrderToast('${toastId}')" class="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  `;
+
+  container.prepend(toast);
+
+  // Auto remove after 14 seconds
+  setTimeout(() => {
+    dismissOrderToast(toastId);
+  }, 14000);
+}
+
+function dismissOrderToast(toastId) {
+  const el = document.getElementById(toastId);
+  if (el) {
+    el.classList.add('animate-out', 'fade-out', 'slide-out-to-top', 'duration-200');
+    setTimeout(() => el.remove(), 200);
+  }
+}
+
+function openRepOrderFromToast(orderId, toastId) {
+  dismissOrderToast(toastId);
+  switchTab('repOrders');
+  openRepOrderInvoiceModal(orderId);
+}
+
+async function loadRepOrders(triggerAlerts = true) {
   const res = await callBackend('get_supplier_orders');
   if (!res || !res.success) return;
 
   const orders = res.orders || [];
-  const pendingCount = orders.filter(o => o.status === 'Pending').length;
+  const pendingOrders = orders.filter(o => o.status === 'Pending');
+  const pendingCount = pendingOrders.length;
+
+  // Check for newly arrived pending orders
+  if (triggerAlerts && !isFirstRepOrdersLoad) {
+    pendingOrders.forEach(o => {
+      if (!knownPendingOrderIds.has(o.id)) {
+        playOrderNotificationSound();
+        showOrderNotificationToast(o);
+      }
+    });
+  }
+
+  // Update known set
+  knownPendingOrderIds = new Set(pendingOrders.map(o => o.id));
+  isFirstRepOrdersLoad = false;
 
   const sideBadge = document.getElementById('repBadgeSidebar');
   const bellBadge = document.getElementById('repBellBadge');

@@ -25,6 +25,9 @@ public partial class MainWindow : Window
                 // Start local Rep portal server in background
                 RepWebPortalService.Instance.Start();
 
+                // Start Cloud background sync (every 5 seconds)
+                CloudSyncService.Instance.StartBackgroundSync(5);
+
                 // Auto update check
                 _ = Task.Run(() =>
                 {
@@ -37,6 +40,23 @@ public partial class MainWindow : Window
                 });
 
                 await posWebView.EnsureCoreWebView2Async();
+
+                // Event listener to notify UI when a rep submits an order
+                void NotifyNewOrderToUi()
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        try
+                        {
+                            var evt = new { _event = "new_order_received", timestamp = DateTime.Now.ToString("o") };
+                            posWebView?.CoreWebView2?.PostWebMessageAsJson(JsonSerializer.Serialize(evt));
+                        }
+                        catch { }
+                    });
+                }
+
+                CloudSyncService.Instance.CloudOrdersImported += NotifyNewOrderToUi;
+                RepWebPortalService.Instance.OrderReceived += NotifyNewOrderToUi;
 
                 posWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 posWebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
