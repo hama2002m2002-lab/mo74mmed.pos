@@ -320,6 +320,46 @@ public class PosBridgeService
                     return JsonSerializer.Serialize(new { success = true });
                 }
 
+                case "get_categories":
+                {
+                    var cats = await db.Categories.AsNoTracking().OrderBy(c => c.Name).Select(c => c.Name).ToListAsync();
+                    return JsonSerializer.Serialize(new { success = true, categories = cats });
+                }
+
+                case "add_category":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    string catName = doc.RootElement.GetProperty("name").GetString()?.Trim() ?? "";
+                    if (!string.IsNullOrEmpty(catName))
+                    {
+                        var exists = await db.Categories.AnyAsync(c => c.Name == catName);
+                        if (!exists)
+                        {
+                            db.Categories.Add(new Category { Id = Guid.NewGuid(), Name = catName, CreatedAt = DateTime.UtcNow });
+                            await db.SaveChangesAsync();
+                        }
+                    }
+                    var cats = await db.Categories.AsNoTracking().OrderBy(c => c.Name).Select(c => c.Name).ToListAsync();
+                    return JsonSerializer.Serialize(new { success = true, categories = cats });
+                }
+
+                case "delete_category":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    string catName = doc.RootElement.GetProperty("name").GetString()?.Trim() ?? "";
+                    if (!string.IsNullOrEmpty(catName) && catName != "عام")
+                    {
+                        var cat = await db.Categories.FirstOrDefaultAsync(c => c.Name == catName);
+                        if (cat != null)
+                        {
+                            db.Categories.Remove(cat);
+                            await db.SaveChangesAsync();
+                        }
+                    }
+                    var cats = await db.Categories.AsNoTracking().OrderBy(c => c.Name).Select(c => c.Name).ToListAsync();
+                    return JsonSerializer.Serialize(new { success = true, categories = cats });
+                }
+
                 // ==========================================
                 // 4. REP ORDERS & NOTIFICATIONS
                 // ==========================================

@@ -54,10 +54,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   await loadProducts();
   await loadSuppliersList();
+  await loadCategoriesList();
   renderInvoiceTabs();
   renderCashierCart();
   await loadDashboard();
   await loadRepOrders();
+  recalcAddProduct();
   
   setInterval(loadRepOrders, 4000);
 });
@@ -73,6 +75,9 @@ function setupGlobalKeyboardShortcuts() {
     } else if (e.key === 'F2') {
       e.preventDefault();
       switchTab('cashier');
+    } else if (e.key === 'F3') {
+      e.preventDefault();
+      switchTab('addProduct');
     }
   });
 }
@@ -100,6 +105,10 @@ function switchTab(tabId) {
 
   if (tabId === 'cashier') {
     document.getElementById('cashierBarcodeInput')?.focus();
+  }
+  if (tabId === 'addProduct') {
+    loadCategoriesList();
+    recalcAddProduct();
   }
   if (tabId === 'dashboard') loadDashboard();
   if (tabId === 'inventory') loadInventory();
@@ -512,54 +521,160 @@ async function submitCashierSale() {
 }
 
 // ========================================================
-// ADD / EDIT PRODUCT FULL FORM
+// ADD / EDIT PRODUCT FULL FORM (DETAILED MARKET LOGIC)
 // ========================================================
-function generateRandomBarcode() {
+function generateUniqueMarketBarcode() {
+  const prefix = "200245";
+  let uniqueBarcode = "";
+  let attempts = 0;
+
+  do {
+    const randomPart = Math.floor(100000 + Math.random() * 900000); // 6 digits
+    uniqueBarcode = `${prefix}${randomPart}`;
+    attempts++;
+  } while (state.products.some(p => p.barcode === uniqueBarcode) && attempts < 500);
+
   const barcodeInput = document.getElementById('ap-barcode');
   if (barcodeInput) {
-    barcodeInput.value = '628' + Math.floor(100000000 + Math.random() * 900000000);
+    barcodeInput.value = uniqueBarcode;
+  }
+
+  // Auto focus on Product Name as requested
+  setTimeout(() => {
+    document.getElementById('ap-name')?.focus();
+  }, 50);
+}
+
+function handleBarcodeEnter(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('ap-name')?.focus();
+  }
+}
+
+async function loadCategoriesList() {
+  const res = await callBackend('get_categories');
+  const catSelect = document.getElementById('ap-categorySelect');
+  if (!catSelect) return;
+
+  const currentVal = catSelect.value || "عام";
+  catSelect.innerHTML = '';
+  
+  const cats = (res && res.success && res.categories && res.categories.length > 0) 
+    ? res.categories 
+    : ["عام", "مواد غذائية", "معلبات", "منظفات", "مشروبات وعصائر", "ألبان وأجبان", "حلويات وبسكويت"];
+
+  cats.forEach(c => {
+    catSelect.innerHTML += `<option value="${c}">${c}</option>`;
+  });
+
+  if (cats.includes(currentVal)) {
+    catSelect.value = currentVal;
+  }
+}
+
+async function promptAddCategory() {
+  const newCat = prompt("أدخل اسم التصنيف الجديد:");
+  if (newCat && newCat.trim()) {
+    const res = await callBackend('add_category', { name: newCat.trim() });
+    await loadCategoriesList();
+    const catSelect = document.getElementById('ap-categorySelect');
+    if (catSelect) catSelect.value = newCat.trim();
+  }
+}
+
+async function deleteCurrentCategory() {
+  const catSelect = document.getElementById('ap-categorySelect');
+  if (!catSelect) return;
+  const selectedCat = catSelect.value;
+  if (!selectedCat || selectedCat === "عام") {
+    alert("لا يمكن حذف التصنيف العام الأساسي!");
+    return;
+  }
+
+  if (confirm(`هل أنت متأكد من حذف التصنيف: "${selectedCat}"؟`)) {
+    await callBackend('delete_category', { name: selectedCat });
+    await loadCategoriesList();
   }
 }
 
 function recalcAddProduct() {
   const itemsPerCarton = Math.max(1, Number(document.getElementById('ap-itemsPerCarton')?.value || 1));
   const cartonsCount = Math.max(0, Number(document.getElementById('ap-cartonsCount')?.value || 0));
-  const cost = Number(document.getElementById('ap-cost')?.value || 0);
-  const price = Number(document.getElementById('ap-price')?.value || 0);
   const cartonPurchase = Number(document.getElementById('ap-cartonPurchase')?.value || 0);
-  const cartonSelling = Number(document.getElementById('ap-cartonSelling')?.value || 0);
 
+  // Total stock in pieces
   const totalPieces = itemsPerCarton * cartonsCount;
-  const retailProfit = Math.max(0, price - cost);
-  const cartonProfit = Math.max(0, cartonSelling - cartonPurchase);
+  const totalStockEl = document.getElementById('ap-totalStock');
+  if (totalStockEl) totalStockEl.value = `${totalPieces} قطعة`;
 
-  document.getElementById('ap-totalStockDisplay').innerText = `${totalPieces} قطعة`;
-  document.getElementById('ap-retailProfitDisplay').innerText = `${Number(retailProfit).toLocaleString()} د.ع`;
-  document.getElementById('ap-cartonProfitDisplay').innerText = `${Number(cartonProfit).toLocaleString()} د.ع`;
+  // Calculated Piece Cost from Carton (Readonly)
+  const pieceCostFromCarton = itemsPerCarton > 0 ? (cartonPurchase / itemsPerCarton) : 0;
+  const pieceCostDisplayEl = document.getElementById('ap-pieceCostFromCarton');
+  if (pieceCostDisplayEl) pieceCostDisplayEl.value = `${Math.round(pieceCostFromCarton).toLocaleString()} د.ع`;
+
+  const costInput = document.getElementById('ap-cost');
+  if (costInput && (!costInput.value || Number(costInput.value) === 0)) {
+    costInput.value = Math.round(pieceCostFromCarton);
+  }
+
+  const cost = Number(costInput?.value || Math.round(pieceCostFromCarton));
+  const price = Number(document.getElementById('ap-price')?.value || 0); // بيع مفرد
+  const wholesale = Number(document.getElementById('ap-wholesalePrice')?.value || 0); // بيع جملة
+  const cartonSelling = Number(document.getElementById('ap-cartonSelling')?.value || 0); // بيع كرتون
+
+  // 1. Retail calculations
+  const retailPieceProfit = price - cost;
+  const retailCartonTotal = price * itemsPerCarton;
+  const retailCartonProfit = (price - cost) * itemsPerCarton;
+
+  const rppEl = document.getElementById('ap-retailPieceProfit');
+  if (rppEl) rppEl.innerText = `${retailPieceProfit >= 0 ? '+' : ''}${Math.round(retailPieceProfit).toLocaleString()} د.ع`;
+  const rctEl = document.getElementById('ap-retailCartonTotal');
+  if (rctEl) rctEl.innerText = `${Math.round(retailCartonTotal).toLocaleString()} د.ع`;
+  const rcpEl = document.getElementById('ap-retailCartonProfit');
+  if (rcpEl) rcpEl.innerText = `${retailCartonProfit >= 0 ? '+' : ''}${Math.round(retailCartonProfit).toLocaleString()} د.ع`;
+
+  // 2. Wholesale calculations
+  const wholesalePieceProfit = wholesale - cost;
+  const wholesaleCartonProfit = (wholesale - cost) * itemsPerCarton;
+
+  const wppEl = document.getElementById('ap-wholesalePieceProfit');
+  if (wppEl) wppEl.innerText = `${wholesalePieceProfit >= 0 ? '+' : ''}${Math.round(wholesalePieceProfit).toLocaleString()} د.ع`;
+  const wcpEl = document.getElementById('ap-wholesaleCartonProfit');
+  if (wcpEl) wcpEl.innerText = `${wholesaleCartonProfit >= 0 ? '+' : ''}${Math.round(wholesaleCartonProfit).toLocaleString()} د.ع`;
+
+  // 3. Carton calculations
+  const cartonDirectProfit = cartonSelling - cartonPurchase;
+  const cdpEl = document.getElementById('ap-cartonDirectProfit');
+  if (cdpEl) cdpEl.innerText = `${cartonDirectProfit >= 0 ? '+' : ''}${Math.round(cartonDirectProfit).toLocaleString()} د.ع`;
 }
 
 function clearAddProductForm() {
   document.getElementById('ap-id').value = '';
-  document.getElementById('ap-name').value = '';
   document.getElementById('ap-barcode').value = '';
-  document.getElementById('ap-category').value = '';
-  document.getElementById('ap-itemsPerCarton').value = '12';
+  document.getElementById('ap-name').value = '';
   document.getElementById('ap-cartonsCount').value = '5';
+  document.getElementById('ap-itemsPerCarton').value = '12';
+  document.getElementById('ap-cartonPurchase').value = '12000';
   document.getElementById('ap-cost').value = '1000';
   document.getElementById('ap-price').value = '1250';
-  document.getElementById('ap-cartonPurchase').value = '12000';
-  document.getElementById('ap-cartonSelling').value = '15000';
-  document.getElementById('addProductFormTitle').innerText = 'إضافة وتعديل مادة بالمخزن';
+  document.getElementById('ap-wholesalePrice').value = '1150';
+  document.getElementById('ap-cartonSelling').value = '14000';
+  document.getElementById('ap-minStockAlert').value = '6';
+  document.getElementById('addProductFormTitle').innerText = 'إضافة وتعديل مادة جديدة بالمخزن';
   recalcAddProduct();
 }
 
 async function saveProductFull() {
   const name = document.getElementById('ap-name')?.value.trim();
   if (!name) {
-    alert('يرجى كتابة اسم المادة!');
+    alert('يرجى كتابة اسم المادة أولاً!');
+    document.getElementById('ap-name')?.focus();
     return;
   }
 
+  const barcode = document.getElementById('ap-barcode')?.value.trim();
   const itemsPerCarton = Math.max(1, Number(document.getElementById('ap-itemsPerCarton')?.value || 1));
   const cartonsCount = Math.max(0, Number(document.getElementById('ap-cartonsCount')?.value || 0));
   const totalStock = itemsPerCarton * cartonsCount;
@@ -567,10 +682,11 @@ async function saveProductFull() {
   const payload = {
     id: document.getElementById('ap-id')?.value || undefined,
     name: name,
-    barcode: document.getElementById('ap-barcode')?.value.trim() || undefined,
-    category: document.getElementById('ap-category')?.value.trim() || 'عام',
+    barcode: barcode || undefined,
+    category: document.getElementById('ap-categorySelect')?.value || 'عام',
     cost: Number(document.getElementById('ap-cost')?.value || 0),
     price: Number(document.getElementById('ap-price')?.value || 0),
+    wholesalePrice: Number(document.getElementById('ap-wholesalePrice')?.value || 0),
     stockQuantity: totalStock,
     piecesPerCarton: itemsPerCarton,
     minStockAlert: Number(document.getElementById('ap-minStockAlert')?.value || 5)
@@ -578,7 +694,7 @@ async function saveProductFull() {
 
   const res = await callBackend('save_product', payload);
   if (res && res.success) {
-    alert('✔ تم حفظ المادة بنجاح في قاعدة البيانات!');
+    alert('✔ تم حفظ المادة وتفاصيل الكرتون والأسعار بنجاح في قاعدة البيانات!');
     clearAddProductForm();
     await loadProducts();
     switchTab('inventory');
