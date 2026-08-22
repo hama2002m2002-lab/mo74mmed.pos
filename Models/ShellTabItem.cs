@@ -9,7 +9,14 @@ namespace HamoPos.Models;
 public class ShellTabItem : HamoPos.ViewModels.BaseViewModel
 {
     public string Id { get; set; } = string.Empty;
-    public string Title { get; set; } = string.Empty;
+
+    private string _title = string.Empty;
+    public string Title
+    {
+        get => _title;
+        set => SetProperty(ref _title, value);
+    }
+
     public string Icon { get; set; } = string.Empty;
     public object ViewModel { get; set; } = null!;
     public bool CanClose { get; set; } = true;

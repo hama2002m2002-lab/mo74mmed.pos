@@ -813,7 +813,7 @@ public class UserAccountsViewModel : BaseViewModel
 
             var allFilteredSales = await allSalesQuery.ToListAsync();
 
-            CashierCards.Clear();
+            var cardsList = new List<CashierCardItem>();
             foreach (var u in users)
             {
                 var userSales = allFilteredSales.Where(s => s.UserId == u.Id || (s.UserId == null && u.Role == "Admin")).ToList();
@@ -841,8 +841,17 @@ public class UserAccountsViewModel : BaseViewModel
                     TodayReturnsAmount = userReturned.Sum(s => s.TotalAmount),
                     TodayNetProfit = userProfit
                 };
-                CashierCards.Add(card);
+                cardsList.Add(card);
             }
+
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                CashierCards.Clear();
+                foreach (var c in cardsList)
+                {
+                    CashierCards.Add(c);
+                }
+            });
         }
         catch { }
     }
@@ -874,11 +883,14 @@ public class UserAccountsViewModel : BaseViewModel
 
             var list = await salesQuery.OrderByDescending(s => s.CreatedAt).ToListAsync();
 
-            CashierSalesHistory.Clear();
-            foreach (var s in list)
+            Application.Current?.Dispatcher?.Invoke(() =>
             {
-                CashierSalesHistory.Add(s);
-            }
+                CashierSalesHistory.Clear();
+                foreach (var s in list)
+                {
+                    CashierSalesHistory.Add(s);
+                }
+            });
 
             var completed = list.Where(s => s.Status != "Returned" && s.Status != "Refunded").ToList();
             CashierPeriodInvoicesCount = completed.Count;

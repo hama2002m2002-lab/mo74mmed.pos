@@ -677,6 +677,38 @@ public class MainShellViewModel : BaseViewModel
         CurrentDateTimeString = DateTime.Now.ToString("dddd, dd MMMM yyyy - hh:mm:ss tt", new System.Globalization.CultureInfo("ar-SA"));
     }
 
+    protected override void OnLanguageChanged()
+    {
+        base.OnLanguageChanged();
+        foreach (var tab in OpenTabs)
+        {
+            tab.Title = GetTabTitle(tab.Id);
+        }
+        OnPropertyChanged(nameof(Loc));
+        OnPropertyChanged(nameof(OpenTabs));
+    }
+
+    public string GetTabTitle(string tabId) => tabId switch
+    {
+        "Dashboard" => Loc["Nav_Dashboard"],
+        "Cashier" => Loc["Nav_Cashier"],
+        "SalesHistory" => Loc["Nav_SalesHistory"],
+        "Inventory" => Loc["Nav_Inventory"],
+        "Stock" => Loc.IsKurdish ? "مەخزەن و بڕی کاڵا" : "المخزن ورصيد المواد",
+        "StockAudit" => Loc.IsKurdish ? "جەردکردنی مەخزەن" : "جرد المخزون",
+        "DamagedItems" => Loc.IsKurdish ? "کاڵای تێکچوو" : "المواد التالفة",
+        "Purchase" => Loc["Nav_Purchases"],
+        "AddProduct" => Loc["Nav_AddProduct"],
+        "Suppliers" => Loc["Nav_Suppliers"],
+        "SupplierOrders" => Loc["Nav_SupplierOrders"],
+        "UserAccounts" => Loc["Nav_UserAccounts"],
+        "Printing" => Loc["Nav_Printing"],
+        "Reports" => Loc["Nav_Reports"],
+        "WarehouseHub" => Loc.IsKurdish ? "بەشی سەرەکی مەخزەن" : "مركز إدارة المخزن",
+        "Settings" => Loc["Nav_Settings"],
+        _ => tabId
+    };
+
     public async Task InitializeAsync()
     {
         await DbInitializer.InitializeAsync(_context);

@@ -481,13 +481,13 @@ public class SuppliersViewModel : BaseViewModel
             var suppliers = await service.GetSuppliersAsync(SearchQuery);
             var invoices = await db.PurchaseInvoices.AsNoTracking().ToListAsync();
 
-            SupplierCards.Clear();
+            var cardsList = new List<SupplierCardItem>();
             foreach (var s in suppliers)
             {
                 decimal totalStockVal = s.Products.Where(p => !p.IsDeleted).Sum(p => p.Cost * p.StockQuantity);
                 int invCount = invoices.Count(i => i.SupplierId == s.Id || (i.SupplierName != null && i.SupplierName.Equals(s.Name, StringComparison.OrdinalIgnoreCase)));
 
-                SupplierCards.Add(new SupplierCardItem
+                cardsList.Add(new SupplierCardItem
                 {
                     Id = s.Id,
                     Name = s.Name,
@@ -501,6 +501,15 @@ public class SuppliersViewModel : BaseViewModel
                     TotalStockValue = totalStockVal
                 });
             }
+
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                SupplierCards.Clear();
+                foreach (var c in cardsList)
+                {
+                    SupplierCards.Add(c);
+                }
+            });
         }
         catch { }
     }
@@ -509,10 +518,6 @@ public class SuppliersViewModel : BaseViewModel
     {
         try
         {
-            SupplierProducts.Clear();
-            SupplierInvoices.Clear();
-            SupplierTransactions.Clear();
-
             using var db = new AppDbContext();
             var service = new SupplierService(db);
             var fullSupplier = await service.GetSupplierByIdAsync(supplierId);
@@ -525,12 +530,8 @@ public class SuppliersViewModel : BaseViewModel
             SelectedSupplier = fullSupplier;
 
             // 1. Products
-            decimal totalGoodsValue = 0;
-            foreach (var p in fullSupplier.Products.Where(p => !p.IsDeleted))
-            {
-                SupplierProducts.Add(p);
-                totalGoodsValue += (p.Cost * p.StockQuantity);
-            }
+            var productsList = fullSupplier.Products.Where(p => !p.IsDeleted).ToList();
+            decimal totalGoodsValue = productsList.Sum(p => p.Cost * p.StockQuantity);
 
             // 2. Invoices
             var invList = await db.PurchaseInvoices
@@ -540,25 +541,35 @@ public class SuppliersViewModel : BaseViewModel
                 .OrderByDescending(pi => pi.CreatedAt)
                 .ToListAsync();
 
-            foreach (var inv in invList)
-            {
-                SupplierInvoices.Add(inv);
-            }
-
             // 3. Transactions
             var txs = await service.GetSupplierTransactionsAsync(fullSupplier.Id);
-            decimal totalPaid = 0;
-            foreach (var t in txs)
-            {
-                SupplierTransactions.Add(t);
-                if (t.TransactionType == "Payment") totalPaid += t.Amount;
-            }
+            decimal totalPaid = txs.Where(t => t.TransactionType == "Payment").Sum(t => t.Amount);
 
-            SupplierProductsCount = SupplierProducts.Count;
-            SupplierInvoicesCount = SupplierInvoices.Count;
-            SupplierTotalStockValue = totalGoodsValue;
-            SupplierTotalPaid = totalPaid;
-            SupplierNetBalance = fullSupplier.OpeningBalance + totalGoodsValue - totalPaid;
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                SupplierProducts.Clear();
+                foreach (var p in productsList)
+                {
+                    SupplierProducts.Add(p);
+                }
+
+                SupplierInvoices.Clear();
+                foreach (var inv in invList)
+                {
+                    SupplierInvoices.Add(inv);
+                }
+
+                SupplierTransactions.Clear();
+                foreach (var t in txs)
+                {
+                    SupplierTransactions.Add(t);
+                }
+
+                SupplierProductsCount = SupplierProducts.Count;
+                SupplierInvoicesCount = SupplierInvoices.Count;
+                SupplierTotalStockValue = totalGoodsValue;
+                SupplierNetBalance = SelectedSupplier.Balance;
+            });
         }
         catch { }
     }

@@ -273,36 +273,40 @@ public class SupplierOrdersViewModel : BaseViewModel
     {
         try
         {
-            var orders = await _context.SupplierOrders
+            using var db = new AppDbContext();
+            var orders = await db.SupplierOrders
                 .Include(o => o.Supplier)
                 .Include(o => o.Items)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
 
-            AllOrders.Clear();
-            foreach (var ord in orders)
+            Application.Current?.Dispatcher?.Invoke(() =>
             {
-                AllOrders.Add(ord);
-            }
+                AllOrders.Clear();
+                foreach (var ord in orders)
+                {
+                    AllOrders.Add(ord);
+                }
 
-            // Calculate KPIs
-            TotalOrdersCount = AllOrders.Count;
-            PendingOrdersCount = AllOrders.Count(o => o.Status == OrderStatus.Pending);
-            InPrepOrdersCount = AllOrders.Count(o => o.Status == OrderStatus.InPreparation);
-            DeliveredOrdersCount = AllOrders.Count(o => o.Status == OrderStatus.Delivered);
-            TotalOrdersValue = AllOrders.Sum(o => o.TotalAmount);
-            OnPropertyChanged(nameof(HasPendingOrders));
+                // Calculate KPIs
+                TotalOrdersCount = AllOrders.Count;
+                PendingOrdersCount = AllOrders.Count(o => o.Status == OrderStatus.Pending);
+                InPrepOrdersCount = AllOrders.Count(o => o.Status == OrderStatus.InPreparation);
+                DeliveredOrdersCount = AllOrders.Count(o => o.Status == OrderStatus.Delivered);
+                TotalOrdersValue = AllOrders.Sum(o => o.TotalAmount);
+                OnPropertyChanged(nameof(HasPendingOrders));
 
-            ApplyFilter();
+                ApplyFilter();
 
-            if (SelectedOrder != null)
-            {
-                SelectedOrder = AllOrders.FirstOrDefault(o => o.Id == SelectedOrder.Id);
-            }
-            else if (FilteredOrders.Any())
-            {
-                SelectedOrder = FilteredOrders.First();
-            }
+                if (SelectedOrder != null)
+                {
+                    SelectedOrder = AllOrders.FirstOrDefault(o => o.Id == SelectedOrder.Id);
+                }
+                else if (FilteredOrders.Any())
+                {
+                    SelectedOrder = FilteredOrders.First();
+                }
+            });
         }
         catch (Exception ex)
         {
@@ -334,11 +338,15 @@ public class SupplierOrdersViewModel : BaseViewModel
             );
         }
 
-        FilteredOrders.Clear();
-        foreach (var item in query)
+        var list = query.ToList();
+        Application.Current?.Dispatcher?.Invoke(() =>
         {
-            FilteredOrders.Add(item);
-        }
+            FilteredOrders.Clear();
+            foreach (var item in list)
+            {
+                FilteredOrders.Add(item);
+            }
+        });
     }
 
     private async Task UpdateSelectedOrderStatusAsync(OrderStatus newStatus)

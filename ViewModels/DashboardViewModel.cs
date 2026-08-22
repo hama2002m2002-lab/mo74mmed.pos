@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using Microsoft.EntityFrameworkCore;
 using HamoPos.Data;
@@ -95,7 +96,6 @@ public class DashboardViewModel : BaseViewModel
     public DashboardViewModel()
     {
         RefreshCommand = new AsyncRelayCommand(async () => await LoadDashboardDataAsync());
-        _ = LoadDashboardDataAsync();
     }
 
     public async Task LoadDashboardDataAsync()
@@ -108,40 +108,47 @@ public class DashboardViewModel : BaseViewModel
 
             // 1. KPI Top Stats
             var todayStats = await saleService.GetTodayStatsAsync();
-            TodayRevenue = todayStats.TotalRevenue;
-            TodayInvoicesCount = todayStats.TotalSalesCount;
-
             var monthStats = await saleService.GetMonthlyStatsAsync();
-            MonthlyRevenue = monthStats.MonthlyRevenue;
-
-            TotalProductsCount = await productService.GetTotalProductsCountAsync();
-
+            int totalProducts = await productService.GetTotalProductsCountAsync();
             var lowStockList = await productService.GetLowStockProductsAsync(6);
-            LowStockCount = lowStockList.Count;
-            LowStockProducts.Clear();
-            foreach (var item in lowStockList)
-            {
-                LowStockProducts.Add(item);
-            }
-
             var recentSalesList = await saleService.GetRecentSalesAsync(5);
-            RecentSales.Clear();
-            foreach (var s in recentSalesList)
+
+            Application.Current?.Dispatcher?.Invoke(() =>
             {
-                RecentSales.Add(s);
-            }
+                TodayRevenue = todayStats.TotalRevenue;
+                TodayInvoicesCount = todayStats.TotalSalesCount;
+                MonthlyRevenue = monthStats.MonthlyRevenue;
+                TotalProductsCount = totalProducts;
+                LowStockCount = lowStockList.Count;
 
-            // 2. Chart 1: Last 7 Days Sales Trend
+                LowStockProducts.Clear();
+                foreach (var item in lowStockList)
+                {
+                    LowStockProducts.Add(item);
+                }
+
+                RecentSales.Clear();
+                foreach (var s in recentSalesList)
+                {
+                    RecentSales.Add(s);
+                }
+            });
+
+            // 2. Visual Charts
             await LoadWeeklySalesChartAsync(db);
-
-            // 3. Chart 2: Payment Distribution Breakdown
             await LoadPaymentDistributionChartAsync(db);
-
-            // 4. Chart 3: Top 5 Best Selling Products
             await LoadTopSellingProductsChartAsync(db);
-
-            // 5. Chart 4: Peak Hours Activity
             await LoadHourlyActivityChartAsync(db);
+
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                OnPropertyChanged(nameof(Loc));
+                OnPropertyChanged(nameof(TodayRevenue));
+                OnPropertyChanged(nameof(TodayInvoicesCount));
+                OnPropertyChanged(nameof(MonthlyRevenue));
+                OnPropertyChanged(nameof(LowStockCount));
+                OnPropertyChanged(nameof(TotalProductsCount));
+            });
         }
         catch (Exception ex)
         {
@@ -163,10 +170,8 @@ public class DashboardViewModel : BaseViewModel
             .GroupBy(s => s.CreatedAt.Date)
             .ToDictionary(g => g.Key, g => new { Count = g.Count(), Total = g.Sum(x => x.TotalAmount) });
 
-        WeeklySalesBars.Clear();
         decimal maxRev = 0;
         decimal weekTotal = 0;
-
         var cultureAr = new CultureInfo("ar-IQ");
         var daysList = new List<WeeklySalesBarItem>();
 
@@ -214,6 +219,7 @@ public class DashboardViewModel : BaseViewModel
 
         // Scale bar heights nicely (between 14px min and 130px max)
         double maxBarH = 130.0;
+        var finalBars = new List<WeeklySalesBarItem>();
         foreach (var d in daysList)
         {
             if (maxRev > 0)
@@ -224,8 +230,17 @@ public class DashboardViewModel : BaseViewModel
             {
                 d.BarHeight = 16.0;
             }
-            WeeklySalesBars.Add(d);
+            finalBars.Add(d);
         }
+
+        Application.Current?.Dispatcher?.Invoke(() =>
+        {
+            WeeklySalesBars.Clear();
+            foreach (var b in finalBars)
+            {
+                WeeklySalesBars.Add(b);
+            }
+        });
     }
 
     private string GetKurdishDayName(DayOfWeek dow) => dow switch
@@ -247,7 +262,6 @@ public class DashboardViewModel : BaseViewModel
             .Where(s => s.CreatedAt >= startOfMonth && s.Status == "Completed")
             .ToListAsync();
 
-        PaymentDistribution.Clear();
         decimal totalMonth = sales.Sum(s => s.TotalAmount);
 
         var cashSales = sales.Where(s => s.PaymentMethod == "Cash").Sum(s => s.TotalAmount);
@@ -255,9 +269,10 @@ public class DashboardViewModel : BaseViewModel
         var cardSales = sales.Where(s => s.PaymentMethod == "Card" || s.PaymentMethod == "Visa" || s.PaymentMethod == "MasterCard").Sum(s => s.TotalAmount);
         var partialSales = sales.Where(s => s.PaymentMethod == "Partial").Sum(s => s.TotalAmount);
 
+        var finalDist = new List<PaymentDistributionItem>();
         if (totalMonth == 0)
         {
-            PaymentDistribution.Add(new PaymentDistributionItem
+            finalDist.Add(new PaymentDistributionItem
             {
                 MethodName = Loc.IsKurdish ? "نەقد (کاش)" : "نقداً (كاش)",
                 Amount = 0,
@@ -265,7 +280,7 @@ public class DashboardViewModel : BaseViewModel
                 ColorHex = "#10B981",
                 Icon = "💵"
             });
-            PaymentDistribution.Add(new PaymentDistributionItem
+            finalDist.Add(new PaymentDistributionItem
             {
                 MethodName = Loc.IsKurdish ? "قەرز (آجل)" : "آجل (ذمم ديون)",
                 Amount = 0,
@@ -273,56 +288,66 @@ public class DashboardViewModel : BaseViewModel
                 ColorHex = "#F59E0B",
                 Icon = "📝"
             });
-            return;
+        }
+        else
+        {
+            if (cashSales > 0)
+            {
+                finalDist.Add(new PaymentDistributionItem
+                {
+                    MethodName = Loc.IsKurdish ? "نەقد (کاش)" : "نقداً (كاش)",
+                    Amount = cashSales,
+                    Percentage = (double)(cashSales / totalMonth) * 100.0,
+                    ColorHex = "#10B981",
+                    Icon = "💵"
+                });
+            }
+
+            if (debtSales > 0)
+            {
+                finalDist.Add(new PaymentDistributionItem
+                {
+                    MethodName = Loc.IsKurdish ? "قەرز (آجل)" : "آجل (ذمم ديون)",
+                    Amount = debtSales,
+                    Percentage = (double)(debtSales / totalMonth) * 100.0,
+                    ColorHex = "#F59E0B",
+                    Icon = "📝"
+                });
+            }
+
+            if (cardSales > 0)
+            {
+                finalDist.Add(new PaymentDistributionItem
+                {
+                    MethodName = Loc.IsKurdish ? "کارتی ئەلیکترۆنی" : "بطاقة دفع إلكتروني",
+                    Amount = cardSales,
+                    Percentage = (double)(cardSales / totalMonth) * 100.0,
+                    ColorHex = "#3B82F6",
+                    Icon = "💳"
+                });
+            }
+
+            if (partialSales > 0)
+            {
+                finalDist.Add(new PaymentDistributionItem
+                {
+                    MethodName = Loc.IsKurdish ? "پارەی بەشەکی" : "دفع جزئي",
+                    Amount = partialSales,
+                    Percentage = (double)(partialSales / totalMonth) * 100.0,
+                    ColorHex = "#8B5CF6",
+                    Icon = "⚖️"
+                });
+            }
         }
 
-        if (cashSales > 0 || totalMonth == 0)
+        Application.Current?.Dispatcher?.Invoke(() =>
         {
-            PaymentDistribution.Add(new PaymentDistributionItem
+            PaymentDistribution.Clear();
+            foreach (var item in finalDist)
             {
-                MethodName = Loc.IsKurdish ? "نەقد (کاش)" : "نقداً (كاش)",
-                Amount = cashSales,
-                Percentage = (double)(cashSales / totalMonth) * 100.0,
-                ColorHex = "#10B981",
-                Icon = "💵"
-            });
-        }
-
-        if (debtSales > 0)
-        {
-            PaymentDistribution.Add(new PaymentDistributionItem
-            {
-                MethodName = Loc.IsKurdish ? "قەرز (آجل)" : "آجل (ذمم ديون)",
-                Amount = debtSales,
-                Percentage = (double)(debtSales / totalMonth) * 100.0,
-                ColorHex = "#F59E0B",
-                Icon = "📝"
-            });
-        }
-
-        if (cardSales > 0)
-        {
-            PaymentDistribution.Add(new PaymentDistributionItem
-            {
-                MethodName = Loc.IsKurdish ? "کارتی ئەلیکترۆنی" : "بطاقة دفع إلكتروني",
-                Amount = cardSales,
-                Percentage = (double)(cardSales / totalMonth) * 100.0,
-                ColorHex = "#3B82F6",
-                Icon = "💳"
-            });
-        }
-
-        if (partialSales > 0)
-        {
-            PaymentDistribution.Add(new PaymentDistributionItem
-            {
-                MethodName = Loc.IsKurdish ? "پارەی بەشەکی" : "دفع جزئي",
-                Amount = partialSales,
-                Percentage = (double)(partialSales / totalMonth) * 100.0,
-                ColorHex = "#8B5CF6",
-                Icon = "⚖️"
-            });
-        }
+                PaymentDistribution.Add(item);
+            }
+        });
     }
 
     private async Task LoadTopSellingProductsChartAsync(AppDbContext db)
@@ -343,28 +368,38 @@ public class DashboardViewModel : BaseViewModel
             .Take(5)
             .ToListAsync();
 
-        TopProductsChart.Clear();
-        if (!items.Any()) return;
-
-        decimal maxTotal = items.Max(x => x.Total);
-        string[] colors = { "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EC4899" };
-        string[] badges = { "🥇 #1", "🥈 #2", "🥉 #3", "4️⃣ #4", "5️⃣ #5" };
-
-        for (int i = 0; i < items.Count; i++)
+        var finalProducts = new List<TopProductBarItem>();
+        if (items.Any())
         {
-            var p = items[i];
-            double percent = maxTotal > 0 ? (double)(p.Total / maxTotal) * 100.0 : 20.0;
-            TopProductsChart.Add(new TopProductBarItem
+            decimal maxTotal = items.Max(x => x.Total);
+            string[] colors = { "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EC4899" };
+            string[] badges = { "🥇 #1", "🥈 #2", "🥉 #3", "4️⃣ #4", "5️⃣ #5" };
+
+            for (int i = 0; i < items.Count; i++)
             {
-                Rank = i + 1,
-                RankBadge = badges[Math.Min(i, badges.Length - 1)],
-                ProductName = p.Name,
-                Quantity = p.Qty,
-                TotalAmount = p.Total,
-                BarPercent = Math.Max(12.0, percent),
-                BarColor = colors[i % colors.Length]
-            });
+                var p = items[i];
+                double percent = maxTotal > 0 ? (double)(p.Total / maxTotal) * 100.0 : 20.0;
+                finalProducts.Add(new TopProductBarItem
+                {
+                    Rank = i + 1,
+                    RankBadge = badges[Math.Min(i, badges.Length - 1)],
+                    ProductName = p.Name,
+                    Quantity = p.Qty,
+                    TotalAmount = p.Total,
+                    BarPercent = Math.Max(12.0, percent),
+                    BarColor = colors[i % colors.Length]
+                });
+            }
         }
+
+        Application.Current?.Dispatcher?.Invoke(() =>
+        {
+            TopProductsChart.Clear();
+            foreach (var item in finalProducts)
+            {
+                TopProductsChart.Add(item);
+            }
+        });
     }
 
     private async Task LoadHourlyActivityChartAsync(AppDbContext db)
@@ -374,8 +409,6 @@ public class DashboardViewModel : BaseViewModel
             .AsNoTracking()
             .Where(s => s.CreatedAt >= today && s.Status == "Completed")
             .ToListAsync();
-
-        HourlyActivities.Clear();
 
         // 4 Time slots
         var slots = new[]
@@ -414,7 +447,15 @@ public class DashboardViewModel : BaseViewModel
         foreach (var r in results)
         {
             r.ActivityPercent = maxSlotAmount > 0 ? Math.Max(12.0, (double)(r.TotalAmount / maxSlotAmount) * 100.0) : 15.0;
-            HourlyActivities.Add(r);
         }
+
+        Application.Current?.Dispatcher?.Invoke(() =>
+        {
+            HourlyActivities.Clear();
+            foreach (var r in results)
+            {
+                HourlyActivities.Add(r);
+            }
+        });
     }
 }
