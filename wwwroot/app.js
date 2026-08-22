@@ -1303,12 +1303,39 @@ function recalcOrderModalInvoice() {
   document.getElementById('oim-grandTotal').innerText = `${Number(grandTotal).toLocaleString()} د.ع`;
 }
 
+async function syncCloudNow() {
+  const btn = document.getElementById('syncCloudBtn');
+  if (btn) btn.innerHTML = '<span>⏳</span><span>جارٍ المزامنة مع السحابة...</span>';
+
+  const res = await callBackend('sync_cloud_orders');
+  if (res && res.success) {
+    alert('✔ تمت المزامنة مع السحابة وتحديث كافة طلبيات المناديب بنجاح!');
+    await loadRepOrders();
+    await loadInventory();
+    await loadDashboard();
+  }
+  if (btn) btn.innerHTML = '<span>🔄</span><span>مزامنة السحابة والطلبيات</span>';
+}
+
+async function acceptRepOrderDirectly(orderId) {
+  if (confirm('هل أنت متأكد من قبول واعتماد هذه الطلبية وخصم موادها من المخزن فوراً؟')) {
+    const res = await callBackend('accept_rep_order', { id: orderId, status: 'Delivered' });
+    if (res && res.success) {
+      alert('✔ تم قبول الطلبية، خصم المواد من المخزن، ومزامنة تطبيق المندوب بنجاح!');
+      await loadRepOrders();
+      await loadInventory();
+      await loadDashboard();
+    }
+  }
+}
+
 async function saveEditedRepOrder() {
   if (!activeOrderModalData) return;
 
+  const status = document.getElementById('oim-statusSelect')?.value || 'InPreparation';
   const payload = {
     id: activeOrderModalData.id,
-    status: document.getElementById('oim-statusSelect')?.value || 'InPreparation',
+    status: status,
     notes: document.getElementById('oim-notes')?.value || '',
     items: activeOrderModalData.items.map(i => ({
       id: i.id,
@@ -1317,11 +1344,20 @@ async function saveEditedRepOrder() {
     }))
   };
 
-  const res = await callBackend('save_rep_order_items', payload);
+  // If status is Delivered, also deduct stock
+  let res;
+  if (status === 'Delivered') {
+    res = await callBackend('accept_rep_order', payload);
+  } else {
+    res = await callBackend('save_rep_order_items', payload);
+  }
+
   if (res && res.success) {
     alert('✔ تم حفظ التعديلات وتحديث الوصل بنجاح!');
     closeOrderInvoiceModal();
     await loadRepOrders();
+    await loadInventory();
+    await loadDashboard();
   }
 }
 
@@ -1331,8 +1367,12 @@ function printRepOrderInvoice() {
 }
 
 async function updateOrderStatus(id, status) {
-  await callBackend('save_rep_order_items', { id, status });
-  await loadRepOrders();
+  if (status === 'Delivered') {
+    await acceptRepOrderDirectly(id);
+  } else {
+    await callBackend('save_rep_order_items', { id, status });
+    await loadRepOrders();
+  }
 }
 
 function openRepPortalModal() {

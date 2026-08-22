@@ -517,14 +517,87 @@ public class PosBridgeService
                                     item.UnitPrice = price;
                                     item.UpdatedAt = DateTime.UtcNow;
                                 }
-                                newTotal += (qty * price);
+                case "accept_rep_order":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var r = doc.RootElement;
+                    var orderId = r.GetProperty("id").GetGuid();
+                    string statusStr = r.TryGetProperty("status", out var stp) ? stp.GetString() ?? "Delivered" : "Delivered";
+
+                    var ord = await db.SupplierOrders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == orderId);
+                    if (ord != null)
+                    {
+                        if (Enum.TryParse<OrderStatus>(statusStr, out var status)) ord.Status = status;
+                        ord.UpdatedAt = DateTime.UtcNow;
+
+                        // Deduct items from warehouse stock if delivered
+                        if (ord.Status == OrderStatus.Delivered)
+                        {
+                            foreach (var item in ord.Items)
+                            {
+                                Product? prod = null;
+                                if (item.ProductId.HasValue)
+                                {
+                                    prod = await db.Products.FindAsync(item.ProductId.Value);
+                                }
+                                if (prod == null && !string.IsNullOrWhiteSpace(item.Barcode))
+                                {
+                                    prod = await db.Products.FirstOrDefaultAsync(p => p.Barcode == item.Barcode && !p.IsDeleted);
+                                }
+                                if (prod == null && !string.IsNullOrWhiteSpace(item.ProductName))
+                                {
+                                    prod = await db.Products.FirstOrDefaultAsync(p => p.Name == item.ProductName && !p.IsDeleted);
+                                }
+
+                                if (prod != null)
+                                {
+                                    prod.StockQuantity = Math.Max(0, prod.StockQuantity - item.Quantity);
+                                    if (prod.ItemsPerCarton > 0)
+                                    {
+                                        prod.CartonsCount = Math.Floor(prod.StockQuantity / prod.ItemsPerCarton);
+                                    }
+                                    prod.UpdatedAt = DateTime.UtcNow;
+                                }
                             }
-                            ord.TotalAmount = newTotal;
                         }
 
                         await db.SaveChangesAsync();
+
+                        // Trigger cloud sync to update rep mobile app catalog in real-time
+                        _ = Task.Run(async () =>
+                        {
+                            await CloudSyncService.Instance.PushProductsToCloudAsync();
+                        });
                     }
                     return JsonSerializer.Serialize(new { success = true });
+                }
+
+                case "sync_cloud_orders":
+                {
+                    await CloudSyncService.Instance.SyncAllAsync();
+                    var orders = await db.SupplierOrders
+                        .Include(o => o.Items)
+                        .OrderByDescending(o => o.OrderDate)
+                        .ToListAsync();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        orders = orders.Select(o => new
+                        {
+                            o.Id,
+                            o.OrderNumber,
+                            o.RepresentativeName,
+                            o.MarketName,
+                            o.MarketPhone,
+                            marketCity = o.MarketAddress,
+                            o.TotalAmount,
+                            status = o.Status.ToString(),
+                            date = o.OrderDate.ToString("yyyy/MM/dd hh:mm tt"),
+                            itemsCount = o.Items.Count,
+                            items = o.Items.Select(i => new { i.ProductName, i.Quantity, i.UnitPrice, i.TotalPrice })
+                        })
+                    });
                 }
 
                 // ==========================================
