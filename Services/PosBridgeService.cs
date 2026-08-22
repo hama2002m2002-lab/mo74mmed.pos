@@ -267,9 +267,9 @@ public class PosBridgeService
                         totalPieces = totalPieces,
                         products = prods.Select(p => new
                         {
-                            p.Id,
-                            p.Name,
-                            p.Barcode,
+                            id = p.Id,
+                            name = p.Name,
+                            barcode = p.Barcode ?? "",
                             category = p.Category?.Name ?? "عام",
                             supplierName = p.SupplierName ?? "",
                             cartonsCount = p.CartonsCount > 0 ? p.CartonsCount : (p.ItemsPerCarton > 0 ? Math.Floor(p.StockQuantity / p.ItemsPerCarton) : 0),
