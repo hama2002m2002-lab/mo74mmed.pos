@@ -1,5 +1,5 @@
 // ========================================================
-// 7amo.pos Next-Gen App State & Quixotic Core Logic
+// SchoolHub Modern Dashboard & POS App Logic
 // ========================================================
 
 const state = {
@@ -11,9 +11,9 @@ const state = {
   ],
   selectedInvoiceTabId: 1,
   products: [],
-  suppliers: [],
-  weeklyChart: null,
-  paymentChart: null
+  attendanceChart: null,
+  performanceChart: null,
+  activityChart: null
 };
 
 // C# Native Bridge Interface
@@ -37,7 +37,7 @@ async function callBackend(action, payload = {}) {
       window.chrome.webview.addEventListener('message', handler);
       window.chrome.webview.postMessage({ action, payload: JSON.stringify(payload), _callbackId: callbackId });
     } else {
-      console.log(`[C# Bridge Call] Action: ${action}`, payload);
+      console.log(`[C# Bridge] ${action}`, payload);
       resolve({ success: true, message: "Browser Mode" });
     }
   });
@@ -49,27 +49,16 @@ async function callBackend(action, payload = {}) {
 document.addEventListener('DOMContentLoaded', async () => {
   applyTheme(state.theme);
   lucide.createIcons();
-  startClock();
   setupGlobalKeyboardShortcuts();
   
   await loadProducts();
-  await loadSuppliersList();
   renderInvoiceTabs();
   renderCashierCart();
   await loadDashboard();
   await loadRepOrders();
   
-  setInterval(loadRepOrders, 4000); // 4s auto poll
+  setInterval(loadRepOrders, 4000);
 });
-
-function startClock() {
-  const update = () => {
-    const clock = document.getElementById('liveClock');
-    if (clock) clock.innerText = new Date().toLocaleTimeString('ar-IQ');
-  };
-  update();
-  setInterval(update, 1000);
-}
 
 function setupGlobalKeyboardShortcuts() {
   window.addEventListener('keydown', (e) => {
@@ -82,67 +71,42 @@ function setupGlobalKeyboardShortcuts() {
     } else if (e.key === 'F2') {
       e.preventDefault();
       switchTab('cashier');
-    } else if (e.key === 'F3') {
-      e.preventDefault();
-      switchTab('addProduct');
     }
   });
 }
 
 // ========================================================
-// TAB NAVIGATION (TOP PILL BAR & FLOATING RAIL DOCK)
+// TAB NAVIGATION
 // ========================================================
 function switchTab(tabId) {
   state.activeTab = tabId;
 
-  // 1. Hide all views
+  // 1. Hide all tabs
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
 
-  // 2. Reset Top Navigation Pills
-  document.querySelectorAll('.top-nav-btn').forEach(el => {
-    el.classList.remove('bg-emerald-600', 'text-white', 'shadow-sm');
-    el.classList.add('text-slate-500');
+  // 2. Reset sidebar items
+  document.querySelectorAll('.sidebar-item').forEach(el => {
+    el.classList.remove('sidebar-item-active');
   });
 
-  // 3. Reset Floating Rail Dock
-  document.querySelectorAll('.rail-btn').forEach(el => {
-    el.classList.remove('bg-emerald-600', 'text-white', 'shadow-md');
-    el.classList.add('text-slate-400');
-  });
-
-  // 4. Activate Selected View
+  // 3. Activate selected tab
   const tabEl = document.getElementById(`tab-${tabId}`);
   if (tabEl) tabEl.classList.remove('hidden');
 
-  const topBtn = document.getElementById(`top-nav-${tabId}`);
-  if (topBtn) {
-    topBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
-    topBtn.classList.remove('text-slate-500');
-  }
+  const sideBtn = document.getElementById(`sidebar-${tabId}`);
+  if (sideBtn) sideBtn.classList.add('sidebar-item-active');
 
-  const railBtn = document.getElementById(`rail-${tabId}`);
-  if (railBtn) {
-    railBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-md');
-    railBtn.classList.remove('text-slate-400');
-  }
-
-  // Focus Barcode on Cashier
   if (tabId === 'cashier') {
     document.getElementById('cashierBarcodeInput')?.focus();
   }
-
-  // Refresh View Data
   if (tabId === 'dashboard') loadDashboard();
-  if (tabId === 'inventory') loadInventory();
-  if (tabId === 'repOrders') loadRepOrders();
-  if (tabId === 'suppliers') loadSuppliers();
-  if (tabId === 'users') loadUsers();
+  if (tabId === 'notice') loadRepOrders();
 
   lucide.createIcons();
 }
 
 // ========================================================
-// THEME SWITCHER (DAY / LIGHT <-> NIGHT / DARK)
+// THEME SWITCHER
 // ========================================================
 function toggleTheme() {
   state.theme = state.theme === 'dark' ? 'light' : 'dark';
@@ -164,90 +128,40 @@ function applyTheme(theme) {
   }
 }
 
+function toggleLanguage() {
+  state.language = state.language === 'ar' ? 'ku' : 'ar';
+  document.getElementById('langBtnText').innerText = state.language === 'ar' ? 'العربية' : 'کوردی';
+}
+
 // ========================================================
-// DASHBOARD LOGIC (QUIXOTIC STATS & CHARTS)
+// DASHBOARD CHARTS (EXACT REPLICA FROM IMAGE)
 // ========================================================
 async function loadDashboard() {
   const res = await callBackend('get_dashboard_data');
-  if (!res || !res.success) return;
+  if (res && res.success) {
+    const totalInc = Number(res.monthlyRevenue || 1682500);
+    const incEl = document.getElementById('kpiTotalIncome');
+    if (incEl) incEl.innerText = '$' + totalInc.toLocaleString();
+  }
 
-  // 1. KPI Numbers
-  document.getElementById('kpiTodayRevenue').innerText = Number(res.todayRevenue || 0).toLocaleString() + ' د.ع';
-  document.getElementById('kpiTodayInvoices').innerText = Number(res.todayInvoices || 0).toLocaleString() + ' فاتورة';
-  document.getElementById('kpiMonthlyRevenue').innerText = Number(res.monthlyRevenue || 0).toLocaleString() + ' د.ع';
-  document.getElementById('kpiLowStockCount').innerText = Number(res.lowStockCount || 0).toLocaleString();
-  
-  const dailyAvg = Math.round((res.monthlyRevenue || 0) / 30);
-  const avgEl = document.getElementById('kpiDailyAvg');
-  if (avgEl) avgEl.innerText = Number(dailyAvg).toLocaleString() + ' د.ع';
-
-  // 2. Quixotic Striped & Highlighted Weekly Chart
-  renderQuixoticWeeklyChart(res.weeklyTrend || []);
-
-  // 3. Quixotic Donut Payment Chart
-  renderQuixoticPaymentChart(res.payments || { cash: 0, card: 0, debt: 0 });
-
-  // 4. Recent Sales History Table
-  renderRecentSalesTable(res.recentSales || []);
+  renderAttendanceChart();
+  renderPerformanceChart();
+  renderActivitySplineChart();
 }
 
-function renderQuixoticWeeklyChart(data) {
-  const ctx = document.getElementById('weeklyChart');
+function renderAttendanceChart() {
+  const ctx = document.getElementById('attendanceChart');
   if (!ctx) return;
 
-  if (state.weeklyChart) state.weeklyChart.destroy();
+  if (state.attendanceChart) state.attendanceChart.destroy();
 
-  const isDark = state.theme === 'dark';
-  const labels = data.map(d => d.dayName);
-  const values = data.map(d => d.revenue);
-  const maxVal = Math.max(...values, 1);
-
-  // Peak bar gets solid dark emerald green (#065F46 / #059669), other bars get soft striped/translucent green
-  const barColors = values.map(v => (v === maxVal && v > 0) ? '#059669' : (isDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(5, 150, 105, 0.38)'));
-
-  state.weeklyChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        data: values,
-        backgroundColor: barColors,
-        borderRadius: 20,
-        borderSkipped: false,
-        barPercentage: 0.55
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { 
-          grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }, 
-          ticks: { color: isDark ? '#94A3B8' : '#6B7280', font: { family: 'Plus Jakarta Sans', size: 10 } } 
-        },
-        x: { 
-          grid: { display: false }, 
-          ticks: { color: isDark ? '#94A3B8' : '#6B7280', font: { family: 'Cairo', weight: 'bold', size: 11 } } 
-        }
-      }
-    }
-  });
-}
-
-function renderQuixoticPaymentChart(payments) {
-  const ctx = document.getElementById('paymentChart');
-  if (!ctx) return;
-
-  if (state.paymentChart) state.paymentChart.destroy();
-
-  state.paymentChart = new Chart(ctx, {
+  state.attendanceChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['نقداً', 'بطاقة', 'آجل'],
+      labels: ['Present', 'Absent'],
       datasets: [{
-        data: [payments.cash || 0, payments.card || 0, payments.debt || 0],
-        backgroundColor: ['#059669', '#3B82F6', '#F59E0B'],
+        data: [80, 20],
+        backgroundColor: ['#A78BFA', '#FBBF24'],
         borderWidth: 0
       }]
     },
@@ -260,33 +174,115 @@ function renderQuixoticPaymentChart(payments) {
   });
 }
 
-function renderRecentSalesTable(sales) {
-  const tbody = document.getElementById('dashRecentSalesTbody');
-  if (!tbody) return;
+function renderPerformanceChart() {
+  const ctx = document.getElementById('performanceChart');
+  if (!ctx) return;
 
-  if (sales.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">لا توجد مبيعات مسجلة حتى الآن</td></tr>';
-    return;
-  }
+  if (state.performanceChart) state.performanceChart.destroy();
 
-  tbody.innerHTML = '';
-  sales.forEach(s => {
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
-    tr.innerHTML = `
-      <td class="py-3.5 font-bold font-mono text-emerald-600 dark:text-emerald-400">${s.InvoiceNumber}</td>
-      <td class="py-3.5 text-slate-500 dark:text-slate-400">${s.createdAt}</td>
-      <td class="py-3.5"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${s.PaymentMethod === 'Cash' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400'}">${s.PaymentMethod === 'Cash' ? '💵 نقداً' : s.PaymentMethod}</span></td>
-      <td class="py-3.5"><span class="text-emerald-600 font-bold">● مكتمل</span></td>
-      <td class="py-3.5 text-left font-black text-slate-900 dark:text-white">${Number(s.TotalAmount).toLocaleString()} د.ع</td>
-    `;
-    tbody.appendChild(tr);
+  const isDark = state.theme === 'dark';
+
+  state.performanceChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      datasets: [
+        {
+          label: 'Class 10',
+          data: [95, 60, 75, 90, 65],
+          backgroundColor: '#38BDF8',
+          borderRadius: 6,
+          barPercentage: 0.7
+        },
+        {
+          label: 'Class 11',
+          data: [65, 80, 60, 75, 45],
+          backgroundColor: '#FBBF24',
+          borderRadius: 6,
+          barPercentage: 0.7
+        },
+        {
+          label: 'Class 12',
+          data: [75, 65, 80, 70, 50],
+          backgroundColor: '#A78BFA',
+          borderRadius: 6,
+          barPercentage: 0.7
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { 
+          min: 0,
+          max: 100,
+          ticks: { stepSize: 25, callback: (v) => v + '%', color: isDark ? '#94A3B8' : '#94A3B8', font: { size: 10 } },
+          grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }
+        },
+        x: { 
+          ticks: { color: isDark ? '#94A3B8' : '#64748B', font: { size: 11, weight: 'bold' } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function renderActivitySplineChart() {
+  const ctx = document.getElementById('activitySplineChart');
+  if (!ctx) return;
+
+  if (state.activityChart) state.activityChart.destroy();
+
+  const isDark = state.theme === 'dark';
+
+  state.activityChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['1', '5', '10', '15', '20', '25', '30'],
+      datasets: [{
+        data: [50, 115, 65, 120, 75, 118, 85],
+        borderColor: '#FBBF24',
+        backgroundColor: 'rgba(251, 191, 36, 0.12)',
+        tension: 0.45,
+        fill: true,
+        pointBackgroundColor: '#FBBF24',
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { 
+          min: 40,
+          max: 160,
+          ticks: { stepSize: 40, color: isDark ? '#94A3B8' : '#94A3B8', font: { size: 10 } },
+          grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }
+        },
+        x: { 
+          grid: { display: false },
+          ticks: { display: false }
+        }
+      }
+    }
   });
 }
 
 // ========================================================
-// CASHIER / POS (MULTI-TABS & RAPID CHECKOUT)
+// CASHIER / POS SYSTEM (RAPID CHECKOUT)
 // ========================================================
+async function loadProducts() {
+  const res = await callBackend('get_pos_products');
+  if (res && res.success) {
+    state.products = res.products || [];
+  }
+}
+
 function getCurrentTab() {
   return state.invoiceTabs.find(t => t.id === state.selectedInvoiceTabId) || state.invoiceTabs[0];
 }
@@ -299,12 +295,12 @@ function renderInvoiceTabs() {
   state.invoiceTabs.forEach(t => {
     const isSel = t.id === state.selectedInvoiceTabId;
     const tabEl = document.createElement('div');
-    tabEl.className = `q-pill-btn flex items-center gap-2 px-4 py-2 cursor-pointer text-xs font-bold transition shadow-sm ${isSel ? 'bg-emerald-600 text-white shadow-md' : 'q-card text-slate-600 dark:text-slate-300 hover:border-emerald-500'}`;
+    tabEl.className = `flex items-center gap-2 px-3.5 py-1.5 rounded-xl cursor-pointer text-xs font-bold transition ${isSel ? 'bg-sky-500 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`;
     tabEl.onclick = () => selectInvoiceTab(t.id);
     tabEl.innerHTML = `
       <span>${t.title}</span>
       <span class="bg-white/20 px-1.5 py-0.2 rounded-full text-[10px]">${t.items.length}</span>
-      ${state.invoiceTabs.length > 1 ? `<button onclick="event.stopPropagation(); closeInvoiceTab(${t.id})" class="text-rose-200 hover:text-white px-1 text-xs">✕</button>` : ''}
+      ${state.invoiceTabs.length > 1 ? `<button onclick="event.stopPropagation(); closeInvoiceTab(${t.id})" class="text-rose-200 hover:text-white px-1">✕</button>` : ''}
     `;
     container.appendChild(tabEl);
   });
@@ -413,19 +409,19 @@ function renderCashierCart() {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
     tr.innerHTML = `
-      <td class="p-3.5 font-bold text-slate-400">${index + 1}</td>
-      <td class="p-3.5 font-bold">${item.name}</td>
-      <td class="p-3.5 font-bold text-emerald-600 dark:text-emerald-400">${Number(item.price).toLocaleString()} د.ع</td>
-      <td class="p-3.5 text-center">
-        <div class="inline-flex items-center gap-2 q-card px-2.5 py-1 rounded-xl shadow-sm">
-          <button onclick="updateCartItemQty('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 text-rose-600 font-bold">-</button>
-          <span class="font-bold px-2">${item.qty}</span>
-          <button onclick="updateCartItemQty('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 text-emerald-600 font-bold">+</button>
+      <td class="p-3 font-bold text-slate-400">${index + 1}</td>
+      <td class="p-3 font-bold">${item.name}</td>
+      <td class="p-3 font-bold text-sky-500">${Number(item.price).toLocaleString()} د.ع</td>
+      <td class="p-3 text-center">
+        <div class="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-xl">
+          <button onclick="updateCartItemQty('${item.id}', -1)" class="w-5 h-5 rounded text-rose-500 font-bold">-</button>
+          <span class="font-bold px-1">${item.qty}</span>
+          <button onclick="updateCartItemQty('${item.id}', 1)" class="w-5 h-5 rounded text-emerald-500 font-bold">+</button>
         </div>
       </td>
-      <td class="p-3.5 font-black text-slate-900 dark:text-white">${Number(item.price * item.qty).toLocaleString()} د.ع</td>
-      <td class="p-3.5 text-center">
-        <button onclick="removeCartItem('${item.id}')" class="text-rose-500 hover:text-rose-600 font-bold p-1 text-xs">🗑</button>
+      <td class="p-3 font-black text-slate-800 dark:text-white">${Number(item.price * item.qty).toLocaleString()} د.ع</td>
+      <td class="p-3 text-center">
+        <button onclick="removeCartItem('${item.id}')" class="text-rose-500 hover:text-rose-600 font-bold text-xs">🗑</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -463,9 +459,9 @@ function setPaymentMethod(pm) {
     const btn = document.getElementById(`pm-${m}`);
     if (btn) {
       if (m === pm) {
-        btn.className = 'flex-1 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md';
+        btn.className = 'flex-1 py-1.5 bg-sky-500 text-white font-bold text-xs rounded-xl shadow-md';
       } else {
-        btn.className = 'flex-1 py-2 q-card text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl';
+        btn.className = 'flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-xs rounded-xl';
       }
     }
   });
@@ -487,7 +483,7 @@ async function submitCashierSale() {
 
   const res = await callBackend('complete_sale', payload);
   if (res && res.success) {
-    alert(`✔ تم إتمام وحفظ الوصل بنجاح!\nرقم الفاتورة: ${res.invoiceNumber}\nالمبلغ المطلوب: ${Number(res.total).toLocaleString()} د.ع`);
+    alert(`✔ تم حفظ وإتمام الفاتورة بنجاح!\nرقم الفاتورة: ${res.invoiceNumber}\nالمبلغ المطلوب: ${Number(res.total).toLocaleString()} د.ع`);
     currentTab.items = [];
     document.getElementById('cashierDiscountInput').value = 0;
     document.getElementById('cashierPaidInput').value = 0;
@@ -498,102 +494,7 @@ async function submitCashierSale() {
 }
 
 // ========================================================
-// ADD PRODUCT & REPS LOGIC
-// ========================================================
-async function loadProducts() {
-  const res = await callBackend('get_pos_products');
-  if (res && res.success) {
-    state.products = res.products || [];
-  }
-}
-
-async function loadSuppliersList() {
-  const res = await callBackend('get_suppliers');
-  if (res && res.success) {
-    state.suppliers = res.suppliers || [];
-    const supSelect = document.getElementById('ap-supplier');
-    if (supSelect) {
-      supSelect.innerHTML = '<option value="">بدون مندوب (مباشر)</option>';
-      state.suppliers.forEach(s => {
-        supSelect.innerHTML += `<option value="${s.name}">${s.name} (${s.company || 'شركة'})</option>`;
-      });
-    }
-  }
-}
-
-function generateRandomBarcode() {
-  const barcodeInput = document.getElementById('ap-barcode');
-  if (barcodeInput) {
-    barcodeInput.value = '628' + Math.floor(100000000 + Math.random() * 900000000);
-  }
-}
-
-function recalcAddProduct() {
-  const itemsPerCarton = Math.max(1, Number(document.getElementById('ap-itemsPerCarton')?.value || 1));
-  const cartonsCount = Math.max(0, Number(document.getElementById('ap-cartonsCount')?.value || 0));
-  const cost = Number(document.getElementById('ap-cost')?.value || 0);
-  const price = Number(document.getElementById('ap-price')?.value || 0);
-  const cartonPurchase = Number(document.getElementById('ap-cartonPurchase')?.value || 0);
-  const cartonSelling = Number(document.getElementById('ap-cartonSelling')?.value || 0);
-
-  const totalPieces = itemsPerCarton * cartonsCount;
-  const retailProfit = Math.max(0, price - cost);
-  const cartonProfit = Math.max(0, cartonSelling - cartonPurchase);
-
-  document.getElementById('ap-totalStockDisplay').innerText = `${totalPieces} قطعة`;
-  document.getElementById('ap-retailProfitDisplay').innerText = `${Number(retailProfit).toLocaleString()} د.ع`;
-  document.getElementById('ap-cartonProfitDisplay').innerText = `${Number(cartonProfit).toLocaleString()} د.ع`;
-}
-
-function clearAddProductForm() {
-  document.getElementById('ap-id').value = '';
-  document.getElementById('ap-name').value = '';
-  document.getElementById('ap-barcode').value = '';
-  document.getElementById('ap-category').value = '';
-  document.getElementById('ap-itemsPerCarton').value = '12';
-  document.getElementById('ap-cartonsCount').value = '5';
-  document.getElementById('ap-cost').value = '1000';
-  document.getElementById('ap-price').value = '1250';
-  document.getElementById('ap-cartonPurchase').value = '12000';
-  document.getElementById('ap-cartonSelling').value = '15000';
-  document.getElementById('addProductFormTitle').innerText = 'إضافة مادة جديدة للمخزن';
-  recalcAddProduct();
-}
-
-async function saveProductFull() {
-  const name = document.getElementById('ap-name')?.value.trim();
-  if (!name) {
-    alert('يرجى كتابة اسم المادة!');
-    return;
-  }
-
-  const itemsPerCarton = Math.max(1, Number(document.getElementById('ap-itemsPerCarton')?.value || 1));
-  const cartonsCount = Math.max(0, Number(document.getElementById('ap-cartonsCount')?.value || 0));
-  const totalStock = itemsPerCarton * cartonsCount;
-
-  const payload = {
-    id: document.getElementById('ap-id')?.value || undefined,
-    name: name,
-    barcode: document.getElementById('ap-barcode')?.value.trim() || undefined,
-    category: document.getElementById('ap-category')?.value.trim() || 'عام',
-    cost: Number(document.getElementById('ap-cost')?.value || 0),
-    price: Number(document.getElementById('ap-price')?.value || 0),
-    stockQuantity: totalStock,
-    piecesPerCarton: itemsPerCarton,
-    minStockAlert: Number(document.getElementById('ap-minStockAlert')?.value || 5)
-  };
-
-  const res = await callBackend('save_product', payload);
-  if (res && res.success) {
-    alert('✔ تم حفظ المادة بنجاح في قاعدة البيانات!');
-    clearAddProductForm();
-    await loadProducts();
-    switchTab('inventory');
-  }
-}
-
-// ========================================================
-// REP ORDERS & INVENTORY LOADERS
+// REP CLOUD ORDERS
 // ========================================================
 async function loadRepOrders() {
   const res = await callBackend('get_supplier_orders');
@@ -602,18 +503,15 @@ async function loadRepOrders() {
   const orders = res.orders || [];
   const pendingCount = orders.filter(o => o.status === 'Pending').length;
 
-  const topBadge = document.getElementById('repTopBadge');
+  const sideBadge = document.getElementById('repBadgeSidebar');
   const bellBadge = document.getElementById('repBellBadge');
-  const railBadge = document.getElementById('repRailBadge');
 
   if (pendingCount > 0) {
-    if (topBadge) { topBadge.innerText = pendingCount; topBadge.classList.remove('hidden'); }
-    if (bellBadge) { bellBadge.innerText = pendingCount; bellBadge.classList.remove('hidden'); }
-    if (railBadge) { railBadge.classList.remove('hidden'); }
+    if (sideBadge) { sideBadge.innerText = pendingCount; sideBadge.classList.remove('hidden'); }
+    if (bellBadge) { bellBadge.classList.remove('hidden'); }
   } else {
-    if (topBadge) topBadge.classList.add('hidden');
+    if (sideBadge) sideBadge.classList.add('hidden');
     if (bellBadge) bellBadge.classList.add('hidden');
-    if (railBadge) railBadge.classList.add('hidden');
   }
 
   const tbody = document.getElementById('repOrdersTableBody');
@@ -624,14 +522,14 @@ async function loadRepOrders() {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
     tr.innerHTML = `
-      <td class="p-4 font-mono font-bold text-emerald-600 dark:text-emerald-400">${o.orderNumber}</td>
-      <td class="p-4 font-bold">${o.marketName || '--'}</td>
-      <td class="p-4 text-slate-500">${o.representativeName || '--'}</td>
-      <td class="p-4 font-bold text-amber-500">${o.itemsCount} مواد</td>
-      <td class="p-4 font-black text-slate-900 dark:text-white">${Number(o.totalAmount).toLocaleString()} د.ع</td>
-      <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${o.status === 'Pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'}">${o.status === 'Pending' ? 'جديد قيد الانتظار' : o.status}</span></td>
-      <td class="p-4 text-center">
-        <button onclick="updateOrderStatus('${o.id}', 'Delivered')" class="q-pill-btn px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm">تسليم</button>
+      <td class="p-3 font-mono font-bold text-sky-500">${o.orderNumber}</td>
+      <td class="p-3 font-bold">${o.marketName || '--'}</td>
+      <td class="p-3 text-slate-500">${o.representativeName || '--'}</td>
+      <td class="p-3 font-bold text-amber-500">${o.itemsCount} مواد</td>
+      <td class="p-3 font-black text-slate-800 dark:text-white">${Number(o.totalAmount).toLocaleString()} د.ع</td>
+      <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${o.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">${o.status === 'Pending' ? 'قيد الانتظار' : o.status}</span></td>
+      <td class="p-3 text-center">
+        <button onclick="updateOrderStatus('${o.id}', 'Delivered')" class="px-3 py-1 bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs rounded-xl shadow-sm">تسليم</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -643,115 +541,10 @@ async function updateOrderStatus(id, status) {
   loadRepOrders();
 }
 
-async function loadInventory() {
-  const res = await callBackend('get_inventory');
-  if (!res || !res.success) return;
-
-  const tbody = document.getElementById('inventoryTableBody');
-  if (!tbody) return;
-
-  tbody.innerHTML = '';
-  (res.products || []).forEach(p => {
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
-    tr.innerHTML = `
-      <td class="p-4 font-bold">${p.name}</td>
-      <td class="p-4 font-mono text-slate-400">${p.barcode || '--'}</td>
-      <td class="p-4 text-slate-500">${p.category || 'عام'}</td>
-      <td class="p-4 font-bold text-blue-600 dark:text-blue-400">${Number(p.cost).toLocaleString()} د.ع</td>
-      <td class="p-4 font-bold text-emerald-600 dark:text-emerald-400">${Number(p.price).toLocaleString()} د.ع</td>
-      <td class="p-4 font-black ${p.stockQuantity <= p.minStockAlert ? 'text-rose-500 font-black' : ''}">${p.stockQuantity}</td>
-      <td class="p-4 text-center">
-        <button onclick="editProductFromInventory('${p.id}')" class="q-pill-btn px-3 py-1 q-card hover:bg-slate-100 text-emerald-600 font-bold text-xs">✏ تعديل</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function editProductFromInventory(id) {
-  const prod = state.products.find(p => p.id === id);
-  if (prod) {
-    switchTab('addProduct');
-    document.getElementById('ap-id').value = prod.id;
-    document.getElementById('ap-name').value = prod.name;
-    document.getElementById('ap-barcode').value = prod.barcode || '';
-    document.getElementById('ap-category').value = prod.category || 'عام';
-    document.getElementById('ap-cost').value = prod.cost;
-    document.getElementById('ap-price').value = prod.price;
-    document.getElementById('ap-itemsPerCarton').value = prod.piecesPerCarton || 1;
-    document.getElementById('ap-cartonsCount').value = Math.floor(prod.stockQuantity / (prod.piecesPerCarton || 1));
-    document.getElementById('addProductFormTitle').innerText = 'تعديل بيانات المادة';
-    recalcAddProduct();
-  }
-}
-
-async function loadSuppliers() {
-  const res = await callBackend('get_suppliers');
-  if (!res || !res.success) return;
-
-  const grid = document.getElementById('suppliersCardsGrid');
-  if (!grid) return;
-
-  grid.innerHTML = '';
-  (res.suppliers || []).forEach(s => {
-    const card = document.createElement('div');
-    card.className = 'q-card p-6 flex flex-col justify-between shadow-sm';
-    card.innerHTML = `
-      <div>
-        <div class="flex items-center justify-between mb-2">
-          <h4 class="font-black text-lg">${s.name}</h4>
-          <span class="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 px-3 py-0.5 rounded-full font-bold">مندوب</span>
-        </div>
-        <p class="text-xs text-slate-400 mb-1">الشركة: ${s.company || 'غير محدد'}</p>
-        <p class="text-xs text-slate-400">الهاتف: ${s.phone || '--'}</p>
-      </div>
-      <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-        <span class="text-xs text-slate-400 font-bold">الرصيد المستحق:</span>
-        <span class="text-base font-black text-amber-500">${Number(s.balance).toLocaleString()} د.ع</span>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
-}
-
-async function loadUsers() {
-  const res = await callBackend('get_users');
-  if (!res || !res.success) return;
-
-  const grid = document.getElementById('usersGrid');
-  if (!grid) return;
-
-  grid.innerHTML = '';
-  (res.users || []).forEach(u => {
-    const card = document.createElement('div');
-    card.className = 'q-card p-6 shadow-sm';
-    card.innerHTML = `
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center font-bold text-xl">👤</div>
-        <div>
-          <h4 class="font-black text-base">${u.fullName}</h4>
-          <span class="text-xs text-slate-400 font-mono">@${u.username} (${u.role})</span>
-        </div>
-      </div>
-      <div class="flex items-center justify-between text-xs pt-3 border-t border-slate-100 dark:border-slate-800">
-        <span class="text-slate-400">الحالة:</span>
-        <span class="font-bold ${u.isActive ? 'text-emerald-600' : 'text-rose-500'}">${u.isActive ? 'نشط ومفعل ✔' : 'معطل ✕'}</span>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
-}
-
 function openRepPortalModal() {
   document.getElementById('repModal')?.classList.remove('hidden');
 }
 
 function closeRepPortalModal() {
   document.getElementById('repModal')?.classList.add('hidden');
-}
-
-function toggleLanguage() {
-  state.language = state.language === 'ar' ? 'ku' : 'ar';
-  document.getElementById('langBtnText').innerText = state.language === 'ar' ? 'العربية' : 'کوردی';
 }

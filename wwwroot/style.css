@@ -1,49 +1,42 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800;900&display=swap');
 
 :root {
-  --bg-app: #F3F4F6;
+  --bg-app: #F3F5FA;
   --bg-card: #FFFFFF;
-  --bg-card-secondary: #F9FAFB;
-  --bg-card-hover: #F3F4F6;
-  --border-card: rgba(229, 231, 235, 0.9);
-  --text-main: #111827;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
+  --bg-card-secondary: #F8FAFC;
+  --bg-card-hover: #F1F5F9;
+  --border-card: rgba(226, 232, 240, 0.8);
+  --text-main: #1E293B;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
   
-  --brand-emerald: #059669;
-  --brand-emerald-dark: #065F46;
-  --brand-emerald-light: #D1FAE5;
-  --brand-emerald-glow: rgba(5, 150, 105, 0.25);
+  --brand-cyan: #0EA5E9;
+  --brand-cyan-light: #E0F2FE;
+  --brand-cyan-dark: #0369A1;
   
-  --accent-blue: #3B82F6;
-  --accent-amber: #F59E0B;
-  --accent-rose: #F43F5E;
+  --accent-yellow: #FBBF24;
+  --accent-purple: #A78BFA;
+  --accent-rose: #FB7185;
+  --accent-emerald: #10B981;
   
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 14px 0 rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.08);
-  --shadow-card: 0 2px 12px -2px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
 }
 
 .dark-theme {
-  --bg-app: #0A0E17;
-  --bg-card: #131A29;
-  --bg-card-secondary: #192236;
-  --bg-card-hover: #202B42;
-  --border-card: #212C42;
-  --text-main: #F9FAFB;
+  --bg-app: #0B0F19;
+  --bg-card: #151D2A;
+  --bg-card-secondary: #1C2638;
+  --bg-card-hover: #233047;
+  --border-card: #25334A;
+  --text-main: #F8FAFC;
   --text-secondary: #94A3B8;
   --text-muted: #64748B;
   
-  --brand-emerald: #10B981;
-  --brand-emerald-dark: #064E3B;
-  --brand-emerald-light: rgba(16, 185, 129, 0.18);
-  --brand-emerald-glow: rgba(16, 185, 129, 0.35);
+  --brand-cyan: #38BDF8;
+  --brand-cyan-light: rgba(56, 189, 248, 0.15);
+  --brand-cyan-dark: #0284C7;
   
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 14px 0 rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.5);
-  --shadow-card: 0 2px 14px -2px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -63,41 +56,35 @@ body {
   width: 100vw;
 }
 
-/* Quixotic Aesthetic Panels */
-.q-card {
+.sh-card {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: 24px;
+  border-radius: 20px;
   box-shadow: var(--shadow-card);
 }
 
-.q-card-secondary {
+.sh-card-secondary {
   background: var(--bg-card-secondary);
   border: 1px solid var(--border-card);
+  border-radius: 16px;
+}
+
+.sh-banner {
+  background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 50%, #06B6D4 100%);
   border-radius: 20px;
-}
-
-.q-pill-btn {
-  border-radius: 9999px;
-  transition: all 0.2s ease;
-}
-
-.q-pill-btn:hover {
-  transform: translateY(-1px);
-}
-
-.q-pill-btn:active {
-  transform: scale(0.97);
-}
-
-.q-hero-card {
-  background: linear-gradient(135deg, #059669 0%, #047857 50%, #064E3B 100%);
-  border-radius: 24px;
   color: #FFFFFF;
-  box-shadow: 0 14px 28px -6px rgba(4, 120, 87, 0.35);
+  box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.35);
 }
 
-/* Custom Scrollbars */
+/* Sidebar item active state */
+.sidebar-item-active {
+  background: var(--brand-cyan-light) !important;
+  color: var(--brand-cyan) !important;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -106,16 +93,16 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.4);
+  background: rgba(156, 163, 175, 0.35);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--brand-emerald);
+  background: var(--brand-cyan);
 }
 
-/* Input Focus Glow */
+/* Focus styles */
 input:focus, select:focus {
-  border-color: var(--brand-emerald) !important;
-  box-shadow: 0 0 0 3px var(--brand-emerald-glow) !important;
+  border-color: var(--brand-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2) !important;
   outline: none;
 }

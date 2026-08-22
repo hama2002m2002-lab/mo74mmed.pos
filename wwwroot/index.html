@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>7amo.pos - Quixotic Next-Gen Design</title>
+  <title>SchoolHub - Modern Dashboard & POS</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js CDN -->
@@ -15,639 +15,644 @@
 <body class="flex flex-col h-screen overflow-hidden select-none">
 
   <!-- ======================================================== -->
-  <!-- 0: TOP QUIXOTIC NAVIGATION BAR -->
+  <!-- MAIN APP CONTAINER -->
   <!-- ======================================================== -->
-  <header class="h-20 px-8 flex items-center justify-between z-30">
-    <!-- Brand Logo -->
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-md shadow-emerald-600/30">
-        <i data-lucide="layers" class="w-6 h-6 text-white"></i>
-      </div>
-      <div>
-        <h1 class="text-xl font-black tracking-tight flex items-center gap-2">
-          <span>7amo.pos</span>
-          <span class="text-[11px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-400 px-2 py-0.5 rounded-full">PRO</span>
-        </h1>
-      </div>
-    </div>
+  <div class="flex h-screen w-screen p-4 gap-4 overflow-hidden">
 
-    <!-- Center Navigation Pill Bar (Quixotic Style) -->
-    <div class="q-card p-1.5 flex items-center gap-1 shadow-sm">
-      <button onclick="switchTab('dashboard')" id="top-nav-dashboard" class="top-nav-btn px-5 py-2 rounded-full font-bold text-xs bg-emerald-600 text-white shadow-sm transition">
-        لوحة التحكم (Dashboard)
-      </button>
-      <button onclick="switchTab('cashier')" id="top-nav-cashier" class="top-nav-btn px-5 py-2 rounded-full font-bold text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition">
-        شاشة الكاشير والبيع
-      </button>
-      <button onclick="switchTab('addProduct')" id="top-nav-addProduct" class="top-nav-btn px-5 py-2 rounded-full font-bold text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition">
-        إضافة وتعديل مادة
-      </button>
-      <button onclick="switchTab('repOrders')" id="top-nav-repOrders" class="top-nav-btn px-5 py-2 rounded-full font-bold text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition relative">
-        <span>طلبيات المحلات</span>
-        <span id="repTopBadge" class="hidden absolute -top-1 -left-1 w-4 h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">0</span>
-      </button>
-      <button onclick="switchTab('inventory')" id="top-nav-inventory" class="top-nav-btn px-5 py-2 rounded-full font-bold text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition">
-        المخزن
-      </button>
-      <button onclick="switchTab('suppliers')" id="top-nav-suppliers" class="top-nav-btn px-5 py-2 rounded-full font-bold text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition">
-        المناديب
-      </button>
-      <button onclick="switchTab('users')" id="top-nav-users" class="top-nav-btn px-5 py-2 rounded-full font-bold text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition">
-        الكاشير
-      </button>
-    </div>
+    <!-- ======================================================== -->
+    <!-- LEFT SIDEBAR (EXACT BUTTONS FROM IMAGE) -->
+    <!-- ======================================================== -->
+    <aside class="w-60 sh-card flex flex-col justify-between p-4 overflow-y-auto z-20">
+      <div class="space-y-4">
+        <!-- Logo -->
+        <div class="flex items-center gap-2.5 px-2 py-1">
+          <div class="w-8 h-8 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-md shadow-sky-500/30">
+            🎓
+          </div>
+          <span class="font-extrabold text-base tracking-tight text-slate-800 dark:text-white">SchoolHub</span>
+        </div>
 
-    <!-- Right Controls: Search, Bell, Theme, Language & Avatar -->
-    <div class="flex items-center gap-3">
-      <!-- Live Clock Pill -->
-      <div id="liveClock" class="q-card px-3.5 py-2 text-xs font-bold text-slate-500 font-mono shadow-sm">
-        00:00:00
-      </div>
+        <!-- Section: MENU -->
+        <div>
+          <div class="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 px-3 mb-1.5 uppercase">MENU</div>
+          <nav class="space-y-1">
+            <button onclick="switchTab('dashboard')" id="sidebar-dashboard" class="sidebar-item w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition sidebar-item-active">
+              <i data-lucide="layout-dashboard" class="w-4 h-4 text-sky-500"></i>
+              <span>Dashboard</span>
+            </button>
 
-      <!-- Currency Badge -->
-      <div class="px-3.5 py-2 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 font-black text-xs">
-        د.ع IQD
-      </div>
+            <button onclick="switchTab('teachers')" id="sidebar-teachers" class="sidebar-item w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i data-lucide="graduation-cap" class="w-4 h-4 text-slate-400"></i>
+              <span>Teachers</span>
+            </button>
 
-      <!-- Theme Switcher (Day <-> Night) -->
-      <button onclick="toggleTheme()" class="q-card p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-sm" title="التبديل بين الوضع الليلي والنهاري">
-        <span id="themeIcon" class="text-base">🌙</span>
-      </button>
+            <button onclick="switchTab('students')" id="sidebar-students" class="sidebar-item w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
+              <span>Students</span>
+            </button>
 
-      <!-- Rep Bell with Notification Badge -->
-      <button onclick="switchTab('repOrders')" class="q-card p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-sm relative">
-        <i data-lucide="bell" class="w-4.5 h-4.5 text-slate-600 dark:text-slate-300"></i>
-        <span id="repBellBadge" class="hidden absolute top-0.5 right-0.5 w-4 h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center animate-pulse">0</span>
-      </button>
+            <button onclick="switchTab('attendance')" id="sidebar-attendance" class="sidebar-item w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i data-lucide="calendar-check" class="w-4 h-4 text-slate-400"></i>
+              <span>Attendance</span>
+            </button>
 
-      <!-- Language Toggle -->
-      <button onclick="toggleLanguage()" class="q-card px-3.5 py-2 rounded-full font-bold text-xs text-emerald-600 dark:text-emerald-400 shadow-sm flex items-center gap-1">
-        <i data-lucide="globe" class="w-3.5 h-3.5"></i>
-        <span id="langBtnText">العربية</span>
-      </button>
+            <button onclick="switchTab('finance')" id="sidebar-finance" class="sidebar-item w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <div class="flex items-center gap-3">
+                <i data-lucide="dollar-sign" class="w-4 h-4 text-slate-400"></i>
+                <span>Finance</span>
+              </div>
+              <span class="text-[10px] text-slate-400">›</span>
+            </button>
 
-      <!-- Profile Avatar -->
-      <div class="flex items-center gap-2 pr-2">
-        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-sm shadow-md">
-          👤
+            <button onclick="switchTab('notice')" id="sidebar-notice" class="sidebar-item w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative">
+              <div class="flex items-center gap-3">
+                <i data-lucide="bell" class="w-4 h-4 text-slate-400"></i>
+                <span>Notice</span>
+              </div>
+              <span id="repBadgeSidebar" class="hidden text-[9px] bg-rose-500 text-white font-bold px-1.5 py-0.2 rounded-full">0</span>
+            </button>
+
+            <button onclick="switchTab('calendar')" id="sidebar-calendar" class="sidebar-item w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+              <span>Calendar</span>
+            </button>
+
+            <button onclick="switchTab('library')" id="sidebar-library" class="sidebar-item w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i data-lucide="book-open" class="w-4 h-4 text-slate-400"></i>
+              <span>Library</span>
+            </button>
+
+            <button onclick="switchTab('message')" id="sidebar-message" class="sidebar-item w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i data-lucide="message-square" class="w-4 h-4 text-slate-400"></i>
+              <span>Message</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- Section: OTHER -->
+        <div>
+          <div class="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 px-3 mb-1.5 uppercase">OTHER</div>
+          <nav class="space-y-1">
+            <button onclick="switchTab('profile')" id="sidebar-profile" class="sidebar-item w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+              <span>Profile</span>
+            </button>
+
+            <button onclick="switchTab('setting')" id="sidebar-setting" class="sidebar-item w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
+              <span>Setting</span>
+            </button>
+
+            <button onclick="switchTab('logout')" id="sidebar-logout" class="sidebar-item w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i data-lucide="log-out" class="w-4 h-4 text-slate-400"></i>
+              <span>Log out</span>
+            </button>
+          </nav>
         </div>
       </div>
-    </div>
-  </header>
 
-  <!-- ======================================================== -->
-  <!-- MAIN WORKSPACE -->
-  <!-- ======================================================== -->
-  <div class="flex flex-1 overflow-hidden px-8 pb-6 gap-6">
+      <!-- Cashier & Mobile Rep Quick Trigger -->
+      <div class="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <button onclick="switchTab('cashier')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2">
+          <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+          <span>شاشة الكاشير والبيع</span>
+        </button>
 
-    <!-- FLOATING LEFT ICON RAIL (QUIXOTIC DOCK) -->
-    <aside class="w-16 q-card flex flex-col items-center justify-between py-6 shadow-sm">
-      <div class="space-y-4">
-        <button onclick="switchTab('dashboard')" id="rail-dashboard" class="rail-btn w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md transition" title="لوحة التحكم">
-          <i data-lucide="layout-grid" class="w-5 h-5"></i>
-        </button>
-        <button onclick="switchTab('cashier')" id="rail-cashier" class="rail-btn w-11 h-11 rounded-2xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-800 flex items-center justify-center transition" title="الكاشير والبيع">
-          <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-        </button>
-        <button onclick="switchTab('addProduct')" id="rail-addProduct" class="rail-btn w-11 h-11 rounded-2xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-800 flex items-center justify-center transition" title="إضافة مادة">
-          <i data-lucide="plus-circle" class="w-5 h-5"></i>
-        </button>
-        <button onclick="switchTab('repOrders')" id="rail-repOrders" class="rail-btn w-11 h-11 rounded-2xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-800 flex items-center justify-center transition relative" title="طلبيات المحلات">
-          <i data-lucide="truck" class="w-5 h-5"></i>
-          <span id="repRailBadge" class="hidden absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full"></span>
-        </button>
-        <button onclick="switchTab('inventory')" id="rail-inventory" class="rail-btn w-11 h-11 rounded-2xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-800 flex items-center justify-center transition" title="المخزن">
-          <i data-lucide="box" class="w-5 h-5"></i>
-        </button>
-        <button onclick="switchTab('suppliers')" id="rail-suppliers" class="rail-btn w-11 h-11 rounded-2xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-800 flex items-center justify-center transition" title="المناديب">
-          <i data-lucide="users" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <div class="space-y-3">
-        <button onclick="openRepPortalModal()" class="w-11 h-11 rounded-2xl text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 flex items-center justify-center transition" title="باركود المندوب للموبايل">
-          <i data-lucide="qr-code" class="w-5 h-5"></i>
+        <button onclick="openRepPortalModal()" class="w-full py-1.5 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 text-sky-600 dark:text-sky-400 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5">
+          <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+          <span>تطبيق المندوب</span>
         </button>
       </div>
     </aside>
 
-    <!-- CONTENT DISPLAY AREA -->
-    <main class="flex-1 overflow-y-auto pr-1">
+    <!-- ======================================================== -->
+    <!-- RIGHT MAIN CONTENT WORKSPACE -->
+    <!-- ======================================================== -->
+    <div class="flex-1 flex flex-col overflow-hidden space-y-4">
 
-      <!-- ======================================================== -->
-      <!-- 1: DASHBOARD VIEW (EXACT QUIXOTIC FINTECH AESTHETIC) -->
-      <!-- ======================================================== -->
-      <div id="tab-dashboard" class="tab-content space-y-6">
-        <!-- Hero Greeting & Action Header -->
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-3xl font-extrabold tracking-tight">أهلاً بك، محمد 👋</h2>
-            <p class="text-xs text-slate-400 mt-1">مرحباً بك في نظام إدارة المبيعات والمخزن المتكامل</p>
+      <!-- TOP HEADER (SEARCH & PROFILE) -->
+      <header class="h-14 sh-card px-6 flex items-center justify-between">
+        <!-- Search Input -->
+        <div class="relative w-80">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute right-3.5 top-2.5"></i>
+          <input type="text" placeholder="Search..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full pr-10 pl-4 py-1.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none">
+        </div>
+
+        <!-- Header Actions: Chat, Bell, Theme, Language & Avatar -->
+        <div class="flex items-center gap-3.5">
+          <!-- Chat Button -->
+          <button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <i data-lucide="message-circle" class="w-4.5 h-4.5"></i>
+          </button>
+
+          <!-- Notification Bell -->
+          <button onclick="switchTab('notice')" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 relative">
+            <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+            <span id="repBellBadge" class="hidden absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full"></span>
+          </button>
+
+          <!-- Theme Toggle (Day <-> Night) -->
+          <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300" title="تبديل الوضع الليلي / النهاري">
+            <span id="themeIcon">🌙</span>
+          </button>
+
+          <!-- Language Button -->
+          <button onclick="toggleLanguage()" class="px-3 py-1 rounded-full text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/60">
+            <span id="langBtnText">العربية</span>
+          </button>
+
+          <!-- User Avatar Profile (From Screenshot: Mia Williams / Student) -->
+          <div class="flex items-center gap-2.5 pl-1 border-r border-slate-200 dark:border-slate-800 pr-3">
+            <div class="text-left">
+              <div class="text-xs font-bold text-slate-800 dark:text-white leading-tight">Mia Williams</div>
+              <div class="text-[10px] text-slate-400">Student</div>
+            </div>
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" alt="Avatar" class="w-8 h-8 rounded-full object-cover ring-2 ring-sky-400">
           </div>
-          <div class="flex items-center gap-3">
-            <!-- Date Filter Pill -->
-            <div class="q-card px-4 py-2.5 rounded-full flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 shadow-sm cursor-pointer">
-              <i data-lucide="calendar" class="w-4 h-4 text-emerald-600"></i>
-              <span id="dashDateRange">اليوم: 22 آب 2026</span>
-              <span class="text-slate-400">⌵</span>
+        </div>
+      </header>
+
+      <!-- VIEWS CONTAINER -->
+      <main class="flex-1 overflow-y-auto pr-1">
+
+        <!-- ======================================================== -->
+        <!-- VIEW 1: DASHBOARD (EXACT SCHOOLHUB DESIGN FROM IMAGE) -->
+        <!-- ======================================================== -->
+        <div id="tab-dashboard" class="tab-content space-y-4">
+          <div class="grid grid-cols-12 gap-4">
+
+            <!-- LEFT 8-COLUMN MAIN BLOCK -->
+            <div class="col-span-8 space-y-4">
+
+              <!-- Cyan Banner Card -->
+              <div class="sh-banner p-6 relative overflow-hidden flex items-center justify-between">
+                <div class="space-y-2 z-10 max-w-md">
+                  <h2 class="text-xl font-black text-white leading-snug">
+                    Your teaching classes are increasing great about 30% than last year
+                  </h2>
+                  <div class="flex items-center gap-3 text-xs text-sky-100 font-mono pt-1">
+                    <span class="flex items-center gap-1">✉ heatersmorris@mail.com</span>
+                    <span class="flex items-center gap-1">📞 +28 1234 5678</span>
+                  </div>
+                </div>
+                <!-- 3D Book Graphic Placeholder -->
+                <div class="text-5xl opacity-90 select-none animate-bounce">
+                  🎓📚
+                </div>
+              </div>
+
+              <!-- 4 KPI Summary Cards Row -->
+              <div class="grid grid-cols-4 gap-3">
+                <div class="sh-card p-4">
+                  <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold">
+                    <span>Total Classes</span>
+                    <span class="text-emerald-500 font-black">↑ 15%</span>
+                  </div>
+                  <div class="text-2xl font-black text-slate-800 dark:text-white mt-1">147</div>
+                </div>
+
+                <div class="sh-card p-4">
+                  <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold">
+                    <span>Total Students</span>
+                    <span class="text-rose-500 font-black">↓ 5%</span>
+                  </div>
+                  <div id="kpiStudents" class="text-2xl font-black text-slate-800 dark:text-white mt-1">3,250</div>
+                </div>
+
+                <div class="sh-card p-4">
+                  <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold">
+                    <span>Total Hours</span>
+                    <span class="text-rose-500 font-black">↓ 10%</span>
+                  </div>
+                  <div class="text-2xl font-black text-slate-800 dark:text-white mt-1">104,687</div>
+                </div>
+
+                <div class="sh-card p-4">
+                  <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold">
+                    <span>Total Income</span>
+                    <span class="text-emerald-500 font-black">↑ 23%</span>
+                  </div>
+                  <div id="kpiTotalIncome" class="text-xl font-black text-slate-800 dark:text-white mt-1">$1,682,500</div>
+                </div>
+              </div>
+
+              <!-- Middle Charts Row (Student Attendance & Student Performance) -->
+              <div class="grid grid-cols-12 gap-4">
+                <!-- Attendance Donut Chart -->
+                <div class="col-span-5 sh-card p-4 flex flex-col justify-between">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-black text-slate-800 dark:text-white">Student Attendance</h3>
+                    <span class="text-slate-400 text-xs cursor-pointer">•••</span>
+                  </div>
+
+                  <div class="h-40 relative flex items-center justify-center my-2">
+                    <canvas id="attendanceChart"></canvas>
+                    <div class="absolute text-center">
+                      <div class="text-2xl font-black text-slate-800 dark:text-white">80%</div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-around text-[11px] font-bold pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <span class="flex items-center gap-1.5 text-purple-500"><span class="w-2.5 h-2.5 rounded-full bg-purple-400 inline-block"></span> Present</span>
+                    <span class="flex items-center gap-1.5 text-amber-500"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> Absent</span>
+                  </div>
+                </div>
+
+                <!-- Performance Multi-color Bar Chart -->
+                <div class="col-span-7 sh-card p-4 flex flex-col justify-between">
+                  <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-black text-slate-800 dark:text-white">Student Performance</h3>
+                    <select class="text-[10px] font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-slate-600 dark:text-slate-300">
+                      <option>Weekly ⌵</option>
+                      <option>Monthly</option>
+                    </select>
+                  </div>
+
+                  <div class="h-44 relative">
+                    <canvas id="performanceChart"></canvas>
+                  </div>
+
+                  <div class="flex items-center justify-center gap-4 text-[10px] font-bold text-slate-400 pt-1">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-400"></span> Class 10</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Class 11</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400"></span> Class 12</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Row (Tasks & Teaching Activity) -->
+              <div class="grid grid-cols-12 gap-4">
+                <!-- Tasks Checklist -->
+                <div class="col-span-5 sh-card p-4 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-black text-slate-800 dark:text-white">Tasks</h3>
+                    <button class="text-[10px] font-bold text-sky-500 hover:text-sky-600">+ Add Task</button>
+                  </div>
+                  <div class="relative">
+                    <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute right-3 top-2"></i>
+                    <input type="text" placeholder="Search Task" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pr-8 pl-3 py-1 text-xs">
+                  </div>
+                  <div class="space-y-2 text-xs">
+                    <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="rounded text-sky-500">
+                        <div>
+                          <div class="font-bold text-slate-700 dark:text-slate-200">Grade Student Essays</div>
+                          <div class="text-[10px] text-slate-400">April 24, 2024</div>
+                        </div>
+                      </label>
+                      <div class="flex gap-1 text-slate-400"><span>✏</span><span>🗑</span></div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked class="rounded text-sky-500">
+                        <div>
+                          <div class="font-bold text-slate-700 dark:text-slate-200">Update Lesson Plans</div>
+                          <div class="text-[10px] text-slate-400">April 25, 2024</div>
+                        </div>
+                      </label>
+                      <div class="flex gap-1 text-slate-400"><span>✏</span><span>🗑</span></div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked class="rounded text-sky-500">
+                        <div>
+                          <div class="font-bold text-slate-700 dark:text-slate-200">Attend Department Meeting</div>
+                          <div class="text-[10px] text-slate-400">April 26, 2024</div>
+                        </div>
+                      </label>
+                      <div class="flex gap-1 text-slate-400"><span>✏</span><span>🗑</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Teaching Activity Spline Wave Chart -->
+                <div class="col-span-7 sh-card p-4 flex flex-col justify-between">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-black text-slate-800 dark:text-white">Teaching Activity</h3>
+                    <select class="text-[10px] font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-slate-600 dark:text-slate-300">
+                      <option>Monthly ⌵</option>
+                    </select>
+                  </div>
+                  <div class="h-44 relative my-1">
+                    <canvas id="activitySplineChart"></canvas>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
-            <!-- Primary Action Button -->
-            <button onclick="switchTab('cashier')" class="q-pill-btn px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 flex items-center gap-2">
-              <i data-lucide="plus" class="w-4 h-4"></i>
-              <span>فاتورة بيع جديدة</span>
+            <!-- RIGHT 4-COLUMN BLOCK (CALENDAR & AGENDA) -->
+            <div class="col-span-4 space-y-4">
+              <!-- Interactive Calendar -->
+              <div class="sh-card p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                  <button class="text-slate-400 hover:text-slate-700">‹</button>
+                  <h3 class="text-xs font-black text-slate-800 dark:text-white">March 2030</h3>
+                  <button class="text-slate-400 hover:text-slate-700">›</button>
+                </div>
+
+                <!-- Calendar Weekdays -->
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400">
+                  <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                </div>
+
+                <!-- Calendar Dates -->
+                <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
+                  <span class="text-slate-300">28</span><span class="text-slate-300">29</span><span class="text-slate-300">30</span><span class="text-slate-300">31</span><span>01</span><span>02</span><span>03</span>
+                  <span>04</span><span>05</span><span>06</span><span>07</span><span>08</span><span>09</span><span>10</span>
+                  <span>11</span><span>12</span><span>13</span><span>14</span><span class="bg-sky-100 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 rounded-lg font-black py-0.5">15</span><span>16</span><span>17</span>
+                  <span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span>
+                  <span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span><span class="text-slate-300">01</span>
+                </div>
+              </div>
+
+              <!-- Agenda Cards List -->
+              <div class="sh-card p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-xs font-black text-slate-800 dark:text-white">Agenda</h3>
+                  <span class="text-slate-400 text-xs cursor-pointer">•••</span>
+                </div>
+
+                <!-- Agenda Item 1 -->
+                <div class="p-3 rounded-2xl border-l-4 border-l-sky-500 bg-sky-50/50 dark:bg-slate-900/50 space-y-1">
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="font-bold text-slate-700 dark:text-slate-200">History 11 AP World History</span>
+                    <span class="text-slate-400 font-mono">8:00 AM - 9:00 AM</span>
+                  </div>
+                  <div class="text-xs font-bold text-slate-800 dark:text-white">Review Recent Test Results</div>
+                </div>
+
+                <!-- Agenda Item 2 -->
+                <div class="p-3 rounded-2xl border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-slate-900/50 space-y-1">
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="font-bold text-slate-700 dark:text-slate-200">History 12</span>
+                    <span class="text-slate-400 font-mono">10:00 AM - 11:30 AM</span>
+                  </div>
+                  <div class="text-xs font-bold text-slate-800 dark:text-white">Lecture on Cold War</div>
+                </div>
+
+                <!-- Agenda Item 3 -->
+                <div class="p-3 rounded-2xl border-l-4 border-l-purple-500 bg-purple-50/50 dark:bg-slate-900/50 space-y-1">
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="font-bold text-slate-700 dark:text-slate-200">History 10A</span>
+                    <span class="text-slate-400 font-mono">4:30 PM - 5:30 PM</span>
+                  </div>
+                  <div class="text-xs font-bold text-slate-800 dark:text-white">Prepare for Tomorrow's Debate</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- VIEW 2: CASHIER / SALE SCREEN (FULLY FUNCTIONAL) -->
+        <!-- ======================================================== -->
+        <div id="tab-cashier" class="tab-content hidden h-full flex flex-col space-y-4">
+          <!-- Multi-Invoice Tabs Header -->
+          <div class="flex items-center justify-between sh-card p-3">
+            <div class="flex items-center gap-2 overflow-x-auto">
+              <div id="invoiceTabsContainer" class="flex items-center gap-2"></div>
+              <button onclick="addNewInvoiceTab()" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl shadow-sm">
+                <span>➕ إضافة فاتورة</span>
+              </button>
+            </div>
+            <button onclick="switchTab('dashboard')" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl">
+              🔙 العودة للرئيسية
             </button>
           </div>
-        </div>
 
-        <!-- Top Row 3 Columns (Payment Goal, Engagement Rate Chart, Total Balance Widget) -->
-        <div class="grid grid-cols-12 gap-6">
-
-          <!-- Column 1: Payment Goal & Hero Emerald Card -->
-          <div class="col-span-4 q-card p-6 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-4">
-              <div>
-                <h4 class="text-xs font-bold text-slate-400">مبيعات اليوم الإجمالية</h4>
-                <p class="text-sm font-black mt-0.5">الهدف اليومي والتحصيل</p>
-              </div>
-              <button class="w-8 h-8 rounded-full q-card flex items-center justify-center text-slate-400 hover:text-emerald-600">
-                ↗
-              </button>
-            </div>
-
-            <!-- The Signature Hero Emerald Card -->
-            <div class="q-hero-card p-5 relative overflow-hidden">
-              <div class="flex items-center justify-between mb-3">
-                <span class="font-black text-sm tracking-widest uppercase">7AMO PAY</span>
-                <span class="text-lg">📡</span>
-              </div>
-              <div class="text-[11px] opacity-80 mb-1">صافي مبيعات اليوم</div>
-              <div id="kpiTodayRevenue" class="text-3xl font-black tracking-tight mb-4">0 د.ع</div>
-              <div class="flex items-center justify-between text-xs opacity-90 font-mono">
-                <span>•••• 909090</span>
-                <span>EXP 09/26</span>
-              </div>
-            </div>
-
-            <!-- Weekly Revenue Pill & Count -->
-            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <div>
-                <span class="text-[11px] text-slate-400 block">فواتير اليوم المنجزة:</span>
-                <span id="kpiTodayInvoices" class="text-base font-black text-slate-800 dark:text-white">0 فاتورة</span>
-              </div>
-              <div class="px-3 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 rounded-full font-black text-xs">
-                +12.8% ↗
-              </div>
-            </div>
-          </div>
-
-          <!-- Column 2: Engagement / Sales Rate Bar Chart -->
-          <div class="col-span-5 q-card p-6 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-                  📊
+          <!-- Main Cashier Split -->
+          <div class="flex-1 flex gap-4 overflow-hidden">
+            <!-- Left Side: Barcode Scanner & Cart Items Table -->
+            <div class="flex-1 flex flex-col sh-card p-4 overflow-hidden">
+              <div class="flex gap-2 mb-3">
+                <div class="relative flex-1">
+                  <i data-lucide="barcode" class="w-5 h-5 text-sky-500 absolute right-3.5 top-2.5"></i>
+                  <input id="cashierBarcodeInput" onkeydown="handleBarcodeKeyDown(event)" type="text" placeholder="امسح الباركود أو ابحث عن المادة (اضغط Enter للإضافة السريعة)..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pr-11 pl-4 py-2.5 text-xs text-slate-800 dark:text-white font-mono">
                 </div>
-                <h4 class="text-sm font-black">حركة المبيعات الأسبوعية</h4>
               </div>
-              <div class="flex items-center gap-1 q-card p-1 rounded-full text-[11px] font-bold">
-                <button class="px-3 py-1 bg-emerald-600 text-white rounded-full">أسبوعي</button>
-                <button class="px-3 py-1 text-slate-400 hover:text-slate-700">شهري</button>
+
+              <div class="flex-1 overflow-y-auto border border-slate-100 dark:border-slate-800 rounded-xl">
+                <table class="w-full text-right text-xs">
+                  <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800 sticky top-0">
+                    <tr>
+                      <th class="p-3">ت</th>
+                      <th class="p-3">اسم المادة</th>
+                      <th class="p-3">سعر المفرد</th>
+                      <th class="p-3 text-center">الكمية</th>
+                      <th class="p-3">المجموع الكلي</th>
+                      <th class="p-3 text-center">حذف</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cashierCartTbody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                    <tr><td colspan="6" class="text-center py-16 text-slate-400">لا توجد مواد في هذه الفاتورة. امسح الباركود للبدء.</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            <!-- Chart Canvas Container -->
-            <div class="h-56 relative my-2">
-              <canvas id="weeklyChart"></canvas>
-            </div>
-
-            <div class="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span>متوسط المبيعات اليومي: <b id="kpiDailyAvg" class="text-slate-800 dark:text-white font-black">0 د.ع</b></span>
-              <span class="text-emerald-600 font-bold">+17.8% ذروة الأداء</span>
-            </div>
-          </div>
-
-          <!-- Column 3: Total Balance & Area Chart Widget -->
-          <div class="col-span-3 q-card p-6 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-2">
+            <!-- Right Side: Elevated Summary & Checkout Box -->
+            <div class="w-96 sh-card p-5 flex flex-col justify-between border-2 border-sky-500/30">
               <div>
-                <h4 class="text-xs font-bold text-slate-400">رصيد المخزن والشهر</h4>
-                <p class="text-xs font-black mt-0.5">القيمة الكلية</p>
+                <div class="text-center pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <span class="text-xs font-bold text-slate-400">إجمالي الفاتورة المطلوب</span>
+                  <div id="cashierTotalDisplay" class="text-3xl font-black text-sky-500 mt-1">0 د.ع</div>
+                </div>
+
+                <!-- Quick Cash Notes Buttons -->
+                <div class="my-3 space-y-2">
+                  <span class="text-[11px] font-bold text-slate-400 block">أزرار النقد السريع (المبلغ المستلم):</span>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button onclick="setPaidAmount(5000)" class="py-2 bg-slate-50 dark:bg-slate-900 hover:border-sky-500 border border-slate-200 dark:border-slate-800 text-xs font-bold rounded-xl">5,000 د.ع</button>
+                    <button onclick="setPaidAmount(10000)" class="py-2 bg-slate-50 dark:bg-slate-900 hover:border-sky-500 border border-slate-200 dark:border-slate-800 text-xs font-bold rounded-xl">10,000 د.ع</button>
+                    <button onclick="setPaidAmount(25000)" class="py-2 bg-slate-50 dark:bg-slate-900 hover:border-sky-500 border border-slate-200 dark:border-slate-800 text-xs font-bold rounded-xl">25,000 د.ع</button>
+                    <button onclick="setPaidAmount(50000)" class="py-2 bg-slate-50 dark:bg-slate-900 hover:border-sky-500 border border-slate-200 dark:border-slate-800 text-xs font-bold rounded-xl">50,000 د.ع</button>
+                  </div>
+                </div>
+
+                <!-- Calculation Details -->
+                <div class="space-y-2 text-xs">
+                  <div class="flex justify-between items-center text-slate-500">
+                    <span>المجموع الفرعي:</span>
+                    <span id="cashierSubtotal" class="font-bold text-slate-800 dark:text-white">0 د.ع</span>
+                  </div>
+                  <div class="flex justify-between items-center text-amber-500 font-bold">
+                    <span>الخصم الممنوح:</span>
+                    <input id="cashierDiscountInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-24 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-right font-bold">
+                  </div>
+                  <div class="flex justify-between items-center text-sky-500 font-bold">
+                    <span>المبلغ المستلم:</span>
+                    <input id="cashierPaidInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-24 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-right font-bold">
+                  </div>
+                  <div class="flex justify-between items-center text-slate-600 dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <span>المتبقي للزبون:</span>
+                    <span id="cashierChangeDisplay" class="font-black text-rose-500 text-sm">0 د.ع</span>
+                  </div>
+                </div>
+
+                <!-- Payment Method Selector -->
+                <div class="mt-4 flex gap-2">
+                  <button onclick="setPaymentMethod('Cash')" id="pm-Cash" class="flex-1 py-1.5 bg-sky-500 text-white font-bold text-xs rounded-xl shadow-md">💵 نقداً</button>
+                  <button onclick="setPaymentMethod('Card')" id="pm-Card" class="flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-xs rounded-xl">💳 بطاقة</button>
+                  <button onclick="setPaymentMethod('Debt')" id="pm-Debt" class="flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-xs rounded-xl">📝 آجل</button>
+                </div>
               </div>
-              <button class="w-8 h-8 rounded-full q-card flex items-center justify-center text-slate-400 hover:text-emerald-600">
-                ↗
-              </button>
-            </div>
 
-            <div class="text-center my-2">
-              <span class="text-xs text-slate-400 font-semibold block">إجمالي مبيعات الشهر</span>
-              <div id="kpiMonthlyRevenue" class="text-2xl font-black text-slate-900 dark:text-white mt-1">0 د.ع</div>
-            </div>
-
-            <!-- Mini Doughnut / Payment Breakdown -->
-            <div class="h-32 flex items-center justify-center my-1">
-              <canvas id="paymentChart"></canvas>
-            </div>
-
-            <!-- Send & Receive Buttons (Quixotic Action Pills) -->
-            <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <button onclick="switchTab('cashier')" class="q-pill-btn py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1">
-                <span>بيع ↑</span>
-              </button>
-              <button onclick="switchTab('addProduct')" class="q-pill-btn py-2 q-card hover:bg-slate-100 dark:hover:bg-slate-800 font-black text-xs text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1 shadow-sm">
-                <span>توريد ↓</span>
+              <!-- Complete Invoice Action Button -->
+              <button onclick="submitCashierSale()" class="w-full py-3.5 bg-sky-500 hover:bg-sky-600 text-white font-black text-sm rounded-xl transition shadow-lg shadow-sky-500/30 flex items-center justify-center gap-2 mt-3">
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                <span>إتمام البيع وحفظ الوصل (F12)</span>
               </button>
             </div>
           </div>
-
         </div>
 
-        <!-- Bottom Row (Recent Sales History & Amount of Credit / Rep Debts) -->
-        <div class="grid grid-cols-12 gap-6">
-
-          <!-- Bottom Left: Recent Sales History Table -->
-          <div class="col-span-8 q-card p-6">
-            <div class="flex items-center justify-between mb-4">
-              <div>
-                <h3 class="text-base font-black">سجل الوصولات والمبيعات الأخيرة</h3>
-                <p class="text-xs text-slate-400 mt-0.5">تفاصيل آخر العمليات المسجلة في النظام</p>
-              </div>
-              <button onclick="switchTab('cashier')" class="w-8 h-8 rounded-full q-card flex items-center justify-center text-slate-400 hover:text-emerald-600">
-                ↗
-              </button>
+        <!-- ======================================================== -->
+        <!-- VIEW 3 TO 11: PLACEHOLDER VIEWS FOR USER TO ADD CUSTOM BUTTONS -->
+        <!-- ======================================================== -->
+        <div id="tab-teachers" class="tab-content hidden space-y-4">
+          <div class="sh-card p-6 text-center space-y-3">
+            <h2 class="text-xl font-black">Teachers Section (قسم المعلمين / المواد)</h2>
+            <p class="text-xs text-slate-400">هذه الواجهة جاهزة ومخصصة لك لتضيف فيها الأزرار والمحتوى الذي تريده يدوياً.</p>
+            <div class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2">
+              <span class="text-3xl text-slate-300">➕</span>
+              <button class="px-5 py-2 bg-sky-500 text-white font-bold text-xs rounded-xl">+ إضافة زر جديد هنا</button>
             </div>
+          </div>
+        </div>
 
-            <div class="overflow-hidden">
+        <div id="tab-students" class="tab-content hidden space-y-4">
+          <div class="sh-card p-6 text-center space-y-3">
+            <h2 class="text-xl font-black">Students Section (قسم الطلاب / الزبائن)</h2>
+            <p class="text-xs text-slate-400">واجهة فارغة ومعدة لتخصيص الأزرار يدوياً.</p>
+            <div class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2">
+              <span class="text-3xl text-slate-300">➕</span>
+              <button class="px-5 py-2 bg-sky-500 text-white font-bold text-xs rounded-xl">+ إضافة زر جديد هنا</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-attendance" class="tab-content hidden space-y-4">
+          <div class="sh-card p-6 text-center space-y-3">
+            <h2 class="text-xl font-black">Attendance Section (قسم الحضور والمخزون)</h2>
+            <p class="text-xs text-slate-400">واجهة فارغة ومعدة لتخصيص الأزرار يدوياً.</p>
+            <div class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2">
+              <span class="text-3xl text-slate-300">➕</span>
+              <button class="px-5 py-2 bg-sky-500 text-white font-bold text-xs rounded-xl">+ إضافة زر جديد هنا</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-finance" class="tab-content hidden space-y-4">
+          <div class="sh-card p-6 text-center space-y-3">
+            <h2 class="text-xl font-black">Finance Section (قسم المالية والحسابات)</h2>
+            <p class="text-xs text-slate-400">واجهة فارغة ومعدة لتخصيص الأزرار يدوياً.</p>
+            <div class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2">
+              <span class="text-3xl text-slate-300">➕</span>
+              <button class="px-5 py-2 bg-sky-500 text-white font-bold text-xs rounded-xl">+ إضافة زر جديد هنا</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-notice" class="tab-content hidden space-y-4">
+          <div class="sh-card p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-xl font-black">Notice Section (قسم الإشعارات وطلبيات المناديب)</h2>
+                <p class="text-xs text-slate-400">استقبال طلبيات المناديب والمحلات مباشرة من السحابة</p>
+              </div>
+              <button onclick="loadRepOrders()" class="px-4 py-2 bg-sky-500 text-white font-bold text-xs rounded-xl">تحديث</button>
+            </div>
+            <div class="overflow-hidden border border-slate-100 dark:border-slate-800 rounded-xl">
               <table class="w-full text-right text-xs">
-                <thead class="text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
                   <tr>
-                    <th class="pb-3">رقم الوصل</th>
-                    <th class="pb-3">التاريخ والوقت</th>
-                    <th class="pb-3">طريقة الدفع</th>
-                    <th class="pb-3">الحالة</th>
-                    <th class="pb-3 text-left">المبلغ</th>
+                    <th class="p-3">رقم الطلبية</th>
+                    <th class="p-3">اسم المحل</th>
+                    <th class="p-3">المندوب</th>
+                    <th class="p-3">المواد</th>
+                    <th class="p-3">الإجمالي</th>
+                    <th class="p-3">الحالة</th>
+                    <th class="p-3 text-center">إجراءات</th>
                   </tr>
                 </thead>
-                <tbody id="dashRecentSalesTbody" class="divide-y divide-slate-100 dark:divide-slate-800/80">
-                  <tr><td colspan="5" class="py-8 text-center text-slate-400">جاري تحميل أحدث العمليات...</td></tr>
-                </tbody>
+                <tbody id="repOrdersTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
               </table>
             </div>
           </div>
-
-          <!-- Bottom Right: Amount of Credit & Active Cashiers / Reps -->
-          <div class="col-span-4 q-card p-6 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
-                  💳
-                </div>
-                <div>
-                  <h4 class="text-xs font-bold text-slate-400">نواقص المواد والطلبيات</h4>
-                  <p class="text-sm font-black mt-0.5">المخزون المحتاج للطلب</p>
-                </div>
-              </div>
-              <button class="w-8 h-8 rounded-full q-card flex items-center justify-center text-slate-400 hover:text-emerald-600">
-                ↗
-              </button>
-            </div>
-
-            <div class="my-3">
-              <div class="flex items-center justify-between">
-                <div id="kpiLowStockCount" class="text-3xl font-black text-amber-500">0</div>
-                <div class="px-3 py-1 bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400 rounded-full font-black text-xs">
-                  أصناف بحاجة للطلب
-                </div>
-              </div>
-              <p class="text-xs text-slate-400 mt-2">يرجى مراجعة المناديب والشركات لتوريد النواقص</p>
-            </div>
-
-            <!-- Active Cashiers / Reps Avatar Row -->
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-400">المناديب المتصلين:</span>
-                <div class="flex -space-x-2 overflow-hidden">
-                  <div class="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center border-2 border-white dark:border-slate-900">م1</div>
-                  <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center border-2 border-white dark:border-slate-900">م2</div>
-                  <div class="w-8 h-8 rounded-full bg-purple-600 text-white font-bold text-xs flex items-center justify-center border-2 border-white dark:border-slate-900">م3</div>
-                  <div class="w-8 h-8 rounded-full bg-slate-700 text-white font-bold text-xs flex items-center justify-center border-2 border-white dark:border-slate-900">+4</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
-      </div>
 
-      <!-- ======================================================== -->
-      <!-- 2: CASHIER / SALE SCREEN (EXACT LAYOUT IN QUIXOTIC STYLE) -->
-      <!-- ======================================================== -->
-      <div id="tab-cashier" class="tab-content hidden h-full flex flex-col space-y-4">
-        <!-- Multi-Invoice Tabs Header -->
-        <div class="flex items-center justify-between q-card p-3 shadow-sm">
-          <div class="flex items-center gap-2 overflow-x-auto">
-            <div id="invoiceTabsContainer" class="flex items-center gap-2"></div>
-            <button onclick="addNewInvoiceTab()" class="q-pill-btn px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-sm flex items-center gap-1">
-              <span>➕ فاتورة جديدة</span>
-            </button>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="switchTab('inventory')" class="q-pill-btn px-4 py-2 q-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm flex items-center gap-1.5">
-              <i data-lucide="box" class="w-4 h-4 text-emerald-600"></i>
-              <span>تصفح المخزن</span>
-            </button>
+        <div id="tab-calendar" class="tab-content hidden space-y-4">
+          <div class="sh-card p-6 text-center space-y-3">
+            <h2 class="text-xl font-black">Calendar Section (قسم التقويم)</h2>
+            <p class="text-xs text-slate-400">واجهة فارغة ومعدة لتخصيص الأزرار يدوياً.</p>
+            <div class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2">
+              <span class="text-3xl text-slate-300">➕</span>
+              <button class="px-5 py-2 bg-sky-500 text-white font-bold text-xs rounded-xl">+ إضافة زر جديد هنا</button>
+            </div>
           </div>
         </div>
 
-        <!-- Main Workspace Split: (Right: Barcode + Items Table, Left: Big Summary Box) -->
-        <div class="flex-1 flex gap-5 overflow-hidden">
-          
-          <!-- Right Side: Barcode Scanner & Cart Items Table -->
-          <div class="flex-1 flex flex-col q-card p-5 overflow-hidden shadow-sm">
-            <!-- Barcode Scanner Bar -->
-            <div class="flex gap-3 mb-4">
-              <div class="relative flex-1">
-                <i data-lucide="barcode" class="w-5 h-5 text-emerald-600 absolute right-4 top-3"></i>
-                <input id="cashierBarcodeInput" onkeydown="handleBarcodeKeyDown(event)" type="text" placeholder="امسح الباركود أو اكتب اسم المادة (اضغط Enter للإضافة المباشرة)..." class="w-full q-card-secondary rounded-2xl pr-12 pl-4 py-3 text-sm text-slate-900 dark:text-white font-mono">
-              </div>
-            </div>
-
-            <!-- Cart Items Data Grid -->
-            <div class="flex-1 overflow-y-auto border border-slate-100 dark:border-slate-800 rounded-2xl">
-              <table class="w-full text-right text-xs">
-                <thead class="bg-slate-50 dark:bg-slate-900/80 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800 sticky top-0">
-                  <tr>
-                    <th class="p-3.5">ت</th>
-                    <th class="p-3.5">اسم المادة</th>
-                    <th class="p-3.5">سعر المفرد</th>
-                    <th class="p-3.5 text-center">الكمية</th>
-                    <th class="p-3.5">المجموع الكلي</th>
-                    <th class="p-3.5 text-center">حذف</th>
-                  </tr>
-                </thead>
-                <tbody id="cashierCartTbody" class="divide-y divide-slate-100 dark:divide-slate-800">
-                  <tr><td colspan="6" class="text-center py-16 text-slate-400">لا توجد مواد في هذه الفاتورة. امسح الباركود للبدء.</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Left Side: Big Elevated Summary & Checkout Box -->
-          <div class="w-96 q-card p-6 flex flex-col justify-between shadow-md border-2 border-emerald-500/30">
-            <div>
-              <div class="text-center pb-4 border-b border-slate-100 dark:border-slate-800">
-                <span class="text-xs font-bold text-slate-400">إجمالي الفاتورة المطلوب</span>
-                <div id="cashierTotalDisplay" class="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">0 د.ع</div>
-              </div>
-
-              <!-- Quick Cash Notes Buttons -->
-              <div class="my-4 space-y-2">
-                <span class="text-[11px] font-bold text-slate-400 block">أزرار النقد السريع (المبلغ المستلم):</span>
-                <div class="grid grid-cols-2 gap-2">
-                  <button onclick="setPaidAmount(5000)" class="py-2.5 q-card hover:border-emerald-500 text-xs font-bold rounded-2xl shadow-sm">5,000 د.ع</button>
-                  <button onclick="setPaidAmount(10000)" class="py-2.5 q-card hover:border-emerald-500 text-xs font-bold rounded-2xl shadow-sm">10,000 د.ع</button>
-                  <button onclick="setPaidAmount(25000)" class="py-2.5 q-card hover:border-emerald-500 text-xs font-bold rounded-2xl shadow-sm">25,000 د.ع</button>
-                  <button onclick="setPaidAmount(50000)" class="py-2.5 q-card hover:border-emerald-500 text-xs font-bold rounded-2xl shadow-sm">50,000 د.ع</button>
-                </div>
-              </div>
-
-              <!-- Calculation Details -->
-              <div class="space-y-2.5 text-xs">
-                <div class="flex justify-between items-center text-slate-500 dark:text-slate-400">
-                  <span>المجموع الفرعي:</span>
-                  <span id="cashierSubtotal" class="font-bold text-slate-900 dark:text-white">0 د.ع</span>
-                </div>
-                <div class="flex justify-between items-center text-amber-600 dark:text-amber-400 font-bold">
-                  <span>الخصم الممنوح:</span>
-                  <input id="cashierDiscountInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-24 q-card-secondary rounded-xl px-2.5 py-1 text-right text-amber-600 dark:text-amber-400 font-bold">
-                </div>
-                <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold">
-                  <span>المبلغ المستلم:</span>
-                  <input id="cashierPaidInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-24 q-card-secondary rounded-xl px-2.5 py-1 text-right text-emerald-600 dark:text-emerald-400 font-bold">
-                </div>
-                <div class="flex justify-between items-center text-slate-700 dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <span>المتبقي للزبون:</span>
-                  <span id="cashierChangeDisplay" class="font-black text-rose-500 text-sm">0 د.ع</span>
-                </div>
-              </div>
-
-              <!-- Payment Method Selector -->
-              <div class="mt-4 flex gap-2">
-                <button onclick="setPaymentMethod('Cash')" id="pm-Cash" class="flex-1 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md">💵 نقداً</button>
-                <button onclick="setPaymentMethod('Card')" id="pm-Card" class="flex-1 py-2 q-card text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl">💳 بطاقة</button>
-                <button onclick="setPaymentMethod('Debt')" id="pm-Debt" class="flex-1 py-2 q-card text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl">📝 آجل</button>
-              </div>
-            </div>
-
-            <!-- Complete Invoice Action Button -->
-            <button onclick="submitCashierSale()" class="q-pill-btn w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2 mt-4">
-              <i data-lucide="check-circle" class="w-5 h-5"></i>
-              <span>إتمام البيع وحفظ الوصل (F12)</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ======================================================== -->
-      <!-- 3: ADD / EDIT PRODUCT FULL FORM (QUIXOTIC STYLE) -->
-      <!-- ======================================================== -->
-      <div id="tab-addProduct" class="tab-content hidden space-y-5">
-        <!-- Top Action Bar -->
-        <div class="flex items-center justify-between q-card p-4 shadow-sm">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center font-bold">
-              📦
-            </div>
-            <div>
-              <h2 id="addProductFormTitle" class="text-xl font-black">إضافة مادة جديدة للمخزن</h2>
-              <p class="text-xs text-slate-400">تسجيل تفاصيل الكرتون، أسعار الشراء، والأسعار البيعية</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="clearAddProductForm()" class="q-pill-btn px-5 py-2.5 q-card hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold shadow-sm">
-              🧹 مسح الحقول
-            </button>
-            <button onclick="saveProductFull()" class="q-pill-btn px-7 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-600/30 flex items-center gap-2">
-              <i data-lucide="save" class="w-4 h-4"></i>
-              <span>حفظ المادة</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 3 Cards Form Layout: Info, Packaging/Cartons, Pricing/Profits -->
-        <div class="grid grid-cols-3 gap-6">
-          <!-- Card 1: Product Main Info -->
-          <div class="q-card p-6 space-y-4 shadow-sm">
-            <h3 class="text-sm font-black text-emerald-600 dark:text-emerald-400 pb-2 border-b border-slate-100 dark:border-slate-800">1. معلومات المادة الأساسية</h3>
-            <input type="hidden" id="ap-id">
-            <div>
-              <label class="block text-xs text-slate-400 mb-1 font-bold">اسم المادة *</label>
-              <input id="ap-name" type="text" placeholder="مثال: زيت نباتي 1 لتر" class="w-full q-card-secondary rounded-2xl px-4 py-2.5 text-sm">
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1 font-bold">الباركود</label>
-              <div class="flex gap-2">
-                <input id="ap-barcode" type="text" placeholder="امسح أو ولد تلقائياً" class="flex-1 q-card-secondary rounded-2xl px-4 py-2.5 text-sm font-mono">
-                <button onclick="generateRandomBarcode()" class="px-3.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 rounded-2xl text-xs font-bold">🎲 توليد</button>
-              </div>
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1 font-bold">التصنيف</label>
-              <input id="ap-category" type="text" placeholder="عام، مواد غذائية، منظفات..." class="w-full q-card-secondary rounded-2xl px-4 py-2.5 text-sm">
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1 font-bold">المندوب / المورد</label>
-              <select id="ap-supplier" class="w-full q-card-secondary rounded-2xl px-4 py-2.5 text-sm">
-                <option value="">بدون مندوب (مباشر)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Card 2: Packaging & Cartons Breakdown -->
-          <div class="q-card p-6 space-y-4 shadow-sm">
-            <h3 class="text-sm font-black text-emerald-600 dark:text-emerald-400 pb-2 border-b border-slate-100 dark:border-slate-800">2. تفاصيل التعبئة والكرتون</h3>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1 font-bold">عدد القطع في الكرتون الواحد</label>
-              <input id="ap-itemsPerCarton" oninput="recalcAddProduct()" type="number" value="12" class="w-full q-card-secondary rounded-2xl px-4 py-2.5 text-sm font-bold">
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1 font-bold">عدد الكراتين بالمخزن</label>
-              <input id="ap-cartonsCount" oninput="recalcAddProduct()" type="number" value="5" class="w-full q-card-secondary rounded-2xl px-4 py-2.5 text-sm font-bold">
-            </div>
-            <div class="p-4 q-card-secondary rounded-2xl space-y-1">
-              <span class="text-xs text-slate-400 font-bold">إجمالي رصيد المخزن بالقطع:</span>
-              <div id="ap-totalStockDisplay" class="text-2xl font-black text-emerald-600 dark:text-emerald-400">60 قطعة</div>
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1 font-bold">تنبيه النواقص عند (قطع)</label>
-              <input id="ap-minStockAlert" type="number" value="6" class="w-full q-card-secondary rounded-2xl px-4 py-2.5 text-sm text-amber-500 font-bold">
-            </div>
-          </div>
-
-          <!-- Card 3: Pricing & Profits Calculator -->
-          <div class="q-card p-6 space-y-4 shadow-sm">
-            <h3 class="text-sm font-black text-emerald-600 dark:text-emerald-400 pb-2 border-b border-slate-100 dark:border-slate-800">3. الأسعار والأرباح التقديرية</h3>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1 font-bold">تكلفة القطعة (د.ع)</label>
-                <input id="ap-cost" oninput="recalcAddProduct()" type="number" value="1000" class="w-full q-card-secondary rounded-2xl px-3 py-2 text-xs font-bold text-blue-600 dark:text-blue-400">
-              </div>
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1 font-bold">سعر بيع المفرد (د.ع)</label>
-                <input id="ap-price" oninput="recalcAddProduct()" type="number" value="1250" class="w-full q-card-secondary rounded-2xl px-3 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1 font-bold">شراء الكرتون (د.ع)</label>
-                <input id="ap-cartonPurchase" oninput="recalcAddProduct()" type="number" value="12000" class="w-full q-card-secondary rounded-2xl px-3 py-2 text-xs font-bold">
-              </div>
-              <div>
-                <label class="block text-[11px] text-slate-400 mb-1 font-bold">بيع الكرتون (د.ع)</label>
-                <input id="ap-cartonSelling" oninput="recalcAddProduct()" type="number" value="15000" class="w-full q-card-secondary rounded-2xl px-3 py-2 text-xs font-bold">
-              </div>
-            </div>
-            <!-- Calculated Profits Display -->
-            <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-500/20 space-y-1.5">
-              <div class="flex justify-between text-xs">
-                <span class="text-slate-500 dark:text-slate-400 font-bold">ربح القطعة المفردة:</span>
-                <span id="ap-retailProfitDisplay" class="font-black text-emerald-600 dark:text-emerald-400">250 د.ع</span>
-              </div>
-              <div class="flex justify-between text-xs">
-                <span class="text-slate-500 dark:text-slate-400 font-bold">ربح الكرتون الواحد:</span>
-                <span id="ap-cartonProfitDisplay" class="font-black text-emerald-600 dark:text-emerald-400">3,000 د.ع</span>
-              </div>
+        <div id="tab-library" class="tab-content hidden space-y-4">
+          <div class="sh-card p-6 text-center space-y-3">
+            <h2 class="text-xl font-black">Library Section (قسم المكتبة / المخزن)</h2>
+            <p class="text-xs text-slate-400">واجهة فارغة ومعدة لتخصيص الأزرار يدوياً.</p>
+            <div class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2">
+              <span class="text-3xl text-slate-300">➕</span>
+              <button class="px-5 py-2 bg-sky-500 text-white font-bold text-xs rounded-xl">+ إضافة زر جديد هنا</button>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- ======================================================== -->
-      <!-- 4: REP ORDERS VIEW -->
-      <!-- ======================================================== -->
-      <div id="tab-repOrders" class="tab-content hidden space-y-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-black">طلبيات المناديب والمحلات</h2>
-            <p class="text-xs text-slate-400 mt-1">الطلبيات الواردة مباشرة من السحابة وتطبيق المندوب</p>
+        <div id="tab-message" class="tab-content hidden space-y-4">
+          <div class="sh-card p-6 text-center space-y-3">
+            <h2 class="text-xl font-black">Message Section (قسم الرسائل)</h2>
+            <p class="text-xs text-slate-400">واجهة فارغة ومعدة لتخصيص الأزرار يدوياً.</p>
+            <div class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2">
+              <span class="text-3xl text-slate-300">➕</span>
+              <button class="px-5 py-2 bg-sky-500 text-white font-bold text-xs rounded-xl">+ إضافة زر جديد هنا</button>
+            </div>
           </div>
-          <button onclick="loadRepOrders()" class="q-pill-btn px-5 py-2.5 q-card hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold shadow-sm">تحديث الطلبيات</button>
         </div>
-        <div class="q-card overflow-hidden shadow-sm">
-          <table class="w-full text-right text-xs">
-            <thead class="bg-slate-50 dark:bg-slate-900/80 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
-              <tr>
-                <th class="p-4">رقم الطلبية</th>
-                <th class="p-4">اسم المحل / الماركت</th>
-                <th class="p-4">المندوب</th>
-                <th class="p-4">المواد</th>
-                <th class="p-4">الإجمالي (د.ع)</th>
-                <th class="p-4">الحالة</th>
-                <th class="p-4 text-center">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody id="repOrdersTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- ======================================================== -->
-      <!-- 5: INVENTORY VIEW -->
-      <!-- ======================================================== -->
-      <div id="tab-inventory" class="tab-content hidden space-y-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-black">المخزن ورصيد المواد</h2>
-            <p class="text-xs text-slate-400 mt-1">جرد وإحصائيات كافة المواد والكميات المتوفرة</p>
+        <div id="tab-profile" class="tab-content hidden space-y-4">
+          <div class="sh-card p-6 text-center space-y-3">
+            <h2 class="text-xl font-black">Profile Section (الملف الشخصي)</h2>
+            <p class="text-xs text-slate-400">واجهة فارغة ومعدة لتخصيص الأزرار يدوياً.</p>
           </div>
-          <button onclick="switchTab('addProduct')" class="q-pill-btn px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20">➕ إضافة مادة</button>
         </div>
-        <div class="q-card overflow-hidden shadow-sm">
-          <table class="w-full text-right text-xs">
-            <thead class="bg-slate-50 dark:bg-slate-900/80 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
-              <tr>
-                <th class="p-4">اسم المادة</th>
-                <th class="p-4">الباركود</th>
-                <th class="p-4">التصنيف</th>
-                <th class="p-4">سعر التكلفة</th>
-                <th class="p-4">سعر البيع</th>
-                <th class="p-4">المخزون (قطع)</th>
-                <th class="p-4 text-center">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody id="inventoryTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-          </table>
+
+        <div id="tab-setting" class="tab-content hidden space-y-4">
+          <div class="sh-card p-6 text-center space-y-3">
+            <h2 class="text-xl font-black">Settings Section (الإعدادات)</h2>
+            <p class="text-xs text-slate-400">واجهة فارغة ومعدة لتخصيص الأزرار يدوياً.</p>
+          </div>
         </div>
-      </div>
 
-      <!-- ======================================================== -->
-      <!-- 6: SUPPLIERS VIEW -->
-      <!-- ======================================================== -->
-      <div id="tab-suppliers" class="tab-content hidden space-y-5">
-        <h2 class="text-2xl font-black">المناديب والشركات الموردة</h2>
-        <div id="suppliersCardsGrid" class="grid grid-cols-3 gap-6"></div>
-      </div>
+        <div id="tab-logout" class="tab-content hidden space-y-4">
+          <div class="sh-card p-6 text-center space-y-3">
+            <h2 class="text-xl font-black">Log Out (تسجيل الخروج)</h2>
+            <p class="text-xs text-slate-400">تم تسجيل الخروج بنجاح.</p>
+          </div>
+        </div>
 
-      <!-- ======================================================== -->
-      <!-- 7: USERS VIEW -->
-      <!-- ======================================================== -->
-      <div id="tab-users" class="tab-content hidden space-y-5">
-        <h2 class="text-2xl font-black">حسابات الكاشير والموظفين</h2>
-        <div id="usersGrid" class="grid grid-cols-3 gap-6"></div>
-      </div>
-
-    </main>
+      </main>
+    </div>
   </div>
 
   <!-- QR Rep Portal Modal -->
-  <div id="repModal" class="fixed inset-0 bg-black/70 backdrop-blur-md hidden flex items-center justify-center z-50">
-    <div class="q-card w-[420px] p-6 text-center space-y-4 shadow-2xl border-2 border-emerald-500/40">
+  <div id="repModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
+    <div class="sh-card w-[380px] p-6 text-center space-y-4 shadow-2xl border-2 border-sky-500/40">
       <h3 class="text-lg font-black">📲 تطبيق المندوب والمحلات</h3>
       <p class="text-xs text-slate-400">امسح الباركود لفتح بوابة إرسال الطلبيات مباشرة بالسحابة</p>
-      <div class="bg-white p-3 rounded-2xl w-44 h-44 mx-auto flex items-center justify-center shadow-lg">
+      <div class="bg-white p-3 rounded-2xl w-44 h-44 mx-auto flex items-center justify-center shadow-md">
         <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://hama2002m2002-lab.github.io/mo74mmed.pos/" alt="QR" class="w-full h-full">
       </div>
-      <button onclick="closeRepPortalModal()" class="q-pill-btn w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs">إغلاق</button>
+      <button onclick="closeRepPortalModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl">إغلاق</button>
     </div>
   </div>
 
