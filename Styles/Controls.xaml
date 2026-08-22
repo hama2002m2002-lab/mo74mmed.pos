@@ -3,12 +3,13 @@
 
     <!-- Base Modern Button Style -->
     <Style x:Key="ActionButton" TargetType="Button">
-        <Setter Property="Background" Value="{DynamicResource BgDarkHover}" />
+        <Setter Property="Background" Value="{DynamicResource BgDarkCard}" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="13.5" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Padding" Value="16,10" />
-        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>
@@ -17,7 +18,7 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="8"
+                            CornerRadius="10"
                             SnapsToDevicePixels="True">
                         <ContentPresenter HorizontalAlignment="Center"
                                           VerticalAlignment="Center"
@@ -25,10 +26,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="{DynamicResource BorderDark}" />
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource BgDarkHover}" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryAccent}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border" Property="Opacity" Value="0.8" />
+                            <Setter TargetName="border" Property="Opacity" Value="0.85" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="border" Property="Opacity" Value="0.4" />
@@ -43,12 +45,13 @@
     <Style x:Key="PrimaryAccentButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
         <Setter Property="Background" Value="{DynamicResource PrimaryAccent}" />
         <Setter Property="Foreground" Value="#FFFFFF" />
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="border"
                             Background="{TemplateBinding Background}"
-                            CornerRadius="8"
+                            CornerRadius="10"
                             SnapsToDevicePixels="True">
                         <ContentPresenter HorizontalAlignment="Center"
                                           VerticalAlignment="Center"
@@ -72,12 +75,13 @@
         <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
         <Setter Property="Foreground" Value="#FFFFFF" />
         <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="border"
                             Background="{TemplateBinding Background}"
-                            CornerRadius="8"
+                            CornerRadius="10"
                             SnapsToDevicePixels="True">
                         <ContentPresenter HorizontalAlignment="Center"
                                           VerticalAlignment="Center"
@@ -100,12 +104,13 @@
     <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
         <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
         <Setter Property="Foreground" Value="#FFFFFF" />
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="border"
                             Background="{TemplateBinding Background}"
-                            CornerRadius="8"
+                            CornerRadius="10"
                             SnapsToDevicePixels="True">
                         <ContentPresenter HorizontalAlignment="Center"
                                           VerticalAlignment="Center"
@@ -129,9 +134,9 @@
         <Setter Property="Background" Value="{DynamicResource BgDarkInput}" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
-        <Setter Property="BorderThickness" Value="1.5" />
-        <Setter Property="Padding" Value="14,10" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="BorderThickness" Value="1.2" />
+        <Setter Property="Padding" Value="14,9" />
+        <Setter Property="FontSize" Value="13.5" />
         <Setter Property="CaretBrush" Value="{DynamicResource PrimaryAccent}" />
         <Setter Property="SelectionBrush" Value="{DynamicResource PrimaryAccent}" />
         <Setter Property="Template">
@@ -141,7 +146,7 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="8"
+                            CornerRadius="10"
                             SnapsToDevicePixels="True">
                         <ScrollViewer x:Name="PART_ContentHost"
                                       Focusable="False"
@@ -150,10 +155,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource TextSecondary}" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryAccent}" />
                         </Trigger>
                         <Trigger Property="IsFocused" Value="True">
                             <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryAccent}" />
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource BgDarkHover}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
