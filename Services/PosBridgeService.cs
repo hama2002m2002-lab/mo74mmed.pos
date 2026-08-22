@@ -712,7 +712,7 @@ public class PosBridgeService
                 }
 
                 // ==========================================
-                // 7. APP INFO & SYSTEM STATUS
+                // 7. APP INFO, UPDATES, EXCEL IMPORT & BACKUP
                 // ==========================================
                 case "get_app_info":
                 {
@@ -720,10 +720,125 @@ public class PosBridgeService
                     {
                         success = true,
                         appName = "7amo.pos",
-                        version = "1.4.0",
+                        version = "2.5.0 Pro",
+                        storeId = StoreSettingsService.Instance.Settings.StoreId,
                         portalUrl = "https://hama2002m2002-lab.github.io/mo74mmed.pos/",
                         localPortalUrl = "http://localhost:5000"
                     });
+                }
+
+                case "check_for_updates":
+                {
+                    UpdateService.Instance.CheckForUpdates(true);
+                    return JsonSerializer.Serialize(new { success = true });
+                }
+
+                case "import_excel_products":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var items = doc.RootElement.GetProperty("products");
+                    int count = 0;
+                    foreach (var it in items.EnumerateArray())
+                    {
+                        string name = it.TryGetProperty("name", out var np) ? np.GetString()?.Trim() ?? "" : "";
+                        if (string.IsNullOrWhiteSpace(name)) continue;
+
+                        string barcode = it.TryGetProperty("barcode", out var bp) ? bp.GetString()?.Trim() ?? "" : "";
+                        string catName = it.TryGetProperty("category", out var cp) ? cp.GetString()?.Trim() ?? "عام" : "عام";
+                        string supplier = it.TryGetProperty("supplierName", out var sp) ? sp.GetString()?.Trim() ?? "" : "";
+                        decimal cost = it.TryGetProperty("cost", out var cst) ? cst.GetDecimal() : 0m;
+                        decimal price = it.TryGetProperty("price", out var prc) ? prc.GetDecimal() : 0m;
+                        decimal wholesale = it.TryGetProperty("wholesalePrice", out var wp) ? wp.GetDecimal() : 0m;
+                        decimal cartonPurchase = it.TryGetProperty("cartonPurchasePrice", out var cpp) ? cpp.GetDecimal() : 0m;
+                        decimal cartonSelling = it.TryGetProperty("cartonSellingPrice", out var csp) ? csp.GetDecimal() : 0m;
+                        decimal itemsPerCarton = it.TryGetProperty("piecesPerCarton", out var ppc) ? Math.Max(1, ppc.GetDecimal()) : 1m;
+                        decimal cartonsCount = it.TryGetProperty("cartonsCount", out var ccp) ? Math.Max(0, ccp.GetDecimal()) : 0m;
+                        decimal stock = it.TryGetProperty("stockQuantity", out var sq) ? sq.GetDecimal() : (itemsPerCarton * cartonsCount);
+                        decimal minAlert = it.TryGetProperty("minStockAlert", out var ma) ? ma.GetDecimal() : 5m;
+
+                        // Find or create category
+                        var category = await db.Categories.FirstOrDefaultAsync(c => c.Name == catName);
+                        if (category == null)
+                        {
+                            category = new Category { Id = Guid.NewGuid(), Name = catName, CreatedAt = DateTime.UtcNow };
+                            await db.Categories.AddAsync(category);
+                            await db.SaveChangesAsync();
+                        }
+
+                        // Check if product exists by barcode or name
+                        Product? existing = null;
+                        if (!string.IsNullOrWhiteSpace(barcode))
+                        {
+                            existing = await db.Products.FirstOrDefaultAsync(p => p.Barcode == barcode && !p.IsDeleted);
+                        }
+                        if (existing == null)
+                        {
+                            existing = await db.Products.FirstOrDefaultAsync(p => p.Name == name && !p.IsDeleted);
+                        }
+
+                        if (existing != null)
+                        {
+                            existing.Name = name;
+                            if (!string.IsNullOrWhiteSpace(barcode)) existing.Barcode = barcode;
+                            existing.CategoryId = category.Id;
+                            existing.SupplierName = supplier;
+                            existing.Cost = cost;
+                            existing.Price = price;
+                            existing.WholesalePrice = wholesale;
+                            existing.CartonPurchasePrice = cartonPurchase;
+                            existing.CartonSellingPrice = cartonSelling;
+                            existing.ItemsPerCarton = itemsPerCarton;
+                            existing.CartonsCount = cartonsCount;
+                            existing.StockQuantity = stock;
+                            existing.MinStockAlert = minAlert;
+                            existing.UpdatedAt = DateTime.UtcNow;
+                        }
+                        else
+                        {
+                            var newProd = new Product
+                            {
+                                Id = Guid.NewGuid(),
+                                Name = name,
+                                Barcode = string.IsNullOrWhiteSpace(barcode) ? DateTime.Now.Ticks.ToString() : barcode,
+                                CategoryId = category.Id,
+                                SupplierName = supplier,
+                                Cost = cost,
+                                Price = price,
+                                WholesalePrice = wholesale,
+                                CartonPurchasePrice = cartonPurchase,
+                                CartonSellingPrice = cartonSelling,
+                                ItemsPerCarton = itemsPerCarton,
+                                CartonsCount = cartonsCount,
+                                StockQuantity = stock,
+                                MinStockAlert = minAlert,
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            await db.Products.AddAsync(newProd);
+                        }
+                        count++;
+                    }
+                    await db.SaveChangesAsync();
+                    return JsonSerializer.Serialize(new { success = true, importedCount = count });
+                }
+
+                case "backup_database":
+                {
+                    string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "pos_data.db");
+                    if (!File.Exists(dbPath))
+                    {
+                        dbPath = Path.Combine(Directory.GetCurrentDirectory(), "pos_data.db");
+                    }
+
+                    string backupDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "نسخ_احتياطية_7amoPOS");
+                    Directory.CreateDirectory(backupDir);
+
+                    string backupFile = Path.Combine(backupDir, $"نسخة_احتياطية_{DateTime.Now:yyyy_MM_dd_HHmmss}.db");
+                    if (File.Exists(dbPath))
+                    {
+                        File.Copy(dbPath, backupFile, true);
+                    }
+
+                    return JsonSerializer.Serialize(new { success = true, backupPath = backupFile });
                 }
 
                 default:

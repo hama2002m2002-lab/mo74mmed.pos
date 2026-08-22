@@ -10,6 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- SheetJS Excel Library -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="flex flex-col h-screen overflow-hidden select-none">
@@ -1131,10 +1133,132 @@
         </div>
 
         <div id="tab-settings" class="tab-content hidden space-y-4">
-          <div class="sh-card p-6 text-center space-y-3">
-            <h2 class="text-xl font-black">إعدادات النظام العامة</h2>
-            <p class="text-xs text-slate-400">النسخ الاحتياطي لقاعدة البيانات، اللغات، والعملات.</p>
+          
+          <!-- Top Header -->
+          <div class="sh-card p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold text-xl">
+                ⚙️
+              </div>
+              <div>
+                <h2 class="text-base font-black text-slate-800 dark:text-white">إعدادات النظام والتحديثات واستيراد البيانات</h2>
+                <p class="text-xs text-slate-400">إدارة التحديثات السحابية، استيراد المواد من إكسل، والنسخ الاحتياطي</p>
+              </div>
+            </div>
+            
+            <button onclick="loadSettingsInfo()" class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold rounded-xl flex items-center gap-1">
+              <span>🔄</span>
+              <span>تحديث الحالة</span>
+            </button>
           </div>
+
+          <!-- Main 2-Column Grid -->
+          <div class="grid grid-cols-2 gap-4">
+            
+            <!-- CARD 1: SYSTEM UPDATES (تحديثات النظام التلقائية) -->
+            <div class="sh-card p-5 space-y-4 flex flex-col justify-between border-t-4 border-sky-500">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xl">🚀</span>
+                    <h3 class="font-black text-sm text-slate-800 dark:text-white">تحديثات البرنامج السحابية (Auto Updates)</h3>
+                  </div>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">سحابي 24/7 ✔</span>
+                </div>
+
+                <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl space-y-2 text-xs">
+                  <div class="flex justify-between items-center">
+                    <span class="text-slate-400 font-bold">الإصدار المثبت حالياً:</span>
+                    <span id="settingsAppVersion" class="font-mono font-black text-sky-500">v2.5.0 Pro</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-slate-400 font-bold">حالة خادم التحديثات:</span>
+                    <span class="font-bold text-emerald-500">GitHub Releases (جاهز ومتصل)</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-slate-400 font-bold">معرف المتجر السحابي:</span>
+                    <span id="settingsStoreId" class="font-mono font-bold text-amber-500">--</span>
+                  </div>
+                </div>
+
+                <!-- Release Notes / Features -->
+                <div class="p-3 border border-slate-100 dark:border-slate-800 rounded-2xl space-y-1.5 text-[11px] text-slate-400">
+                  <span class="font-bold text-slate-700 dark:text-slate-300 block">✨ ميزات هذا الإصدار:</span>
+                  <ul class="list-disc list-inside space-y-0.5 text-[11px]">
+                    <li>شاشة كاشير فائقة السرعة مع بحث وقراءة باركود ذكية.</li>
+                    <li>إدارة كراتين وتعبئة وأسعار بيع ثلاثية (مفرد/جملة/كرتون) وحساب أرباح دقيق.</li>
+                    <li>ربط مباشر مع تطبيق المندوب للموبايل واستقبال الطلبيات وإشعار الوصل.</li>
+                    <li>تحديثات تلقائية سحابية بنقرة واحدة بدون فقدان أي بيانات.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Update Action Button -->
+              <button onclick="checkForAppUpdates()" class="w-full py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-2">
+                <span>🔄</span>
+                <span>فحص وتثبيت التحديثات الجديدة الآن</span>
+              </button>
+            </div>
+
+            <!-- CARD 2: EXCEL IMPORT (استيراد مواد من ملف إكسل) -->
+            <div class="sh-card p-5 space-y-4 flex flex-col justify-between border-t-4 border-emerald-500">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xl">📊</span>
+                    <h3 class="font-black text-sm text-slate-800 dark:text-white">إضافة واستيراد مواد من إكسل (Excel / CSV)</h3>
+                  </div>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">XLSX / CSV</span>
+                </div>
+
+                <p class="text-xs text-slate-400">
+                  يمكنك استيراد مئات المواد دفعة واحدة من ملف إكسل بضغطة زر وتحديث أرصدة وأسعار وتصنيفات المخزن فوراً.
+                </p>
+
+                <!-- Excel Upload Zone -->
+                <div class="border-2 border-dashed border-emerald-500/40 hover:border-emerald-500 p-4 rounded-2xl text-center space-y-2 bg-emerald-50/20 dark:bg-emerald-950/10 cursor-pointer" onclick="document.getElementById('excelFileInput').click()">
+                  <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelFileUpload(event)">
+                  <span class="text-3xl block">📥</span>
+                  <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 block">اضغط هنا لاختيار ملف إكسل أو سحبه إلى هنا</span>
+                  <span class="text-[10px] text-slate-400 block">يدعم ملفات (.xlsx, .xls, .csv)</span>
+                </div>
+
+                <!-- Template & Help -->
+                <div class="flex items-center justify-between pt-1">
+                  <button onclick="downloadExcelSampleTemplate()" class="text-xs font-bold text-sky-500 hover:text-sky-600 flex items-center gap-1">
+                    <span>⬇</span>
+                    <span>تحميل نموذج إكسل جاهز للتعبئة (Sample Template)</span>
+                  </button>
+                </div>
+
+                <!-- Import Status Box (Hidden by default) -->
+                <div id="excelImportStatusBox" class="hidden p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl text-xs space-y-2 border border-slate-200 dark:border-slate-800">
+                  <div class="flex justify-between items-center font-bold">
+                    <span>المواد المكتشفة بالملف:</span>
+                    <span id="excelParsedCount" class="text-emerald-500 font-black">0 مادة</span>
+                  </div>
+                  <button onclick="confirmExcelImport()" id="btnConfirmExcelImport" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md">
+                    ✔ حفظ وتوريد المواد إلى المخزن الآن
+                  </button>
+                </div>
+              </div>
+
+              <!-- Database Backup Row -->
+              <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <span class="font-bold text-xs block text-slate-700 dark:text-slate-200">النسخ الاحتياطي:</span>
+                  <span class="text-[10px] text-slate-400">حفظ نسخة آمنة من قاعدة البيانات على سطح المكتب</span>
+                </div>
+                <button onclick="backupDatabase()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl flex items-center gap-1.5">
+                  <span>💾</span>
+                  <span>أخذ نسخة احتياطية</span>
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
 
       </main>

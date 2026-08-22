@@ -215,6 +215,7 @@ function switchTab(tabId) {
   if (tabId === 'repOrders') loadRepOrders();
   if (tabId === 'suppliers') loadSuppliers();
   if (tabId === 'users') loadUsers();
+  if (tabId === 'settings') loadSettingsInfo();
 
   lucide.createIcons();
 }
@@ -1648,4 +1649,223 @@ document.addEventListener('click', (e) => {
     document.getElementById('cashierBarcodeInput')?.focus();
   }
 });
+
+// ========================================================
+// SETTINGS, SYSTEM UPDATES & EXCEL BULK IMPORTER
+// ========================================================
+let parsedExcelProductsList = [];
+
+async function loadSettingsInfo() {
+  const res = await callBackend('get_app_info');
+  if (res && res.success) {
+    const verEl = document.getElementById('settingsAppVersion');
+    if (verEl) verEl.innerText = res.version ? `v${res.version}` : 'v2.5.0 Pro';
+
+    const stEl = document.getElementById('settingsStoreId');
+    if (stEl) stEl.innerText = res.storeId || 'MARKET-DEFAULT-01';
+  }
+}
+
+async function checkForAppUpdates() {
+  alert('🔄 جاري فحص خادم التحديثات السحابي الآن...\nإذا توفر إصدار أحدث، سيبدأ التحديث التلقائي فوراً.');
+  await callBackend('check_for_updates');
+}
+
+// --------------------------------------------------------
+// EXCEL / CSV FILE UPLOAD & PARSING
+// --------------------------------------------------------
+async function handleExcelFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const fileName = file.name.toLowerCase();
+  const reader = new FileReader();
+
+  if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        if (typeof XLSX !== 'undefined') {
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+          processExcelRows(jsonRows);
+        } else {
+          alert('تعذر تحميل مكتبة معالجة الإكسل، يرجى حفظ الملف كـ CSV وإعادة المحاولة.');
+        }
+      } catch (err) {
+        alert('حدث خطأ أثناء قراءة ملف الإكسل: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    // CSV Text reader
+    reader.onload = (e) => {
+      try {
+        const text = e.target.result;
+        const rows = parseCSVText(text);
+        processExcelRows(rows);
+      } catch (err) {
+        alert('حدث خطأ أثناء قراءة ملف CSV: ' + err.message);
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  // Reset file input
+  event.target.value = '';
+}
+
+function parseCSVText(text) {
+  const lines = text.split(/\r\n|\n/).filter(l => l.trim().length > 0);
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(',').map(h => h.replace(/^["']|["']$/g, '').trim());
+  const rows = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
+    const rowObj = {};
+    headers.forEach((h, idx) => {
+      rowObj[h] = cols[idx] || '';
+    });
+    rows.push(rowObj);
+  }
+  return rows;
+}
+
+function processExcelRows(rawRows) {
+  parsedExcelProductsList = [];
+
+  rawRows.forEach((row, index) => {
+    // Smart Column Header Mapping (Arabic & English)
+    const name = row['اسم المادة'] || row['اسم_المادة'] || row['Name'] || row['name'] || row['المادة'] || '';
+    if (!name || !String(name).trim()) return;
+
+    const barcode = String(row['الباركود'] || row['باركود'] || row['Barcode'] || row['barcode'] || '').trim();
+    const category = String(row['التصنيف'] || row['تصنيف'] || row['Category'] || row['category'] || 'عام').trim();
+    const supplierName = String(row['المندوب'] || row['اسم المندوب'] || row['Supplier'] || row['supplier'] || '').trim();
+
+    const cost = parseFloat(row['التكلفة'] || row['سعر الشراء'] || row['Cost'] || row['cost'] || 0) || 0;
+    const price = parseFloat(row['سعر المفرد'] || row['سعر البيع'] || row['Price'] || row['price'] || 0) || 0;
+    const wholesalePrice = parseFloat(row['سعر الجملة'] || row['Wholesale'] || row['wholesale'] || price) || price;
+    const cartonPurchasePrice = parseFloat(row['سعر شراء الكرتون'] || row['شراء كرتون'] || row['CartonCost'] || 0) || 0;
+    const cartonSellingPrice = parseFloat(row['سعر بيع الكرتون'] || row['بيع كرتون'] || row['CartonPrice'] || 0) || 0;
+
+    const piecesPerCarton = parseInt(row['عدد القطع بالكرتون'] || row['قطع بالكرتون'] || row['PiecesPerCarton'] || 1) || 1;
+    const cartonsCount = parseInt(row['عدد الكراتين'] || row['كراتين'] || row['Cartons'] || 0) || 0;
+    let stockQuantity = parseInt(row['الرصيد'] || row['الكمية'] || row['Stock'] || row['stock'] || (cartonsCount * piecesPerCarton)) || 0;
+    if (stockQuantity <= 0 && cartonsCount > 0) {
+      stockQuantity = cartonsCount * piecesPerCarton;
+    }
+
+    parsedExcelProductsList.push({
+      name: String(name).trim(),
+      barcode: barcode,
+      category: category || 'عام',
+      supplierName: supplierName,
+      cost: cost,
+      price: price,
+      wholesalePrice: wholesalePrice,
+      cartonPurchasePrice: cartonPurchasePrice,
+      cartonSellingPrice: cartonSellingPrice,
+      piecesPerCarton: piecesPerCarton,
+      cartonsCount: cartonsCount,
+      stockQuantity: stockQuantity,
+      minStockAlert: 5
+    });
+  });
+
+  if (parsedExcelProductsList.length === 0) {
+    alert('لم يتم العثور على أي صفوف صالحة للمواد داخل الملف!\nتأكد من وجود عمود (اسم المادة) في الملف.');
+    return;
+  }
+
+  // Update UI Status Box
+  const statusBox = document.getElementById('excelImportStatusBox');
+  const countEl = document.getElementById('excelParsedCount');
+  if (statusBox) statusBox.classList.remove('hidden');
+  if (countEl) countEl.innerText = `${parsedExcelProductsList.length} مادة جاهزة للاستيراد`;
+}
+
+async function confirmExcelImport() {
+  if (parsedExcelProductsList.length === 0) {
+    alert('لا توجد مواد محملة للاستيراد.');
+    return;
+  }
+
+  const btn = document.getElementById('btnConfirmExcelImport');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = '⏳ جاري الحفظ والتوريد للمخزن...';
+  }
+
+  const res = await callBackend('import_excel_products', { products: parsedExcelProductsList });
+
+  if (btn) {
+    btn.disabled = false;
+    btn.innerText = '✔ حفظ وتوريد المواد إلى المخزن الآن';
+  }
+
+  if (res && res.success) {
+    alert(`🎉 تم استيراد وتحديث (${res.importedCount || parsedExcelProductsList.length}) مادة بنجاح في المخزن وقاعدة البيانات!`);
+    parsedExcelProductsList = [];
+    document.getElementById('excelImportStatusBox')?.classList.add('hidden');
+    
+    // Refresh inventory and products across the app
+    await loadInventory();
+    await loadProducts();
+    await loadDashboard();
+  } else {
+    alert('حدث خطأ أثناء حفظ المواد: ' + (res?.message || 'خطأ غير معروف'));
+  }
+}
+
+function downloadExcelSampleTemplate() {
+  const headers = [
+    'اسم المادة',
+    'الباركود',
+    'التصنيف',
+    'سعر الشراء (التكلفة)',
+    'سعر المفرد',
+    'سعر الجملة',
+    'سعر شراء الكرتون',
+    'سعر بيع الكرتون',
+    'عدد القطع بالكرتون',
+    'عدد الكراتين',
+    'الرصيد الكلي بالقطع',
+    'اسم المندوب'
+  ];
+
+  const sampleRows = [
+    ['عصير راني برتقال 240مل', '200245000101', 'مشروبات وعصائر', '400', '500', '450', '9600', '11000', '24', '10', '240', 'شركة الروان'],
+    ['بسكويت دايجستف 400غ', '200245000102', 'بسكويت وحلويات', '1250', '1500', '1400', '15000', '17000', '12', '5', '60', 'المندوب أحمد'],
+    ['شاي ليبتون 100 خيط', '200245000103', 'شاي وقهوة', '3000', '3500', '3300', '36000', '40000', '12', '8', '96', 'شركة الخيرات']
+  ];
+
+  let csvContent = '\uFEFF'; // UTF-8 BOM for Arabic support in Excel
+  csvContent += headers.join(',') + '\r\n';
+  sampleRows.forEach(r => {
+    csvContent += r.map(cell => `"${cell}"`).join(',') + '\r\n';
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'نموذج_استيراد_مواد_7amoPOS.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+async function backupDatabase() {
+  const res = await callBackend('backup_database');
+  if (res && res.success) {
+    alert(`✔ تم حفظ نسخة احتياطية من قاعدة البيانات بنجاح!\nالمسار: ${res.backupPath}`);
+  } else {
+    alert('تعذر أخذ نسخة احتياطية: ' + (res?.message || 'خطأ غير معروف'));
+  }
+}
 
