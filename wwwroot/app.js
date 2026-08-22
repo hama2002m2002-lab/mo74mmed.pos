@@ -1,10 +1,10 @@
 // ========================================================
-// 7amo.pos Next-Gen App State & Core Logic
+// 7amo.pos Next-Gen App State & Quixotic Core Logic
 // ========================================================
 
 const state = {
-  activeTab: 'cashier',
-  theme: 'dark',
+  activeTab: 'dashboard',
+  theme: localStorage.getItem('pos_theme') || 'light',
   language: 'ar',
   invoiceTabs: [
     { id: 1, title: 'فاتورة 1', items: [], discount: 0, paid: 0, paymentMethod: 'Cash' }
@@ -16,7 +16,7 @@ const state = {
   paymentChart: null
 };
 
-// C# Native Bridge Call
+// C# Native Bridge Interface
 async function callBackend(action, payload = {}) {
   return new Promise((resolve) => {
     if (window.chrome && window.chrome.webview) {
@@ -37,8 +37,8 @@ async function callBackend(action, payload = {}) {
       window.chrome.webview.addEventListener('message', handler);
       window.chrome.webview.postMessage({ action, payload: JSON.stringify(payload), _callbackId: callbackId });
     } else {
-      console.log(`[C# Bridge Mock] ${action}`, payload);
-      resolve({ success: true, message: "Browser Mock" });
+      console.log(`[C# Bridge Call] Action: ${action}`, payload);
+      resolve({ success: true, message: "Browser Mode" });
     }
   });
 }
@@ -47,16 +47,19 @@ async function callBackend(action, payload = {}) {
 // INITIALIZATION
 // ========================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  applyTheme(state.theme);
   lucide.createIcons();
   startClock();
   setupGlobalKeyboardShortcuts();
+  
   await loadProducts();
   await loadSuppliersList();
   renderInvoiceTabs();
   renderCashierCart();
   await loadDashboard();
   await loadRepOrders();
-  setInterval(loadRepOrders, 4000); // 4s polling
+  
+  setInterval(loadRepOrders, 4000); // 4s auto poll
 });
 
 function startClock() {
@@ -75,8 +78,11 @@ function setupGlobalKeyboardShortcuts() {
       submitCashierSale();
     } else if (e.key === 'F1') {
       e.preventDefault();
-      switchTab('cashier');
+      switchTab('dashboard');
     } else if (e.key === 'F2') {
+      e.preventDefault();
+      switchTab('cashier');
+    } else if (e.key === 'F3') {
       e.preventDefault();
       switchTab('addProduct');
     }
@@ -84,29 +90,48 @@ function setupGlobalKeyboardShortcuts() {
 }
 
 // ========================================================
-// TAB NAVIGATION
+// TAB NAVIGATION (TOP PILL BAR & FLOATING RAIL DOCK)
 // ========================================================
 function switchTab(tabId) {
   state.activeTab = tabId;
 
+  // 1. Hide all views
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.classList.remove('bg-slate-800/90', 'text-blue-400', 'border', 'border-blue-500/30');
-    el.classList.add('text-slate-300');
+
+  // 2. Reset Top Navigation Pills
+  document.querySelectorAll('.top-nav-btn').forEach(el => {
+    el.classList.remove('bg-emerald-600', 'text-white', 'shadow-sm');
+    el.classList.add('text-slate-500');
   });
 
+  // 3. Reset Floating Rail Dock
+  document.querySelectorAll('.rail-btn').forEach(el => {
+    el.classList.remove('bg-emerald-600', 'text-white', 'shadow-md');
+    el.classList.add('text-slate-400');
+  });
+
+  // 4. Activate Selected View
   const tabEl = document.getElementById(`tab-${tabId}`);
   if (tabEl) tabEl.classList.remove('hidden');
 
-  const navEl = document.getElementById(`nav-${tabId}`);
-  if (navEl) {
-    navEl.classList.add('bg-slate-800/90', 'text-blue-400', 'border', 'border-blue-500/30');
-    navEl.classList.remove('text-slate-300');
+  const topBtn = document.getElementById(`top-nav-${tabId}`);
+  if (topBtn) {
+    topBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
+    topBtn.classList.remove('text-slate-500');
   }
 
+  const railBtn = document.getElementById(`rail-${tabId}`);
+  if (railBtn) {
+    railBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-md');
+    railBtn.classList.remove('text-slate-400');
+  }
+
+  // Focus Barcode on Cashier
   if (tabId === 'cashier') {
     document.getElementById('cashierBarcodeInput')?.focus();
   }
+
+  // Refresh View Data
   if (tabId === 'dashboard') loadDashboard();
   if (tabId === 'inventory') loadInventory();
   if (tabId === 'repOrders') loadRepOrders();
@@ -117,7 +142,150 @@ function switchTab(tabId) {
 }
 
 // ========================================================
-// CASHIER / SALE LOGIC (MULTI-TABS & RAPID CHECKOUT)
+// THEME SWITCHER (DAY / LIGHT <-> NIGHT / DARK)
+// ========================================================
+function toggleTheme() {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('pos_theme', state.theme);
+  applyTheme(state.theme);
+  if (state.activeTab === 'dashboard') {
+    loadDashboard();
+  }
+}
+
+function applyTheme(theme) {
+  const icon = document.getElementById('themeIcon');
+  if (theme === 'dark') {
+    document.body.classList.add('dark-theme');
+    if (icon) icon.innerText = '☀️';
+  } else {
+    document.body.classList.remove('dark-theme');
+    if (icon) icon.innerText = '🌙';
+  }
+}
+
+// ========================================================
+// DASHBOARD LOGIC (QUIXOTIC STATS & CHARTS)
+// ========================================================
+async function loadDashboard() {
+  const res = await callBackend('get_dashboard_data');
+  if (!res || !res.success) return;
+
+  // 1. KPI Numbers
+  document.getElementById('kpiTodayRevenue').innerText = Number(res.todayRevenue || 0).toLocaleString() + ' د.ع';
+  document.getElementById('kpiTodayInvoices').innerText = Number(res.todayInvoices || 0).toLocaleString() + ' فاتورة';
+  document.getElementById('kpiMonthlyRevenue').innerText = Number(res.monthlyRevenue || 0).toLocaleString() + ' د.ع';
+  document.getElementById('kpiLowStockCount').innerText = Number(res.lowStockCount || 0).toLocaleString();
+  
+  const dailyAvg = Math.round((res.monthlyRevenue || 0) / 30);
+  const avgEl = document.getElementById('kpiDailyAvg');
+  if (avgEl) avgEl.innerText = Number(dailyAvg).toLocaleString() + ' د.ع';
+
+  // 2. Quixotic Striped & Highlighted Weekly Chart
+  renderQuixoticWeeklyChart(res.weeklyTrend || []);
+
+  // 3. Quixotic Donut Payment Chart
+  renderQuixoticPaymentChart(res.payments || { cash: 0, card: 0, debt: 0 });
+
+  // 4. Recent Sales History Table
+  renderRecentSalesTable(res.recentSales || []);
+}
+
+function renderQuixoticWeeklyChart(data) {
+  const ctx = document.getElementById('weeklyChart');
+  if (!ctx) return;
+
+  if (state.weeklyChart) state.weeklyChart.destroy();
+
+  const isDark = state.theme === 'dark';
+  const labels = data.map(d => d.dayName);
+  const values = data.map(d => d.revenue);
+  const maxVal = Math.max(...values, 1);
+
+  // Peak bar gets solid dark emerald green (#065F46 / #059669), other bars get soft striped/translucent green
+  const barColors = values.map(v => (v === maxVal && v > 0) ? '#059669' : (isDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(5, 150, 105, 0.38)'));
+
+  state.weeklyChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: barColors,
+        borderRadius: 20,
+        borderSkipped: false,
+        barPercentage: 0.55
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { 
+          grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }, 
+          ticks: { color: isDark ? '#94A3B8' : '#6B7280', font: { family: 'Plus Jakarta Sans', size: 10 } } 
+        },
+        x: { 
+          grid: { display: false }, 
+          ticks: { color: isDark ? '#94A3B8' : '#6B7280', font: { family: 'Cairo', weight: 'bold', size: 11 } } 
+        }
+      }
+    }
+  });
+}
+
+function renderQuixoticPaymentChart(payments) {
+  const ctx = document.getElementById('paymentChart');
+  if (!ctx) return;
+
+  if (state.paymentChart) state.paymentChart.destroy();
+
+  state.paymentChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['نقداً', 'بطاقة', 'آجل'],
+      datasets: [{
+        data: [payments.cash || 0, payments.card || 0, payments.debt || 0],
+        backgroundColor: ['#059669', '#3B82F6', '#F59E0B'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '76%',
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function renderRecentSalesTable(sales) {
+  const tbody = document.getElementById('dashRecentSalesTbody');
+  if (!tbody) return;
+
+  if (sales.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">لا توجد مبيعات مسجلة حتى الآن</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  sales.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
+    tr.innerHTML = `
+      <td class="py-3.5 font-bold font-mono text-emerald-600 dark:text-emerald-400">${s.InvoiceNumber}</td>
+      <td class="py-3.5 text-slate-500 dark:text-slate-400">${s.createdAt}</td>
+      <td class="py-3.5"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${s.PaymentMethod === 'Cash' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400'}">${s.PaymentMethod === 'Cash' ? '💵 نقداً' : s.PaymentMethod}</span></td>
+      <td class="py-3.5"><span class="text-emerald-600 font-bold">● مكتمل</span></td>
+      <td class="py-3.5 text-left font-black text-slate-900 dark:text-white">${Number(s.TotalAmount).toLocaleString()} د.ع</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ========================================================
+// CASHIER / POS (MULTI-TABS & RAPID CHECKOUT)
 // ========================================================
 function getCurrentTab() {
   return state.invoiceTabs.find(t => t.id === state.selectedInvoiceTabId) || state.invoiceTabs[0];
@@ -131,12 +299,12 @@ function renderInvoiceTabs() {
   state.invoiceTabs.forEach(t => {
     const isSel = t.id === state.selectedInvoiceTabId;
     const tabEl = document.createElement('div');
-    tabEl.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer text-xs font-bold transition border ${isSel ? 'bg-slate-800 text-blue-400 border-blue-500/40 shadow-lg' : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white'}`;
+    tabEl.className = `q-pill-btn flex items-center gap-2 px-4 py-2 cursor-pointer text-xs font-bold transition shadow-sm ${isSel ? 'bg-emerald-600 text-white shadow-md' : 'q-card text-slate-600 dark:text-slate-300 hover:border-emerald-500'}`;
     tabEl.onclick = () => selectInvoiceTab(t.id);
     tabEl.innerHTML = `
       <span>${t.title}</span>
-      <span class="bg-blue-600/30 text-blue-300 px-1.5 py-0.2 rounded-md text-[10px]">${t.items.length}</span>
-      ${state.invoiceTabs.length > 1 ? `<button onclick="event.stopPropagation(); closeInvoiceTab(${t.id})" class="text-rose-400 hover:text-rose-300 px-1 text-xs">✕</button>` : ''}
+      <span class="bg-white/20 px-1.5 py-0.2 rounded-full text-[10px]">${t.items.length}</span>
+      ${state.invoiceTabs.length > 1 ? `<button onclick="event.stopPropagation(); closeInvoiceTab(${t.id})" class="text-rose-200 hover:text-white px-1 text-xs">✕</button>` : ''}
     `;
     container.appendChild(tabEl);
   });
@@ -235,7 +403,7 @@ function renderCashierCart() {
   if (!tbody) return;
 
   if (currentTab.items.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-slate-500">لا توجد مواد في هذه الفاتورة. امسح الباركود للبدء.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-16 text-slate-400">لا توجد مواد في هذه الفاتورة. امسح الباركود للبدء.</td></tr>';
     recalcCashierInvoice();
     return;
   }
@@ -243,21 +411,21 @@ function renderCashierCart() {
   tbody.innerHTML = '';
   currentTab.items.forEach((item, index) => {
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-800/50';
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
     tr.innerHTML = `
-      <td class="p-3 font-bold text-slate-400">${index + 1}</td>
-      <td class="p-3 font-bold text-white">${item.name}</td>
-      <td class="p-3 font-bold text-blue-400">${Number(item.price).toLocaleString()} د.ع</td>
-      <td class="p-3 text-center">
-        <div class="inline-flex items-center gap-1.5 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
-          <button onclick="updateCartItemQty('${item.id}', -1)" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 rounded text-rose-400 font-bold">-</button>
-          <span class="font-bold text-white px-2">${item.qty}</span>
-          <button onclick="updateCartItemQty('${item.id}', 1)" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 rounded text-emerald-400 font-bold">+</button>
+      <td class="p-3.5 font-bold text-slate-400">${index + 1}</td>
+      <td class="p-3.5 font-bold">${item.name}</td>
+      <td class="p-3.5 font-bold text-emerald-600 dark:text-emerald-400">${Number(item.price).toLocaleString()} د.ع</td>
+      <td class="p-3.5 text-center">
+        <div class="inline-flex items-center gap-2 q-card px-2.5 py-1 rounded-xl shadow-sm">
+          <button onclick="updateCartItemQty('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 text-rose-600 font-bold">-</button>
+          <span class="font-bold px-2">${item.qty}</span>
+          <button onclick="updateCartItemQty('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 text-emerald-600 font-bold">+</button>
         </div>
       </td>
-      <td class="p-3 font-black text-emerald-400">${Number(item.price * item.qty).toLocaleString()} د.ع</td>
-      <td class="p-3 text-center">
-        <button onclick="removeCartItem('${item.id}')" class="text-rose-400 hover:text-rose-300 p-1 text-xs">🗑</button>
+      <td class="p-3.5 font-black text-slate-900 dark:text-white">${Number(item.price * item.qty).toLocaleString()} د.ع</td>
+      <td class="p-3.5 text-center">
+        <button onclick="removeCartItem('${item.id}')" class="text-rose-500 hover:text-rose-600 font-bold p-1 text-xs">🗑</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -295,9 +463,9 @@ function setPaymentMethod(pm) {
     const btn = document.getElementById(`pm-${m}`);
     if (btn) {
       if (m === pm) {
-        btn.className = 'flex-1 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-xl border border-emerald-500 shadow-md';
+        btn.className = 'flex-1 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md';
       } else {
-        btn.className = 'flex-1 py-1.5 bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-700';
+        btn.className = 'flex-1 py-2 q-card text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl';
       }
     }
   });
@@ -319,7 +487,7 @@ async function submitCashierSale() {
 
   const res = await callBackend('complete_sale', payload);
   if (res && res.success) {
-    alert(`✔ تم حفظ وإتمام الفاتورة بنجاح!\nرقم الفاتورة: ${res.invoiceNumber}\nالإجمالي: ${Number(res.total).toLocaleString()} د.ع`);
+    alert(`✔ تم إتمام وحفظ الوصل بنجاح!\nرقم الفاتورة: ${res.invoiceNumber}\nالمبلغ المطلوب: ${Number(res.total).toLocaleString()} د.ع`);
     currentTab.items = [];
     document.getElementById('cashierDiscountInput').value = 0;
     document.getElementById('cashierPaidInput').value = 0;
@@ -330,7 +498,7 @@ async function submitCashierSale() {
 }
 
 // ========================================================
-// ADD / EDIT PRODUCT FULL FORM
+// ADD PRODUCT & REPS LOGIC
 // ========================================================
 async function loadProducts() {
   const res = await callBackend('get_pos_products');
@@ -425,83 +593,7 @@ async function saveProductFull() {
 }
 
 // ========================================================
-// DASHBOARD & CHARTS
-// ========================================================
-async function loadDashboard() {
-  const res = await callBackend('get_dashboard_data');
-  if (!res || !res.success) return;
-
-  document.getElementById('kpiTodayRevenue').innerText = Number(res.todayRevenue || 0).toLocaleString();
-  document.getElementById('kpiTodayInvoices').innerText = Number(res.todayInvoices || 0).toLocaleString();
-  document.getElementById('kpiMonthlyRevenue').innerText = Number(res.monthlyRevenue || 0).toLocaleString();
-  document.getElementById('kpiLowStock').innerText = Number(res.lowStockCount || 0).toLocaleString();
-
-  renderWeeklyChart(res.weeklyTrend || []);
-  renderPaymentChart(res.payments || { cash: 0, card: 0, debt: 0 });
-}
-
-function renderWeeklyChart(data) {
-  const ctx = document.getElementById('weeklyChart');
-  if (!ctx) return;
-
-  if (state.weeklyChart) state.weeklyChart.destroy();
-  state.weeklyChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: data.map(d => d.dayName),
-      datasets: [{
-        data: data.map(d => d.revenue),
-        backgroundColor: '#3B82F6',
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        x: { ticks: { color: '#94A3B8' }, grid: { display: false } }
-      }
-    }
-  });
-}
-
-function renderPaymentChart(payments) {
-  const ctx = document.getElementById('paymentChart');
-  if (!ctx) return;
-
-  if (state.paymentChart) state.paymentChart.destroy();
-  state.paymentChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['نقداً', 'بطاقة', 'آجل'],
-      datasets: [{
-        data: [payments.cash || 0, payments.card || 0, payments.debt || 0],
-        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B'],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '70%',
-      plugins: { legend: { display: false } }
-    }
-  });
-
-  const legend = document.getElementById('paymentLegend');
-  if (legend) {
-    legend.innerHTML = `
-      <span class="text-emerald-400">💵 نقداً: ${Number(payments.cash || 0).toLocaleString()}</span>
-      <span class="text-blue-400">💳 بطاقة: ${Number(payments.card || 0).toLocaleString()}</span>
-      <span class="text-amber-400">📝 آجل: ${Number(payments.debt || 0).toLocaleString()}</span>
-    `;
-  }
-}
-
-// ========================================================
-// REP ORDERS & INVENTORY
+// REP ORDERS & INVENTORY LOADERS
 // ========================================================
 async function loadRepOrders() {
   const res = await callBackend('get_supplier_orders');
@@ -510,18 +602,18 @@ async function loadRepOrders() {
   const orders = res.orders || [];
   const pendingCount = orders.filter(o => o.status === 'Pending').length;
 
-  const badge = document.getElementById('repBadge');
-  const sideBadge = document.getElementById('repSidebarBadge');
-  if (badge && sideBadge) {
-    if (pendingCount > 0) {
-      badge.innerText = pendingCount;
-      badge.classList.remove('hidden');
-      sideBadge.innerText = pendingCount;
-      sideBadge.classList.remove('hidden');
-    } else {
-      badge.classList.add('hidden');
-      sideBadge.classList.add('hidden');
-    }
+  const topBadge = document.getElementById('repTopBadge');
+  const bellBadge = document.getElementById('repBellBadge');
+  const railBadge = document.getElementById('repRailBadge');
+
+  if (pendingCount > 0) {
+    if (topBadge) { topBadge.innerText = pendingCount; topBadge.classList.remove('hidden'); }
+    if (bellBadge) { bellBadge.innerText = pendingCount; bellBadge.classList.remove('hidden'); }
+    if (railBadge) { railBadge.classList.remove('hidden'); }
+  } else {
+    if (topBadge) topBadge.classList.add('hidden');
+    if (bellBadge) bellBadge.classList.add('hidden');
+    if (railBadge) railBadge.classList.add('hidden');
   }
 
   const tbody = document.getElementById('repOrdersTableBody');
@@ -530,16 +622,16 @@ async function loadRepOrders() {
   tbody.innerHTML = '';
   orders.forEach(o => {
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-800/40';
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
     tr.innerHTML = `
-      <td class="p-3 font-mono font-bold text-blue-400">${o.orderNumber}</td>
-      <td class="p-3 font-bold text-white">${o.marketName || '--'}</td>
-      <td class="p-3 text-cyan-400">${o.representativeName || '--'}</td>
-      <td class="p-3 text-amber-400 font-bold">${o.itemsCount} مواد</td>
-      <td class="p-3 font-black text-emerald-400">${Number(o.totalAmount).toLocaleString()} د.ع</td>
-      <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${o.status === 'Pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}">${o.status === 'Pending' ? 'جديد قيد الانتظار' : o.status}</span></td>
-      <td class="p-3 text-center">
-        <button onclick="updateOrderStatus('${o.id}', 'Delivered')" class="bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded text-xs font-bold">تسليم</button>
+      <td class="p-4 font-mono font-bold text-emerald-600 dark:text-emerald-400">${o.orderNumber}</td>
+      <td class="p-4 font-bold">${o.marketName || '--'}</td>
+      <td class="p-4 text-slate-500">${o.representativeName || '--'}</td>
+      <td class="p-4 font-bold text-amber-500">${o.itemsCount} مواد</td>
+      <td class="p-4 font-black text-slate-900 dark:text-white">${Number(o.totalAmount).toLocaleString()} د.ع</td>
+      <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${o.status === 'Pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'}">${o.status === 'Pending' ? 'جديد قيد الانتظار' : o.status}</span></td>
+      <td class="p-4 text-center">
+        <button onclick="updateOrderStatus('${o.id}', 'Delivered')" class="q-pill-btn px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm">تسليم</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -561,16 +653,16 @@ async function loadInventory() {
   tbody.innerHTML = '';
   (res.products || []).forEach(p => {
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-800/40';
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
     tr.innerHTML = `
-      <td class="p-3 font-bold text-white">${p.name}</td>
-      <td class="p-3 font-mono text-slate-400">${p.barcode || '--'}</td>
-      <td class="p-3 text-slate-400">${p.category || 'عام'}</td>
-      <td class="p-3 font-bold text-blue-400">${Number(p.cost).toLocaleString()} د.ع</td>
-      <td class="p-3 font-bold text-emerald-400">${Number(p.price).toLocaleString()} د.ع</td>
-      <td class="p-3 font-black ${p.stockQuantity <= p.minStockAlert ? 'text-rose-400 animate-pulse' : 'text-slate-200'}">${p.stockQuantity}</td>
-      <td class="p-3 text-center">
-        <button onclick="editProductFromInventory('${p.id}')" class="text-blue-400 hover:text-blue-300 px-1 font-bold">✏ تعديل</button>
+      <td class="p-4 font-bold">${p.name}</td>
+      <td class="p-4 font-mono text-slate-400">${p.barcode || '--'}</td>
+      <td class="p-4 text-slate-500">${p.category || 'عام'}</td>
+      <td class="p-4 font-bold text-blue-600 dark:text-blue-400">${Number(p.cost).toLocaleString()} د.ع</td>
+      <td class="p-4 font-bold text-emerald-600 dark:text-emerald-400">${Number(p.price).toLocaleString()} د.ع</td>
+      <td class="p-4 font-black ${p.stockQuantity <= p.minStockAlert ? 'text-rose-500 font-black' : ''}">${p.stockQuantity}</td>
+      <td class="p-4 text-center">
+        <button onclick="editProductFromInventory('${p.id}')" class="q-pill-btn px-3 py-1 q-card hover:bg-slate-100 text-emerald-600 font-bold text-xs">✏ تعديل</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -594,26 +686,61 @@ function editProductFromInventory(id) {
   }
 }
 
-// ========================================================
-// THEME & REPS
-// ========================================================
-function toggleTheme() {
-  state.theme = state.theme === 'dark' ? 'light' : 'dark';
-  document.getElementById('themeIcon').innerText = state.theme === 'dark' ? '🌙' : '☀️';
-  document.getElementById('themeLabel').innerText = state.theme === 'dark' ? 'الوضع الليلي' : 'الوضع النهاري';
-  
-  if (state.theme === 'light') {
-    document.body.classList.remove('bg-[#090D16]', 'text-slate-100');
-    document.body.classList.add('bg-[#F8FAFC]', 'text-slate-900');
-  } else {
-    document.body.classList.add('bg-[#090D16]', 'text-slate-100');
-    document.body.classList.remove('bg-[#F8FAFC]', 'text-slate-900');
-  }
+async function loadSuppliers() {
+  const res = await callBackend('get_suppliers');
+  if (!res || !res.success) return;
+
+  const grid = document.getElementById('suppliersCardsGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  (res.suppliers || []).forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'q-card p-6 flex flex-col justify-between shadow-sm';
+    card.innerHTML = `
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="font-black text-lg">${s.name}</h4>
+          <span class="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 px-3 py-0.5 rounded-full font-bold">مندوب</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-1">الشركة: ${s.company || 'غير محدد'}</p>
+        <p class="text-xs text-slate-400">الهاتف: ${s.phone || '--'}</p>
+      </div>
+      <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <span class="text-xs text-slate-400 font-bold">الرصيد المستحق:</span>
+        <span class="text-base font-black text-amber-500">${Number(s.balance).toLocaleString()} د.ع</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
 }
 
-function toggleLanguage() {
-  state.language = state.language === 'ar' ? 'ku' : 'ar';
-  document.getElementById('langBtnText').innerText = state.language === 'ar' ? 'العربية' : 'کوردی';
+async function loadUsers() {
+  const res = await callBackend('get_users');
+  if (!res || !res.success) return;
+
+  const grid = document.getElementById('usersGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  (res.users || []).forEach(u => {
+    const card = document.createElement('div');
+    card.className = 'q-card p-6 shadow-sm';
+    card.innerHTML = `
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center font-bold text-xl">👤</div>
+        <div>
+          <h4 class="font-black text-base">${u.fullName}</h4>
+          <span class="text-xs text-slate-400 font-mono">@${u.username} (${u.role})</span>
+        </div>
+      </div>
+      <div class="flex items-center justify-between text-xs pt-3 border-t border-slate-100 dark:border-slate-800">
+        <span class="text-slate-400">الحالة:</span>
+        <span class="font-bold ${u.isActive ? 'text-emerald-600' : 'text-rose-500'}">${u.isActive ? 'نشط ومفعل ✔' : 'معطل ✕'}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
 }
 
 function openRepPortalModal() {
@@ -622,4 +749,9 @@ function openRepPortalModal() {
 
 function closeRepPortalModal() {
   document.getElementById('repModal')?.classList.add('hidden');
+}
+
+function toggleLanguage() {
+  state.language = state.language === 'ar' ? 'ku' : 'ar';
+  document.getElementById('langBtnText').innerText = state.language === 'ar' ? 'العربية' : 'کوردی';
 }
