@@ -1,0 +1,29 @@
+{
+  "storeId": "ST-9038",
+  "orderNumber": "ORD-20260822-882",
+  "orderDate": "2026-08-22T19:40:50.240Z",
+  "marketName": "محمد",
+  "marketPhone": "",
+  "marketAddress": "",
+  "representativeName": "نن",
+  "notes": "",
+  "totalAmount": 47000,
+  "items": [
+    {
+      "productId": "b6957489-65ca-4f91-a0e7-cafb0274d526",
+      "productName": "kek",
+      "barcode": "200245724732",
+      "quantity": 4,
+      "unitType": "Retail",
+      "unitPrice": 1250
+    },
+    {
+      "productId": "b6957489-65ca-4f91-a0e7-cafb0274d526",
+      "productName": "kek",
+      "barcode": "200245724732",
+      "quantity": 3,
+      "unitType": "Carton",
+      "unitPrice": 14000
+    }
+  ]
+}
