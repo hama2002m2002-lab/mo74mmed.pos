@@ -509,7 +509,6 @@ public class PosBridgeService
                                 var itemId = it.GetProperty("id").GetGuid();
                                 var qty = it.GetProperty("quantity").GetDecimal();
                                 var price = it.GetProperty("unitPrice").GetDecimal();
-
                                 var item = ord.Items.FirstOrDefault(i => i.Id == itemId);
                                 if (item != null)
                                 {
@@ -517,6 +516,16 @@ public class PosBridgeService
                                     item.UnitPrice = price;
                                     item.UpdatedAt = DateTime.UtcNow;
                                 }
+                                newTotal += (qty * price);
+                            }
+                            ord.TotalAmount = newTotal;
+                        }
+
+                        await db.SaveChangesAsync();
+                    }
+                    return JsonSerializer.Serialize(new { success = true });
+                }
+
                 case "accept_rep_order":
                 {
                     using var doc = JsonDocument.Parse(payloadJson);
