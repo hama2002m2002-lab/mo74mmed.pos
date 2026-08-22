@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>7amo POS - Ultimate Next-Gen POS</title>
+  <title>7amo.pos PRO - نظام إدارة المبيعات والمخازن</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js CDN -->
@@ -12,439 +12,464 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="flex flex-col h-screen overflow-hidden select-none bg-[#0B0F19] text-slate-100">
+<body class="flex flex-col h-screen overflow-hidden select-none bg-[#090D16] text-slate-100 font-sans">
 
   <!-- ======================================================== -->
-  <!-- TOP APP BAR -->
+  <!-- 0: TOP GLOBAL APPLICATION BAR -->
   <!-- ======================================================== -->
-  <header class="h-14 glass-panel border-b border-slate-800/80 flex items-center justify-between px-5 z-20">
-    <!-- Brand & Logo -->
+  <header class="h-14 glass-panel border-b border-slate-800/80 flex items-center justify-between px-5 z-30">
+    <!-- Brand & Status -->
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
         <i data-lucide="zap" class="w-5 h-5 text-white"></i>
       </div>
       <div>
         <h1 class="text-base font-black tracking-wide text-white flex items-center gap-2">
-          <span>pos.7amo</span>
+          <span>7amo.pos</span>
           <span class="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full font-bold">PRO v1.4.0</span>
         </h1>
       </div>
     </div>
 
-    <!-- Clock, Currency, Rep Bell & Toggles -->
-    <div class="flex items-center gap-4">
+    <!-- Controls, Theme Switcher & User Profile -->
+    <div class="flex items-center gap-3.5">
       <!-- Live Clock -->
-      <div id="liveClock" class="text-xs font-semibold text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
+      <div id="liveClock" class="text-xs font-semibold text-slate-400 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-800">
         00:00:00
       </div>
 
       <!-- Currency Badge -->
-      <div class="text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 px-3 py-1.5 rounded-lg">
+      <div class="text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/60 px-3 py-1.5 rounded-xl">
         د.ع (IQD)
       </div>
 
       <!-- Rep Orders Notification Bell -->
-      <button onclick="switchTab('repOrders')" class="relative p-2 rounded-xl bg-slate-800/60 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition">
-        <i data-lucide="bell" class="w-5 h-5"></i>
+      <button onclick="switchTab('repOrders')" class="relative p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition">
+        <i data-lucide="bell" class="w-5 h-5 text-amber-400"></i>
         <span id="repBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-rose-600 text-[11px] font-bold text-white rounded-full flex items-center justify-center animate-pulse">0</span>
       </button>
 
+      <!-- Theme Switcher (Dark <-> Light) -->
+      <button onclick="toggleTheme()" class="flex items-center gap-1.5 text-xs font-bold bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-slate-800 px-3 py-1.5 rounded-xl transition">
+        <span id="themeIcon">🌙</span>
+        <span id="themeLabel">الوضع الليلي</span>
+      </button>
+
       <!-- Language Switcher -->
-      <button onclick="toggleLanguage()" class="flex items-center gap-1.5 text-xs font-bold bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 px-3 py-1.5 rounded-lg transition">
+      <button onclick="toggleLanguage()" class="flex items-center gap-1.5 text-xs font-bold bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 px-3 py-1.5 rounded-xl transition">
         <i data-lucide="globe" class="w-3.5 h-3.5"></i>
         <span id="langBtnText">العربية</span>
       </button>
 
-      <!-- Cashier User Tag -->
-      <div class="flex items-center gap-2 bg-slate-800/80 border border-slate-700 px-3 py-1 rounded-xl">
+      <!-- Active User Tag -->
+      <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-1 rounded-xl">
         <div class="w-6 h-6 rounded-full bg-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-xs">👤</div>
-        <span id="currentCashierLabel" class="text-xs font-bold text-slate-200">محمد الكاشير</span>
+        <span class="text-xs font-bold text-slate-200">المدير العام</span>
       </div>
     </div>
   </header>
 
   <!-- ======================================================== -->
-  <!-- MAIN WORKSPACE (SIDEBAR + CONTENT TABS) -->
+  <!-- MAIN WORKSPACE -->
   <!-- ======================================================== -->
   <div class="flex flex-1 overflow-hidden">
 
-    <!-- SIDEBAR NAVIGATION -->
-    <aside class="w-64 glass-panel border-l border-slate-800/80 flex flex-col justify-between p-3.5 z-10">
+    <!-- SIDEBAR -->
+    <aside class="w-64 glass-panel border-l border-slate-800/80 flex flex-col justify-between p-3 z-20">
       <nav class="space-y-1.5">
         <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition">
           <i data-lucide="layout-dashboard" class="w-4.5 h-4.5 text-blue-400"></i>
-          <span data-i18n="nav_dashboard">لوحة التحكم والإحصائيات</span>
+          <span>لوحة التحكم (داشبۆرد)</span>
         </button>
 
-        <button onclick="switchTab('pos')" id="nav-pos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-sm text-emerald-400 bg-emerald-950/30 border border-emerald-500/20 hover:bg-emerald-900/40 transition">
+        <button onclick="switchTab('cashier')" id="nav-cashier" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 hover:bg-emerald-900/50 transition">
           <i data-lucide="shopping-cart" class="w-4.5 h-4.5 text-emerald-400"></i>
-          <span data-i18n="nav_pos">نقطة البيع والكاشير السريع</span>
+          <span>شاشة الكاشير والبيع</span>
+        </button>
+
+        <button onclick="switchTab('addProduct')" id="nav-addProduct" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition">
+          <i data-lucide="plus-circle" class="w-4.5 h-4.5 text-indigo-400"></i>
+          <span>إضافة وتعديل مادة</span>
         </button>
 
         <button onclick="switchTab('repOrders')" id="nav-repOrders" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition">
           <div class="flex items-center gap-3">
-            <i data-lucide="package-search" class="w-4.5 h-4.5 text-amber-400"></i>
-            <span data-i18n="nav_repOrders">طلبيات المناديب والمحلات</span>
+            <i data-lucide="truck" class="w-4.5 h-4.5 text-amber-400"></i>
+            <span>طلبيات المناديب والمحلات</span>
           </div>
           <span id="repSidebarBadge" class="hidden text-[10px] bg-rose-600 text-white font-bold px-2 py-0.5 rounded-full">0</span>
         </button>
 
         <button onclick="switchTab('inventory')" id="nav-inventory" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition">
-          <i data-lucide="boxes" class="w-4.5 h-4.5 text-indigo-400"></i>
-          <span data-i18n="nav_inventory">إدارة المخزن والمستودع</span>
+          <i data-lucide="boxes" class="w-4.5 h-4.5 text-cyan-400"></i>
+          <span>المخزن ورصيد المواد</span>
         </button>
 
         <button onclick="switchTab('suppliers')" id="nav-suppliers" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition">
-          <i data-lucide="handshake" class="w-4.5 h-4.5 text-cyan-400"></i>
-          <span data-i18n="nav_suppliers">المناديب والشركات الموردة</span>
+          <i data-lucide="handshake" class="w-4.5 h-4.5 text-purple-400"></i>
+          <span>المناديب والشركات الموردة</span>
         </button>
 
         <button onclick="switchTab('users')" id="nav-users" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition">
-          <i data-lucide="users" class="w-4.5 h-4.5 text-purple-400"></i>
-          <span data-i18n="nav_users">حسابات الكاشير والموظفين</span>
+          <i data-lucide="users" class="w-4.5 h-4.5 text-pink-400"></i>
+          <span>حسابات الكاشير</span>
         </button>
       </nav>
 
-      <!-- Cloud Rep Portal Quick Banner -->
-      <div class="p-3 bg-gradient-to-br from-blue-950/40 to-slate-900/60 rounded-2xl border border-blue-500/20">
-        <div class="flex items-center gap-2 mb-1.5">
+      <!-- Cloud Sync Banner -->
+      <div class="p-3 bg-gradient-to-br from-blue-950/50 to-slate-900/80 rounded-2xl border border-blue-500/20">
+        <div class="flex items-center gap-2 mb-1">
           <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
-          <span class="text-xs font-bold text-blue-300">سحابة المناديب 24/7</span>
+          <span class="text-xs font-bold text-blue-300">السحابة متصلة</span>
         </div>
-        <p class="text-[11px] text-slate-400 mb-2">استقبال طلبيات المحلات تلقائياً من الموبايل</p>
-        <button onclick="openRepPortalModal()" class="w-full text-xs font-bold py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition shadow-lg shadow-blue-500/20 flex items-center justify-center gap-1">
+        <p class="text-[11px] text-slate-400 mb-2">استقبال طلبيات المناديب والمحلات لحظياً</p>
+        <button onclick="openRepPortalModal()" class="w-full text-xs font-bold py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition shadow-lg shadow-blue-500/20 flex items-center justify-center gap-1.5">
           <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
-          <span>فتح باركود المندوب</span>
+          <span>باركود تطبيق المندوب</span>
         </button>
       </div>
     </aside>
 
-    <!-- CONTENT DISPLAY AREA -->
-    <main class="flex-1 overflow-y-auto p-6 relative">
+    <!-- CONTENT DISPLAY -->
+    <main class="flex-1 overflow-y-auto p-4 relative">
 
       <!-- ======================================================== -->
-      <!-- TAB 1: DASHBOARD VIEW -->
+      <!-- VIEW 1: CASHIER / SALE SCREEN (EXACT ORIGINAL LAYOUT) -->
       <!-- ======================================================== -->
-      <div id="tab-dashboard" class="tab-content space-y-6">
-        <!-- Header & Refresh -->
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-black text-white" data-i18n="dash_title">لوحة التحكم والإحصائيات العامة</h2>
-            <p class="text-xs text-slate-400 mt-1" data-i18n="dash_subtitle">مراقبة حية للمبيعات اليومية، الأرباح، ونواقص المخزون</p>
+      <div id="tab-cashier" class="tab-content h-full flex flex-col space-y-3">
+        <!-- Multi-Invoice Tabs Header -->
+        <div class="flex items-center justify-between glass-panel p-2.5 rounded-2xl">
+          <div class="flex items-center gap-2 overflow-x-auto">
+            <div id="invoiceTabsContainer" class="flex items-center gap-2"></div>
+            <button onclick="addNewInvoiceTab()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs font-bold rounded-xl border border-slate-700 flex items-center gap-1">
+              <span>➕ إضافة فاتورة</span>
+            </button>
           </div>
-          <button onclick="loadDashboard()" class="glow-btn flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold border border-slate-700">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-blue-400"></i>
-            <span data-i18n="dash_refresh">تحديث البيانات</span>
-          </button>
-        </div>
-
-        <!-- 4 Top KPI Glowing Cards -->
-        <div class="grid grid-cols-4 gap-4">
-          <!-- Today Sales -->
-          <div class="glass-card p-4.5 border-l-4 border-l-emerald-500 flex flex-col justify-between">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-400" data-i18n="dash_today_sales">مبيعات اليوم</span>
-              <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                <i data-lucide="dollar-sign" class="w-5 h-5"></i>
-              </div>
-            </div>
-            <div class="mt-3">
-              <span id="kpiTodayRevenue" class="text-2xl font-black text-emerald-400">0</span>
-              <span class="text-xs font-bold text-emerald-500"> د.ع</span>
-            </div>
-          </div>
-
-          <!-- Today Invoices -->
-          <div class="glass-card p-4.5 border-l-4 border-l-blue-500 flex flex-col justify-between">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-400" data-i18n="dash_today_invoices">فواتير اليوم</span>
-              <div class="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center">
-                <i data-lucide="receipt" class="w-5 h-5"></i>
-              </div>
-            </div>
-            <div class="mt-3">
-              <span id="kpiTodayInvoices" class="text-2xl font-black text-blue-400">0</span>
-              <span class="text-xs text-slate-400" data-i18n="dash_invoices_unit"> وصل</span>
-            </div>
-          </div>
-
-          <!-- Monthly Sales -->
-          <div class="glass-card p-4.5 border-l-4 border-l-purple-500 flex flex-col justify-between">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-400" data-i18n="dash_month_sales">مبيعات الشهر</span>
-              <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
-                <i data-lucide="trending-up" class="w-5 h-5"></i>
-              </div>
-            </div>
-            <div class="mt-3">
-              <span id="kpiMonthlyRevenue" class="text-2xl font-black text-purple-400">0</span>
-              <span class="text-xs font-bold text-purple-500"> د.ع</span>
-            </div>
-          </div>
-
-          <!-- Low Stock Alert -->
-          <div class="glass-card p-4.5 border-l-4 border-l-amber-500 flex flex-col justify-between">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-400" data-i18n="dash_low_stock">نواقص المخزن</span>
-              <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
-                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-              </div>
-            </div>
-            <div class="mt-3">
-              <span id="kpiLowStock" class="text-2xl font-black text-amber-400">0</span>
-              <span class="text-xs text-slate-400" data-i18n="dash_need_order"> أصناف بحاجة للطلب</span>
-            </div>
+          <div class="flex items-center gap-2">
+            <button onclick="switchTab('inventory')" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-lg shadow-blue-600/20">
+              <i data-lucide="package" class="w-3.5 h-3.5"></i>
+              <span>تصفح المخزن</span>
+            </button>
           </div>
         </div>
 
-        <!-- Charts Row -->
-        <div class="grid grid-cols-12 gap-5">
-          <!-- Weekly Bar Chart -->
-          <div class="col-span-8 glass-card p-5">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
-                <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-400"></i>
-                <span data-i18n="dash_chart_weekly">حركة المبيعات خلال الأسبوع الأخير</span>
-              </h3>
+        <!-- Main Workspace Split: (Right: Barcode + Items Table, Left: Big Summary Box) -->
+        <div class="flex-1 flex gap-4 overflow-hidden">
+          
+          <!-- Right Side: Barcode Search & Cart Table -->
+          <div class="flex-1 flex flex-col glass-panel rounded-2xl p-4 overflow-hidden border border-slate-800">
+            <!-- Barcode Scanner Bar -->
+            <div class="flex gap-2 mb-3">
+              <div class="relative flex-1">
+                <i data-lucide="barcode" class="w-5 h-5 text-blue-400 absolute right-3.5 top-2.5"></i>
+                <input id="cashierBarcodeInput" onkeydown="handleBarcodeKeyDown(event)" type="text" placeholder="امسح الباركود أو ابحث عن المادة (اضغط Enter للإضافة السريعة)..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pr-11 pl-4 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none font-mono">
+              </div>
+              <button onclick="openInventoryLookup()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700">
+                🔍 بحث يدوي
+              </button>
             </div>
-            <div class="h-56">
-              <canvas id="weeklyChart"></canvas>
+
+            <!-- Cart Items Data Grid -->
+            <div class="flex-1 overflow-y-auto border border-slate-800 rounded-xl">
+              <table class="w-full text-right text-xs">
+                <thead class="bg-slate-900/90 text-slate-300 font-bold border-b border-slate-800 sticky top-0">
+                  <tr>
+                    <th class="p-3">ت</th>
+                    <th class="p-3">اسم المادة</th>
+                    <th class="p-3">سعر المفرد</th>
+                    <th class="p-3 text-center">الكمية</th>
+                    <th class="p-3">المجموع الكلي</th>
+                    <th class="p-3 text-center">حذف</th>
+                  </tr>
+                </thead>
+                <tbody id="cashierCartTbody" class="divide-y divide-slate-800/60 text-slate-200">
+                  <tr>
+                    <td colspan="6" class="text-center py-12 text-slate-500">لا توجد مواد في هذه الفاتورة. امسح الباركود للبدء.</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <!-- Payment Breakdown Doughnut -->
-          <div class="col-span-4 glass-card p-5 flex flex-col justify-between">
-            <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2 mb-3">
-              <i data-lucide="pie-chart" class="w-4 h-4 text-purple-400"></i>
-              <span data-i18n="dash_chart_payments">طرق الدفع والتحصيل</span>
-            </h3>
-            <div class="h-44 flex items-center justify-center">
-              <canvas id="paymentChart"></canvas>
-            </div>
-            <div id="paymentLegend" class="flex justify-around text-xs mt-2 font-bold"></div>
-          </div>
-        </div>
-      </div>
+          <!-- Left Side: Big Elevated Summary & Checkout Box -->
+          <div class="w-96 glass-card p-5 rounded-2xl flex flex-col justify-between border-2 border-emerald-500/30 shadow-2xl shadow-emerald-950/30">
+            <div>
+              <div class="text-center pb-3 border-b border-slate-800">
+                <span class="text-xs font-bold text-slate-400">إجمالي الفاتورة المطلوب</span>
+                <div id="cashierTotalDisplay" class="text-3xl font-black text-emerald-400 mt-1">0 د.ع</div>
+              </div>
 
-      <!-- ======================================================== -->
-      <!-- TAB 2: POS CASHIER VIEW -->
-      <!-- ======================================================== -->
-      <div id="tab-pos" class="tab-content hidden h-full flex gap-5">
-        <!-- Products Catalog (Left side) -->
-        <div class="flex-1 flex flex-col glass-panel rounded-2xl p-4 overflow-hidden">
-          <!-- Search & Category filter -->
-          <div class="flex gap-3 mb-3">
-            <div class="relative flex-1">
-              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute right-3.5 top-3"></i>
-              <input id="posSearchInput" oninput="filterPosProducts()" type="text" placeholder="مسح أو كتابة الباركود / اسم المادة..." class="w-full bg-slate-900/80 border border-slate-700 rounded-xl pr-10 pl-4 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
-            </div>
-            <select id="posCatFilter" onchange="filterPosProducts()" class="bg-slate-900/80 border border-slate-700 text-slate-300 rounded-xl px-3 text-xs font-bold">
-              <option value="ALL">جميع الأصناف</option>
-            </select>
-          </div>
+              <!-- Quick Cash Notes Buttons -->
+              <div class="my-4 space-y-2">
+                <span class="text-[11px] font-bold text-slate-400 block">أزرار النقد السريع (المبلغ المستلم):</span>
+                <div class="grid grid-cols-2 gap-2">
+                  <button onclick="setPaidAmount(5000)" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700">5,000 د.ع</button>
+                  <button onclick="setPaidAmount(10000)" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700">10,000 د.ع</button>
+                  <button onclick="setPaidAmount(25000)" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700">25,000 د.ع</button>
+                  <button onclick="setPaidAmount(50000)" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700">50,000 د.ع</button>
+                </div>
+              </div>
 
-          <!-- Products Grid -->
-          <div id="posProductsGrid" class="flex-1 grid grid-cols-4 gap-3 overflow-y-auto pr-1"></div>
-        </div>
+              <!-- Calculation Details -->
+              <div class="space-y-2 text-xs">
+                <div class="flex justify-between items-center text-slate-300">
+                  <span>المجموع الفرعي:</span>
+                  <span id="cashierSubtotal" class="font-bold text-white">0 د.ع</span>
+                </div>
+                <div class="flex justify-between items-center text-amber-400">
+                  <span>الخصم الممنوح:</span>
+                  <input id="cashierDiscountInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-right text-amber-400 font-bold">
+                </div>
+                <div class="flex justify-between items-center text-blue-400">
+                  <span>المبلغ المستلم:</span>
+                  <input id="cashierPaidInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-right text-blue-400 font-bold">
+                </div>
+                <div class="flex justify-between items-center text-slate-300 pt-2 border-t border-slate-800">
+                  <span>المتبقي للزبون:</span>
+                  <span id="cashierChangeDisplay" class="font-black text-rose-400 text-sm">0 د.ع</span>
+                </div>
+              </div>
 
-        <!-- POS Cart / Invoice Checkout (Right side) -->
-        <div class="w-96 flex flex-col glass-panel rounded-2xl p-4 border border-blue-500/20">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-            <h3 class="font-black text-base text-white flex items-center gap-2">
-              <i data-lucide="shopping-bag" class="w-4 h-4 text-emerald-400"></i>
-              <span>فاتورة البيع الحالية</span>
-            </h3>
-            <button onclick="clearCart()" class="text-xs text-rose-400 hover:text-rose-300 font-bold">تفريغ السلة</button>
-          </div>
-
-          <!-- Cart Items List -->
-          <div id="posCartList" class="flex-1 overflow-y-auto py-3 space-y-2 pr-1">
-            <div class="text-center text-xs text-slate-500 py-10">السلة فارغة، اختر المواد لإضافتها</div>
-          </div>
-
-          <!-- Cart Summary & Payment -->
-          <div class="pt-3 border-t border-slate-800 space-y-2">
-            <div class="flex justify-between text-xs text-slate-400">
-              <span>المجموع الفرعي:</span>
-              <span id="posSubTotal" class="font-bold text-white">0 د.ع</span>
-            </div>
-            <div class="flex justify-between text-xs text-amber-400">
-              <span>الخصم الممنوح:</span>
-              <input id="posDiscountInput" oninput="calculateCartTotal()" type="number" value="0" class="w-20 text-right bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-amber-400">
-            </div>
-            <div class="flex justify-between text-base font-black text-emerald-400 pt-2 border-t border-slate-800/60">
-              <span>المبلغ المطلوب:</span>
-              <span id="posTotalAmount" class="text-xl">0 د.ع</span>
+              <!-- Payment Method Selector -->
+              <div class="mt-4 flex gap-2">
+                <button onclick="setPaymentMethod('Cash')" id="pm-Cash" class="flex-1 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-xl border border-emerald-500 shadow-md">💵 نقداً</button>
+                <button onclick="setPaymentMethod('Card')" id="pm-Card" class="flex-1 py-1.5 bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-700">💳 بطاقة</button>
+                <button onclick="setPaymentMethod('Debt')" id="pm-Debt" class="flex-1 py-1.5 bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-700">📝 آجل</button>
+              </div>
             </div>
 
-            <!-- Complete Sale Button -->
-            <button onclick="completeSale()" class="glow-btn w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-sm transition mt-3 flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
-              <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-              <span>إتمام البيع وحفظ الفاتورة</span>
+            <!-- Complete Invoice Action Button -->
+            <button onclick="submitCashierSale()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm rounded-xl transition shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2 mt-4">
+              <i data-lucide="check-circle" class="w-5 h-5"></i>
+              <span>إتمام البيع وحفظ الوصل (F12)</span>
             </button>
           </div>
         </div>
       </div>
 
       <!-- ======================================================== -->
-      <!-- TAB 3: REP & MARKET ORDERS VIEW -->
+      <!-- VIEW 2: ADD / EDIT PRODUCT (EXACT ORIGINAL LAYOUT) -->
       <!-- ======================================================== -->
-      <div id="tab-repOrders" class="tab-content hidden space-y-5">
+      <div id="tab-addProduct" class="tab-content hidden space-y-4">
+        <!-- Top Action Bar -->
+        <div class="flex items-center justify-between glass-panel p-3 rounded-2xl">
+          <div class="flex items-center gap-3">
+            <h2 id="addProductFormTitle" class="text-xl font-black text-white">إضافة مادة جديدة للمخزن</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="clearAddProductForm()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700">
+              🧹 مسح الحقول
+            </button>
+            <button onclick="saveProductFull()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>حفظ المادة</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 Cards Form Layout: Info, Packaging/Cartons, Pricing/Profits -->
+        <div class="grid grid-cols-3 gap-4">
+          <!-- Card 1: Product Main Info -->
+          <div class="glass-card p-4 space-y-3">
+            <h3 class="text-sm font-black text-blue-400 pb-2 border-b border-slate-800">1. معلومات المادة الأساسية</h3>
+            <input type="hidden" id="ap-id">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-bold">اسم المادة *</label>
+              <input id="ap-name" type="text" placeholder="مثال: زيت نباتي 1 لتر" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-bold">الباركود</label>
+              <div class="flex gap-2">
+                <input id="ap-barcode" type="text" placeholder="امسح أو ولد تلقائياً" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
+                <button onclick="generateRandomBarcode()" class="px-3 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-xl text-xs font-bold">🎲 توليد</button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-bold">التصنيف</label>
+              <input id="ap-category" type="text" placeholder="عام، مواد غذائية، منظفات..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-bold">المندوب / المورد</label>
+              <select id="ap-supplier" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+                <option value="">بدون مندوب (مباشر)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Card 2: Packaging & Cartons Breakdown -->
+          <div class="glass-card p-4 space-y-3">
+            <h3 class="text-sm font-black text-indigo-400 pb-2 border-b border-slate-800">2. تفاصيل التعبئة والكرتون</h3>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-bold">عدد القطع في الكرتون الواحد</label>
+              <input id="ap-itemsPerCarton" oninput="recalcAddProduct()" type="number" value="12" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-bold focus:border-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-bold">عدد الكراتين بالمخزن</label>
+              <input id="ap-cartonsCount" oninput="recalcAddProduct()" type="number" value="5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-bold focus:border-blue-500 focus:outline-none">
+            </div>
+            <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 space-y-1">
+              <span class="text-xs text-slate-400">إجمالي القطع المتوفرة بالمخزن:</span>
+              <div id="ap-totalStockDisplay" class="text-xl font-black text-indigo-400">60 قطعة</div>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1 font-bold">تنبيه النواقص عند (قطع)</label>
+              <input id="ap-minStockAlert" type="number" value="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-amber-400 font-bold focus:border-blue-500 focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Card 3: Pricing & Profits Calculator -->
+          <div class="glass-card p-4 space-y-3">
+            <h3 class="text-sm font-black text-emerald-400 pb-2 border-b border-slate-800">3. الأسعار والأرباح التقديرية</h3>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1 font-bold">تكلفة القطعة (د.ع)</label>
+                <input id="ap-cost" oninput="recalcAddProduct()" type="number" value="1000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1 font-bold">سعر بيع المفرد (د.ع)</label>
+                <input id="ap-price" oninput="recalcAddProduct()" type="number" value="1250" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400 font-bold focus:border-blue-500 focus:outline-none">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1 font-bold">شراء الكرتون (د.ع)</label>
+                <input id="ap-cartonPurchase" oninput="recalcAddProduct()" type="number" value="12000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 font-bold focus:border-blue-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1 font-bold">بيع الكرتون (د.ع)</label>
+                <input id="ap-cartonSelling" oninput="recalcAddProduct()" type="number" value="15000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 font-bold focus:border-blue-500 focus:outline-none">
+              </div>
+            </div>
+            <!-- Calculated Profits Display -->
+            <div class="p-3 bg-emerald-950/30 rounded-xl border border-emerald-500/30 space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-400">ربح القطعة المفردة:</span>
+                <span id="ap-retailProfitDisplay" class="font-bold text-emerald-400">250 د.ع</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-400">ربح الكرتون الواحد:</span>
+                <span id="ap-cartonProfitDisplay" class="font-bold text-emerald-400">3,000 د.ع</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- VIEW 3: DASHBOARD -->
+      <!-- ======================================================== -->
+      <div id="tab-dashboard" class="tab-content hidden space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-black text-white">لوحة التحكم والإحصائيات</h2>
+            <p class="text-xs text-slate-400 mt-1">مراقبة حية للمبيعات، النواقص، وحركة الأسبوع</p>
+          </div>
+          <button onclick="loadDashboard()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700 flex items-center gap-1.5">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-blue-400"></i>
+            <span>تحديث</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-4 gap-4">
+          <div class="glass-card p-4 border-l-4 border-l-emerald-500">
+            <span class="text-xs font-bold text-slate-400">مبيعات اليوم</span>
+            <div class="mt-2"><span id="kpiTodayRevenue" class="text-2xl font-black text-emerald-400">0</span> <span class="text-xs font-bold text-emerald-500">د.ع</span></div>
+          </div>
+          <div class="glass-card p-4 border-l-4 border-l-blue-500">
+            <span class="text-xs font-bold text-slate-400">فواتير اليوم</span>
+            <div class="mt-2"><span id="kpiTodayInvoices" class="text-2xl font-black text-blue-400">0</span> <span class="text-xs text-slate-400">فاتورة</span></div>
+          </div>
+          <div class="glass-card p-4 border-l-4 border-l-purple-500">
+            <span class="text-xs font-bold text-slate-400">مبيعات الشهر</span>
+            <div class="mt-2"><span id="kpiMonthlyRevenue" class="text-2xl font-black text-purple-400">0</span> <span class="text-xs font-bold text-purple-500">د.ع</span></div>
+          </div>
+          <div class="glass-card p-4 border-l-4 border-l-amber-500">
+            <span class="text-xs font-bold text-slate-400">نواقص المخزن</span>
+            <div class="mt-2"><span id="kpiLowStock" class="text-2xl font-black text-amber-400">0</span> <span class="text-xs text-slate-400">مواد</span></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-8 glass-card p-4">
+            <h3 class="text-xs font-bold text-slate-300 mb-3 flex items-center gap-2">📊 مبيعات آخر 7 أيام</h3>
+            <div class="h-52"><canvas id="weeklyChart"></canvas></div>
+          </div>
+          <div class="col-span-4 glass-card p-4 flex flex-col justify-between">
+            <h3 class="text-xs font-bold text-slate-300 mb-2 flex items-center gap-2">💳 توزيع طرق الدفع</h3>
+            <div class="h-40 flex items-center justify-center"><canvas id="paymentChart"></canvas></div>
+            <div id="paymentLegend" class="flex justify-around text-[11px] font-bold mt-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- VIEW 4: REP ORDERS -->
+      <!-- ======================================================== -->
+      <div id="tab-repOrders" class="tab-content hidden space-y-4">
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-2xl font-black text-white">طلبيات المناديب والمحلات</h2>
-            <p class="text-xs text-slate-400 mt-1">الطلبيات الواردة مباشرة من تطبيق المندوب والمحلات بالسحابة</p>
+            <p class="text-xs text-slate-400 mt-1">الطلبيات الواردة مباشرة من السحابة</p>
           </div>
-          <button onclick="loadRepOrders()" class="glow-btn flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold border border-slate-700">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-amber-400"></i>
-            <span>تحديث الطلبيات</span>
-          </button>
+          <button onclick="loadRepOrders()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700">تحديث</button>
         </div>
-
-        <!-- Orders Table -->
         <div class="glass-panel rounded-2xl overflow-hidden">
           <table class="w-full text-right text-xs">
-            <thead class="bg-slate-900/80 text-slate-400 font-bold border-b border-slate-800">
+            <thead class="bg-slate-900 text-slate-400 font-bold border-b border-slate-800">
               <tr>
-                <th class="p-3.5">رقم الطلبية</th>
-                <th class="p-3.5">اسم الماركت / المحل</th>
-                <th class="p-3.5">المندوب</th>
-                <th class="p-3.5">المدينة والهاتف</th>
-                <th class="p-3.5">عدد المواد</th>
-                <th class="p-3.5">الإجمالي (د.ع)</th>
-                <th class="p-3.5">الحالة</th>
-                <th class="p-3.5 text-center">إجراءات</th>
+                <th class="p-3">رقم الطلبية</th>
+                <th class="p-3">اسم المحل / الماركت</th>
+                <th class="p-3">المندوب</th>
+                <th class="p-3">المواد</th>
+                <th class="p-3">الإجمالي (د.ع)</th>
+                <th class="p-3">الحالة</th>
+                <th class="p-3 text-center">إجراءات</th>
               </tr>
             </thead>
-            <tbody id="repOrdersTableBody" class="divide-y divide-slate-800/60 text-slate-200"></tbody>
+            <tbody id="repOrdersTableBody" class="divide-y divide-slate-800 text-slate-200"></tbody>
           </table>
         </div>
       </div>
 
       <!-- ======================================================== -->
-      <!-- TAB 4: INVENTORY VIEW -->
+      <!-- VIEW 5: INVENTORY -->
       <!-- ======================================================== -->
-      <div id="tab-inventory" class="tab-content hidden space-y-5">
+      <div id="tab-inventory" class="tab-content hidden space-y-4">
         <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-black text-white">إدارة المخزن والمستودع</h2>
-            <p class="text-xs text-slate-400 mt-1">مراقبة كميات المخزون، أسعار الشراء والبيع، والقيمة الكلية للمواد</p>
-          </div>
-          <button onclick="openProductModal()" class="glow-btn flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span>إضافة مادة جديدة</span>
-          </button>
+          <h2 class="text-2xl font-black text-white">المخزن ورصيد المواد</h2>
+          <button onclick="switchTab('addProduct')" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-1">➕ إضافة مادة</button>
         </div>
-
-        <!-- Inventory Stats -->
-        <div class="grid grid-cols-3 gap-4">
-          <div class="glass-card p-4 border-l-4 border-l-blue-500">
-            <span class="text-xs text-slate-400">إجمالي القيمة الشرائية للمخزن</span>
-            <div id="invTotalCost" class="text-xl font-black text-blue-400 mt-1">0 د.ع</div>
-          </div>
-          <div class="glass-card p-4 border-l-4 border-l-emerald-500">
-            <span class="text-xs text-slate-400">إجمالي القيمة البيعية المتوقعة</span>
-            <div id="invTotalSell" class="text-xl font-black text-emerald-400 mt-1">0 د.ع</div>
-          </div>
-          <div class="glass-card p-4 border-l-4 border-l-purple-500">
-            <span class="text-xs text-slate-400">صافي الأرباح المتوقعة</span>
-            <div id="invTotalProfit" class="text-xl font-black text-purple-400 mt-1">0 د.ع</div>
-          </div>
-        </div>
-
-        <!-- Products Table -->
         <div class="glass-panel rounded-2xl overflow-hidden">
           <table class="w-full text-right text-xs">
-            <thead class="bg-slate-900/80 text-slate-400 font-bold border-b border-slate-800">
+            <thead class="bg-slate-900 text-slate-400 font-bold border-b border-slate-800">
               <tr>
-                <th class="p-3.5">اسم المادة</th>
-                <th class="p-3.5">الباركود</th>
-                <th class="p-3.5">التصنيف</th>
-                <th class="p-3.5">سعر التكلفة</th>
-                <th class="p-3.5">سعر البيع</th>
-                <th class="p-3.5">المخزون (قطع)</th>
-                <th class="p-3.5">إجمالي التكلفة</th>
-                <th class="p-3.5 text-center">إجراءات</th>
+                <th class="p-3">اسم المادة</th>
+                <th class="p-3">الباركود</th>
+                <th class="p-3">التصنيف</th>
+                <th class="p-3">سعر التكلفة</th>
+                <th class="p-3">سعر البيع</th>
+                <th class="p-3">المخزون (قطع)</th>
+                <th class="p-3 text-center">إجراءات</th>
               </tr>
             </thead>
-            <tbody id="inventoryTableBody" class="divide-y divide-slate-800/60 text-slate-200"></tbody>
+            <tbody id="inventoryTableBody" class="divide-y divide-slate-800 text-slate-200"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Add / Edit Product Modal -->
-      <div id="productModal" class="fixed inset-0 bg-black/75 backdrop-blur-md hidden flex items-center justify-center z-50">
-        <div class="glass-card w-[520px] p-6 space-y-4 border border-blue-500/40">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-            <h3 id="productModalTitle" class="text-base font-black text-white">إضافة مادة جديدة للمخزن</h3>
-            <button onclick="closeProductModal()" class="text-slate-400 hover:text-white font-bold text-sm">✕</button>
-          </div>
-          <input type="hidden" id="modalProdId">
-          <div class="grid grid-cols-2 gap-3 text-xs">
-            <div class="col-span-2">
-              <label class="block text-slate-400 mb-1 font-bold">اسم المادة *</label>
-              <input id="modalProdName" type="text" placeholder="مثال: شاي الوزة 500 غرام" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-slate-400 mb-1 font-bold">الباركود</label>
-              <input id="modalProdBarcode" type="text" placeholder="امسح أو اترك فارغاً للتوليد" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none font-mono">
-            </div>
-            <div>
-              <label class="block text-slate-400 mb-1 font-bold">التصنيف</label>
-              <input id="modalProdCategory" type="text" placeholder="عام، مشروبات، معلبات..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-blue-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-slate-400 mb-1 font-bold">سعر التكلفة (د.ع)</label>
-              <input id="modalProdCost" type="number" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-slate-400 mb-1 font-bold">سعر البيع المفرد (د.ع)</label>
-              <input id="modalProdPrice" type="number" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-emerald-400 font-bold focus:border-blue-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-slate-400 mb-1 font-bold">الكمية بالمخزن</label>
-              <input id="modalProdStock" type="number" value="10" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold focus:border-blue-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-slate-400 mb-1 font-bold">تنبيه النواقص عند</label>
-              <input id="modalProdMinStock" type="number" value="5" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-amber-400 font-bold focus:border-blue-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="flex gap-2 pt-3 border-t border-slate-800">
-            <button onclick="saveProductFromModal()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-blue-500/20">حفظ المادة</button>
-            <button onclick="closeProductModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs">إلغاء</button>
-          </div>
-        </div>
-      </div>
-
       <!-- ======================================================== -->
-      <!-- TAB 5: SUPPLIERS VIEW -->
+      <!-- VIEW 6: SUPPLIERS -->
       <!-- ======================================================== -->
-      <div id="tab-suppliers" class="tab-content hidden space-y-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-black text-white">المناديب والشركات الموردة</h2>
-            <p class="text-xs text-slate-400 mt-1">إدارة حسابات المناديب وسداد الدفعات وتتبع الذمم المالية</p>
-          </div>
-          <button onclick="loadSuppliers()" class="glow-btn flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold border border-slate-700">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-cyan-400"></i>
-            <span>تحديث المناديب</span>
-          </button>
-        </div>
-
+      <div id="tab-suppliers" class="tab-content hidden space-y-4">
+        <h2 class="text-2xl font-black text-white">المناديب والشركات الموردة</h2>
         <div id="suppliersCardsGrid" class="grid grid-cols-3 gap-4"></div>
       </div>
 
       <!-- ======================================================== -->
-      <!-- TAB 6: USERS VIEW -->
+      <!-- VIEW 7: USERS -->
       <!-- ======================================================== -->
-      <div id="tab-users" class="tab-content hidden space-y-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-black text-white">حسابات الكاشير والموظفين</h2>
-            <p class="text-xs text-slate-400 mt-1">إدارة المستخدمين والصلاحيات والرموز السرية</p>
-          </div>
-        </div>
+      <div id="tab-users" class="tab-content hidden space-y-4">
+        <h2 class="text-2xl font-black text-white">حسابات الكاشير</h2>
         <div id="usersGrid" class="grid grid-cols-3 gap-4"></div>
       </div>
 
@@ -452,15 +477,14 @@
   </div>
 
   <!-- QR Rep Portal Modal -->
-  <div id="repModal" class="fixed inset-0 bg-black/70 backdrop-blur-md hidden flex items-center justify-center z-50">
-    <div class="glass-card w-[420px] p-6 text-center space-y-4 border border-blue-500/40">
-      <h3 class="text-lg font-black text-white">📲 تطبيق المندوب والمحلات للموبايل</h3>
-      <p class="text-xs text-slate-300">امسح الباركود التالي بالموبايل لفتح بوابة إرسال الطلبيات مباشرة</p>
-      <div class="bg-white p-4 rounded-2xl w-48 h-48 mx-auto flex items-center justify-center shadow-2xl">
-        <img id="repQrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://hama2002m2002-lab.github.io/mo74mmed.pos/" alt="QR" class="w-full h-full">
+  <div id="repModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex items-center justify-center z-50">
+    <div class="glass-card w-[400px] p-6 text-center space-y-4 border border-blue-500/40">
+      <h3 class="text-lg font-black text-white">📲 تطبيق المندوب للموبايل</h3>
+      <p class="text-xs text-slate-300">امسح الباركود لفتح بوابة المناديب وإرسال الطلبيات مباشرة</p>
+      <div class="bg-white p-3 rounded-2xl w-44 h-44 mx-auto flex items-center justify-center shadow-2xl">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://hama2002m2002-lab.github.io/mo74mmed.pos/" alt="QR" class="w-full h-full">
       </div>
-      <p class="text-xs font-mono text-blue-400 break-all bg-slate-900/80 p-2 rounded-lg border border-slate-800">https://hama2002m2002-lab.github.io/mo74mmed.pos/</p>
-      <button onclick="closeRepPortalModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs">إغلاق</button>
+      <button onclick="closeRepPortalModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs">إغلاق</button>
     </div>
   </div>
 
