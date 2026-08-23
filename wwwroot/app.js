@@ -415,8 +415,10 @@ async function loadProducts(showAlert = false) {
   const res = await callBackend('get_pos_products');
   if (res && res.success) {
     state.products = res.products || [];
+    const badge = document.getElementById('cashierTotalProductsBadge');
+    if (badge) badge.innerText = state.products.length.toLocaleString();
     if (showAlert) {
-      alert(`✔ تم تحديث قائمة المواد من المخزن بنجاح! (${state.products.length} مادة جاهزة للبيع)`);
+      alert(`✔ تم تحديث قائمة المواد من المخزن بنجاح! (${state.products.length.toLocaleString()} مادة جاهزة للبيع)`);
     }
   }
 }
@@ -435,10 +437,10 @@ async function loadSuppliersList() {
   }
 }
 
-// Ensure invoice tabs are strictly numbered sequentially (فاتورة 1, فاتورة 2...)
+// Ensure invoice tabs are strictly numbered sequentially (پەنجەرە 1, پەنجەرە 2...)
 function reindexInvoiceTabs() {
   state.invoiceTabs.forEach((tab, index) => {
-    tab.title = `فاتورة ${index + 1}`;
+    tab.title = `پەنجەرە ${index + 1}`;
   });
 }
 
@@ -455,12 +457,12 @@ function renderInvoiceTabs() {
   state.invoiceTabs.forEach(t => {
     const isSel = t.id === state.selectedInvoiceTabId;
     const tabEl = document.createElement('div');
-    tabEl.className = `flex items-center gap-2 px-3.5 py-1.5 rounded-xl cursor-pointer text-xs font-bold transition ${isSel ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`;
+    tabEl.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer text-xs font-bold transition border ${isSel ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white border-teal-400 shadow-md' : 'bg-slate-900/90 border-slate-800 text-slate-300 hover:text-white'}`;
     tabEl.onclick = () => selectInvoiceTab(t.id);
     tabEl.innerHTML = `
       <span>${t.title}</span>
-      <span class="bg-white/20 px-1.5 py-0.2 rounded-full text-[10px]">${t.items.length}</span>
-      ${state.invoiceTabs.length > 1 ? `<button onclick="event.stopPropagation(); closeInvoiceTab('${t.id}')" class="text-rose-200 hover:text-white px-1 font-black" title="إغلاق الفاتورة">✕</button>` : ''}
+      <span class="bg-black/30 px-1.5 py-0.2 rounded-full text-[10px] font-mono">${t.items.length}</span>
+      ${state.invoiceTabs.length > 1 ? `<button onclick="event.stopPropagation(); closeInvoiceTab('${t.id}')" class="text-rose-300 hover:text-rose-100 px-1 font-black" title="داخستن">✕</button>` : ''}
     `;
     container.appendChild(tabEl);
   });
@@ -470,7 +472,7 @@ function addNewInvoiceTab() {
   const newId = 'inv_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
   state.invoiceTabs.push({
     id: newId,
-    title: `فاتورة ${state.invoiceTabs.length + 1}`,
+    title: `پەنجەرە ${state.invoiceTabs.length + 1}`,
     items: [],
     discount: 0,
     paid: 0,
@@ -509,12 +511,10 @@ function closeInvoiceTab(id) {
 function flashBarcodeError() {
   const input = document.getElementById('cashierBarcodeInput');
   if (!input) return;
-  input.classList.remove('border-slate-200', 'dark:border-slate-800');
-  input.classList.add('border-rose-500', 'bg-rose-50', 'dark:bg-rose-950/60', 'text-rose-500', 'ring-2', 'ring-rose-500');
+  input.classList.add('border-rose-500', 'text-rose-400', 'ring-4', 'ring-rose-500/30');
   input.select();
   setTimeout(() => {
-    input.classList.remove('border-rose-500', 'bg-rose-50', 'dark:bg-rose-950/60', 'text-rose-500', 'ring-2', 'ring-rose-500');
-    input.classList.add('border-slate-200', 'dark:border-slate-800');
+    input.classList.remove('border-rose-500', 'text-rose-400', 'ring-4', 'ring-rose-500/30');
   }, 1800);
 }
 
@@ -588,7 +588,7 @@ function handleCashierSearchInput() {
   resultsContainer.innerHTML = '';
   matches.forEach(p => {
     const item = document.createElement('div');
-    item.className = 'p-2.5 hover:bg-emerald-50 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between border-b border-slate-100 dark:border-slate-800 transition';
+    item.className = 'p-3 hover:bg-slate-800/80 cursor-pointer flex items-center justify-between transition border-b border-slate-800/60';
     item.onclick = () => {
       addItemToCurrentCart(p);
       input.value = '';
@@ -596,15 +596,15 @@ function handleCashierSearchInput() {
       input.focus();
     };
     item.innerHTML = `
-      <div class="flex items-center gap-2">
-        <span class="text-base">🏷</span>
+      <div class="flex items-center gap-2.5">
+        <span class="text-lg">🏷</span>
         <div>
-          <div class="font-bold text-xs text-slate-800 dark:text-white">${p.name}</div>
-          <div class="text-[10px] font-mono text-slate-400">باركود: ${p.barcode || '--'}</div>
+          <div class="font-bold text-xs text-white">${p.name || p.Name}</div>
+          <div class="text-[10px] font-mono text-sky-400">باركود: ${p.barcode || p.Barcode || '--'}</div>
         </div>
       </div>
-      <div class="text-right">
-        <div class="font-black text-xs text-emerald-600 dark:text-emerald-400">${Number(p.price).toLocaleString()} د.ع</div>
+      <div class="text-left">
+        <div class="font-black text-xs text-emerald-400 font-mono">${Number(p.price || p.Price || 0).toLocaleString()} د.ع</div>
         <div class="text-[10px] text-slate-400 font-bold">الرصيد: ${p.stockQuantity || 0} قطعة</div>
       </div>
     `;
@@ -620,17 +620,23 @@ function hideCashierSearchResults() {
 
 function addItemToCurrentCart(product) {
   const currentTab = getCurrentTab();
-  const existing = currentTab.items.find(i => i.id === product.id);
+  const prodId = product.id || product.Id;
+  const prodName = product.name || product.Name || 'مادة بدون اسم';
+  const prodBarcode = product.barcode || product.Barcode || '--';
+  const prodPrice = Number(product.price ?? product.Price ?? 0) || 0;
+  const prodCost = Number(product.cost ?? product.Cost ?? 0) || 0;
+
+  const existing = currentTab.items.find(i => i.id === prodId);
 
   if (existing) {
-    existing.qty += 1;
+    existing.qty = (Number(existing.qty) || 1) + 1;
   } else {
     currentTab.items.push({
-      id: product.id,
-      name: product.name,
-      barcode: product.barcode,
-      price: product.price,
-      cost: product.cost,
+      id: prodId,
+      name: prodName,
+      barcode: prodBarcode,
+      price: prodPrice,
+      cost: prodCost,
       qty: 1
     });
   }
@@ -643,7 +649,7 @@ function updateCartItemQty(id, delta) {
   const currentTab = getCurrentTab();
   const item = currentTab.items.find(i => i.id === id);
   if (item) {
-    item.qty += delta;
+    item.qty = (Number(item.qty) || 1) + delta;
     if (item.qty <= 0) {
       currentTab.items = currentTab.items.filter(i => i.id !== id);
     }
@@ -659,35 +665,64 @@ function removeCartItem(id) {
   renderCashierCart();
 }
 
+function clearCurrentInvoice() {
+  const currentTab = getCurrentTab();
+  currentTab.items = [];
+  const discountInput = document.getElementById('cashierDiscountInput');
+  const paidInput = document.getElementById('cashierPaidInput');
+  const taxInput = document.getElementById('cashierTaxInput');
+  if (discountInput) discountInput.value = 0;
+  if (paidInput) paidInput.value = 0;
+  if (taxInput) taxInput.value = 0;
+
+  renderInvoiceTabs();
+  renderCashierCart();
+  setTimeout(() => {
+    document.getElementById('cashierBarcodeInput')?.focus();
+  }, 50);
+}
+
 function renderCashierCart() {
   const currentTab = getCurrentTab();
+  const emptyState = document.getElementById('cashierCartEmptyState');
+  const tableWrapper = document.getElementById('cashierCartTableWrapper');
   const tbody = document.getElementById('cashierCartTbody');
+
   if (!tbody) return;
 
   if (currentTab.items.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-16 text-slate-400">لا توجد مواد في هذه الفاتورة. امسح الباركود للبدء.</td></tr>';
+    if (emptyState) emptyState.classList.remove('hidden');
+    if (tableWrapper) tableWrapper.classList.add('hidden');
     recalcCashierInvoice();
     return;
   }
 
+  if (emptyState) emptyState.classList.add('hidden');
+  if (tableWrapper) tableWrapper.classList.remove('hidden');
+
   tbody.innerHTML = '';
   currentTab.items.forEach((item, index) => {
+    const itemPrice = Number(item.price) || 0;
+    const itemQty = Number(item.qty) || 1;
+    const itemTotal = itemPrice * itemQty;
+
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
+    tr.className = 'hover:bg-slate-800/50 transition';
     tr.innerHTML = `
-      <td class="p-3 font-bold text-slate-400">${index + 1}</td>
-      <td class="p-3 font-bold">${item.name}</td>
-      <td class="p-3 font-bold text-emerald-600 dark:text-emerald-400">${Number(item.price).toLocaleString()} د.ع</td>
+      <td class="p-3 text-center text-slate-400 font-bold font-mono">${index + 1}</td>
+      <td class="p-3 font-bold text-white">${item.name}</td>
+      <td class="p-3 font-mono text-sky-400 text-xs">${item.barcode || '--'}</td>
+      <td class="p-3 text-center font-bold text-emerald-400 font-mono">${itemPrice.toLocaleString()} د.ع</td>
       <td class="p-3 text-center">
-        <div class="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-xl">
-          <button onclick="updateCartItemQty('${item.id}', -1)" class="w-5 h-5 rounded text-rose-500 font-bold">-</button>
-          <span class="font-bold px-1">${item.qty}</span>
-          <button onclick="updateCartItemQty('${item.id}', 1)" class="w-5 h-5 rounded text-emerald-500 font-bold">+</button>
+        <div class="inline-flex items-center gap-2 bg-[#0b1329] border border-slate-700 px-2 py-1 rounded-xl">
+          <button onclick="updateCartItemQty('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 font-black text-sm flex items-center justify-center">-</button>
+          <span class="font-black px-1 text-white font-mono">${itemQty}</span>
+          <button onclick="updateCartItemQty('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 font-black text-sm flex items-center justify-center">+</button>
         </div>
       </td>
-      <td class="p-3 font-black text-slate-800 dark:text-white">${Number(item.price * item.qty).toLocaleString()} د.ع</td>
+      <td class="p-3 text-center font-black text-emerald-300 font-mono">${itemTotal.toLocaleString()} د.ع</td>
       <td class="p-3 text-center">
-        <button onclick="removeCartItem('${item.id}')" class="text-rose-500 hover:text-rose-600 font-bold text-xs">🗑</button>
+        <button onclick="removeCartItem('${item.id}')" class="p-1.5 hover:bg-rose-500/20 text-rose-400 rounded-lg font-bold text-xs" title="سڕینەوە">🗑</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -698,16 +733,24 @@ function renderCashierCart() {
 
 function recalcCashierInvoice() {
   const currentTab = getCurrentTab();
-  const subtotal = currentTab.items.reduce((sum, i) => sum + (i.price * i.qty), 0);
-  const discount = Number(document.getElementById('cashierDiscountInput')?.value || 0);
-  const paid = Number(document.getElementById('cashierPaidInput')?.value || 0);
+  const totalItems = currentTab.items.reduce((sum, i) => sum + (Number(i.qty) || 1), 0);
+  const subtotal = currentTab.items.reduce((sum, i) => sum + ((Number(i.price) || 0) * (Number(i.qty) || 1)), 0);
+  const discount = Math.max(0, Number(document.getElementById('cashierDiscountInput')?.value || 0));
+  const tax = Math.max(0, Number(document.getElementById('cashierTaxInput')?.value || 0));
+  const paid = Math.max(0, Number(document.getElementById('cashierPaidInput')?.value || 0));
 
-  const total = Math.max(0, subtotal - discount);
+  const total = Math.max(0, subtotal - discount + tax);
   const change = Math.max(0, paid - total);
 
-  document.getElementById('cashierSubtotal').innerText = Number(subtotal).toLocaleString() + ' د.ع';
-  document.getElementById('cashierTotalDisplay').innerText = Number(total).toLocaleString() + ' د.ع';
-  document.getElementById('cashierChangeDisplay').innerText = Number(change).toLocaleString() + ' د.ع';
+  const subtotalEl = document.getElementById('cashierSubtotal');
+  const totalEl = document.getElementById('cashierTotalDisplay');
+  const changeEl = document.getElementById('cashierChangeDisplay');
+  const countBadgeEl = document.getElementById('cashierItemCountBadge');
+
+  if (subtotalEl) subtotalEl.innerText = `${subtotal.toLocaleString()} د.ع`;
+  if (totalEl) totalEl.innerText = `${total.toLocaleString()} د.ع`;
+  if (changeEl) changeEl.innerText = `${change.toLocaleString()} د.ع`;
+  if (countBadgeEl) countBadgeEl.innerText = `${totalItems} کاڵا لە سەبەتەدا`;
 }
 
 function setPaidAmount(amt) {
@@ -721,26 +764,26 @@ function setPaidAmount(amt) {
 function setPaymentMethod(pm) {
   const currentTab = getCurrentTab();
   currentTab.paymentMethod = pm;
-  ['Cash', 'Card', 'Debt'].forEach(m => {
+  ['Cash', 'Debt', 'Card', 'Nfc'].forEach(m => {
     const btn = document.getElementById(`pm-${m}`);
     if (btn) {
       if (m === pm) {
-        btn.className = 'flex-1 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md';
+        btn.className = 'py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 transition';
       } else {
-        btn.className = 'flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-xs rounded-xl';
+        btn.className = 'py-2 px-3 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition';
       }
     }
   });
 }
 
-async function submitCashierSale() {
+async function submitCashierSale(printReceipt = false) {
   const currentTab = getCurrentTab();
   if (currentTab.items.length === 0) {
-    alert('الفاتورة فارغة!');
+    alert('سەبەتە بەتاڵە! تکایە پێش فرۆشتن کاڵا زیاد بکە.');
     return;
   }
 
-  const discount = Number(document.getElementById('cashierDiscountInput')?.value || 0);
+  const discount = Math.max(0, Number(document.getElementById('cashierDiscountInput')?.value || 0));
   const payload = {
     paymentMethod: currentTab.paymentMethod || 'Cash',
     discount: discount,
@@ -749,15 +792,130 @@ async function submitCashierSale() {
 
   const res = await callBackend('complete_sale', payload);
   if (res && res.success) {
-    alert(`✔ تم حفظ وإتمام الفاتورة بنجاح!\nرقم الفاتورة: ${res.invoiceNumber}\nالمبلغ المطلوب: ${Number(res.total).toLocaleString()} د.ع`);
+    alert(`🎉 فرۆشتن بە سەرکەوتوویی تەواو بوو!\nژمارەی پسوولە: ${res.invoiceNumber}\nبڕی پارە: ${Number(res.total).toLocaleString()} د.ع`);
+    
+    if (printReceipt || isFastPrintEnabled) {
+      window.print();
+    }
+
     currentTab.items = [];
     document.getElementById('cashierDiscountInput').value = 0;
     document.getElementById('cashierPaidInput').value = 0;
+    document.getElementById('cashierTaxInput').value = 0;
+    
     renderInvoiceTabs();
     renderCashierCart();
     loadDashboard();
+    loadInventory();
+  } else {
+    alert('هەڵەیەک ڕوویدا لە کاتی فرۆشتندا: ' + (res?.message || ''));
   }
 }
+
+// --------------------------------------------------------
+// QUICK WAREHOUSE PRODUCTS MODAL (کۆگا F4)
+// --------------------------------------------------------
+function openQuickProductModal() {
+  renderQuickProductsGrid(state.products);
+  document.getElementById('quickProductModal')?.classList.remove('hidden');
+  setTimeout(() => {
+    document.getElementById('qpm-search')?.focus();
+  }, 100);
+}
+
+function closeQuickProductModal() {
+  document.getElementById('quickProductModal')?.classList.add('hidden');
+  document.getElementById('cashierBarcodeInput')?.focus();
+}
+
+function renderQuickProductsGrid(list) {
+  const grid = document.getElementById('qpm-grid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  list.slice(0, 60).forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'p-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500 rounded-xl cursor-pointer transition flex flex-col justify-between';
+    card.onclick = () => {
+      addItemToCurrentCart(p);
+      closeQuickProductModal();
+    };
+    card.innerHTML = `
+      <div>
+        <div class="font-bold text-xs text-white line-clamp-1">${p.name || p.Name}</div>
+        <div class="text-[10px] font-mono text-sky-400">${p.barcode || p.Barcode || '--'}</div>
+      </div>
+      <div class="flex items-center justify-between pt-2 mt-2 border-t border-slate-800 text-xs">
+        <span class="font-black text-emerald-400 font-mono">${Number(p.price || p.Price || 0).toLocaleString()} د.ع</span>
+        <span class="text-[10px] text-slate-400 font-bold">رصيد: ${p.stockQuantity || 0}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function filterQuickProductModal() {
+  const q = (document.getElementById('qpm-search')?.value || '').toLowerCase().trim();
+  const filtered = state.products.filter(p => 
+    (p.name && p.name.toLowerCase().includes(q)) || (p.barcode && p.barcode.includes(q))
+  );
+  renderQuickProductsGrid(filtered);
+}
+
+let isFastPrintEnabled = false;
+function toggleFastPrint() {
+  isFastPrintEnabled = !isFastPrintEnabled;
+  const btn = document.getElementById('btnFastPrint');
+  if (btn) {
+    btn.className = isFastPrintEnabled 
+      ? 'px-3.5 py-2 bg-teal-600 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition whitespace-nowrap'
+      : 'px-3.5 py-2 bg-slate-900 border border-teal-500/40 text-teal-400 hover:bg-teal-950/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap';
+  }
+}
+
+let isSmartPrintEnabled = false;
+function toggleSmartPrint() {
+  isSmartPrintEnabled = !isSmartPrintEnabled;
+  const btn = document.getElementById('btnSmartPrint');
+  if (btn) {
+    btn.className = isSmartPrintEnabled
+      ? 'flex-1 py-1.5 bg-teal-600 text-white font-bold rounded-xl text-[11px] flex items-center justify-center gap-1 transition'
+      : 'flex-1 py-1.5 bg-[#060c1c] border border-teal-500/40 text-teal-400 hover:bg-teal-950/40 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition';
+  }
+}
+
+let isReturnMode = false;
+function toggleReturnMode() {
+  isReturnMode = !isReturnMode;
+  const btn = document.getElementById('btnReturnMode');
+  if (btn) {
+    btn.className = isReturnMode
+      ? 'px-3 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition whitespace-nowrap'
+      : 'px-3 py-2 bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap';
+  }
+}
+
+// Global Keyboard Shortcuts Listener
+window.addEventListener('keydown', (e) => {
+  if (state.activeTab !== 'cashier') return;
+
+  if (e.key === 'F1') {
+    e.preventDefault();
+    addNewInvoiceTab();
+  } else if (e.key === 'F3') {
+    e.preventDefault();
+    document.getElementById('cashierBarcodeInput')?.focus();
+  } else if (e.key === 'F4') {
+    e.preventDefault();
+    openQuickProductModal();
+  } else if (e.key === 'F8') {
+    e.preventDefault();
+    clearCurrentInvoice();
+  } else if (e.key === 'F12') {
+    e.preventDefault();
+    submitCashierSale(true);
+  }
+});
 
 // ========================================================
 // ADD / EDIT PRODUCT FULL FORM (DETAILED MARKET LOGIC)
