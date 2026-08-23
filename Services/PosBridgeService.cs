@@ -241,104 +241,99 @@ public class PosBridgeService
                     });
                 }
 
-                case "get_invoices":
+                case "get_receipts_and_returns":
                 {
-                    var sales = await db.Sales
+                    var allSales = await db.Sales
                         .Include(s => s.Items)
                         .AsNoTracking()
                         .OrderByDescending(s => s.CreatedAt)
+                        .Take(500)
                         .ToListAsync();
 
-                    decimal totalSalesAmount = sales.Where(s => s.Status != "Returned").Sum(s => s.TotalAmount);
-                    int totalSalesCount = sales.Count(s => s.Status != "Returned");
-                    int totalReturnsCount = sales.Count(s => s.Status == "Returned");
-                    decimal totalReturnedAmount = sales.Where(s => s.Status == "Returned").Sum(s => s.TotalAmount);
+                    var completedSales = allSales.Where(s => s.Status == "Completed" && !s.IsReturnSale).ToList();
+                    var returnedSales = allSales.Where(s => s.Status == "Returned" || s.IsReturnSale).ToList();
+
+                    decimal totalSalesAmount = completedSales.Sum(s => s.TotalAmount);
+                    int totalSalesCount = completedSales.Count;
+
+                    decimal totalReturnedAmount = returnedSales.Sum(s => s.TotalAmount);
+                    int totalReturnedCount = returnedSales.Count;
+
+                    var receiptsList = allSales.Select(s => new
+                    {
+                        id = s.Id,
+                        invoiceNumber = s.InvoiceNumber,
+                        customerName = s.CustomerName ?? "زبون نقدي",
+                        totalAmount = s.TotalAmount,
+                        subTotal = s.SubTotal,
+                        discountAmount = s.DiscountAmount,
+                        paymentMethod = s.PaymentMethod ?? "Cash",
+                        status = s.Status,
+                        isReturn = s.Status == "Returned" || s.IsReturnSale,
+                        itemsCount = s.Items.Count,
+                        date = s.CreatedAt.ToString("yyyy/MM/dd hh:mm tt"),
+                        items = s.Items.Select(i => new
+                        {
+                            name = i.ProductName,
+                            qty = i.Quantity,
+                            price = i.UnitPrice,
+                            total = i.TotalPrice
+                        })
+                    }).ToList();
 
                     return JsonSerializer.Serialize(new
                     {
                         success = true,
-                        totalSalesAmount = totalSalesAmount,
-                        totalSalesCount = totalSalesCount,
-                        totalReturnsCount = totalReturnsCount,
-                        totalReturnedAmount = totalReturnedAmount,
-                        invoices = sales.Select(s => new
-                        {
-                            id = s.Id,
-                            invoiceNumber = s.InvoiceNumber,
-                            customerName = s.CustomerName ?? "زبون نقدي",
-                            paymentMethod = s.PaymentMethod ?? "Cash",
-                            subTotal = s.SubTotal,
-                            discountAmount = s.DiscountAmount,
-                            totalAmount = s.TotalAmount,
-                            paidAmount = s.PaidAmount,
-                            status = s.Status,
-                            createdAt = s.CreatedAt.ToString("yyyy/MM/dd hh:mm tt"),
-                            itemsCount = s.Items != null ? s.Items.Count : 0,
-                            items = (s.Items ?? new List<SaleItem>()).Select(i => new
-                            {
-                                id = i.Id,
-                                productId = i.ProductId,
-                                productName = i.ProductName,
-                                quantity = i.Quantity,
-                                unitPrice = i.UnitPrice,
-                                totalPrice = i.TotalPrice
-                            })
-                        })
+                        totalSalesAmount,
+                        totalSalesCount,
+                        totalReturnedAmount,
+                        totalReturnedCount,
+                        receipts = receiptsList
                     });
                 }
 
-                case "return_invoice":
+                case "return_receipt":
                 {
                     using var doc = JsonDocument.Parse(payloadJson);
-                    var root = doc.RootElement;
-                    string invoiceIdStr = root.TryGetProperty("invoiceId", out var idProp) ? idProp.GetString() ?? "" : "";
-                    string invoiceNum = root.TryGetProperty("invoiceNumber", out var numProp) ? numProp.GetString() ?? "" : "";
+                    string invNum = doc.RootElement.TryGetProperty("invoiceNumber", out var ip) ? ip.GetString()?.Trim() ?? "" : "";
+                    
+                    var targetSale = await db.Sales
+                        .Include(s => s.Items)
+                        .FirstOrDefaultAsync(s => s.InvoiceNumber == invNum);
 
-                    Sale? saleToReturn = null;
-                    if (Guid.TryParse(invoiceIdStr, out var gId))
+                    if (targetSale == null)
                     {
-                        saleToReturn = await db.Sales.Include(s => s.Items).FirstOrDefaultAsync(s => s.Id == gId);
-                    }
-                    if (saleToReturn == null && !string.IsNullOrWhiteSpace(invoiceNum))
-                    {
-                        saleToReturn = await db.Sales.Include(s => s.Items).FirstOrDefaultAsync(s => s.InvoiceNumber == invoiceNum);
+                        return JsonSerializer.Serialize(new { success = false, message = "لم يتم العثور على الفاتورة المطلوبة" });
                     }
 
-                    if (saleToReturn == null)
+                    if (targetSale.Status == "Returned")
                     {
-                        return JsonSerializer.Serialize(new { success = false, message = "الفاتورة غير موجودة" });
+                        return JsonSerializer.Serialize(new { success = false, message = "هذه الفاتورة تم إرجاعها مسبقاً!" });
                     }
 
-                    if (saleToReturn.Status == "Returned")
+                    // Restore stock quantities
+                    foreach (var item in targetSale.Items)
                     {
-                        return JsonSerializer.Serialize(new { success = false, message = "الفاتورة تم إرجاعها مسبقاً" });
-                    }
-
-                    saleToReturn.Status = "Returned";
-                    saleToReturn.Notes += $" [تم الإرجاع بتاريخ {DateTime.Now:yyyy/MM/dd HH:mm}]";
-
-                    // Restock inventory products
-                    if (saleToReturn.Items != null)
-                    {
-                        foreach (var itm in saleToReturn.Items)
+                        if (item.ProductId.HasValue)
                         {
-                            var prod = await db.Products.FindAsync(itm.ProductId);
+                            var prod = await db.Products.FindAsync(item.ProductId.Value);
                             if (prod != null)
                             {
-                                prod.StockQuantity += itm.Quantity;
+                                prod.StockQuantity += item.Quantity;
                                 prod.UpdatedAt = DateTime.UtcNow;
                             }
                         }
                     }
 
+                    targetSale.Status = "Returned";
+                    targetSale.Notes = (targetSale.Notes ?? "") + " [تم الاسترجاع بالكامل]";
                     await db.SaveChangesAsync();
 
                     return JsonSerializer.Serialize(new
                     {
                         success = true,
-                        invoiceNumber = saleToReturn.InvoiceNumber,
-                        returnedAmount = saleToReturn.TotalAmount,
-                        message = "تم إرجاع الفاتورة واستعادة رصيد المخزن بنجاح"
+                        invoiceNumber = targetSale.InvoiceNumber,
+                        refundAmount = targetSale.TotalAmount
                     });
                 }
 

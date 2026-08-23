@@ -99,7 +99,7 @@ function setupGlobalKeyboardShortcuts() {
 }
 
 // ========================================================
-// I18N LOCALIZATION DICTIONARY (ARABIC, KURDISH & ENGLISH)
+// I18N LOCALIZATION DICTIONARY (ARABIC & KURDISH)
 // ========================================================
 const i18n = {
   ar: {
@@ -132,36 +132,7 @@ const i18n = {
     ap_w_profit: "ربح قطعة الجملة:",
     ap_w_c_profit: "ربح الكرتون بالجملة:",
     ap_lbl_carton_sell: "سعر بيع الكرتون كاملاً (د.ع)",
-    ap_c_profit: "ربح بيع الكرتون كاملاً:",
-    pos_btn_home: "الرئيسية",
-    pos_cashier_user: "الكاشير: المدير العام (Admin)",
-    pos_system_subtitle: "7amo.pos • نظام المبيعات السريعة",
-    pos_btn_invoices_history: "الفواتير المباعة والمرتجعة",
-    pos_tabs_title: "نوافذ البيع النشطة:",
-    pos_new_tab: "فاتورة جديدة F1",
-    pos_warehouse_btn: "المخزن F4",
-    pos_return_btn: "إرجاع مادة",
-    pos_barcode_ph: "[F3] امسح الباركود هنا (نشط)...",
-    ihm_title: "سجل الفواتير والمبيعات والمرتجعات",
-    ihm_subtitle: "استعراض تفاصيل الفواتير وإرجاع المواد واستعادة رصيد المخزن",
-    ihm_sales_amount: "إجمالي المبيعات",
-    ihm_sales_count: "عدد الفواتير المباعة",
-    ihm_returns_count: "عدد الفواتير المرجوعة",
-    ihm_returns_amount: "إجمالي المبالغ المرجوعة",
-    ihm_tab_all: "الكل",
-    ihm_tab_sold: "المباعة",
-    ihm_tab_returned: "المرتجعة",
-    ihm_search_ph: "بحث برقم الفاتورة، اسم الزبون، أو التاريخ...",
-    ihm_th_inv: "رقم الفاتورة",
-    ihm_th_date: "الوقت والتاريخ",
-    ihm_th_customer: "الزبون / العميل",
-    ihm_th_payment: "طريقة الدفع",
-    ihm_th_items: "عدد المواد",
-    ihm_th_total: "المبلغ الإجمالي",
-    ihm_th_status: "الحالة",
-    ihm_th_actions: "الإجراءات",
-    ihm_refresh: "تحديث",
-    qpm_title: "اختيار سريع من المخزن (قائمة المواد السريعة)"
+    ap_c_profit: "ربح بيع الكرتون كاملاً:"
   },
   ku: {
     ap_back: "گەڕانەوە بۆ سەرەکی",
@@ -193,162 +164,14 @@ const i18n = {
     ap_w_profit: "قازانجی دانە بە کۆ:",
     ap_w_c_profit: "قازانجی کارتۆن بە کۆ:",
     ap_lbl_carton_sell: "نرخی فرۆشتنی تەواوی کارتۆن (د.ع)",
-    ap_c_profit: "قازانجی فرۆشتنی کارتۆن:",
-    pos_btn_home: "سەرەکی",
-    pos_cashier_user: "کاشێر: المدير العام (Admin)",
-    pos_system_subtitle: "7amo.pos • سیستەمی فرۆشتن",
-    pos_btn_invoices_history: "پسوولە فرۆشراو و گەڕاوەکان",
-    pos_tabs_title: "پەنجەرەکانی فرۆشتن:",
-    pos_new_tab: "پەنجەرەی نوێ F1",
-    pos_warehouse_btn: "کۆگا F4",
-    pos_return_btn: "گەڕاندنەوەی کاڵا",
-    pos_barcode_ph: "[F3] لێرە بارکۆد لێبدە (چالاک)...",
-    ihm_title: "پسوولە فرۆشراو و گەڕاوەکان (سجل الفواتير والمبيعات والمرتجعات)",
-    ihm_subtitle: "بینینی وردەکاری سەرجەم پسوولەکان و گەڕاندنەوەی کاڵا بۆ کۆگا",
-    ihm_sales_amount: "کۆی گشتی فرۆشراو",
-    ihm_sales_count: "ژمارەی پسوولەی فرۆشراو",
-    ihm_returns_count: "ژمارەی پسوولەی گەڕاوە",
-    ihm_returns_amount: "کۆی گشتی بڕی گەڕاوە",
-    ihm_tab_all: "هەموو",
-    ihm_tab_sold: "فرۆشراو",
-    ihm_tab_returned: "گەڕاوە",
-    ihm_search_ph: "گەڕان بەپێی ژمارەی پسوولە، کڕیار، یان ڕێکەوت...",
-    ihm_th_inv: "ژمارەی پسوولە",
-    ihm_th_date: "کات و بەروار",
-    ihm_th_customer: "کڕیار / زبون",
-    ihm_th_payment: "شێوازی پارەدان",
-    ihm_th_items: "ژمارەی کاڵا",
-    ihm_th_total: "بڕی گشتی",
-    ihm_th_status: "دۆخ",
-    ihm_th_actions: "کردارەکان",
-    ihm_refresh: "نوێکردنەوە",
-    qpm_title: "هەڵبژاردنی خێرا لە کۆگا (قائمة المواد السريعة)"
-  },
-  en: {
-    ap_back: "Back to Home",
-    ap_title: "Add / Edit Warehouse Product",
-    ap_subtitle: "Double-click barcode input for unique auto-code (200245)",
-    ap_clear: "Clear Fields",
-    ap_save: "Save Product",
-    pos_btn_home: "Home",
-    pos_cashier_user: "Cashier: General Manager (Admin)",
-    pos_system_subtitle: "7amo.pos • Rapid Sales POS",
-    pos_btn_invoices_history: "Sold & Returned Invoices",
-    pos_tabs_title: "Active Sales Tabs:",
-    pos_new_tab: "New Tab F1",
-    pos_warehouse_btn: "Stock F4",
-    pos_return_btn: "Refund Item",
-    pos_barcode_ph: "[F3] Scan Barcode Here (Active)...",
-    ihm_title: "Sales & Returns Invoices Log",
-    ihm_subtitle: "View invoice details, re-print, and return stock to warehouse",
-    ihm_sales_amount: "Total Net Sales",
-    ihm_sales_count: "Total Sold Invoices",
-    ihm_returns_count: "Total Returns Count",
-    ihm_returns_amount: "Total Returned Amount",
-    ihm_tab_all: "All",
-    ihm_tab_sold: "Sold",
-    ihm_tab_returned: "Returned",
-    ihm_search_ph: "Search by invoice #, customer, or date...",
-    ihm_th_inv: "Invoice #",
-    ihm_th_date: "Date & Time",
-    ihm_th_customer: "Customer",
-    ihm_th_payment: "Payment Method",
-    ihm_th_items: "Items Count",
-    ihm_th_total: "Total Amount",
-    ihm_th_status: "Status",
-    ihm_th_actions: "Actions",
-    ihm_refresh: "Refresh",
-    qpm_title: "Quick Warehouse Selection"
+    ap_c_profit: "قازانجی فرۆشتنی کارتۆن:"
   }
 };
 
-function setLanguage(lang) {
-  state.language = lang;
-  ['ar', 'ku', 'en'].forEach(l => {
-    const btn = document.getElementById(`posLang${l.charAt(0).toUpperCase() + l.slice(1)}`);
-    if (btn) {
-      if (l === lang) {
-        btn.className = 'px-2.5 py-1 rounded-xl bg-sky-500 text-white font-bold transition';
-      } else {
-        btn.className = 'px-2.5 py-1 rounded-xl text-slate-300 hover:text-white font-bold transition';
-      }
-    }
-  });
-
-  const langBtnText = document.getElementById('langBtnText');
-  if (langBtnText) {
-    langBtnText.innerText = lang === 'ar' ? 'العربية' : lang === 'ku' ? 'کوردی' : 'English';
-  }
-
-  applyLanguage(lang);
-  if (document.getElementById('invoicesHistoryModal') && !document.getElementById('invoicesHistoryModal').classList.contains('hidden')) {
-    filterInvoicesHistoryTable();
-  }
-}
-
-function toggleLanguage() {
-  const nextLang = state.language === 'ar' ? 'ku' : state.language === 'ku' ? 'en' : 'ar';
-  setLanguage(nextLang);
-}
-
-function applyLanguage(lang) {
-  const dict = i18n[lang] || i18n.ar;
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (dict[key]) {
-      el.innerText = dict[key];
-    }
-  });
-
-  const nameInput = document.getElementById('ap-name');
-  if (nameInput) nameInput.placeholder = dict.ap_name_ph || "اسم المادة";
-
-  // Dynamic POS Labels
-  const userLbl = document.getElementById('posCashierUserLabel');
-  const subLbl = document.getElementById('posSystemSubtitle');
-  const invHistBtn = document.getElementById('posBtnInvoicesHistory');
-  const tabsTitle = document.getElementById('posTabsTitle');
-  const newTabBtn = document.getElementById('posNewTabBtn');
-  const warehouseBtn = document.getElementById('posWarehouseBtnText');
-  const returnBtn = document.getElementById('posReturnModeBtnText');
-  const barcodeInput = document.getElementById('cashierBarcodeInput');
-
-  if (userLbl && dict.pos_cashier_user) userLbl.innerText = dict.pos_cashier_user;
-  if (subLbl && dict.pos_system_subtitle) subLbl.innerText = dict.pos_system_subtitle;
-  if (invHistBtn && dict.pos_btn_invoices_history) invHistBtn.innerText = dict.pos_btn_invoices_history;
-  if (tabsTitle && dict.pos_tabs_title) tabsTitle.innerText = dict.pos_tabs_title;
-  if (newTabBtn && dict.pos_new_tab) newTabBtn.innerText = dict.pos_new_tab;
-  if (warehouseBtn && dict.pos_warehouse_btn) warehouseBtn.innerText = dict.pos_warehouse_btn;
-  if (returnBtn && dict.pos_return_btn) returnBtn.innerText = dict.pos_return_btn;
-  if (barcodeInput && dict.pos_barcode_ph) barcodeInput.placeholder = dict.pos_barcode_ph;
-
-  // Invoices History Modal Labels
-  const ihmTitle = document.getElementById('ihmModalTitle');
-  const ihmSubtitle = document.getElementById('ihmModalSubtitle');
-  const sAmtLbl = document.getElementById('ihmKpiSalesAmountLabel');
-  const sCntLbl = document.getElementById('ihmKpiSalesCountLabel');
-  const rCntLbl = document.getElementById('ihmKpiReturnsCountLabel');
-  const rAmtLbl = document.getElementById('ihmKpiReturnsAmountLabel');
-  const tabAll = document.getElementById('ihmTab-all');
-  const tabSold = document.getElementById('ihmTab-sold');
-  const tabRet = document.getElementById('ihmTab-returned');
-  const ihmSearch = document.getElementById('ihmSearchInput');
-  const ihmRefresh = document.getElementById('ihmRefreshBtn');
-  const qpmTitle = document.getElementById('qpmModalTitle');
-
-  if (ihmTitle && dict.ihm_title) ihmTitle.innerText = dict.ihm_title;
-  if (ihmSubtitle && dict.ihm_subtitle) ihmSubtitle.innerText = dict.ihm_subtitle;
-  if (sAmtLbl && dict.ihm_sales_amount) sAmtLbl.innerText = dict.ihm_sales_amount;
-  if (sCntLbl && dict.ihm_sales_count) sCntLbl.innerText = dict.ihm_sales_count;
-  if (rCntLbl && dict.ihm_returns_count) rCntLbl.innerText = dict.ihm_returns_count;
-  if (rAmtLbl && dict.ihm_returns_amount) rAmtLbl.innerText = dict.ihm_returns_amount;
-  if (tabAll && dict.ihm_tab_all) tabAll.innerText = dict.ihm_tab_all;
-  if (tabSold && dict.ihm_tab_sold) tabSold.innerText = dict.ihm_tab_sold;
-  if (tabRet && dict.ihm_tab_returned) tabRet.innerText = dict.ihm_tab_returned;
-  if (ihmSearch && dict.ihm_search_ph) ihmSearch.placeholder = dict.ihm_search_ph;
-  if (ihmRefresh && dict.ihm_refresh) ihmRefresh.innerText = dict.ihm_refresh;
-  if (qpmTitle && dict.qpm_title) qpmTitle.innerText = dict.qpm_title;
-}
+// ========================================================
+// TAB NAVIGATION
+// ========================================================
+function switchTab(tabId) {
   state.activeTab = tabId;
 
   // 1. Hide all tabs
@@ -359,19 +182,17 @@ function applyLanguage(lang) {
     el.classList.remove('sidebar-item-active');
   });
 
-  // 3. Auto-hide sidebar and top app header in Cashier mode for maximum screen area
+  // 3. Auto-hide sidebar and global header when opening Cashier view
   const sidebar = document.getElementById('appSidebar');
-  const mainHeader = document.getElementById('mainAppHeader');
+  const globalHeader = document.getElementById('globalAppHeader');
   
   if (tabId === 'cashier') {
     if (sidebar) sidebar.classList.add('hidden');
-    if (mainHeader) mainHeader.classList.add('hidden');
+    if (globalHeader) globalHeader.classList.add('hidden');
   } else {
-    if (sidebar) {
-      if (tabId === 'addProduct') sidebar.classList.add('hidden');
-      else sidebar.classList.remove('hidden');
-    }
-    if (mainHeader) mainHeader.classList.remove('hidden');
+    if (sidebar && tabId !== 'addProduct') sidebar.classList.remove('hidden');
+    if (sidebar && tabId === 'addProduct') sidebar.classList.add('hidden');
+    if (globalHeader) globalHeader.classList.remove('hidden');
   }
 
   // 4. Activate selected tab
@@ -384,11 +205,7 @@ function applyLanguage(lang) {
   if (tabId === 'cashier') {
     loadProducts();
     setTimeout(() => {
-      const bInput = document.getElementById('cashierBarcodeInput');
-      if (bInput) {
-        bInput.value = '';
-        bInput.focus();
-      }
+      document.getElementById('cashierBarcodeInput')?.focus();
     }, 50);
   }
   if (tabId === 'addProduct') {
@@ -425,23 +242,51 @@ function toggleTheme() {
 
 function applyTheme(theme) {
   const icon = document.getElementById('themeIcon');
+  const posThemeText = document.getElementById('posThemeText');
   if (theme === 'dark') {
     document.body.classList.add('dark-theme');
     if (icon) icon.innerText = '☀️';
+    if (posThemeText) posThemeText.innerText = state.language === 'ku' ? 'شەو' : 'ليلي';
   } else {
     document.body.classList.remove('dark-theme');
     if (icon) icon.innerText = '🌙';
+    if (posThemeText) posThemeText.innerText = state.language === 'ku' ? 'ڕۆژ' : 'نهاري';
   }
 }
 
+function setLanguage(lang) {
+  state.language = lang;
+  localStorage.setItem('pos_language', lang);
+  
+  // Highlight active lang button in cashier header
+  ['Ar', 'Ku', 'En'].forEach(l => {
+    const btn = document.getElementById(`posLang${l}`);
+    if (btn) {
+      if (l.toLowerCase() === lang.toLowerCase()) {
+        btn.className = 'px-2.5 py-1 rounded-lg bg-sky-500 text-white font-bold transition';
+      } else {
+        btn.className = 'px-2.5 py-1 rounded-lg text-slate-300 hover:text-white font-bold transition';
+      }
+    }
+  });
+
+  const langBtnText = document.getElementById('langBtnText');
+  if (langBtnText) {
+    langBtnText.innerText = lang === 'ku' ? 'کوردی' : 'العربية';
+  }
+
+  applyLanguage(lang);
+}
+
 function toggleLanguage() {
-  state.language = state.language === 'ar' ? 'ku' : 'ar';
-  document.getElementById('langBtnText').innerText = state.language === 'ar' ? 'العربية' : 'کوردی';
-  applyLanguage(state.language);
+  const newLang = state.language === 'ar' ? 'ku' : 'ar';
+  setLanguage(newLang);
 }
 
 function applyLanguage(lang) {
+  const isKu = (lang === 'ku');
   const dict = i18n[lang] || i18n.ar;
+
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (dict[key]) {
@@ -451,8 +296,54 @@ function applyLanguage(lang) {
 
   const nameInput = document.getElementById('ap-name');
   if (nameInput) {
-    nameInput.placeholder = dict.ap_name_ph || "اسم المادة";
+    nameInput.placeholder = dict.ap_name_ph || (isKu ? "ناوی کاڵا" : "اسم المادة");
   }
+
+  // Dynamic Cashier Screen Texts
+  const cTitle = document.getElementById('posCashierHeaderTitle');
+  const cSub = document.getElementById('posCashierHeaderSub');
+  const btnReceipts = document.getElementById('btnReceiptsAndReturnsText');
+  const btnHome = document.getElementById('btnHomeText');
+  const tabsLabel = document.getElementById('posInvoiceTabsLabel');
+  const btnNewTab = document.getElementById('btnNewInvoiceTabText');
+  const btnWh = document.getElementById('btnWarehouseText');
+  const btnRet = document.getElementById('btnReturnItemText');
+  const barInput = document.getElementById('cashierBarcodeInput');
+
+  if (cTitle) cTitle.innerText = isKu ? "کاشێر: بەڕێوەبەری گشتی (Admin)" : "كاشير: المدير العام (Admin)";
+  if (cSub) cSub.innerText = isKu ? "7amo.pos • سیستەمی فرۆشتن" : "7amo.pos • نظام المبيعات السريع";
+  if (btnReceipts) btnReceipts.innerText = isKu ? "پسوولە و گەڕاوەکان" : "الفواتير والمرتجعات";
+  if (btnHome) btnHome.innerText = isKu ? "سەرەکی" : "الرئيسية";
+  if (tabsLabel) tabsLabel.innerHTML = `<span>🗂</span><span>${isKu ? "پەنجەرەکانی فرۆشتن:" : "نوافذ البيع:"}</span>`;
+  if (btnNewTab) btnNewTab.innerText = isKu ? "پەنجەرەی نوێ F1" : "فاتورة جديدة F1";
+  if (btnWh) btnWh.innerText = isKu ? "کۆگا F4" : "المخزن F4";
+  if (btnRet) btnRet.innerText = isKu ? "گەڕاندنەوەی کاڵا" : "إرجاع مادة";
+  if (barInput) barInput.placeholder = isKu ? "[F3] لێرە بارکۆد لێبدە (چالاک)..." : "[F3] امسح الباركود هنا (نشط)...";
+
+  // Dynamic Receipts & Returns Modal Texts
+  const rrmTitle = document.getElementById('rrmTitle');
+  const rrmSub = document.getElementById('rrmSubtitle');
+  const rrmKpi1 = document.getElementById('rrmKpiSalesAmountLbl');
+  const rrmKpi2 = document.getElementById('rrmKpiSalesCountLbl');
+  const rrmKpi3 = document.getElementById('rrmKpiReturnsCountLbl');
+  const rrmKpi4 = document.getElementById('rrmKpiReturnsAmountLbl');
+  const rrmSearch = document.getElementById('rrmSearchInput');
+  const rrmF1 = document.getElementById('rrmFilterAll');
+  const rrmF2 = document.getElementById('rrmFilterCompleted');
+  const rrmF3 = document.getElementById('rrmFilterReturned');
+  const rrmRef = document.getElementById('rrmRefreshText');
+
+  if (rrmTitle) rrmTitle.innerText = isKu ? "پسوولە فرۆشراوەکان و گەڕاوەکان" : "فواتير المبيعات والمرتجعات";
+  if (rrmSub) rrmSub.innerText = isKu ? "چاودێری و وردبینی گشت فرۆشراوەکان و گەڕاوەکان" : "متابعة وتدقيق كامل المبيعات والمرتجعات والأموال";
+  if (rrmKpi1) rrmKpi1.innerText = isKu ? "کۆی گشتی فرۆشراو" : "إجمالي المبيعات";
+  if (rrmKpi2) rrmKpi2.innerText = isKu ? "ژمارەی پسوولەکان" : "عدد الوصلات";
+  if (rrmKpi3) rrmKpi3.innerText = isKu ? "ژمارەی گەڕاوەکان" : "عدد المرجوعات";
+  if (rrmKpi4) rrmKpi4.innerText = isKu ? "کۆی بڕی گەڕاوە" : "سعر المرجوعات";
+  if (rrmSearch) rrmSearch.placeholder = isKu ? "گەڕان بەپێی ژمارەی پسوولە یان ناوی کڕیار..." : "بحث برقم الفاتورة أو اسم الزبون...";
+  if (rrmF1) rrmF1.innerText = isKu ? "گشت پسوولەکان (الكل)" : "جميع الفواتير (الكل)";
+  if (rrmF2) rrmF2.innerText = isKu ? "فرۆشراوەکان (المباعة)" : "الفواتير المباعة";
+  if (rrmF3) rrmF3.innerText = isKu ? "گەڕاوەکان (المرجوعة)" : "الفواتير المرجوعة";
+  if (rrmRef) rrmRef.innerText = isKu ? "نوێکردنەوە" : "تحديث";
 }
 
 // ========================================================
@@ -693,16 +584,16 @@ function closeInvoiceTab(id) {
   }, 50);
 }
 
-// Flash Barcode Input RED on Not Found Error & Instant Auto-Clear for Next Scan
+// Flash Barcode Input RED on Not Found Error & Ready for next scan
 function flashBarcodeError() {
   const input = document.getElementById('cashierBarcodeInput');
   if (!input) return;
-  input.classList.add('border-rose-500', 'bg-rose-950/70', 'text-rose-300', 'ring-4', 'ring-rose-500/40');
-  input.value = ''; // Auto clear barcode field so cashier can instantly scan another barcode!
+  input.classList.add('border-rose-500', 'text-rose-400', 'ring-4', 'ring-rose-500/30', 'bg-rose-950/60');
+  input.value = '';
   setTimeout(() => {
-    input.classList.remove('border-rose-500', 'bg-rose-950/70', 'text-rose-300', 'ring-4', 'ring-rose-500/40');
-  }, 1200);
-  setTimeout(() => input.focus(), 50);
+    input.classList.remove('border-rose-500', 'text-rose-400', 'ring-4', 'ring-rose-500/30', 'bg-rose-950/60');
+    input.focus();
+  }, 1000);
 }
 
 async function handleBarcodeKeyDown(e) {
@@ -742,10 +633,12 @@ async function handleBarcodeKeyDown(e) {
 
     if (matched) {
       addItemToCurrentCart(matched);
-      if (input) input.value = ''; // Clear barcode immediately!
-      setTimeout(() => input?.focus(), 50);
+      if (input) input.value = '';
+      setTimeout(() => input?.focus(), 30);
     } else {
       flashBarcodeError();
+      if (input) input.value = '';
+      setTimeout(() => input?.focus(), 30);
     }
   }
 }
@@ -1080,211 +973,6 @@ function toggleReturnMode() {
       ? 'px-3 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition whitespace-nowrap'
       : 'px-3 py-2 bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap';
   }
-  if (isReturnMode) {
-    openInvoicesHistoryModal();
-  }
-}
-
-// --------------------------------------------------------
-// INVOICES & RETURNS HISTORY SYSTEM (سجل الفواتير والمرتجعات)
-// --------------------------------------------------------
-let invoicesHistoryList = [];
-let currentInvoicesFilter = 'all';
-let currentlyViewedInvoice = null;
-
-async function openInvoicesHistoryModal() {
-  document.getElementById('invoicesHistoryModal')?.classList.remove('hidden');
-  await loadInvoicesHistory();
-  setTimeout(() => {
-    document.getElementById('ihmSearchInput')?.focus();
-  }, 100);
-}
-
-function closeInvoicesHistoryModal() {
-  document.getElementById('invoicesHistoryModal')?.classList.add('hidden');
-  document.getElementById('cashierBarcodeInput')?.focus();
-}
-
-async function loadInvoicesHistory(showAlert = false) {
-  const res = await callBackend('get_invoices');
-  if (res && res.success) {
-    invoicesHistoryList = res.invoices || [];
-    
-    // Update KPI summary cards
-    const sAmtEl = document.getElementById('ihmKpiTotalSalesAmount');
-    const sCntEl = document.getElementById('ihmKpiTotalSalesCount');
-    const rCntEl = document.getElementById('ihmKpiTotalReturnsCount');
-    const rAmtEl = document.getElementById('ihmKpiTotalReturnedAmount');
-    
-    if (sAmtEl) sAmtEl.innerText = `${Number(res.totalSalesAmount || 0).toLocaleString()} د.ع`;
-    if (sCntEl) sCntEl.innerText = `${res.totalSalesCount || 0} ${state.language === 'ku' ? 'پسوولە' : 'فاتورة'}`;
-    if (rCntEl) rCntEl.innerText = `${res.totalReturnsCount || 0} ${state.language === 'ku' ? 'پسوولە' : 'فاتورة'}`;
-    if (rAmtEl) rAmtEl.innerText = `${Number(res.totalReturnedAmount || 0).toLocaleString()} د.ع`;
-    
-    filterInvoicesHistoryTable();
-    if (showAlert) alert(state.language === 'ku' ? '✔ پسوولەکان نوێکرانەوە!' : '✔ تم تحديث سجل الفواتير بنجاح!');
-  }
-}
-
-function setInvoicesHistoryFilter(status) {
-  currentInvoicesFilter = status;
-  ['all', 'sold', 'returned'].forEach(t => {
-    const btn = document.getElementById(`ihmTab-${t}`);
-    if (btn) {
-      if (t === status) {
-        btn.className = 'px-3 py-1 rounded-lg bg-teal-600 text-white font-black transition';
-      } else {
-        btn.className = 'px-3 py-1 rounded-lg text-slate-400 hover:text-white transition';
-      }
-    }
-  });
-  filterInvoicesHistoryTable();
-}
-
-function filterInvoicesHistoryTable() {
-  const q = (document.getElementById('ihmSearchInput')?.value || '').toLowerCase().trim();
-  const tbody = document.getElementById('invoicesHistoryTbody');
-  const summaryEl = document.getElementById('ihmInvoicesCountSummary');
-  if (!tbody) return;
-
-  let filtered = invoicesHistoryList.filter(inv => {
-    const isReturned = inv.status === 'Returned';
-    if (currentInvoicesFilter === 'sold' && isReturned) return false;
-    if (currentInvoicesFilter === 'returned' && !isReturned) return false;
-
-    if (!q) return true;
-    const invNum = (inv.invoiceNumber || '').toLowerCase();
-    const cust = (inv.customerName || '').toLowerCase();
-    const dt = (inv.createdAt || '').toLowerCase();
-    return invNum.includes(q) || cust.includes(q) || dt.includes(q);
-  });
-
-  if (summaryEl) {
-    summaryEl.innerText = state.language === 'ku' 
-      ? `ژمارەی پسوولەکان: ${filtered.length.toLocaleString()}`
-      : `عدد الفواتير: ${filtered.length.toLocaleString()}`;
-  }
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-12 text-slate-400 font-bold">${state.language === 'ku' ? 'هیچ پسوولەیەک نەدۆزرایەوە' : 'لا توجد فواتير مطابقة للبحث'}</td></tr>`;
-    return;
-  }
-
-  let html = '';
-  filtered.forEach((inv, index) => {
-    const isRet = inv.status === 'Returned';
-    const statusBadge = isRet
-      ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/30">↩ ${state.language === 'ku' ? 'گەڕاوە' : 'مرتجع'}</span>`
-      : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">✔ ${state.language === 'ku' ? 'تەواوکراو' : 'مكتمل'}</span>`;
-
-    html += `
-      <tr class="hover:bg-slate-800/60 transition">
-        <td class="p-3 text-center text-slate-400 font-mono">${index + 1}</td>
-        <td class="p-3 font-mono font-bold text-sky-400">${inv.invoiceNumber}</td>
-        <td class="p-3 text-slate-300 text-xs font-mono">${inv.createdAt}</td>
-        <td class="p-3 font-bold text-white">${inv.customerName || 'زبون نقدي'}</td>
-        <td class="p-3 text-center">
-          <span class="px-2 py-0.5 rounded-md bg-slate-800 text-[10px] font-bold text-slate-300">${inv.paymentMethod || 'Cash'}</span>
-        </td>
-        <td class="p-3 text-center font-mono font-bold text-white">${inv.itemsCount || 0}</td>
-        <td class="p-3 text-center font-black font-mono text-emerald-400">${Number(inv.totalAmount || 0).toLocaleString()} د.ع</td>
-        <td class="p-3 text-center">${statusBadge}</td>
-        <td class="p-3 text-center">
-          <div class="flex items-center justify-center gap-1.5">
-            <button onclick="openInvoiceDetailViewModal('${inv.id}')" class="p-1.5 bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 rounded-lg text-xs font-bold" title="عرض التفاصيل">👁</button>
-            ${!isRet ? `<button onclick="confirmReturnInvoice('${inv.id}', '${inv.invoiceNumber}')" class="p-1.5 bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 rounded-lg text-xs font-bold" title="إرجاع واستعادة المخزن">↩</button>` : ''}
-          </div>
-        </td>
-      </tr>
-    `;
-  });
-
-  tbody.innerHTML = html;
-}
-
-function openInvoiceDetailViewModal(invId) {
-  const inv = invoicesHistoryList.find(i => i.id === invId || String(i.id) === String(invId));
-  if (!inv) return;
-
-  currentlyViewedInvoice = inv;
-  const numEl = document.getElementById('idvInvoiceNumber');
-  const dateEl = document.getElementById('idvDateSubtitle');
-  const custEl = document.getElementById('idvCustomerName');
-  const payEl = document.getElementById('idvPaymentMethod');
-  const statusEl = document.getElementById('idvStatusBadge');
-  const totalEl = document.getElementById('idvTotalAmount');
-  const returnBtn = document.getElementById('idvReturnInvoiceBtn');
-  const tbody = document.getElementById('idvItemsTbody');
-
-  if (numEl) numEl.innerText = inv.invoiceNumber;
-  if (dateEl) dateEl.innerText = inv.createdAt;
-  if (custEl) custEl.innerText = inv.customerName || 'زبون نقدي';
-  if (payEl) payEl.innerText = `💵 ${inv.paymentMethod || 'Cash'}`;
-  
-  const isRet = inv.status === 'Returned';
-  if (statusEl) {
-    statusEl.innerHTML = isRet 
-      ? `<span class="text-rose-400 font-bold">↩ ${state.language === 'ku' ? 'گەڕاوە' : 'مرتجع'}</span>`
-      : `<span class="text-emerald-400 font-bold">✔ ${state.language === 'ku' ? 'تەواوکراو' : 'مكتمل'}</span>`;
-  }
-  if (totalEl) totalEl.innerText = `${Number(inv.totalAmount || 0).toLocaleString()} د.ع`;
-
-  if (returnBtn) {
-    if (isRet) returnBtn.classList.add('hidden');
-    else returnBtn.classList.remove('hidden');
-  }
-
-  if (tbody) {
-    tbody.innerHTML = '';
-    (inv.items || []).forEach((itm, idx) => {
-      const tr = document.createElement('tr');
-      tr.className = 'hover:bg-slate-800/40';
-      tr.innerHTML = `
-        <td class="p-2.5 text-slate-400 font-mono">${idx + 1}</td>
-        <td class="p-2.5 font-bold text-white">${itm.productName}</td>
-        <td class="p-2.5 text-center font-mono text-white">${itm.quantity}</td>
-        <td class="p-2.5 text-center font-mono text-emerald-400">${Number(itm.unitPrice).toLocaleString()} د.ع</td>
-        <td class="p-2.5 text-center font-mono font-black text-emerald-300">${Number(itm.totalPrice).toLocaleString()} د.ع</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  document.getElementById('invoiceDetailViewModal')?.classList.remove('hidden');
-}
-
-function closeInvoiceDetailViewModal() {
-  document.getElementById('invoiceDetailViewModal')?.classList.add('hidden');
-}
-
-async function confirmReturnInvoice(invId, invNum) {
-  const msg = state.language === 'ku'
-    ? `ئایا دڵنیایت لە گەڕاندنەوەی پسوولەی (${invNum})؟\nکاڵاکان دەگەڕێنەوە بۆ کۆگا و بڕی پارەکە کەمدەکرێتەوە.`
-    : `هل أنت متأكد من إرجاع الفاتورة رقم (${invNum})؟\nسيتم استعادة كميات المواد للمخزن وخصم المبلغ من المبيعات.`;
-
-  if (!confirm(msg)) return;
-
-  const res = await callBackend('return_invoice', { invoiceId: invId });
-  if (res && res.success) {
-    alert(state.language === 'ku' ? '✔ پسوولەکە بە سەرکەوتوویی گەڕێندرایەوە و کۆگا نوێکرایەوە!' : '✔ تم إرجاع الفاتورة واستعادة رصيد المواد بالمخزن بنجاح!');
-    await loadInvoicesHistory();
-    loadDashboard();
-    loadInventory();
-  } else {
-    alert(res?.message || 'هەڵەیەک ڕوویدا');
-  }
-}
-
-async function executeReturnInvoiceAction() {
-  if (!currentlyViewedInvoice) return;
-  await confirmReturnInvoice(currentlyViewedInvoice.id, currentlyViewedInvoice.invoiceNumber);
-  closeInvoiceDetailViewModal();
-}
-
-function printCurrentViewedInvoice() {
-  window.print();
-}
-
 // Global Keyboard Shortcuts Listener
 window.addEventListener('keydown', (e) => {
   if (state.activeTab !== 'cashier') return;
@@ -1306,6 +994,152 @@ window.addEventListener('keydown', (e) => {
     submitCashierSale(true);
   }
 });
+
+// ========================================================
+// RECEIPTS & RETURNS MODAL (نافذة الفواتير والمبيعات والمرتجعات)
+// ========================================================
+let rrmAllReceipts = [];
+let rrmFilterState = 'all';
+
+async function openReceiptsAndReturnsModal() {
+  document.getElementById('receiptsAndReturnsModal')?.classList.remove('hidden');
+  await loadReceiptsAndReturnsData();
+}
+
+function closeReceiptsAndReturnsModal() {
+  document.getElementById('receiptsAndReturnsModal')?.classList.add('hidden');
+  document.getElementById('cashierBarcodeInput')?.focus();
+}
+
+async function loadReceiptsAndReturnsData() {
+  const tbody = document.getElementById('rrmTableBody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center py-12 text-slate-400 font-bold">جاری بارکردنی پسوولەکان...</td></tr>';
+
+  const res = await callBackend('get_receipts_and_returns');
+  if (res && res.success) {
+    rrmAllReceipts = res.receipts || [];
+    
+    // Update KPIs
+    const sAmt = document.getElementById('rrmTotalSalesAmount');
+    const sCnt = document.getElementById('rrmTotalSalesCount');
+    const rCnt = document.getElementById('rrmTotalReturnsCount');
+    const rAmt = document.getElementById('rrmTotalReturnsAmount');
+
+    if (sAmt) sAmt.innerText = `${Number(res.totalSalesAmount || 0).toLocaleString()} د.ع`;
+    if (sCnt) sCnt.innerText = Number(res.totalSalesCount || 0).toLocaleString();
+    if (rCnt) rCnt.innerText = Number(res.totalReturnedCount || 0).toLocaleString();
+    if (rAmt) rAmt.innerText = `${Number(res.totalReturnedAmount || 0).toLocaleString()} د.ع`;
+
+    filterReceiptsAndReturnsTable();
+  }
+}
+
+function setRrmFilter(f) {
+  rrmFilterState = f;
+  ['all', 'completed', 'returned'].forEach(type => {
+    const btn = document.getElementById(`rrmFilter${type.charAt(0).toUpperCase() + type.slice(1)}`);
+    if (btn) {
+      if (type === f) {
+        btn.className = 'px-3 py-1 bg-sky-500 text-white rounded-lg transition font-bold shadow-sm';
+      } else {
+        btn.className = 'px-3 py-1 text-slate-400 hover:text-white rounded-lg transition font-bold';
+      }
+    }
+  });
+  filterReceiptsAndReturnsTable();
+}
+
+function filterReceiptsAndReturnsTable() {
+  const q = (document.getElementById('rrmSearchInput')?.value || '').toLowerCase().trim();
+  let list = rrmAllReceipts;
+
+  if (rrmFilterState === 'completed') {
+    list = list.filter(r => !r.isReturn);
+  } else if (rrmFilterState === 'returned') {
+    list = list.filter(r => r.isReturn);
+  }
+
+  if (q) {
+    list = list.filter(r => 
+      (r.invoiceNumber && r.invoiceNumber.toLowerCase().includes(q)) ||
+      (r.customerName && r.customerName.toLowerCase().includes(q))
+    );
+  }
+
+  renderReceiptsAndReturnsTable(list);
+}
+
+function renderReceiptsAndReturnsTable(list) {
+  const tbody = document.getElementById('rrmTableBody');
+  const summaryEl = document.getElementById('rrmTableCountSummary');
+  if (!tbody) return;
+
+  const isKu = (state.language === 'ku');
+
+  if (summaryEl) {
+    summaryEl.innerText = isKu ? `پیشاندانی ${list.length.toLocaleString()} پسوولە` : `عرض ${list.length.toLocaleString()} فاتورة`;
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-slate-400 font-bold">${isKu ? 'هیچ پسوولەیەک نەدۆزرایەوە' : 'لا توجد فواتير مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+
+  let html = '';
+
+  list.forEach((r, idx) => {
+    const isRet = r.isReturn;
+    const statusBadge = isRet 
+      ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/40">${isKu ? 'گەڕاوە (مرتجع)' : 'مرتجع'}</span>`
+      : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">${isKu ? 'تەواوکراو (مباع)' : 'مباع / ناجح'}</span>`;
+
+    html += `
+      <tr class="hover:bg-slate-800/50 transition">
+        <td class="p-3 text-center text-slate-400 font-bold font-mono">${idx + 1}</td>
+        <td class="p-3 font-mono font-bold text-sky-400">${r.invoiceNumber}</td>
+        <td class="p-3 font-bold text-white">${r.customerName}</td>
+        <td class="p-3 text-xs text-slate-400 font-mono">${r.date}</td>
+        <td class="p-3 text-center">
+          <span class="px-2 py-0.5 rounded-lg bg-slate-800 text-[10px] font-bold text-slate-300">${r.paymentMethod}</span>
+        </td>
+        <td class="p-3 text-center font-black font-mono ${isRet ? 'text-rose-400' : 'text-emerald-400'}">${Number(r.totalAmount).toLocaleString()} د.ع</td>
+        <td class="p-3 text-center">${statusBadge}</td>
+        <td class="p-3 text-center">
+          <div class="flex items-center justify-center gap-1.5">
+            ${!isRet ? `
+              <button onclick="executeReturnReceipt('${r.invoiceNumber}')" class="px-2.5 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-700/60 text-rose-300 font-bold text-[10px] rounded-lg shadow-sm flex items-center gap-1 transition" title="گەڕاندنەوەی پسوولە">
+                <span>🔄</span>
+                <span>${isKu ? 'گەڕاندنەوە' : 'إرجاع'}</span>
+              </button>
+            ` : `<span class="text-[10px] text-slate-500 font-bold">✔ ${isKu ? 'گەڕاوەتەوە' : 'مسترجع'}</span>`}
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+}
+
+async function executeReturnReceipt(invNum) {
+  const isKu = (state.language === 'ku');
+  const confirmMsg = isKu
+    ? `ئایا دڵنیایت لە گەڕاندنەوەی پسوولەی (${invNum}) و گەڕاندنەوەی سەرجەم ماددەکان بۆ ناو کۆگا؟`
+    : `هل أنت متأكد من استرجاع الفاتورة (${invNum}) وإعادة كامل المواد إلى رصيد المخزن؟`;
+
+  if (!confirm(confirmMsg)) return;
+
+  const res = await callBackend('return_receipt', { invoiceNumber: invNum });
+  if (res && res.success) {
+    alert(isKu ? `✔ پسوولەی (${invNum}) بە سەرکەوتوویی گەڕێندرایەوە و کاڵاکان گەڕانەوە کۆگا!` : `✔ تم استرجاع الفاتورة (${invNum}) وإعادة المواد إلى المخزن بنجاح!`);
+    await loadReceiptsAndReturnsData();
+    loadProducts();
+    loadDashboard();
+    loadInventory();
+  } else {
+    alert(res?.message || 'هەڵەیەک ڕوویدا');
+  }
+}
 
 // ========================================================
 // ADD / EDIT PRODUCT FULL FORM (DETAILED MARKET LOGIC)
