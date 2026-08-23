@@ -189,7 +189,34 @@ const i18n = {
     ap_w_profit: "ربح قطعة الجملة:",
     ap_w_c_profit: "ربح الكرتون بالجملة:",
     ap_lbl_carton_sell: "سعر بيع الكرتون كاملاً (د.ع)",
-    ap_c_profit: "ربح بيع الكرتون كاملاً:"
+    // Inventory & Warehouse Screen
+    inv_back: "العودة للرئيسية",
+    inv_title: "المخزن ورصيد المواد (تفاصيل شاملة)",
+    inv_subtitle: "عرض كامل تفاصيل الكراتين، التكلفة، أسعار البيع، والأرباح لكل مادة",
+    inv_refresh_btn: "تحديث القائمة",
+    inv_add_new_btn: "إضافة مادة جديدة",
+    inv_kpi_total_items: "إجمالي عدد المواد",
+    inv_kpi_cost_val: "قيمة المخزن بالتكلفة",
+    inv_kpi_sell_val: "القيمة البيعية الإجمالية",
+    inv_kpi_expected_profit: "الأرباح المتوقعة بالمخزن",
+    inv_search_ph: "بحث بالاسم أو الباركود...",
+    inv_all_cats: "جميع التصنيفات",
+    inv_limit_1000: "عرض: أول 1,000 مادة (الأسرع)",
+    inv_limit_500: "عرض: أول 500 مادة",
+    inv_limit_2000: "عرض: أول 2,000 مادة",
+    inv_limit_5000: "عرض: أول 5,000 مادة",
+    inv_limit_all: "عرض: كافة المواد دفعة واحدة (الكل)",
+    inv_low_stock_only: "النواقص فقط",
+    inv_th_num: "#",
+    inv_th_item_barcode: "المادة / الباركود",
+    inv_th_cat_supplier: "التصنيف والمورد",
+    inv_th_packaging: "التعبئة والكراتين",
+    inv_th_stock_qty: "رصيد القطع",
+    inv_th_cost: "تكلفة القطعة / الكرتون",
+    inv_th_sell_prices: "أسعار البيع (مفرد/جملة/كرتون)",
+    inv_th_profits: "الأرباح المحسوبة",
+    inv_th_status: "الحالة",
+    inv_th_actions: "الإجراءات"
   },
   ku: {
     // POS & Cashier Top & Header
@@ -275,7 +302,36 @@ const i18n = {
     ap_w_profit: "قازانجی دانە بە کۆ:",
     ap_w_c_profit: "قازانجی کارتۆن بە کۆ:",
     ap_lbl_carton_sell: "نرخی فرۆشتنی تەواوی کارتۆن (د.ع)",
-    ap_c_profit: "قازانجی فرۆشتنی کارتۆن:"
+    ap_c_profit: "قازانجی فرۆشتنی کارتۆن:",
+
+    // Inventory & Warehouse Screen
+    inv_back: "گەڕانەوە بۆ سەرەکی",
+    inv_title: "کۆگا و باڵانسی کاڵاکان (زانیاری تەواو)",
+    inv_subtitle: "پیشاندانی تەواوی کارتۆن، تێچوون، نرخەکان و قازانجەکان",
+    inv_refresh_btn: "نوێکردنەوەی لیست",
+    inv_add_new_btn: "زیادکردنی کاڵای نوێ",
+    inv_kpi_total_items: "کۆی گشتی کاڵاکان",
+    inv_kpi_cost_val: "نرخی کۆگا بە تێچوون",
+    inv_kpi_sell_val: "کۆی بەهای فرۆشتن",
+    inv_kpi_expected_profit: "قازانجی چاوەڕوانکراو",
+    inv_search_ph: "گەڕان بە ناو یان بارکۆد...",
+    inv_all_cats: "هەموو جۆرەکان",
+    inv_limit_1000: "پیشاندان: یەکەم ١،٠٠٠ کاڵا",
+    inv_limit_500: "پیشاندان: یەکەم ٥٠٠ کاڵا",
+    inv_limit_2000: "پیشاندان: یەکەم ٢،٠٠٠ کاڵا",
+    inv_limit_5000: "پیشاندان: یەکەم ٥،٠٠٠ کاڵا",
+    inv_limit_all: "پیشاندان: هەموو کاڵاکان پێکەوە",
+    inv_low_stock_only: "تەنها کەموکوڕییەکان",
+    inv_th_num: "#",
+    inv_th_item_barcode: "کاڵا / بارکۆد",
+    inv_th_cat_supplier: "پۆلێن و مەندوب",
+    inv_th_packaging: "پاکێج و کارتۆن",
+    inv_th_stock_qty: "باڵانسی دانەکان",
+    inv_th_cost: "تێچووی دانە / کارتۆن",
+    inv_th_sell_prices: "نرخەکانی فرۆشتن (تاک/کۆ/کارتۆن)",
+    inv_th_profits: "قازانجی هەژمارکراو",
+    inv_th_status: "دۆخ",
+    inv_th_actions: "کردارەکان"
   },
   en: {
     // POS & Cashier Top & Header
@@ -361,7 +417,36 @@ const i18n = {
     ap_w_profit: "Wholesale Profit:",
     ap_w_c_profit: "Carton Wholesale Profit:",
     ap_lbl_carton_sell: "Full Carton Price (IQD)",
-    ap_c_profit: "Full Carton Profit:"
+    ap_c_profit: "Full Carton Profit:",
+
+    // Inventory & Warehouse Screen
+    inv_back: "Back to Main",
+    inv_title: "Inventory & Stock Balance",
+    inv_subtitle: "Full details of cartons, costs, sale prices, and profits",
+    inv_refresh_btn: "Refresh List",
+    inv_add_new_btn: "Add New Product",
+    inv_kpi_total_items: "Total Items Count",
+    inv_kpi_cost_val: "Warehouse Cost Value",
+    inv_kpi_sell_val: "Total Selling Value",
+    inv_kpi_expected_profit: "Expected Stock Profit",
+    inv_search_ph: "Search by name or barcode...",
+    inv_all_cats: "All Categories",
+    inv_limit_1000: "Display: First 1,000 (Fast)",
+    inv_limit_500: "Display: First 500 items",
+    inv_limit_2000: "Display: First 2,000 items",
+    inv_limit_5000: "Display: First 5,000 items",
+    inv_limit_all: "Display: All Items at Once",
+    inv_low_stock_only: "Low Stock Only",
+    inv_th_num: "#",
+    inv_th_item_barcode: "Item / Barcode",
+    inv_th_cat_supplier: "Category & Supplier",
+    inv_th_packaging: "Packaging & Cartons",
+    inv_th_stock_qty: "Stock Quantity",
+    inv_th_cost: "Piece / Carton Cost",
+    inv_th_sell_prices: "Sale Prices (Retail/Wholesale/Carton)",
+    inv_th_profits: "Calculated Profit",
+    inv_th_status: "Status",
+    inv_th_actions: "Actions"
   }
 };
 
@@ -501,12 +586,20 @@ function applyLanguage(lang) {
 
   const barcodeInput = document.getElementById('cashierBarcodeInput');
   if (barcodeInput) {
-    barcodeInput.placeholder = dict.pos_search_ph || "[F3] لێرە بارکۆد لێبدە (چالاک)...";
+    barcodeInput.placeholder = dict.pos_search_ph || "[F3] امسح الباركود هنا (نشط)...";
   }
 
-  // Re-render cart and tabs to apply language changes
+  const invSearch = document.getElementById('invSearchInput');
+  if (invSearch) {
+    invSearch.placeholder = dict.inv_search_ph || "بحث بالاسم أو الباركود...";
+  }
+
+  // Re-render cart, tabs, and inventory to apply language changes
   renderInvoiceTabs();
   renderCashierCart();
+  if (state.activeTab === 'inventory') {
+    renderInventoryTable();
+  }
 }
 
 // ========================================================
