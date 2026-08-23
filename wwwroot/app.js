@@ -182,17 +182,14 @@ function switchTab(tabId) {
     el.classList.remove('sidebar-item-active');
   });
 
-  // 3. Auto-hide sidebar and global header when opening Cashier view
+  // 3. Auto-hide sidebar when opening Add Product or Cashier view as requested
   const sidebar = document.getElementById('appSidebar');
-  const globalHeader = document.getElementById('globalAppHeader');
-  
-  if (tabId === 'cashier') {
-    if (sidebar) sidebar.classList.add('hidden');
-    if (globalHeader) globalHeader.classList.add('hidden');
-  } else {
-    if (sidebar && tabId !== 'addProduct') sidebar.classList.remove('hidden');
-    if (sidebar && tabId === 'addProduct') sidebar.classList.add('hidden');
-    if (globalHeader) globalHeader.classList.remove('hidden');
+  if (sidebar) {
+    if (tabId === 'addProduct' || tabId === 'cashier') {
+      sidebar.classList.add('hidden');
+    } else {
+      sidebar.classList.remove('hidden');
+    }
   }
 
   // 4. Activate selected tab
@@ -242,51 +239,23 @@ function toggleTheme() {
 
 function applyTheme(theme) {
   const icon = document.getElementById('themeIcon');
-  const posThemeText = document.getElementById('posThemeText');
   if (theme === 'dark') {
     document.body.classList.add('dark-theme');
     if (icon) icon.innerText = '☀️';
-    if (posThemeText) posThemeText.innerText = state.language === 'ku' ? 'شەو' : 'ليلي';
   } else {
     document.body.classList.remove('dark-theme');
     if (icon) icon.innerText = '🌙';
-    if (posThemeText) posThemeText.innerText = state.language === 'ku' ? 'ڕۆژ' : 'نهاري';
   }
-}
-
-function setLanguage(lang) {
-  state.language = lang;
-  localStorage.setItem('pos_language', lang);
-  
-  // Highlight active lang button in cashier header
-  ['Ar', 'Ku', 'En'].forEach(l => {
-    const btn = document.getElementById(`posLang${l}`);
-    if (btn) {
-      if (l.toLowerCase() === lang.toLowerCase()) {
-        btn.className = 'px-2.5 py-1 rounded-lg bg-sky-500 text-white font-bold transition';
-      } else {
-        btn.className = 'px-2.5 py-1 rounded-lg text-slate-300 hover:text-white font-bold transition';
-      }
-    }
-  });
-
-  const langBtnText = document.getElementById('langBtnText');
-  if (langBtnText) {
-    langBtnText.innerText = lang === 'ku' ? 'کوردی' : 'العربية';
-  }
-
-  applyLanguage(lang);
 }
 
 function toggleLanguage() {
-  const newLang = state.language === 'ar' ? 'ku' : 'ar';
-  setLanguage(newLang);
+  state.language = state.language === 'ar' ? 'ku' : 'ar';
+  document.getElementById('langBtnText').innerText = state.language === 'ar' ? 'العربية' : 'کوردی';
+  applyLanguage(state.language);
 }
 
 function applyLanguage(lang) {
-  const isKu = (lang === 'ku');
   const dict = i18n[lang] || i18n.ar;
-
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (dict[key]) {
@@ -296,54 +265,8 @@ function applyLanguage(lang) {
 
   const nameInput = document.getElementById('ap-name');
   if (nameInput) {
-    nameInput.placeholder = dict.ap_name_ph || (isKu ? "ناوی کاڵا" : "اسم المادة");
+    nameInput.placeholder = dict.ap_name_ph || "اسم المادة";
   }
-
-  // Dynamic Cashier Screen Texts
-  const cTitle = document.getElementById('posCashierHeaderTitle');
-  const cSub = document.getElementById('posCashierHeaderSub');
-  const btnReceipts = document.getElementById('btnReceiptsAndReturnsText');
-  const btnHome = document.getElementById('btnHomeText');
-  const tabsLabel = document.getElementById('posInvoiceTabsLabel');
-  const btnNewTab = document.getElementById('btnNewInvoiceTabText');
-  const btnWh = document.getElementById('btnWarehouseText');
-  const btnRet = document.getElementById('btnReturnItemText');
-  const barInput = document.getElementById('cashierBarcodeInput');
-
-  if (cTitle) cTitle.innerText = isKu ? "کاشێر: بەڕێوەبەری گشتی (Admin)" : "كاشير: المدير العام (Admin)";
-  if (cSub) cSub.innerText = isKu ? "7amo.pos • سیستەمی فرۆشتن" : "7amo.pos • نظام المبيعات السريع";
-  if (btnReceipts) btnReceipts.innerText = isKu ? "پسوولە و گەڕاوەکان" : "الفواتير والمرتجعات";
-  if (btnHome) btnHome.innerText = isKu ? "سەرەکی" : "الرئيسية";
-  if (tabsLabel) tabsLabel.innerHTML = `<span>🗂</span><span>${isKu ? "پەنجەرەکانی فرۆشتن:" : "نوافذ البيع:"}</span>`;
-  if (btnNewTab) btnNewTab.innerText = isKu ? "پەنجەرەی نوێ F1" : "فاتورة جديدة F1";
-  if (btnWh) btnWh.innerText = isKu ? "کۆگا F4" : "المخزن F4";
-  if (btnRet) btnRet.innerText = isKu ? "گەڕاندنەوەی کاڵا" : "إرجاع مادة";
-  if (barInput) barInput.placeholder = isKu ? "[F3] لێرە بارکۆد لێبدە (چالاک)..." : "[F3] امسح الباركود هنا (نشط)...";
-
-  // Dynamic Receipts & Returns Modal Texts
-  const rrmTitle = document.getElementById('rrmTitle');
-  const rrmSub = document.getElementById('rrmSubtitle');
-  const rrmKpi1 = document.getElementById('rrmKpiSalesAmountLbl');
-  const rrmKpi2 = document.getElementById('rrmKpiSalesCountLbl');
-  const rrmKpi3 = document.getElementById('rrmKpiReturnsCountLbl');
-  const rrmKpi4 = document.getElementById('rrmKpiReturnsAmountLbl');
-  const rrmSearch = document.getElementById('rrmSearchInput');
-  const rrmF1 = document.getElementById('rrmFilterAll');
-  const rrmF2 = document.getElementById('rrmFilterCompleted');
-  const rrmF3 = document.getElementById('rrmFilterReturned');
-  const rrmRef = document.getElementById('rrmRefreshText');
-
-  if (rrmTitle) rrmTitle.innerText = isKu ? "پسوولە فرۆشراوەکان و گەڕاوەکان" : "فواتير المبيعات والمرتجعات";
-  if (rrmSub) rrmSub.innerText = isKu ? "چاودێری و وردبینی گشت فرۆشراوەکان و گەڕاوەکان" : "متابعة وتدقيق كامل المبيعات والمرتجعات والأموال";
-  if (rrmKpi1) rrmKpi1.innerText = isKu ? "کۆی گشتی فرۆشراو" : "إجمالي المبيعات";
-  if (rrmKpi2) rrmKpi2.innerText = isKu ? "ژمارەی پسوولەکان" : "عدد الوصلات";
-  if (rrmKpi3) rrmKpi3.innerText = isKu ? "ژمارەی گەڕاوەکان" : "عدد المرجوعات";
-  if (rrmKpi4) rrmKpi4.innerText = isKu ? "کۆی بڕی گەڕاوە" : "سعر المرجوعات";
-  if (rrmSearch) rrmSearch.placeholder = isKu ? "گەڕان بەپێی ژمارەی پسوولە یان ناوی کڕیار..." : "بحث برقم الفاتورة أو اسم الزبون...";
-  if (rrmF1) rrmF1.innerText = isKu ? "گشت پسوولەکان (الكل)" : "جميع الفواتير (الكل)";
-  if (rrmF2) rrmF2.innerText = isKu ? "فرۆشراوەکان (المباعة)" : "الفواتير المباعة";
-  if (rrmF3) rrmF3.innerText = isKu ? "گەڕاوەکان (المرجوعة)" : "الفواتير المرجوعة";
-  if (rrmRef) rrmRef.innerText = isKu ? "نوێکردنەوە" : "تحديث";
 }
 
 // ========================================================
@@ -584,16 +507,15 @@ function closeInvoiceTab(id) {
   }, 50);
 }
 
-// Flash Barcode Input RED on Not Found Error & Ready for next scan
+// Flash Barcode Input RED on Not Found Error
 function flashBarcodeError() {
   const input = document.getElementById('cashierBarcodeInput');
   if (!input) return;
-  input.classList.add('border-rose-500', 'text-rose-400', 'ring-4', 'ring-rose-500/30', 'bg-rose-950/60');
-  input.value = '';
+  input.classList.add('border-rose-500', 'text-rose-400', 'ring-4', 'ring-rose-500/30');
+  input.select();
   setTimeout(() => {
-    input.classList.remove('border-rose-500', 'text-rose-400', 'ring-4', 'ring-rose-500/30', 'bg-rose-950/60');
-    input.focus();
-  }, 1000);
+    input.classList.remove('border-rose-500', 'text-rose-400', 'ring-4', 'ring-rose-500/30');
+  }, 1800);
 }
 
 async function handleBarcodeKeyDown(e) {
@@ -634,11 +556,9 @@ async function handleBarcodeKeyDown(e) {
     if (matched) {
       addItemToCurrentCart(matched);
       if (input) input.value = '';
-      setTimeout(() => input?.focus(), 30);
+      setTimeout(() => input?.focus(), 50);
     } else {
       flashBarcodeError();
-      if (input) input.value = '';
-      setTimeout(() => input?.focus(), 30);
     }
   }
 }
@@ -973,6 +893,8 @@ function toggleReturnMode() {
       ? 'px-3 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition whitespace-nowrap'
       : 'px-3 py-2 bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap';
   }
+}
+
 // Global Keyboard Shortcuts Listener
 window.addEventListener('keydown', (e) => {
   if (state.activeTab !== 'cashier') return;
@@ -994,152 +916,6 @@ window.addEventListener('keydown', (e) => {
     submitCashierSale(true);
   }
 });
-
-// ========================================================
-// RECEIPTS & RETURNS MODAL (نافذة الفواتير والمبيعات والمرتجعات)
-// ========================================================
-let rrmAllReceipts = [];
-let rrmFilterState = 'all';
-
-async function openReceiptsAndReturnsModal() {
-  document.getElementById('receiptsAndReturnsModal')?.classList.remove('hidden');
-  await loadReceiptsAndReturnsData();
-}
-
-function closeReceiptsAndReturnsModal() {
-  document.getElementById('receiptsAndReturnsModal')?.classList.add('hidden');
-  document.getElementById('cashierBarcodeInput')?.focus();
-}
-
-async function loadReceiptsAndReturnsData() {
-  const tbody = document.getElementById('rrmTableBody');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center py-12 text-slate-400 font-bold">جاری بارکردنی پسوولەکان...</td></tr>';
-
-  const res = await callBackend('get_receipts_and_returns');
-  if (res && res.success) {
-    rrmAllReceipts = res.receipts || [];
-    
-    // Update KPIs
-    const sAmt = document.getElementById('rrmTotalSalesAmount');
-    const sCnt = document.getElementById('rrmTotalSalesCount');
-    const rCnt = document.getElementById('rrmTotalReturnsCount');
-    const rAmt = document.getElementById('rrmTotalReturnsAmount');
-
-    if (sAmt) sAmt.innerText = `${Number(res.totalSalesAmount || 0).toLocaleString()} د.ع`;
-    if (sCnt) sCnt.innerText = Number(res.totalSalesCount || 0).toLocaleString();
-    if (rCnt) rCnt.innerText = Number(res.totalReturnedCount || 0).toLocaleString();
-    if (rAmt) rAmt.innerText = `${Number(res.totalReturnedAmount || 0).toLocaleString()} د.ع`;
-
-    filterReceiptsAndReturnsTable();
-  }
-}
-
-function setRrmFilter(f) {
-  rrmFilterState = f;
-  ['all', 'completed', 'returned'].forEach(type => {
-    const btn = document.getElementById(`rrmFilter${type.charAt(0).toUpperCase() + type.slice(1)}`);
-    if (btn) {
-      if (type === f) {
-        btn.className = 'px-3 py-1 bg-sky-500 text-white rounded-lg transition font-bold shadow-sm';
-      } else {
-        btn.className = 'px-3 py-1 text-slate-400 hover:text-white rounded-lg transition font-bold';
-      }
-    }
-  });
-  filterReceiptsAndReturnsTable();
-}
-
-function filterReceiptsAndReturnsTable() {
-  const q = (document.getElementById('rrmSearchInput')?.value || '').toLowerCase().trim();
-  let list = rrmAllReceipts;
-
-  if (rrmFilterState === 'completed') {
-    list = list.filter(r => !r.isReturn);
-  } else if (rrmFilterState === 'returned') {
-    list = list.filter(r => r.isReturn);
-  }
-
-  if (q) {
-    list = list.filter(r => 
-      (r.invoiceNumber && r.invoiceNumber.toLowerCase().includes(q)) ||
-      (r.customerName && r.customerName.toLowerCase().includes(q))
-    );
-  }
-
-  renderReceiptsAndReturnsTable(list);
-}
-
-function renderReceiptsAndReturnsTable(list) {
-  const tbody = document.getElementById('rrmTableBody');
-  const summaryEl = document.getElementById('rrmTableCountSummary');
-  if (!tbody) return;
-
-  const isKu = (state.language === 'ku');
-
-  if (summaryEl) {
-    summaryEl.innerText = isKu ? `پیشاندانی ${list.length.toLocaleString()} پسوولە` : `عرض ${list.length.toLocaleString()} فاتورة`;
-  }
-
-  if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-slate-400 font-bold">${isKu ? 'هیچ پسوولەیەک نەدۆزرایەوە' : 'لا توجد فواتير مطابقة للبحث'}</td></tr>`;
-    return;
-  }
-
-  let html = '';
-
-  list.forEach((r, idx) => {
-    const isRet = r.isReturn;
-    const statusBadge = isRet 
-      ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/40">${isKu ? 'گەڕاوە (مرتجع)' : 'مرتجع'}</span>`
-      : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">${isKu ? 'تەواوکراو (مباع)' : 'مباع / ناجح'}</span>`;
-
-    html += `
-      <tr class="hover:bg-slate-800/50 transition">
-        <td class="p-3 text-center text-slate-400 font-bold font-mono">${idx + 1}</td>
-        <td class="p-3 font-mono font-bold text-sky-400">${r.invoiceNumber}</td>
-        <td class="p-3 font-bold text-white">${r.customerName}</td>
-        <td class="p-3 text-xs text-slate-400 font-mono">${r.date}</td>
-        <td class="p-3 text-center">
-          <span class="px-2 py-0.5 rounded-lg bg-slate-800 text-[10px] font-bold text-slate-300">${r.paymentMethod}</span>
-        </td>
-        <td class="p-3 text-center font-black font-mono ${isRet ? 'text-rose-400' : 'text-emerald-400'}">${Number(r.totalAmount).toLocaleString()} د.ع</td>
-        <td class="p-3 text-center">${statusBadge}</td>
-        <td class="p-3 text-center">
-          <div class="flex items-center justify-center gap-1.5">
-            ${!isRet ? `
-              <button onclick="executeReturnReceipt('${r.invoiceNumber}')" class="px-2.5 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-700/60 text-rose-300 font-bold text-[10px] rounded-lg shadow-sm flex items-center gap-1 transition" title="گەڕاندنەوەی پسوولە">
-                <span>🔄</span>
-                <span>${isKu ? 'گەڕاندنەوە' : 'إرجاع'}</span>
-              </button>
-            ` : `<span class="text-[10px] text-slate-500 font-bold">✔ ${isKu ? 'گەڕاوەتەوە' : 'مسترجع'}</span>`}
-          </div>
-        </td>
-      </tr>
-    `;
-  });
-
-  tbody.innerHTML = html;
-}
-
-async function executeReturnReceipt(invNum) {
-  const isKu = (state.language === 'ku');
-  const confirmMsg = isKu
-    ? `ئایا دڵنیایت لە گەڕاندنەوەی پسوولەی (${invNum}) و گەڕاندنەوەی سەرجەم ماددەکان بۆ ناو کۆگا؟`
-    : `هل أنت متأكد من استرجاع الفاتورة (${invNum}) وإعادة كامل المواد إلى رصيد المخزن؟`;
-
-  if (!confirm(confirmMsg)) return;
-
-  const res = await callBackend('return_receipt', { invoiceNumber: invNum });
-  if (res && res.success) {
-    alert(isKu ? `✔ پسوولەی (${invNum}) بە سەرکەوتوویی گەڕێندرایەوە و کاڵاکان گەڕانەوە کۆگا!` : `✔ تم استرجاع الفاتورة (${invNum}) وإعادة المواد إلى المخزن بنجاح!`);
-    await loadReceiptsAndReturnsData();
-    loadProducts();
-    loadDashboard();
-    loadInventory();
-  } else {
-    alert(res?.message || 'هەڵەیەک ڕوویدا');
-  }
-}
 
 // ========================================================
 // ADD / EDIT PRODUCT FULL FORM (DETAILED MARKET LOGIC)
