@@ -448,10 +448,12 @@ function applyTheme(theme) {
   const icon = document.getElementById('themeIcon');
   const posThemeText = document.getElementById('posThemeText');
   if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
     document.body.classList.add('dark-theme');
     if (icon) icon.innerText = '☀️';
     if (posThemeText) posThemeText.innerText = 'شەو';
   } else {
+    document.documentElement.classList.remove('dark');
     document.body.classList.remove('dark-theme');
     if (icon) icon.innerText = '🌙';
     if (posThemeText) posThemeText.innerText = 'ڕۆژ';

@@ -107,6 +107,31 @@ input:focus, select:focus {
   outline: none;
 }
 
+/* Global Input Styling for High Contrast in Light & Dark Mode */
+html:not(.dark) input:not([type="button"]):not([type="submit"]),
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+html:not(.dark) input:focus,
+html:not(.dark) select:focus,
+html:not(.dark) textarea:focus {
+  background-color: #FFFFFF !important;
+  border-color: #0EA5E9 !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
+}
+
+html.dark input:not([type="button"]):not([type="submit"]),
+html.dark select,
+html.dark textarea {
+  background-color: #0F172A !important;
+  color: #F8FAFC !important;
+  border-color: #334155 !important;
+}
+
 /* POS Full Theme Classes (Day & Night Responsive) */
 .pos-panel {
   background-color: var(--bg-card) !important;
@@ -148,4 +173,5 @@ input:focus, select:focus {
 .pos-text-sub {
   color: var(--text-secondary) !important;
 }
+
 
