@@ -216,7 +216,35 @@ const i18n = {
     inv_th_sell_prices: "أسعار البيع (مفرد/جملة/كرتون)",
     inv_th_profits: "الأرباح المحسوبة",
     inv_th_status: "الحالة",
-    inv_th_actions: "الإجراءات"
+    inv_th_actions: "الإجراءات",
+
+    // Stock Audit Screen
+    audit_back: "العودة للرئيسية",
+    audit_title: "جرد ومطابقة أرصدة الرفوف والمخزن (جرد ذكي)",
+    audit_subtitle: "فحص الكميات الفعلية ومطابقتها مع رصيد النظام فورياً باستخدام الباركود",
+    audit_refresh_btn: "تحديث القائمة",
+    audit_save_all: "حفظ واعتماد كل الفروقات",
+    audit_kpi_total: "إجمالي المواد",
+    audit_kpi_matched: "المواد المطابقة (بدون فارق)",
+    audit_kpi_shortage: "مواد بها عجز / نقص",
+    audit_kpi_surplus: "مواد بها زيادة",
+    audit_scan_ph: "⚡ امسح الباركود للجرد المباشر...",
+    audit_auto_inc: "زيادة تلقائية (+1 عند كل مسح)",
+    audit_filter_all: "كافة المواد",
+    audit_filter_diff: "المواد التي بها فروقات فقط",
+    audit_filter_shortage: "العجز والنقص فقط",
+    audit_filter_surplus: "الزيادة فقط",
+    audit_filter_matched: "المطابقة فقط",
+    audit_all_cats: "جميع التصنيفات",
+    audit_th_num: "#",
+    audit_th_name: "المادة / الباركود",
+    audit_th_cat: "التصنيف",
+    audit_th_sys_stock: "الرصيد بالنظام",
+    audit_th_actual_stock: "الكمية الفعلية على الرف (جرد)",
+    audit_th_diff: "فارق الجرد",
+    audit_th_diff_val: "قيمة الفارق (د.ع)",
+    audit_th_status: "الحالة",
+    audit_th_action: "تحديث"
   },
   ku: {
     // POS & Cashier Top & Header
@@ -331,7 +359,35 @@ const i18n = {
     inv_th_sell_prices: "نرخەکانی فرۆشتن (تاک/کۆ/کارتۆن)",
     inv_th_profits: "قازانجی هەژمارکراو",
     inv_th_status: "دۆخ",
-    inv_th_actions: "کردارەکان"
+    inv_th_actions: "کردارەکان",
+
+    // Stock Audit Screen
+    audit_back: "گەڕانەوە بۆ سەرەکی",
+    audit_title: "پشکنین و هاوتای باڵانسی ڕەفەکانی کۆگا (جردی زیرەک)",
+    audit_subtitle: "پشکنینی بڕی ڕاستەقینە و بەراوردکردن لەگەڵ سیستەم بە بارکۆد",
+    audit_refresh_btn: "نوێکردنەوەی لیست",
+    audit_save_all: "پاشەکەوتکردنی هەموو جیاوازییەکان",
+    audit_kpi_total: "کۆی گشتی کاڵاکان",
+    audit_kpi_matched: "کاڵا هاوتاکان (بێ جیاوازی)",
+    audit_kpi_shortage: "کاڵای کەمی / کورتیناو",
+    audit_kpi_surplus: "کاڵای زیادی",
+    audit_scan_ph: "⚡ لێرە بارکۆد لێبدە بۆ پشکنینی ڕاستەوخۆ...",
+    audit_auto_inc: "زیادکردنی خۆکار (+١ لەگەڵ هەر لێدانێک)",
+    audit_filter_all: "هەموو کاڵاکان",
+    audit_filter_diff: "تەنها کاڵا جیاوازەکان",
+    audit_filter_shortage: "تەنها کەمییەکان",
+    audit_filter_surplus: "تەنها زیادییەکان",
+    audit_filter_matched: "تەنها هاوتاکان",
+    audit_all_cats: "هەموو جۆرەکان",
+    audit_th_num: "#",
+    audit_th_name: "کاڵا / بارکۆد",
+    audit_th_cat: "پۆلێن",
+    audit_th_sys_stock: "باڵانس لە سیستەم",
+    audit_th_actual_stock: "بڕی ڕاستەقینە لەسەر ڕەف",
+    audit_th_diff: "جیاوازی پشکنین",
+    audit_th_diff_val: "بەهای جیاوازی (د.ع)",
+    audit_th_status: "دۆخ",
+    audit_th_action: "نوێکردنەوە"
   },
   en: {
     // POS & Cashier Top & Header
@@ -446,7 +502,35 @@ const i18n = {
     inv_th_sell_prices: "Sale Prices (Retail/Wholesale/Carton)",
     inv_th_profits: "Calculated Profit",
     inv_th_status: "Status",
-    inv_th_actions: "Actions"
+    inv_th_actions: "Actions",
+
+    // Stock Audit Screen
+    audit_back: "Back to Main",
+    audit_title: "Smart Stock Audit & Shelf Reconciliation",
+    audit_subtitle: "Verify actual shelf quantities against system balances using barcodes",
+    audit_refresh_btn: "Refresh List",
+    audit_save_all: "Save All Discrepancies",
+    audit_kpi_total: "Total Products",
+    audit_kpi_matched: "Matched (No Diff)",
+    audit_kpi_shortage: "Shortage Items",
+    audit_kpi_surplus: "Surplus Items",
+    audit_scan_ph: "⚡ Scan barcode for live audit...",
+    audit_auto_inc: "Auto Increment (+1 on scan)",
+    audit_filter_all: "All Products",
+    audit_filter_diff: "Discrepancies Only",
+    audit_filter_shortage: "Shortage Only",
+    audit_filter_surplus: "Surplus Only",
+    audit_filter_matched: "Matched Only",
+    audit_all_cats: "All Categories",
+    audit_th_num: "#",
+    audit_th_name: "Product / Barcode",
+    audit_th_cat: "Category",
+    audit_th_sys_stock: "System Stock",
+    audit_th_actual_stock: "Actual Shelf Stock",
+    audit_th_diff: "Audit Diff",
+    audit_th_diff_val: "Diff Value (IQD)",
+    audit_th_status: "Status",
+    audit_th_action: "Update"
   }
 };
 
@@ -464,20 +548,20 @@ function switchTab(tabId) {
     el.classList.remove('sidebar-item-active');
   });
 
-  // 3. Auto-hide sidebar when opening Add Product, Cashier, or Inventory view as requested
+  // 3. Auto-hide sidebar when opening Add Product, Cashier, Inventory, or Stock Audit view as requested
   const sidebar = document.getElementById('appSidebar');
   if (sidebar) {
-    if (tabId === 'addProduct' || tabId === 'cashier' || tabId === 'inventory') {
+    if (tabId === 'addProduct' || tabId === 'cashier' || tabId === 'inventory' || tabId === 'stockAudit') {
       sidebar.classList.add('hidden');
     } else {
       sidebar.classList.remove('hidden');
     }
   }
 
-  // 4. Auto-hide the global top navbar when in Cashier, Add Product, or Inventory view to give 100% full screen
+  // 4. Auto-hide the global top navbar when in Cashier, Add Product, Inventory, or Stock Audit view to give 100% full screen
   const appTopHeader = document.getElementById('appTopHeader');
   if (appTopHeader) {
-    if (tabId === 'cashier' || tabId === 'addProduct' || tabId === 'inventory') {
+    if (tabId === 'cashier' || tabId === 'addProduct' || tabId === 'inventory' || tabId === 'stockAudit') {
       appTopHeader.classList.add('hidden');
     } else {
       appTopHeader.classList.remove('hidden');
@@ -594,11 +678,24 @@ function applyLanguage(lang) {
     invSearch.placeholder = dict.inv_search_ph || "بحث بالاسم أو الباركود...";
   }
 
-  // Re-render cart, tabs, and inventory to apply language changes
+  const auditScan = document.getElementById('auditBarcodeScannerInput');
+  if (auditScan) {
+    auditScan.placeholder = dict.audit_scan_ph || "⚡ امسح الباركود للجرد المباشر...";
+  }
+
+  const auditSearch = document.getElementById('audit-searchInput');
+  if (auditSearch) {
+    auditSearch.placeholder = dict.inv_search_ph || "بحث بالاسم أو الباركود...";
+  }
+
+  // Re-render cart, tabs, inventory, and audit to apply language changes
   renderInvoiceTabs();
   renderCashierCart();
   if (state.activeTab === 'inventory') {
     renderInventoryTable();
+  }
+  if (state.activeTab === 'stockAudit') {
+    renderAuditTable();
   }
 }
 
@@ -2811,25 +2908,218 @@ async function confirmCustomerPayment() {
 }
 
 // ========================================================
-// 3. STOCK AUDIT (الجرد ومطابقة الرفوف)
+// 3. STOCK AUDIT (الجرد ومطابقة الرفوف المتطورة)
 // ========================================================
 let auditProductsList = [];
 let auditFilteredList = [];
+let auditActualCounts = {}; // Track user edits: { prodId: count }
 
 async function loadStockAudit(showAlert = false) {
   const res = await callBackend('get_stock_audit');
   if (res && res.success) {
     auditProductsList = res.products || [];
+    
+    // Initialize actual counts if not yet modified
+    auditProductsList.forEach(p => {
+      const pid = p.id || p.Id;
+      if (auditActualCounts[pid] === undefined) {
+        auditActualCounts[pid] = p.stockQuantity;
+      }
+    });
+
+    // Populate Category Filter
+    const catFilter = document.getElementById('auditCategoryFilter');
+    if (catFilter) {
+      const cats = [...new Set(auditProductsList.map(p => p.category).filter(Boolean))];
+      const curVal = catFilter.value;
+      catFilter.innerHTML = '<option value="" data-i18n="audit_all_cats">جميع التصنيفات</option>';
+      cats.forEach(c => {
+        catFilter.innerHTML += `<option value="${c}">${c}</option>`;
+      });
+      if (cats.includes(curVal)) catFilter.value = curVal;
+    }
+
+    updateAuditKPIs();
     filterAuditTable();
+
+    // Auto focus barcode gun scanner
+    setTimeout(() => {
+      document.getElementById('auditBarcodeScannerInput')?.focus();
+    }, 100);
+
     if (showAlert) alert('✔ تم تحديث قائمة جرد الرفوف بنجاح!');
   }
 }
 
+function updateAuditKPIs() {
+  let matched = 0;
+  let shortage = 0;
+  let surplus = 0;
+
+  auditProductsList.forEach(p => {
+    const pid = p.id || p.Id;
+    const actual = auditActualCounts[pid] !== undefined ? auditActualCounts[pid] : p.stockQuantity;
+    const diff = actual - p.stockQuantity;
+    if (diff === 0) matched++;
+    else if (diff < 0) shortage++;
+    else surplus++;
+  });
+
+  const totalEl = document.getElementById('auditKpiTotal');
+  if (totalEl) totalEl.innerText = `${auditProductsList.length.toLocaleString()} مادة`;
+
+  const matchedEl = document.getElementById('auditKpiMatched');
+  if (matchedEl) matchedEl.innerText = `${matched.toLocaleString()} مادة`;
+
+  const shortEl = document.getElementById('auditKpiShortage');
+  if (shortEl) shortEl.innerText = `${shortage.toLocaleString()} مادة`;
+
+  const surplusEl = document.getElementById('auditKpiSurplus');
+  if (surplusEl) surplusEl.innerText = `${surplus.toLocaleString()} مادة`;
+}
+
+function handleAuditBarcodeScan(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const barcodeInput = document.getElementById('auditBarcodeScannerInput');
+    if (!barcodeInput) return;
+    const code = barcodeInput.value.trim();
+    if (!code) return;
+
+    const prod = auditProductsList.find(p => (p.barcode || p.Barcode) === code || (p.name || p.Name).toLowerCase() === code.toLowerCase());
+    if (prod) {
+      const pid = prod.id || prod.Id;
+      const isAutoInc = document.getElementById('auditAutoIncrementToggle')?.checked ?? true;
+      const currentCount = auditActualCounts[pid] !== undefined ? auditActualCounts[pid] : prod.stockQuantity;
+      const newCount = isAutoInc ? (currentCount + 1) : currentCount;
+      auditActualCounts[pid] = newCount;
+
+      // Show Last Scanned Banner
+      const banner = document.getElementById('auditLastScannedBanner');
+      if (banner) {
+        document.getElementById('auditScannedName').innerText = prod.name || prod.Name;
+        document.getElementById('auditScannedBarcode').innerText = prod.barcode || prod.Barcode || '--';
+        document.getElementById('auditScannedCount').innerText = `${newCount} قطعة`;
+        banner.classList.remove('hidden');
+      }
+
+      updateAuditKPIs();
+      filterAuditTable();
+
+      // Highlight input in table if visible
+      setTimeout(() => {
+        const inputEl = document.getElementById(`audit-input-${pid}`);
+        if (inputEl) {
+          inputEl.classList.add('ring-2', 'ring-amber-500');
+          setTimeout(() => inputEl.classList.remove('ring-2', 'ring-amber-500'), 1200);
+        }
+      }, 50);
+    } else {
+      alert(`⚠️ الباركود [${code}] غير مسجل ضمن مواد المخزن!`);
+    }
+
+    barcodeInput.value = '';
+    barcodeInput.focus();
+  }
+}
+
+function changeAuditCount(pid, delta) {
+  const prod = auditProductsList.find(p => (p.id || p.Id) === pid);
+  if (!prod) return;
+  const cur = auditActualCounts[pid] !== undefined ? auditActualCounts[pid] : prod.stockQuantity;
+  const next = Math.max(0, cur + delta);
+  auditActualCounts[pid] = next;
+
+  const input = document.getElementById(`audit-input-${pid}`);
+  if (input) input.value = next;
+
+  calcAuditDiff(pid, prod.stockQuantity);
+}
+
+function handleAuditDirectInput(pid, sysStock) {
+  const input = document.getElementById(`audit-input-${pid}`);
+  if (!input) return;
+  const val = Math.max(0, parseFloat(input.value) || 0);
+  auditActualCounts[pid] = val;
+  calcAuditDiff(pid, sysStock);
+}
+
+function calcAuditDiff(pid, sysStock) {
+  const prod = auditProductsList.find(p => (p.id || p.Id) === pid);
+  const actual = auditActualCounts[pid] !== undefined ? auditActualCounts[pid] : sysStock;
+  const diff = actual - sysStock;
+  const cost = prod ? (prod.cost || 0) : 0;
+  const diffVal = diff * cost;
+
+  const diffEl = document.getElementById(`audit-diff-${pid}`);
+  const valEl = document.getElementById(`audit-diff-val-${pid}`);
+  const statusEl = document.getElementById(`audit-status-${pid}`);
+
+  if (diffEl) {
+    if (diff === 0) {
+      diffEl.innerText = '0 (مطابق)';
+      diffEl.className = 'font-bold font-mono text-xs text-slate-400';
+    } else if (diff > 0) {
+      diffEl.innerText = `+${diff} (زيادة)`;
+      diffEl.className = 'font-black font-mono text-xs text-sky-600 dark:text-sky-400';
+    } else {
+      diffEl.innerText = `${diff} (عجز/نقص)`;
+      diffEl.className = 'font-black font-mono text-xs text-rose-600 dark:text-rose-400';
+    }
+  }
+
+  if (valEl) {
+    if (diff === 0) {
+      valEl.innerText = '0 د.ع';
+      valEl.className = 'font-bold font-mono text-xs text-slate-400';
+    } else if (diff > 0) {
+      valEl.innerText = `+${Math.round(diffVal).toLocaleString()} د.ع`;
+      valEl.className = 'font-black font-mono text-xs text-sky-600 dark:text-sky-400';
+    } else {
+      valEl.innerText = `${Math.round(diffVal).toLocaleString()} د.ع`;
+      valEl.className = 'font-black font-mono text-xs text-rose-600 dark:text-rose-400';
+    }
+  }
+
+  if (statusEl) {
+    if (diff === 0) {
+      statusEl.innerHTML = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">مطابق ✔</span>';
+    } else if (diff > 0) {
+      statusEl.innerHTML = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-400">زيادة ➕</span>';
+    } else {
+      statusEl.innerHTML = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400">عجز ⚠️</span>';
+    }
+  }
+
+  updateAuditKPIs();
+}
+
 function filterAuditTable() {
   const q = (document.getElementById('audit-searchInput')?.value || '').toLowerCase().trim();
-  auditFilteredList = auditProductsList.filter(p => 
-    (p.name && p.name.toLowerCase().includes(q)) || (p.barcode && p.barcode.includes(q))
-  );
+  const selCat = document.getElementById('auditCategoryFilter')?.value || '';
+  const statusFilter = document.getElementById('auditStatusFilter')?.value || 'all';
+
+  auditFilteredList = auditProductsList.filter(p => {
+    const pid = p.id || p.Id;
+    const actual = auditActualCounts[pid] !== undefined ? auditActualCounts[pid] : p.stockQuantity;
+    const diff = actual - p.stockQuantity;
+
+    const pName = (p.name || p.Name || '').toLowerCase();
+    const pBar = (p.barcode || p.Barcode || '').toLowerCase();
+    const pCat = (p.category || p.Category || '').toLowerCase();
+
+    const matchesSearch = !q || pName.includes(q) || pBar.includes(q) || pCat.includes(q);
+    const matchesCat = !selCat || (p.category === selCat || p.Category === selCat);
+
+    let matchesStatus = true;
+    if (statusFilter === 'diff') matchesStatus = diff !== 0;
+    else if (statusFilter === 'shortage') matchesStatus = diff < 0;
+    else if (statusFilter === 'surplus') matchesStatus = diff > 0;
+    else if (statusFilter === 'matched') matchesStatus = diff === 0;
+
+    return matchesSearch && matchesCat && matchesStatus;
+  });
+
   renderAuditTable();
 }
 
@@ -2840,7 +3130,7 @@ function renderAuditTable() {
   if (!tbody) return;
 
   if (auditFilteredList.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold">لا توجد مواد مطابقة للبحث للجرد</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center py-12 text-slate-400 font-bold">لا توجد مواد مطابقة للبحث أو الفلترة للجرد</td></tr>';
     if (summaryEl) summaryEl.innerText = 'يتم عرض 0 مادة';
     if (showAllBtn) showAllBtn.classList.add('hidden');
     return;
@@ -2857,20 +3147,57 @@ function renderAuditTable() {
   let rowsHtml = '';
   for (let i = 0; i < displayItems.length; i++) {
     const p = displayItems[i];
-    const prodId = p.id || p.Id;
+    const pid = p.id || p.Id;
+    const sysStock = p.stockQuantity || 0;
+    const actual = auditActualCounts[pid] !== undefined ? auditActualCounts[pid] : sysStock;
+    const diff = actual - sysStock;
+    const cost = p.cost || 0;
+    const diffVal = diff * cost;
+
+    const isMatched = diff === 0;
+    const isSurplus = diff > 0;
+    const isShortage = diff < 0;
+
     rowsHtml += `
       <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-        <td class="p-3 text-center text-slate-400 font-bold">${i + 1}</td>
-        <td class="p-3 font-bold text-slate-800 dark:text-white">${p.name || p.Name}</td>
-        <td class="p-3 text-sky-500 font-mono font-bold">${p.barcode || p.Barcode || '--'}</td>
-        <td class="p-3 text-center font-black font-mono">${p.stockQuantity} قطعة</td>
-        <td class="p-3 text-center">
-          <input id="audit-input-${prodId}" type="number" value="${p.stockQuantity}" oninput="calcAuditDiff('${prodId}', ${p.stockQuantity})" class="w-24 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1 text-center font-black font-mono text-xs">
+        <td class="p-2.5 text-center text-slate-400 font-bold">${i + 1}</td>
+        <td class="p-2.5">
+          <div class="font-black text-slate-900 dark:text-white text-xs">${p.name || p.Name}</div>
+          <div class="text-[10px] font-mono text-sky-500 font-bold flex items-center gap-1">
+            <span>🏷</span><span>${p.barcode || p.Barcode || '--'}</span>
+          </div>
         </td>
-        <td class="p-3 text-center font-bold font-mono text-xs" id="audit-diff-${prodId}">0 (مطابق)</td>
-        <td class="p-3 text-center">
-          <button onclick="quickSaveAuditStock('${prodId}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg shadow-sm">
-            💾 حفظ
+        <td class="p-2.5">
+          <span class="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300">${p.category || 'عام'}</span>
+        </td>
+        <td class="p-2.5 text-center font-black font-mono text-slate-800 dark:text-white text-xs">${sysStock} قطعة</td>
+        <td class="p-2.5 text-center">
+          <div class="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-300 dark:border-slate-700">
+            <button onclick="changeAuditCount('${pid}', -1)" class="w-6 h-6 rounded-lg bg-white dark:bg-slate-700 text-rose-500 hover:bg-rose-50 font-black text-xs flex items-center justify-center shadow-sm">-</button>
+            <input id="audit-input-${pid}" type="number" min="0" value="${actual}" oninput="handleAuditDirectInput('${pid}', ${sysStock})" class="w-16 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg py-0.5 text-center font-black font-mono text-xs text-slate-900 dark:text-white">
+            <button onclick="changeAuditCount('${pid}', 1)" class="w-6 h-6 rounded-lg bg-white dark:bg-slate-700 text-emerald-600 hover:bg-emerald-50 font-black text-xs flex items-center justify-center shadow-sm">+</button>
+          </div>
+        </td>
+        <td class="p-2.5 text-center" id="audit-diff-${pid}">
+          <span class="${isMatched ? 'font-bold font-mono text-xs text-slate-400' : isSurplus ? 'font-black font-mono text-xs text-sky-600 dark:text-sky-400' : 'font-black font-mono text-xs text-rose-600 dark:text-rose-400'}">
+            ${isMatched ? '0 (مطابق)' : isSurplus ? `+${diff} (زيادة)` : `${diff} (عجز)`}
+          </span>
+        </td>
+        <td class="p-2.5 text-center" id="audit-diff-val-${pid}">
+          <span class="${isMatched ? 'font-bold font-mono text-xs text-slate-400' : isSurplus ? 'font-black font-mono text-xs text-sky-600 dark:text-sky-400' : 'font-black font-mono text-xs text-rose-600 dark:text-rose-400'}">
+            ${isMatched ? '0 د.ع' : isSurplus ? `+${Math.round(diffVal).toLocaleString()} د.ع` : `${Math.round(diffVal).toLocaleString()} د.ع`}
+          </span>
+        </td>
+        <td class="p-2.5 text-center" id="audit-status-${pid}">
+          ${isMatched 
+            ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">مطابق ✔</span>' 
+            : isSurplus 
+            ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-400">زيادة ➕</span>' 
+            : '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400">عجز ⚠️</span>'}
+        </td>
+        <td class="p-2.5 text-center">
+          <button onclick="quickSaveAuditStock('${pid}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg shadow-sm transition" title="حفظ هذه المادة فقط">
+            💾
           </button>
         </td>
       </tr>
@@ -2899,45 +3226,48 @@ function showAllAuditItems() {
   renderAuditTable();
 }
 
-function calcAuditDiff(id, sysStock) {
-  const input = document.getElementById(`audit-input-${id}`);
-  const diffEl = document.getElementById(`audit-diff-${id}`);
-  if (!input || !diffEl) return;
+async function quickSaveAuditStock(pid) {
+  const prod = auditProductsList.find(p => (p.id || p.Id) === pid);
+  if (!prod) return;
+  const actualStock = auditActualCounts[pid] !== undefined ? auditActualCounts[pid] : prod.stockQuantity;
 
-  const actual = parseFloat(input.value) || 0;
-  const diff = actual - sysStock;
-
-  if (diff === 0) {
-    diffEl.innerText = '0 (مطابق)';
-    diffEl.className = 'p-3 text-center font-bold font-mono text-xs text-slate-400';
-  } else if (diff > 0) {
-    diffEl.innerText = `+${diff} (زيادة)`;
-    diffEl.className = 'p-3 text-center font-bold font-mono text-xs text-emerald-500';
-  } else {
-    diffEl.innerText = `${diff} (نقص)`;
-    diffEl.className = 'p-3 text-center font-bold font-mono text-xs text-rose-500';
-  }
-}
-
-async function quickSaveAuditStock(id) {
-  const input = document.getElementById(`audit-input-${id}`);
-  if (!input) return;
-  const actualStock = parseFloat(input.value) || 0;
-
-  const res = await callBackend('update_stock_audit', { productId: id, actualStock });
+  const res = await callBackend('update_stock_audit', { productId: pid, actualStock });
   if (res && res.success) {
-    alert('✔ تم تحديث رصيد المادة الفعلي بالمخزن بنجاح!');
+    prod.stockQuantity = actualStock;
+    alert(`✔ تم تحديث واعتماد رصيد [${prod.name || prod.Name}] في المخزن بنجاح!`);
+    updateAuditKPIs();
+    filterAuditTable();
     await loadInventory();
     await loadProducts();
   }
 }
 
-function filterAuditTable() {
-  const q = (document.getElementById('audit-searchInput')?.value || '').toLowerCase().trim();
-  const filtered = auditProductsList.filter(p => 
-    (p.name && p.name.toLowerCase().includes(q)) || (p.barcode && p.barcode.includes(q))
-  );
-  renderAuditTable(filtered);
+async function saveAllAuditChanges() {
+  const modified = [];
+  auditProductsList.forEach(p => {
+    const pid = p.id || p.Id;
+    const actual = auditActualCounts[pid] !== undefined ? auditActualCounts[pid] : p.stockQuantity;
+    if (actual !== p.stockQuantity) {
+      modified.push({ productId: pid, actualStock: actual });
+    }
+  });
+
+  if (modified.length === 0) {
+    alert('لا توجد أي فروقات معدلة لحفظها، جميع المواد مطابقة!');
+    return;
+  }
+
+  if (!confirm(`هل أنت متأكد من حفظ واعتماد فروقات الجرد لـ (${modified.length}) مادة وتحديث أرصدة المخزن؟`)) {
+    return;
+  }
+
+  const res = await callBackend('batch_update_stock_audit', { updates: modified });
+  if (res && res.success) {
+    alert(`✔ تم حفظ واعتماد فروقات الجرد لـ ${modified.length} مادة وتحديث المخزن بنجاح!`);
+    await loadStockAudit();
+    await loadInventory();
+    await loadProducts();
+  }
 }
 
 // ========================================================

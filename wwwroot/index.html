@@ -1425,55 +1425,183 @@
         <!-- ======================================================== -->
         <!-- VIEW 8: STOCK AUDIT (الجرد ومطابقة الرفوف) -->
         <!-- ======================================================== -->
-        <div id="tab-stockAudit" class="tab-content hidden space-y-4">
-          <div class="sh-card p-4 flex items-center justify-between">
-            <div>
-              <h2 class="text-base font-black text-slate-800 dark:text-white">جرد ومطابقة أرصدة الرفوف بالمخزن</h2>
-              <p class="text-xs text-slate-400">فحص الكميات الفعلية ومطابقتها مع رصيد النظام فورياً</p>
+        <!-- ======================================================== -->
+        <!-- VIEW 8: STOCK AUDIT (الجرد ومطابقة الرفوف المتطورة) -->
+        <!-- ======================================================== -->
+        <div id="tab-stockAudit" class="tab-content hidden space-y-3">
+          
+          <!-- Top Header Bar (Full Width with Back Button & Quick Actions) -->
+          <div class="flex items-center justify-between sh-card px-4 py-2.5">
+            <div class="flex items-center gap-3">
+              <button onclick="switchTab('dashboard')" class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
+                <span>🔙</span>
+                <span data-i18n="audit_back">العودة للرئيسية</span>
+              </button>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold text-base">
+                  📋
+                </div>
+                <div>
+                  <h2 data-i18n="audit_title" class="text-base font-black text-slate-900 dark:text-white">جرد ومطابقة أرصدة الرفوف والمخزن (جرد ذكي)</h2>
+                  <p data-i18n="audit_subtitle" class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">فحص الكميات الفعلية ومطابقتها مع رصيد النظام فورياً باستخدام الباركود</p>
+                </div>
+              </div>
             </div>
+
+            <!-- Action Controls -->
             <div class="flex items-center gap-2">
-              <input id="audit-searchInput" oninput="filterAuditTable()" type="text" placeholder="بحث فوري عن مادة للجرد..." class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-white w-60">
-              <select id="auditDisplayLimit" onchange="filterAuditTable()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 dark:text-sky-400">
-                <option value="1000" selected>عرض: أول 1,000 مادة</option>
-                <option value="500">عرض: أول 500 مادة</option>
-                <option value="2000">عرض: أول 2,000 مادة</option>
-                <option value="all">عرض: كافة المواد دفعة واحدة</option>
-              </select>
-              <button onclick="loadStockAudit(true)" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-xs font-bold rounded-xl flex items-center gap-1">
+              <!-- Language Switcher Pill -->
+              <div class="bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/60 rounded-xl p-0.5 flex items-center text-xs font-bold">
+                <button onclick="setLanguage('ar')" class="px-2 py-0.5 rounded-lg text-slate-700 dark:text-slate-300 hover:text-sky-500 transition text-[11px]">عربي</button>
+                <button onclick="setLanguage('ku')" class="px-2 py-0.5 rounded-lg text-slate-700 dark:text-slate-300 hover:text-sky-500 transition text-[11px]">کوردی</button>
+                <button onclick="setLanguage('en')" class="px-2 py-0.5 rounded-lg text-slate-700 dark:text-slate-300 hover:text-sky-500 transition text-[11px]">EN</button>
+              </div>
+
+              <!-- Theme Toggle Button -->
+              <button onclick="toggleTheme()" class="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50 rounded-xl text-xs font-bold flex items-center gap-1 transition">
+                <span>🌓</span>
+                <span>الثيم</span>
+              </button>
+
+              <button onclick="loadStockAudit(true)" class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1 transition">
                 <span>🔄</span>
-                <span>تحديث القائمة</span>
+                <span data-i18n="audit_refresh_btn">تحديث القائمة</span>
+              </button>
+
+              <button onclick="saveAllAuditChanges()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 transition">
+                <span>💾</span>
+                <span data-i18n="audit_save_all">حفظ واعتماد كل الفروقات</span>
               </button>
             </div>
           </div>
 
-          <div class="sh-card p-4 overflow-hidden space-y-3">
-            <div class="overflow-x-auto max-h-[calc(100vh-270px)]">
+          <!-- Audit KPI Summary Cards (4 KPI Cards) -->
+          <div class="grid grid-cols-4 gap-3">
+            <div class="sh-card p-3 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-lg">📦</div>
+              <div>
+                <span data-i18n="audit_kpi_total" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">إجمالي المواد</span>
+                <span id="auditKpiTotal" class="text-sm font-black text-slate-900 dark:text-white">0 مادة</span>
+              </div>
+            </div>
+            <div class="sh-card p-3 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center font-bold text-lg">✔</div>
+              <div>
+                <span data-i18n="audit_kpi_matched" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">المواد المطابقة (بدون فارق)</span>
+                <span id="auditKpiMatched" class="text-sm font-black text-emerald-600 dark:text-emerald-400">0 مادة</span>
+              </div>
+            </div>
+            <div class="sh-card p-3 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center font-bold text-lg">⚠️</div>
+              <div>
+                <span data-i18n="audit_kpi_shortage" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">مواد بها عجز / نقص</span>
+                <span id="auditKpiShortage" class="text-sm font-black text-rose-600 dark:text-rose-400">0 مادة</span>
+              </div>
+            </div>
+            <div class="sh-card p-3 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-950/60 text-sky-600 flex items-center justify-center font-bold text-lg">➕</div>
+              <div>
+                <span data-i18n="audit_kpi_surplus" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">مواد بها زيادة</span>
+                <span id="auditKpiSurplus" class="text-sm font-black text-sky-600 dark:text-sky-400">0 مادة</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced Smart Barcode Audit Toolbar -->
+          <div class="sh-card p-3 space-y-2.5">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              
+              <!-- Fast Barcode Gun Scanner Live Input -->
+              <div class="flex items-center gap-2">
+                <div class="relative w-80">
+                  <input id="auditBarcodeScannerInput" onkeydown="handleAuditBarcodeScan(event)" type="text" placeholder="⚡ امسح الباركود للجرد المباشر..." class="w-full bg-amber-50/50 dark:bg-amber-950/30 border-2 border-amber-400 dark:border-amber-600 rounded-xl pr-9 pl-3 py-1.5 text-xs font-mono font-black text-amber-900 dark:text-amber-200 focus:ring-2 focus:ring-amber-400">
+                  <span class="absolute right-3 top-2 text-amber-500 text-xs select-none">📷</span>
+                </div>
+                <label class="flex items-center gap-1.5 cursor-pointer bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <input id="auditAutoIncrementToggle" type="checkbox" checked class="rounded text-amber-500">
+                  <span data-i18n="audit_auto_inc">زيادة تلقائية (+1 عند كل مسح)</span>
+                </label>
+              </div>
+
+              <!-- Filter & Search Controls -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <!-- Search text/barcode -->
+                <div class="relative w-64">
+                  <input id="audit-searchInput" oninput="filterAuditTable()" type="text" placeholder="بحث بالاسم أو الباركود..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pr-9 pl-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:border-sky-500">
+                  <span class="absolute right-3 top-2 text-slate-400 text-xs select-none">🔍</span>
+                </div>
+
+                <!-- Status Filter -->
+                <select id="auditStatusFilter" onchange="filterAuditTable()" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                  <option value="all" data-i18n="audit_filter_all">كافة المواد</option>
+                  <option value="diff" data-i18n="audit_filter_diff">المواد التي بها فروقات فقط</option>
+                  <option value="shortage" data-i18n="audit_filter_shortage">العجز والنقص فقط</option>
+                  <option value="surplus" data-i18n="audit_filter_surplus">الزيادة فقط</option>
+                  <option value="matched" data-i18n="audit_filter_matched">المطابقة فقط</option>
+                </select>
+
+                <!-- Category Filter -->
+                <select id="auditCategoryFilter" onchange="filterAuditTable()" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                  <option value="" data-i18n="audit_all_cats">جميع التصنيفات</option>
+                </select>
+
+                <!-- Limit Filter -->
+                <select id="auditDisplayLimit" onchange="filterAuditTable()" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 dark:text-sky-400">
+                  <option value="1000" selected data-i18n="inv_limit_1000">عرض: أول 1,000 مادة</option>
+                  <option value="500" data-i18n="inv_limit_500">عرض: أول 500 مادة</option>
+                  <option value="2000" data-i18n="inv_limit_2000">عرض: أول 2,000 مادة</option>
+                  <option value="all" data-i18n="inv_limit_all">عرض: كافة المواد دفعة واحدة</option>
+                </select>
+              </div>
+
+            </div>
+
+            <!-- Last Scanned Product Notification Banner -->
+            <div id="auditLastScannedBanner" class="hidden p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-700 flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
+              <div class="flex items-center gap-2">
+                <span>🎯 تم مسح:</span>
+                <span id="auditScannedName" class="font-black text-sm text-emerald-900 dark:text-white"></span>
+                <span id="auditScannedBarcode" class="font-mono text-xs px-2 py-0.5 rounded bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100"></span>
+              </div>
+              <div>
+                <span>الرصيد الفعلي الجديد:</span>
+                <span id="auditScannedCount" class="font-black text-sm text-emerald-700 dark:text-emerald-300 mr-1"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Stock Audit Table -->
+          <div class="sh-card overflow-hidden space-y-3">
+            <div class="overflow-x-auto max-h-[calc(100vh-320px)]">
               <table class="w-full text-right text-xs">
                 <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800 sticky top-0 z-10">
                   <tr>
-                    <th class="p-3">#</th>
-                    <th class="p-3">اسم المادة</th>
-                    <th class="p-3">الباركود</th>
-                    <th class="p-3 text-center">الرصيد بالنظام</th>
-                    <th class="p-3 text-center">الكمية الفعلية على الرف</th>
-                    <th class="p-3 text-center">الفارق</th>
-                    <th class="p-3 text-center">تحديث الرصيد</th>
+                    <th class="p-2.5 text-center w-12" data-i18n="audit_th_num">#</th>
+                    <th class="p-2.5" data-i18n="audit_th_name">المادة / الباركود</th>
+                    <th class="p-2.5" data-i18n="audit_th_cat">التصنيف</th>
+                    <th class="p-2.5 text-center" data-i18n="audit_th_sys_stock">الرصيد بالنظام</th>
+                    <th class="p-2.5 text-center" data-i18n="audit_th_actual_stock">الكمية الفعلية على الرف (جرد)</th>
+                    <th class="p-2.5 text-center" data-i18n="audit_th_diff">فارق الجرد</th>
+                    <th class="p-2.5 text-center" data-i18n="audit_th_diff_val">قيمة الفارق (د.ع)</th>
+                    <th class="p-2.5 text-center" data-i18n="audit_th_status">الحالة</th>
+                    <th class="p-2.5 text-center" data-i18n="audit_th_action">تحديث</th>
                   </tr>
                 </thead>
-                <tbody id="auditTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
-                  <tr><td colspan="7" class="text-center py-8 text-slate-400">جاري تحميل بيانات الجرد...</td></tr>
+                <tbody id="auditTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold">
+                  <tr><td colspan="9" class="text-center py-8 text-slate-400 font-bold">جاري تحميل بيانات الجرد...</td></tr>
                 </tbody>
               </table>
             </div>
 
             <!-- Footer Bar with Count & Show All Option -->
             <div class="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 rounded-b-xl text-xs">
-              <span id="auditCountSummary" class="text-slate-500 font-bold">يتم عرض 0 مادة</span>
+              <span id="auditCountSummary" class="text-slate-500 dark:text-slate-400 font-bold">يتم عرض 0 مادة</span>
               <button id="auditShowAllBtn" onclick="showAllAuditItems()" class="hidden px-3.5 py-1.5 bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs rounded-xl shadow-sm transition">
                 👁 عرض كافة المواد دفعة واحدة
               </button>
             </div>
           </div>
+
         </div>
 
         <!-- ======================================================== -->

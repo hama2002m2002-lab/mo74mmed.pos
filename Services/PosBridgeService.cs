@@ -907,6 +907,32 @@ public class PosBridgeService
                     return JsonSerializer.Serialize(new { success = true });
                 }
 
+                case "batch_update_stock_audit":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var r = doc.RootElement;
+                    if (r.TryGetProperty("updates", out var updates) && updates.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var item in updates.EnumerateArray())
+                        {
+                            var prodId = item.GetProperty("productId").GetGuid();
+                            decimal actualStock = item.GetProperty("actualStock").GetDecimal();
+                            var prod = await db.Products.FindAsync(prodId);
+                            if (prod != null)
+                            {
+                                prod.StockQuantity = actualStock;
+                                if (prod.ItemsPerCarton > 0)
+                                {
+                                    prod.CartonsCount = Math.Floor(actualStock / prod.ItemsPerCarton);
+                                }
+                                prod.UpdatedAt = DateTime.UtcNow;
+                            }
+                        }
+                        await db.SaveChangesAsync();
+                    }
+                    return JsonSerializer.Serialize(new { success = true });
+                }
+
                 case "get_reports":
                 {
                     var today = DateTime.Today;
