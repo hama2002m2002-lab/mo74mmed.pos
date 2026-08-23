@@ -967,25 +967,50 @@
         <!-- ======================================================== -->
         <!-- VIEW 4: INVENTORY & WAREHOUSE (FULL DETAILED VIEW) -->
         <!-- ======================================================== -->
-        <div id="tab-inventory" class="tab-content hidden space-y-3.5">
+        <!-- ======================================================== -->
+        <!-- VIEW 4: INVENTORY & WAREHOUSE (FULL DETAILED VIEW) -->
+        <!-- ======================================================== -->
+        <div id="tab-inventory" class="tab-content hidden space-y-3">
           
-          <!-- Top Header Bar -->
+          <!-- Top Header Bar (Full Width with Back Button & Quick Actions) -->
           <div class="flex items-center justify-between sh-card px-4 py-2.5">
-            <div class="flex items-center gap-2.5">
-              <div class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold text-lg">
-                🏬
-              </div>
-              <div>
-                <h2 class="text-base font-black text-slate-800 dark:text-white">المخزن ورصيد المواد (تفاصيل شاملة)</h2>
-                <p class="text-[11px] text-slate-400">عرض كامل تفاصيل الكراتين، التكلفة، أسعار البيع، والأرباح لكل مادة</p>
+            <div class="flex items-center gap-3">
+              <button onclick="switchTab('dashboard')" class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
+                <span>🔙</span>
+                <span>العودة للرئيسية</span>
+              </button>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold text-base">
+                  🏬
+                </div>
+                <div>
+                  <h2 class="text-base font-black text-slate-900 dark:text-white">المخزن ورصيد المواد (تفاصيل شاملة)</h2>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">عرض كامل تفاصيل الكراتين، التكلفة، أسعار البيع، والأرباح لكل مادة</p>
+                </div>
               </div>
             </div>
+
+            <!-- Action Controls -->
             <div class="flex items-center gap-2">
-              <button onclick="loadInventory()" class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold rounded-xl flex items-center gap-1">
+              
+              <!-- Language Switcher Pill -->
+              <div class="bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/60 rounded-xl p-0.5 flex items-center text-xs font-bold">
+                <button onclick="setLanguage('ar')" class="px-2 py-0.5 rounded-lg text-slate-700 dark:text-slate-300 hover:text-sky-500 transition text-[11px]">عربي</button>
+                <button onclick="setLanguage('ku')" class="px-2 py-0.5 rounded-lg text-slate-700 dark:text-slate-300 hover:text-sky-500 transition text-[11px]">کوردی</button>
+                <button onclick="setLanguage('en')" class="px-2 py-0.5 rounded-lg text-slate-700 dark:text-slate-300 hover:text-sky-500 transition text-[11px]">EN</button>
+              </div>
+
+              <!-- Theme Toggle Button -->
+              <button onclick="toggleTheme()" class="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50 rounded-xl text-xs font-bold flex items-center gap-1 transition">
+                <span>🌓</span>
+                <span>الثيم</span>
+              </button>
+
+              <button onclick="loadInventory()" class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1 transition">
                 <span>🔄</span>
                 <span>تحديث القائمة</span>
               </button>
-              <button onclick="switchTab('addProduct')" class="px-4 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1">
+              <button onclick="switchTab('addProduct')" class="px-4 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1 transition">
                 <span>➕</span>
                 <span>إضافة مادة جديدة</span>
               </button>
@@ -997,43 +1022,45 @@
             <div class="sh-card p-3 flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-950/60 text-sky-600 flex items-center justify-center font-bold text-lg">📦</div>
               <div>
-                <span class="text-[10px] font-bold text-slate-400 block">إجمالي عدد المواد</span>
-                <span id="invTotalProducts" class="text-sm font-black text-slate-800 dark:text-white">0 مادة</span>
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">إجمالي عدد المواد</span>
+                <span id="invTotalProducts" class="text-sm font-black text-slate-900 dark:text-white">0 مادة</span>
               </div>
             </div>
             <div class="sh-card p-3 flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center font-bold text-lg">💵</div>
               <div>
-                <span class="text-[10px] font-bold text-slate-400 block">قيمة المخزن بالتكلفة</span>
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">قيمة المخزن بالتكلفة</span>
                 <span id="invTotalCostValue" class="text-sm font-black text-blue-600 dark:text-blue-400">0 د.ع</span>
               </div>
             </div>
             <div class="sh-card p-3 flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center font-bold text-lg">🛍</div>
               <div>
-                <span class="text-[10px] font-bold text-slate-400 block">القيمة البيعية الإجمالية</span>
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">القيمة البيعية الإجمالية</span>
                 <span id="invTotalSellingValue" class="text-sm font-black text-emerald-600 dark:text-emerald-400">0 د.ع</span>
               </div>
             </div>
             <div class="sh-card p-3 flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center font-bold text-lg">📈</div>
               <div>
-                <span class="text-[10px] font-bold text-slate-400 block">الأرباح المتوقعة بالمخزن</span>
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">الأرباح المتوقعة بالمخزن</span>
                 <span id="invTotalProfitValue" class="text-sm font-black text-purple-600 dark:text-purple-400">0 د.ع</span>
               </div>
             </div>
           </div>
 
-          <!-- Search & Filter Bar -->
+          <!-- Search & Filter Bar (Compact Barcode Search) -->
           <div class="sh-card p-2.5 flex items-center justify-between gap-3">
-            <div class="flex-1 flex items-center gap-2">
-              <div class="relative flex-1">
-                <input id="invSearchInput" oninput="filterInventoryTable()" type="text" placeholder="بحث فوري بالاسم، الباركود، أو التصنيف..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-1.5 text-xs font-bold text-slate-800 dark:text-white">
+            <div class="flex items-center gap-2.5">
+              <!-- Compact Barcode-Sized Search Input -->
+              <div class="relative w-72">
+                <input id="invSearchInput" oninput="filterInventoryTable()" type="text" placeholder="بحث بالاسم أو الباركود..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pr-9 pl-3 py-1.5 text-xs font-mono font-bold text-slate-900 dark:text-white focus:border-sky-500">
+                <span class="absolute right-3 top-2 text-slate-400 text-xs select-none">🔍</span>
               </div>
-              <select id="invCategoryFilter" onchange="filterInventoryTable()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-white">
+              <select id="invCategoryFilter" onchange="filterInventoryTable()" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white">
                 <option value="">جميع التصنيفات</option>
               </select>
-              <select id="invDisplayLimit" onchange="filterInventoryTable()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 dark:text-sky-400">
+              <select id="invDisplayLimit" onchange="filterInventoryTable()" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 dark:text-sky-400">
                 <option value="1000" selected>عرض: أول 1,000 مادة (الأسرع)</option>
                 <option value="500">عرض: أول 500 مادة</option>
                 <option value="2000">عرض: أول 2,000 مادة</option>
@@ -1042,7 +1069,7 @@
               </select>
             </div>
             <div class="flex items-center gap-2 text-xs font-bold">
-              <label class="flex items-center gap-1.5 cursor-pointer text-amber-500 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-xl">
+              <label class="flex items-center gap-1.5 cursor-pointer text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-3 py-1.5 rounded-xl">
                 <input id="invLowStockOnly" onchange="filterInventoryTable()" type="checkbox" class="rounded text-amber-500">
                 <span class="text-[11px]">النواقص فقط</span>
               </label>

@@ -379,20 +379,20 @@ function switchTab(tabId) {
     el.classList.remove('sidebar-item-active');
   });
 
-  // 3. Auto-hide sidebar when opening Add Product or Cashier view as requested
+  // 3. Auto-hide sidebar when opening Add Product, Cashier, or Inventory view as requested
   const sidebar = document.getElementById('appSidebar');
   if (sidebar) {
-    if (tabId === 'addProduct' || tabId === 'cashier') {
+    if (tabId === 'addProduct' || tabId === 'cashier' || tabId === 'inventory') {
       sidebar.classList.add('hidden');
     } else {
       sidebar.classList.remove('hidden');
     }
   }
 
-  // 4. Auto-hide the global top navbar when in Cashier view to give 100% full screen
+  // 4. Auto-hide the global top navbar when in Cashier, Add Product, or Inventory view to give 100% full screen
   const appTopHeader = document.getElementById('appTopHeader');
   if (appTopHeader) {
-    if (tabId === 'cashier') {
+    if (tabId === 'cashier' || tabId === 'addProduct' || tabId === 'inventory') {
       appTopHeader.classList.add('hidden');
     } else {
       appTopHeader.classList.remove('hidden');
