@@ -106,12 +106,19 @@ function setupGlobalKeyboardShortcuts() {
 // ========================================================
 const i18n = {
   ar: {
-    // POS & Cashier
+    // POS & Cashier Top & Header
+    pos_user_title: "الكاشير: المدير العام (Admin)",
+    pos_subtitle: "7amo.pos • نظام السوبرماركت والمبيعات",
+    pos_home_btn: "الرئيسية",
+    pos_tabs_title: "نوافذ البيع:",
+    pos_new_tab_btn: "+ نافذة جديدة F1",
     pos_btn_invoices: "الوصولات المباعة والمرجوعة",
     pos_btn_warehouse: "المخزن F4",
     pos_btn_return: "إرجاع مادة",
     pos_empty_cart: "السلة فارغة، امسح الباركود أو اختر مادة من المخزن",
     pos_search_ph: "[F3] امسح الباركود هنا (نشط)...",
+
+    // Cart Table Headers
     cart_th_num: "#",
     cart_th_name: "اسم المادة",
     cart_th_cost: "سعر الشراء",
@@ -123,6 +130,27 @@ const i18n = {
     sale_type_retail: "مفرد",
     sale_type_wholesale: "جملة",
     sale_type_carton: "كرتون",
+
+    // Right Summary & Payment Panel
+    pos_total_due_title: "المبلغ الكلي المطلوب للدفع",
+    pos_items_in_cart: "مواد في السلة",
+    pos_payment_details_title: "طريقة وتفاصيل الدفع",
+    pos_payment_method_lbl: "شێوازی پارەدان:",
+    pos_pm_cash: "نقد (كاش)",
+    pos_pm_debt: "آجل / في الحساب",
+    pos_pm_card: "بطاقة / ماستر",
+    pos_pm_nfc: "NFC / دفع ذكي",
+    pos_paid_lbl: "المبلغ المستلم:",
+    pos_subtotal_lbl: "المجموع الأولي:",
+    pos_discount_lbl: "خصم خاص:",
+    pos_tax_lbl: "الضريبة (%0):",
+    pos_change_lbl: "المتبقي للزبون (الباقي):",
+    pos_btn_sell_no_receipt: "✔ بيع (بدون وصل)",
+    pos_btn_sell_print: "🖨️ بيع وطباعة وصل",
+    pos_btn_smart_print: "⚡ طباعة ذكية",
+    pos_btn_clear_cart: "🔄 تفريغ السلة [F8]",
+
+    // Modals
     qpm_title: "اختيار سريع من المخزن (قائمة المواد السريعة)",
     inv_modal_title: "الوصولات المباعة والمرتجعة (فواتير المبيعات)",
     inv_filter_all: "جميع الفواتير (الكل)",
@@ -164,12 +192,19 @@ const i18n = {
     ap_c_profit: "ربح بيع الكرتون كاملاً:"
   },
   ku: {
-    // POS & Cashier
+    // POS & Cashier Top & Header
+    pos_user_title: "کاشێر: بەڕێوەبەری گشتی (Admin)",
+    pos_subtitle: "7amo.pos • سیستەمی فرۆشتن",
+    pos_home_btn: "سەرەکی",
+    pos_tabs_title: "پەنجەرەکانی فرۆشتن:",
+    pos_new_tab_btn: "+ پەنجەرەی نوێ F1",
     pos_btn_invoices: "پسوولە فرۆشراو و گەڕاوەکان",
     pos_btn_warehouse: "کۆگا F4",
     pos_btn_return: "گەڕاندنەوەی کاڵا",
     pos_empty_cart: "سەبەتە بەتاڵە، بارکۆد لێبدە یان کاڵا هەڵبژێرە",
     pos_search_ph: "[F3] لێرە بارکۆد لێبدە (چالاک)...",
+
+    // Cart Table Headers
     cart_th_num: "#",
     cart_th_name: "ناوی کاڵا",
     cart_th_cost: "نرخی کڕین",
@@ -181,6 +216,27 @@ const i18n = {
     sale_type_retail: "تاک (مفرد)",
     sale_type_wholesale: "کۆ (جملة)",
     sale_type_carton: "کارتۆن",
+
+    // Right Summary & Payment Panel
+    pos_total_due_title: "کۆی گشتی ماوە بۆ دان",
+    pos_items_in_cart: "کاڵا لە سەبەتەدا",
+    pos_payment_details_title: "شێواز و وردەکاری پارەدان",
+    pos_payment_method_lbl: "شێوازی پارەدان:",
+    pos_pm_cash: "نەختینە (کاش)",
+    pos_pm_debt: "قەرز / لەژمێر",
+    pos_pm_card: "کارت",
+    pos_pm_nfc: "NFC / بێ بارکەوتن",
+    pos_paid_lbl: "بڕی وەرگیراو:",
+    pos_subtotal_lbl: "کۆی سەرەتایی:",
+    pos_discount_lbl: "داشکاندنی تایبەت:",
+    pos_tax_lbl: "باج (%0):",
+    pos_change_lbl: "ماوەی گەڕاوە (الباقي):",
+    pos_btn_sell_no_receipt: "✔ فرۆشتن (بێ پسوولە)",
+    pos_btn_sell_print: "🖨️ فرۆشتن و چاپ",
+    pos_btn_smart_print: "⚡ چاپی سمارت",
+    pos_btn_clear_cart: "🔄 بەتاڵکردنی سەبەتە [F8]",
+
+    // Modals
     qpm_title: "هەڵبژاردنی خێرا لە کۆگا (قائمة المواد السريعة)",
     inv_modal_title: "پسوولە فرۆشراو و گەڕاوەکان (فواتير المبيعات)",
     inv_filter_all: "هەموو پسوولەکان (الكل)",
@@ -222,12 +278,19 @@ const i18n = {
     ap_c_profit: "قازانجی فرۆشتنی کارتۆن:"
   },
   en: {
-    // POS & Cashier
+    // POS & Cashier Top & Header
+    pos_user_title: "Cashier: General Admin",
+    pos_subtitle: "7amo.pos • Supermarket POS System",
+    pos_home_btn: "Home",
+    pos_tabs_title: "Sales Windows:",
+    pos_new_tab_btn: "+ New Tab F1",
     pos_btn_invoices: "Invoices (Sales & Returns)",
     pos_btn_warehouse: "Warehouse F4",
     pos_btn_return: "Return Item",
     pos_empty_cart: "Cart is empty. Scan a barcode or pick an item.",
     pos_search_ph: "[F3] Scan barcode here (Active)...",
+
+    // Cart Table Headers
     cart_th_num: "#",
     cart_th_name: "Item Name",
     cart_th_cost: "Cost Price",
@@ -239,6 +302,27 @@ const i18n = {
     sale_type_retail: "Retail",
     sale_type_wholesale: "Wholesale",
     sale_type_carton: "Carton",
+
+    // Right Summary & Payment Panel
+    pos_total_due_title: "Total Amount Due",
+    pos_items_in_cart: "Items in Cart",
+    pos_payment_details_title: "Payment Method & Details",
+    pos_payment_method_lbl: "Payment Method:",
+    pos_pm_cash: "Cash",
+    pos_pm_debt: "Debt / Account",
+    pos_pm_card: "Card",
+    pos_pm_nfc: "NFC Pay",
+    pos_paid_lbl: "Paid Amount:",
+    pos_subtotal_lbl: "Subtotal:",
+    pos_discount_lbl: "Discount:",
+    pos_tax_lbl: "Tax (%0):",
+    pos_change_lbl: "Change Due:",
+    pos_btn_sell_no_receipt: "✔ Sell (No Print)",
+    pos_btn_sell_print: "🖨️ Sell & Print",
+    pos_btn_smart_print: "⚡ Smart Print",
+    pos_btn_clear_cart: "🔄 Clear Cart [F8]",
+
+    // Modals
     qpm_title: "Quick Warehouse Selector (F4)",
     inv_modal_title: "Sold & Returned Invoices",
     inv_filter_all: "All Invoices",
@@ -591,10 +675,11 @@ async function loadSuppliersList() {
   }
 }
 
-// Ensure invoice tabs are strictly numbered sequentially (پەنجەرە 1, پەنجەرە 2...)
+// Ensure invoice tabs are strictly numbered sequentially (فاتورة 1 / پەنجەرە 1 / Invoice 1)
 function reindexInvoiceTabs() {
+  const prefix = state.language === 'en' ? 'Invoice' : state.language === 'ku' ? 'پەنجەرە' : 'فاتورة';
   state.invoiceTabs.forEach((tab, index) => {
-    tab.title = `پەنجەرە ${index + 1}`;
+    tab.title = `${prefix} ${index + 1}`;
   });
 }
 
@@ -611,12 +696,12 @@ function renderInvoiceTabs() {
   state.invoiceTabs.forEach(t => {
     const isSel = t.id === state.selectedInvoiceTabId;
     const tabEl = document.createElement('div');
-    tabEl.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer text-xs font-bold transition border ${isSel ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white border-teal-400 shadow-md' : 'bg-slate-900/90 border-slate-800 text-slate-300 hover:text-white'}`;
+    tabEl.className = `flex items-center gap-1.5 px-3 py-1 rounded-xl cursor-pointer text-xs font-bold transition border ${isSel ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white border-teal-400 shadow-md' : 'pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-800'}`;
     tabEl.onclick = () => selectInvoiceTab(t.id);
     tabEl.innerHTML = `
       <span>${t.title}</span>
-      <span class="bg-black/30 px-1.5 py-0.2 rounded-full text-[10px] font-mono">${t.items.length}</span>
-      ${state.invoiceTabs.length > 1 ? `<button onclick="event.stopPropagation(); closeInvoiceTab('${t.id}')" class="text-rose-300 hover:text-rose-100 px-1 font-black" title="داخستن">✕</button>` : ''}
+      <span class="bg-black/20 dark:bg-black/40 px-1.5 py-0.2 rounded-full text-[10px] font-mono">${t.items.length}</span>
+      ${state.invoiceTabs.length > 1 ? `<button onclick="event.stopPropagation(); closeInvoiceTab('${t.id}')" class="text-rose-400 hover:text-rose-600 px-1 font-black" title="إغلاق">✕</button>` : ''}
     `;
     container.appendChild(tabEl);
   });
@@ -624,9 +709,10 @@ function renderInvoiceTabs() {
 
 function addNewInvoiceTab() {
   const newId = 'inv_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  const prefix = state.language === 'en' ? 'Invoice' : state.language === 'ku' ? 'پەنجەرە' : 'فاتورة';
   state.invoiceTabs.push({
     id: newId,
-    title: `پەنجەرە ${state.invoiceTabs.length + 1}`,
+    title: `${prefix} ${state.invoiceTabs.length + 1}`,
     items: [],
     discount: 0,
     paid: 0,

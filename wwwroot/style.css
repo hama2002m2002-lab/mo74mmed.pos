@@ -106,3 +106,46 @@ input:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2) !important;
   outline: none;
 }
+
+/* POS Full Theme Classes (Day & Night Responsive) */
+.pos-panel {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-card) !important;
+  color: var(--text-main) !important;
+}
+
+.pos-subpanel {
+  background-color: var(--bg-card-secondary) !important;
+  border-color: var(--border-card) !important;
+  color: var(--text-main) !important;
+}
+
+.pos-input {
+  background-color: var(--bg-card-secondary) !important;
+  border-color: var(--border-card) !important;
+  color: var(--text-main) !important;
+}
+
+.pos-table-header {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-card) !important;
+  color: var(--text-secondary) !important;
+}
+
+.pos-table-row {
+  border-color: var(--border-card) !important;
+  color: var(--text-main) !important;
+}
+
+.pos-table-row:hover {
+  background-color: var(--bg-card-hover) !important;
+}
+
+.pos-text-title {
+  color: var(--text-main) !important;
+}
+
+.pos-text-sub {
+  color: var(--text-secondary) !important;
+}
+

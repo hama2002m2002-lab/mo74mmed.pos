@@ -417,7 +417,7 @@
         <div id="tab-cashier" class="tab-content hidden h-full flex flex-col space-y-1.5">
           
           <!-- TOP CASHIER HEADER BAR (COMPACT & CLEAN) -->
-          <div class="flex items-center justify-between px-3.5 py-1 bg-[#0b1329] border border-slate-800/80 rounded-2xl shadow-md">
+          <div class="flex items-center justify-between px-3.5 py-1 pos-panel rounded-2xl shadow-md">
             
             <!-- User Info Pill (Left) -->
             <div class="flex items-center gap-2.5">
@@ -426,10 +426,10 @@
               </div>
               <div>
                 <div class="flex items-center gap-1.5">
-                  <span class="text-xs font-black text-white">کاشێر: المدير العام (Admin)</span>
-                  <span class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-teal-500/20 text-teal-300 border border-teal-500/30">Admin</span>
+                  <span data-i18n="pos_user_title" class="text-xs font-black pos-text-title">کاشێر: بەڕێوەبەری گشتی (Admin)</span>
+                  <span class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-teal-500/20 text-teal-500 border border-teal-500/30">Admin</span>
                 </div>
-                <span class="text-[9px] text-slate-400 font-semibold">7amo.pos • سیستەمی فرۆشتن</span>
+                <span data-i18n="pos_subtitle" class="text-[9px] pos-text-sub font-semibold">7amo.pos • سیستەمی فرۆشتن</span>
               </div>
             </div>
 
@@ -437,22 +437,22 @@
             <div class="flex items-center gap-2">
               
               <!-- Language Switcher Pill -->
-              <div class="bg-slate-900/90 border border-slate-700/60 rounded-xl p-0.5 flex items-center text-xs font-bold">
-                <button onclick="setLanguage('ar')" id="posLangAr" class="px-2 py-0.5 rounded-lg text-slate-300 hover:text-white transition text-[11px]">عربي</button>
+              <div class="pos-subpanel rounded-xl p-0.5 flex items-center text-xs font-bold">
+                <button onclick="setLanguage('ar')" id="posLangAr" class="px-2 py-0.5 rounded-lg text-slate-500 dark:text-slate-300 hover:text-sky-500 transition text-[11px]">عربي</button>
                 <button onclick="setLanguage('ku')" id="posLangKu" class="px-2 py-0.5 rounded-lg bg-sky-500 text-white transition text-[11px]">کوردی</button>
-                <button onclick="setLanguage('en')" id="posLangEn" class="px-2 py-0.5 rounded-lg text-slate-300 hover:text-white transition text-[11px]">EN</button>
+                <button onclick="setLanguage('en')" id="posLangEn" class="px-2 py-0.5 rounded-lg text-slate-500 dark:text-slate-300 hover:text-sky-500 transition text-[11px]">EN</button>
               </div>
 
               <!-- Theme Toggle Button -->
-              <button onclick="toggleTheme()" class="px-2.5 py-1 bg-indigo-950/60 hover:bg-indigo-900 text-indigo-300 border border-indigo-800/50 rounded-xl text-[11px] font-bold flex items-center gap-1 transition">
-                <span>🌙</span>
+              <button onclick="toggleTheme()" class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 dark:text-indigo-300 border border-indigo-500/30 rounded-xl text-[11px] font-bold flex items-center gap-1 transition">
+                <span id="themeIcon">🌙</span>
                 <span id="posThemeText">شەو</span>
               </button>
 
               <!-- Home / Dashboard Button -->
-              <button onclick="switchTab('dashboard')" class="px-3 py-1 bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+              <button onclick="switchTab('dashboard')" class="px-3 py-1 pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
                 <span>🏠</span>
-                <span>سەرەکی</span>
+                <span data-i18n="pos_home_btn">سەرەکی</span>
               </button>
 
             </div>
@@ -463,14 +463,14 @@
           <div class="flex-1 flex gap-2.5 overflow-hidden">
             
             <!-- LEFT MAIN PANEL: TABS, SCANNER & CART TABLE -->
-            <div class="flex-1 flex flex-col bg-[#0b1329] border border-slate-800/80 rounded-2xl p-3 overflow-hidden shadow-xl">
+            <div class="flex-1 flex flex-col pos-panel rounded-2xl p-3 overflow-hidden shadow-xl">
               
               <!-- Invoice Tabs Row -->
-              <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800/80">
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-center gap-2 overflow-x-auto">
-                  <span class="text-xs font-black text-slate-400 flex items-center gap-1">
+                  <span class="text-xs font-black pos-text-sub flex items-center gap-1">
                     <span>🗂</span>
-                    <span>پەنجەرەکانی فرۆشتن:</span>
+                    <span data-i18n="pos_tabs_title">پەنجەرەکانی فرۆشتن:</span>
                   </span>
                   <div id="invoiceTabsContainer" class="flex items-center gap-1.5"></div>
                 </div>
@@ -478,7 +478,7 @@
                 <!-- New Invoice Tab Button -->
                 <button onclick="addNewInvoiceTab()" class="px-3 py-1 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1 transition whitespace-nowrap">
                   <span>+</span>
-                  <span>پەنجەرەی نوێ F1</span>
+                  <span data-i18n="pos_new_tab_btn">پەنجەرەی نوێ F1</span>
                 </button>
               </div>
 
@@ -486,56 +486,56 @@
               <div class="flex items-center gap-2 mb-2">
 
                 <!-- Invoices (Sales & Returns) Modal Button -->
-                <button onclick="openInvoicesHistoryModal()" class="px-3 py-1.5 bg-slate-900 border border-purple-500/40 text-purple-400 hover:bg-purple-950/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap" title="عرض الفواتير المباعة والمرتجعة">
+                <button onclick="openInvoicesHistoryModal()" class="px-3 py-1.5 pos-subpanel border border-purple-500/40 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap" title="عرض الفواتير المباعة والمرتجعة">
                   <span>🧾</span>
                   <span data-i18n="pos_btn_invoices">پسوولەکان (المبيعات والمرتجع)</span>
                 </button>
 
                 <!-- Warehouse Modal Button with Count Badge -->
-                <button onclick="openQuickProductModal()" class="px-3 py-1.5 bg-slate-900 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-950/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap">
+                <button onclick="openQuickProductModal()" class="px-3 py-1.5 pos-subpanel border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap">
                   <span>📦</span>
                   <span data-i18n="pos_btn_warehouse">کۆگا F4</span>
-                  <span id="cashierTotalProductsBadge" class="bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded-md text-[10px] font-mono font-bold">0</span>
+                  <span id="cashierTotalProductsBadge" class="bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 px-1.5 py-0.2 rounded-md text-[10px] font-mono font-bold">0</span>
                 </button>
 
                 <!-- Return Item Toggle Button -->
-                <button onclick="toggleReturnMode()" id="btnReturnMode" class="px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap">
+                <button onclick="toggleReturnMode()" id="btnReturnMode" class="px-3 py-1.5 pos-subpanel border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap">
                   <span>🔄</span>
                   <span data-i18n="pos_btn_return">گەڕاندنەوەی کاڵا</span>
                 </button>
 
                 <!-- Glowing Golden Barcode Scanner Input Bar -->
                 <div class="relative flex-1">
-                  <input id="cashierBarcodeInput" oninput="handleCashierSearchInput()" onkeydown="handleBarcodeKeyDown(event)" type="text" placeholder="[F3] لێرە بارکۆد لێبدە (چالاک)..." class="w-full bg-[#060c1c] border-2 border-amber-500/80 focus:border-amber-400 focus:ring-4 focus:ring-amber-500/20 rounded-xl pr-10 pl-4 py-1.5 text-xs text-white font-mono font-bold shadow-[0_0_15px_rgba(245,158,11,0.15)] transition text-right">
-                  <span class="absolute right-3 top-1.5 text-amber-400 font-mono font-black tracking-widest text-sm select-none">||||||</span>
+                  <input id="cashierBarcodeInput" oninput="handleCashierSearchInput()" onkeydown="handleBarcodeKeyDown(event)" type="text" placeholder="[F3] لێرە بارکۆد لێبدە (چالاک)..." class="w-full pos-input border-2 border-amber-500/80 focus:border-amber-400 focus:ring-4 focus:ring-amber-500/20 rounded-xl pr-10 pl-4 py-1.5 text-xs font-mono font-bold shadow-[0_0_15px_rgba(245,158,11,0.15)] transition text-right">
+                  <span class="absolute right-3 top-1.5 text-amber-500 font-mono font-black tracking-widest text-sm select-none">||||||</span>
                   
                   <!-- Autocomplete Search Dropdown -->
-                  <div id="cashierSearchResults" class="hidden absolute top-full left-0 right-0 mt-2 bg-[#0b1329] border border-slate-700 rounded-2xl shadow-2xl z-40 max-h-64 overflow-y-auto divide-y divide-slate-800"></div>
+                  <div id="cashierSearchResults" class="hidden absolute top-full left-0 right-0 mt-2 pos-panel rounded-2xl shadow-2xl z-40 max-h-64 overflow-y-auto divide-y divide-slate-200 dark:divide-slate-800"></div>
                 </div>
 
               </div>
 
               <!-- Cart Area (Empty State vs Cart Table) -->
-              <div class="flex-1 overflow-y-auto border border-slate-800/80 rounded-xl bg-[#060c1c] relative flex flex-col">
+              <div class="flex-1 overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-xl pos-subpanel relative flex flex-col">
                 
                 <!-- EMPTY STATE ILLUSTRATION -->
                 <div id="cashierCartEmptyState" class="flex-1 flex flex-col items-center justify-center p-6 space-y-3 text-center">
                   <div class="w-24 h-24 relative flex items-center justify-center">
                     <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-[0_0_20px_rgba(14,165,233,0.3)]">
                       <path d="M20 30H32L45 80H90L100 40H38" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                      <circle cx="50" cy="95" r="7" stroke="#0ea5e9" stroke-width="4" fill="#060c1c"/>
-                      <circle cx="85" cy="95" r="7" stroke="#0ea5e9" stroke-width="4" fill="#060c1c"/>
+                      <circle cx="50" cy="95" r="7" stroke="#0ea5e9" stroke-width="4" fill="currentColor"/>
+                      <circle cx="85" cy="95" r="7" stroke="#0ea5e9" stroke-width="4" fill="currentColor"/>
                       <path d="M45 45L55 30L75 30L85 45L75 60L55 60Z" fill="#f59e0b" fill-opacity="0.8" stroke="#fbbf24" stroke-width="2"/>
                       <path d="M60 55L68 42L82 42L90 55L82 68L68 68Z" fill="#8b5cf6" fill-opacity="0.8" stroke="#a78bfa" stroke-width="2"/>
                     </svg>
                   </div>
-                  <span id="cashierEmptyCartText" data-i18n="pos_empty_cart" class="text-xs font-black text-slate-400">سەبەتە بەتاڵە، بارکۆد لێبدە یان کاڵا هەڵبژێرە</span>
+                  <span id="cashierEmptyCartText" data-i18n="pos_empty_cart" class="text-xs font-black pos-text-sub">سەبەتە بەتاڵە، بارکۆد لێبدە یان کاڵا هەڵبژێرە</span>
                 </div>
 
                 <!-- CART ITEMS TABLE -->
                 <div id="cashierCartTableWrapper" class="hidden flex-1 overflow-y-auto">
                   <table class="w-full text-right text-xs">
-                    <thead class="bg-[#0b1329] text-slate-400 font-bold border-b border-slate-800 sticky top-0 z-10">
+                    <thead class="pos-table-header font-bold border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
                       <tr>
                         <th class="p-2 text-center w-10" data-i18n="cart_th_num">#</th>
                         <th class="p-2" data-i18n="cart_th_name">اسم المادة</th>
@@ -547,7 +547,7 @@
                         <th class="p-2 text-center w-12" data-i18n="cart_th_del">حذف</th>
                       </tr>
                     </thead>
-                    <tbody id="cashierCartTbody" class="divide-y divide-slate-800/80 font-bold text-white">
+                    <tbody id="cashierCartTbody" class="divide-y divide-slate-200 dark:divide-slate-800 font-bold">
                     </tbody>
                   </table>
                 </div>
@@ -557,43 +557,43 @@
             </div>
 
             <!-- RIGHT SUMMARY & PAYMENT PANEL -->
-            <div class="w-[350px] bg-[#0b1329] border border-slate-800/80 rounded-2xl p-3 flex flex-col justify-start space-y-2.5 shadow-xl">
+            <div class="w-[350px] pos-panel rounded-2xl p-3 flex flex-col justify-start space-y-2.5 shadow-xl">
               
               <!-- TOP NEON GLOWING TOTAL CARD -->
-              <div class="bg-[#060c1c] border-2 border-emerald-500/90 rounded-2xl p-3 text-center shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                <span class="text-xs font-bold text-slate-300 block mb-0.5">کۆی گشتی ماوە بۆ دان</span>
-                <div id="cashierTotalDisplay" class="text-3xl font-black text-emerald-400 font-mono tracking-tight my-0.5">
+              <div class="pos-subpanel border-2 border-emerald-500/90 rounded-2xl p-3 text-center shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                <span data-i18n="pos_total_due_title" class="text-xs font-bold pos-text-sub block mb-0.5">کۆی گشتی ماوە بۆ دان</span>
+                <div id="cashierTotalDisplay" class="text-3xl font-black text-emerald-500 dark:text-emerald-400 font-mono tracking-tight my-0.5">
                   0 د.ع
                 </div>
-                <div id="cashierItemCountBadge" class="inline-block px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 rounded-full text-[10px] font-bold">
+                <div id="cashierItemCountBadge" class="inline-block px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/40 text-emerald-600 dark:text-emerald-300 rounded-full text-[10px] font-bold">
                   0 کاڵا لە سەبەتەدا
                 </div>
               </div>
 
               <!-- PAYMENT METHODS SECTION -->
               <div class="space-y-1.5">
-                <div class="flex items-center gap-1 text-xs font-bold text-slate-300 pb-1 border-b border-slate-800">
+                <div class="flex items-center gap-1 text-xs font-bold pos-text-title pb-1 border-b border-slate-200 dark:border-slate-800">
                   <span>🗂️</span>
-                  <span>شێواز و وردەکاری پارەدان</span>
+                  <span data-i18n="pos_payment_details_title">شێواز و وردەکاری پارەدان</span>
                 </div>
-                <span class="text-[10px] text-slate-400 font-bold block">شێوازی پارەدان:</span>
+                <span data-i18n="pos_payment_method_lbl" class="text-[10px] pos-text-sub font-bold block">شێوازی پارەدان:</span>
                 
                 <div class="grid grid-cols-2 gap-1.5">
                   <button onclick="setPaymentMethod('Cash')" id="pm-Cash" class="py-1.5 px-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1 transition">
                     <span>💵</span>
-                    <span>نەختینە (کاش)</span>
+                    <span data-i18n="pos_pm_cash">نەختینە (کاش)</span>
                   </button>
-                  <button onclick="setPaymentMethod('Debt')" id="pm-Debt" class="py-1.5 px-2 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition">
+                  <button onclick="setPaymentMethod('Debt')" id="pm-Debt" class="py-1.5 px-2 pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition">
                     <span>👤</span>
-                    <span>قەرز / لەژمێر</span>
+                    <span data-i18n="pos_pm_debt">قەرز / لەژمێر</span>
                   </button>
-                  <button onclick="setPaymentMethod('Card')" id="pm-Card" class="py-1.5 px-2 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition">
+                  <button onclick="setPaymentMethod('Card')" id="pm-Card" class="py-1.5 px-2 pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition">
                     <span>💳</span>
-                    <span>کارت</span>
+                    <span data-i18n="pos_pm_card">کارت</span>
                   </button>
-                  <button onclick="setPaymentMethod('Nfc')" id="pm-Nfc" class="py-1.5 px-2 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition">
+                  <button onclick="setPaymentMethod('Nfc')" id="pm-Nfc" class="py-1.5 px-2 pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition">
                     <span>📱</span>
-                    <span>NFC / بێ بارکەوتن</span>
+                    <span data-i18n="pos_pm_nfc">NFC / بێ بارکەوتن</span>
                   </button>
                 </div>
               </div>
@@ -601,70 +601,70 @@
               <!-- RECEIVED CASH AMOUNT & QUICK BILLS GRID -->
               <div class="space-y-1.5">
                 <div class="flex items-center justify-between text-xs">
-                  <span class="font-bold text-slate-400">بڕی وەرگیراو:</span>
-                  <input id="cashierPaidInput" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="recalcCashierInvoice()" type="number" placeholder="0" class="w-32 bg-[#060c1c] border border-slate-700 focus:border-emerald-500 rounded-xl px-2 py-1 text-center font-black font-mono text-emerald-400 text-sm">
+                  <span data-i18n="pos_paid_lbl" class="font-bold pos-text-sub">بڕی وەرگیراو:</span>
+                  <input id="cashierPaidInput" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="recalcCashierInvoice()" type="number" placeholder="0" class="w-32 pos-input border border-slate-300 dark:border-slate-700 focus:border-emerald-500 rounded-xl px-2 py-1 text-center font-black font-mono text-emerald-500 dark:text-emerald-400 text-sm">
                 </div>
 
                 <!-- Quick Cash Bills Grid (7 Buttons) -->
                 <div class="grid grid-cols-7 gap-1">
-                  <button onclick="setPaidAmount(1000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">1,000</button>
-                  <button onclick="setPaidAmount(5000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">5,000</button>
-                  <button onclick="setPaidAmount(10000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">10,000</button>
-                  <button onclick="setPaidAmount(15000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">15,000</button>
-                  <button onclick="setPaidAmount(20000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">20,000</button>
-                  <button onclick="setPaidAmount(25000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">25,000</button>
-                  <button onclick="setPaidAmount(50000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">50,000</button>
+                  <button onclick="setPaidAmount(1000)" class="py-1 pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-800 text-[9px] font-bold rounded-lg">1,000</button>
+                  <button onclick="setPaidAmount(5000)" class="py-1 pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-800 text-[9px] font-bold rounded-lg">5,000</button>
+                  <button onclick="setPaidAmount(10000)" class="py-1 pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-800 text-[9px] font-bold rounded-lg">10,000</button>
+                  <button onclick="setPaidAmount(15000)" class="py-1 pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-800 text-[9px] font-bold rounded-lg">15,000</button>
+                  <button onclick="setPaidAmount(20000)" class="py-1 pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-800 text-[9px] font-bold rounded-lg">20,000</button>
+                  <button onclick="setPaidAmount(25000)" class="py-1 pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-800 text-[9px] font-bold rounded-lg">25,000</button>
+                  <button onclick="setPaidAmount(50000)" class="py-1 pos-subpanel hover:bg-slate-200 dark:hover:bg-slate-800 text-[9px] font-bold rounded-lg">50,000</button>
                 </div>
               </div>
 
               <!-- FINANCIAL SUMMARY ROWS -->
-              <div class="space-y-1 text-xs pt-1.5 border-t border-slate-800">
-                <div class="flex justify-between items-center text-slate-400">
-                  <span>کۆی سەرەتایی:</span>
-                  <span id="cashierSubtotal" class="font-bold text-slate-200 font-mono">0 د.ع</span>
+              <div class="space-y-1 text-xs pt-1.5 border-t border-slate-200 dark:border-slate-800">
+                <div class="flex justify-between items-center pos-text-sub">
+                  <span data-i18n="pos_subtotal_lbl">کۆی سەرەتایی:</span>
+                  <span id="cashierSubtotal" class="font-bold pos-text-title font-mono">0 د.ع</span>
                 </div>
-                <div class="flex justify-between items-center text-amber-400 font-bold">
-                  <span>داشکاندنی تایبەت:</span>
+                <div class="flex justify-between items-center text-amber-500 dark:text-amber-400 font-bold">
+                  <span data-i18n="pos_discount_lbl">داشکاندنی تایبەت:</span>
                   <div class="flex items-center gap-1">
-                    <input id="cashierDiscountInput" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="recalcCashierInvoice()" type="number" value="0" class="w-20 bg-[#060c1c] border border-slate-700 rounded-lg px-2 py-0.5 text-center font-bold text-amber-400 font-mono text-xs">
+                    <input id="cashierDiscountInput" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="recalcCashierInvoice()" type="number" value="0" class="w-20 pos-input border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-0.5 text-center font-bold text-amber-500 dark:text-amber-400 font-mono text-xs">
                     <span class="text-[10px]">د.ع</span>
                   </div>
                 </div>
-                <div class="flex justify-between items-center text-slate-400 font-bold">
-                  <span>باج (%0):</span>
+                <div class="flex justify-between items-center pos-text-sub font-bold">
+                  <span data-i18n="pos_tax_lbl">باج (%0):</span>
                   <div class="flex items-center gap-1">
-                    <input id="cashierTaxInput" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="recalcCashierInvoice()" type="number" value="0" class="w-20 bg-[#060c1c] border border-slate-700 rounded-lg px-2 py-0.5 text-center font-bold text-slate-400 font-mono text-xs">
+                    <input id="cashierTaxInput" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="recalcCashierInvoice()" type="number" value="0" class="w-20 pos-input border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-0.5 text-center font-bold font-mono text-xs">
                     <span class="text-[10px]">د.ع</span>
                   </div>
                 </div>
-                <div class="flex justify-between items-center text-slate-300 pt-1 border-t border-slate-800">
-                  <span class="font-bold">ماوەی گەڕاوە (الباقي):</span>
-                  <span id="cashierChangeDisplay" class="font-black text-emerald-400 text-xs font-mono">0 د.ع</span>
+                <div class="flex justify-between items-center pos-text-title pt-1 border-t border-slate-200 dark:border-slate-800">
+                  <span data-i18n="pos_change_lbl" class="font-bold">ماوەی گەڕاوە (الباقي):</span>
+                  <span id="cashierChangeDisplay" class="font-black text-emerald-500 dark:text-emerald-400 text-xs font-mono">0 د.ع</span>
                 </div>
               </div>
 
               <!-- CHECKOUT BIG BUTTONS (PROMINENT, LARGER & PLACED DIRECTLY BELOW SUMMARY) -->
-              <div class="space-y-2 pt-2 border-t border-slate-800">
+              <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <div class="grid grid-cols-2 gap-2">
                   <button onclick="submitCashierSale(false)" class="py-3 px-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition">
                     <span>✔</span>
-                    <span>فرۆشتن (بێ پسوولە)</span>
+                    <span data-i18n="pos_btn_sell_no_receipt">فرۆشتن (بێ پسوولە)</span>
                   </button>
                   <button onclick="submitCashierSale(true)" class="py-3 px-2 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-black text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition">
                     <span>🖨️</span>
-                    <span>فرۆشتن و چاپ</span>
+                    <span data-i18n="pos_btn_sell_print">فرۆشتن و چاپ</span>
                   </button>
                 </div>
 
                 <!-- Bottom Auxiliary Buttons -->
                 <div class="flex items-center justify-between gap-2">
-                  <button onclick="toggleSmartPrint()" id="btnSmartPrint" class="flex-1 py-1.5 bg-[#060c1c] border border-teal-500/40 text-teal-400 hover:bg-teal-950/40 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
+                  <button onclick="toggleSmartPrint()" id="btnSmartPrint" class="flex-1 py-1.5 pos-subpanel border border-teal-500/40 text-teal-600 dark:text-teal-400 hover:bg-teal-500/10 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
                     <span>⚡</span>
-                    <span>چاپی سمارت</span>
+                    <span data-i18n="pos_btn_smart_print">چاپی سمارت</span>
                   </button>
-                  <button onclick="clearCurrentInvoice()" class="flex-1 py-1.5 bg-[#060c1c] border border-rose-500/40 text-rose-400 hover:bg-rose-950/40 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
+                  <button onclick="clearCurrentInvoice()" class="flex-1 py-1.5 pos-subpanel border border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
                     <span>🔄</span>
-                    <span>بەتاڵکردنی سەبەتە [F8]</span>
+                    <span data-i18n="pos_btn_clear_cart">بەتاڵکردنی سەبەتە [F8]</span>
                   </button>
                 </div>
               </div>
