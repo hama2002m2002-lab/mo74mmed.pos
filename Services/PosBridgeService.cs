@@ -241,6 +241,107 @@ public class PosBridgeService
                     });
                 }
 
+                case "get_invoices":
+                {
+                    var sales = await db.Sales
+                        .Include(s => s.Items)
+                        .AsNoTracking()
+                        .OrderByDescending(s => s.CreatedAt)
+                        .ToListAsync();
+
+                    decimal totalSalesAmount = sales.Where(s => s.Status != "Returned").Sum(s => s.TotalAmount);
+                    int totalSalesCount = sales.Count(s => s.Status != "Returned");
+                    int totalReturnsCount = sales.Count(s => s.Status == "Returned");
+                    decimal totalReturnedAmount = sales.Where(s => s.Status == "Returned").Sum(s => s.TotalAmount);
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        totalSalesAmount = totalSalesAmount,
+                        totalSalesCount = totalSalesCount,
+                        totalReturnsCount = totalReturnsCount,
+                        totalReturnedAmount = totalReturnedAmount,
+                        invoices = sales.Select(s => new
+                        {
+                            id = s.Id,
+                            invoiceNumber = s.InvoiceNumber,
+                            customerName = s.CustomerName ?? "زبون نقدي",
+                            paymentMethod = s.PaymentMethod ?? "Cash",
+                            subTotal = s.SubTotal,
+                            discountAmount = s.DiscountAmount,
+                            totalAmount = s.TotalAmount,
+                            paidAmount = s.PaidAmount,
+                            status = s.Status,
+                            createdAt = s.CreatedAt.ToString("yyyy/MM/dd hh:mm tt"),
+                            itemsCount = s.Items != null ? s.Items.Count : 0,
+                            items = (s.Items ?? new List<SaleItem>()).Select(i => new
+                            {
+                                id = i.Id,
+                                productId = i.ProductId,
+                                productName = i.ProductName,
+                                quantity = i.Quantity,
+                                unitPrice = i.UnitPrice,
+                                totalPrice = i.TotalPrice
+                            })
+                        })
+                    });
+                }
+
+                case "return_invoice":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var root = doc.RootElement;
+                    string invoiceIdStr = root.TryGetProperty("invoiceId", out var idProp) ? idProp.GetString() ?? "" : "";
+                    string invoiceNum = root.TryGetProperty("invoiceNumber", out var numProp) ? numProp.GetString() ?? "" : "";
+
+                    Sale? saleToReturn = null;
+                    if (Guid.TryParse(invoiceIdStr, out var gId))
+                    {
+                        saleToReturn = await db.Sales.Include(s => s.Items).FirstOrDefaultAsync(s => s.Id == gId);
+                    }
+                    if (saleToReturn == null && !string.IsNullOrWhiteSpace(invoiceNum))
+                    {
+                        saleToReturn = await db.Sales.Include(s => s.Items).FirstOrDefaultAsync(s => s.InvoiceNumber == invoiceNum);
+                    }
+
+                    if (saleToReturn == null)
+                    {
+                        return JsonSerializer.Serialize(new { success = false, message = "الفاتورة غير موجودة" });
+                    }
+
+                    if (saleToReturn.Status == "Returned")
+                    {
+                        return JsonSerializer.Serialize(new { success = false, message = "الفاتورة تم إرجاعها مسبقاً" });
+                    }
+
+                    saleToReturn.Status = "Returned";
+                    saleToReturn.Notes += $" [تم الإرجاع بتاريخ {DateTime.Now:yyyy/MM/dd HH:mm}]";
+
+                    // Restock inventory products
+                    if (saleToReturn.Items != null)
+                    {
+                        foreach (var itm in saleToReturn.Items)
+                        {
+                            var prod = await db.Products.FindAsync(itm.ProductId);
+                            if (prod != null)
+                            {
+                                prod.StockQuantity += itm.Quantity;
+                                prod.UpdatedAt = DateTime.UtcNow;
+                            }
+                        }
+                    }
+
+                    await db.SaveChangesAsync();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        invoiceNumber = saleToReturn.InvoiceNumber,
+                        returnedAmount = saleToReturn.TotalAmount,
+                        message = "تم إرجاع الفاتورة واستعادة رصيد المخزن بنجاح"
+                    });
+                }
+
                 // ==========================================
                 // 3. INVENTORY & STOCK
                 // ==========================================
