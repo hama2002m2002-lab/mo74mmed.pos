@@ -549,117 +549,113 @@
 
             </div>
 
-            <!-- RIGHT SUMMARY & PAYMENT PANEL (RAISED & ULTRA COMPACT) -->
-            <div class="w-[330px] bg-[#0b1329] border border-slate-800/80 rounded-2xl p-2.5 flex flex-col justify-between shadow-xl space-y-1.5 overflow-hidden">
+            <!-- RIGHT SUMMARY & PAYMENT PANEL -->
+            <div class="w-[350px] bg-[#0b1329] border border-slate-800/80 rounded-2xl p-3 flex flex-col justify-start space-y-2.5 shadow-xl">
               
-              <div class="space-y-1.5">
-                
-                <!-- TOP NEON GLOWING TOTAL CARD -->
-                <div class="bg-[#060c1c] border-2 border-emerald-500/90 rounded-xl p-2 text-center shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                  <span class="text-[10px] font-bold text-slate-300 block">کۆی گشتی ماوە بۆ دان</span>
-                  <div id="cashierTotalDisplay" class="text-2xl font-black text-emerald-400 font-mono tracking-tight my-0">
-                    0 د.ع
-                  </div>
-                  <div id="cashierItemCountBadge" class="inline-block px-2 py-0 bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 rounded-full text-[9px] font-bold">
-                    0 کاڵا لە سەبەتەدا
-                  </div>
+              <!-- TOP NEON GLOWING TOTAL CARD -->
+              <div class="bg-[#060c1c] border-2 border-emerald-500/90 rounded-2xl p-3 text-center shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                <span class="text-xs font-bold text-slate-300 block mb-0.5">کۆی گشتی ماوە بۆ دان</span>
+                <div id="cashierTotalDisplay" class="text-3xl font-black text-emerald-400 font-mono tracking-tight my-0.5">
+                  0 د.ع
                 </div>
-
-                <!-- PAYMENT METHODS SECTION -->
-                <div class="space-y-1">
-                  <div class="flex items-center gap-1 text-[10px] font-bold text-slate-300 pb-0.5 border-b border-slate-800">
-                    <span>🗂️</span>
-                    <span>شێواز و وردەکاری پارەدان</span>
-                  </div>
-                  <span class="text-[9px] text-slate-400 font-bold block">شێوازی پارەدان:</span>
-                  
-                  <div class="grid grid-cols-2 gap-1">
-                    <button onclick="setPaymentMethod('Cash')" id="pm-Cash" class="py-1 px-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] rounded-lg shadow-md flex items-center justify-center gap-1 transition">
-                      <span>💵</span>
-                      <span>نەختینە (کاش)</span>
-                    </button>
-                    <button onclick="setPaymentMethod('Debt')" id="pm-Debt" class="py-1 px-2 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-[10px] rounded-lg flex items-center justify-center gap-1 transition">
-                      <span>👤</span>
-                      <span>قەرز / لەژمێر</span>
-                    </button>
-                    <button onclick="setPaymentMethod('Card')" id="pm-Card" class="py-1 px-2 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-[10px] rounded-lg flex items-center justify-center gap-1 transition">
-                      <span>💳</span>
-                      <span>کارت</span>
-                    </button>
-                    <button onclick="setPaymentMethod('Nfc')" id="pm-Nfc" class="py-1 px-2 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-[10px] rounded-lg flex items-center justify-center gap-1 transition">
-                      <span>📱</span>
-                      <span>NFC / بێ بارکەوتن</span>
-                    </button>
-                  </div>
+                <div id="cashierItemCountBadge" class="inline-block px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 rounded-full text-[10px] font-bold">
+                  0 کاڵا لە سەبەتەدا
                 </div>
-
-                <!-- RECEIVED CASH AMOUNT & QUICK BILLS GRID -->
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between text-[10px]">
-                    <span class="font-bold text-slate-400">بڕی وەرگیراو:</span>
-                    <input id="cashierPaidInput" oninput="recalcCashierInvoice()" type="number" placeholder="0" class="w-28 bg-[#060c1c] border border-slate-700 focus:border-emerald-500 rounded-lg px-1.5 py-0.5 text-center font-black font-mono text-emerald-400 text-xs">
-                  </div>
-
-                  <!-- Quick Cash Bills Grid (7 Buttons) -->
-                  <div class="grid grid-cols-7 gap-0.5">
-                    <button onclick="setPaidAmount(1000)" class="py-0.5 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[8px] font-bold text-slate-300 rounded">1,000</button>
-                    <button onclick="setPaidAmount(5000)" class="py-0.5 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[8px] font-bold text-slate-300 rounded">5,000</button>
-                    <button onclick="setPaidAmount(10000)" class="py-0.5 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[8px] font-bold text-slate-300 rounded">10,000</button>
-                    <button onclick="setPaidAmount(15000)" class="py-0.5 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[8px] font-bold text-slate-300 rounded">15,000</button>
-                    <button onclick="setPaidAmount(20000)" class="py-0.5 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[8px] font-bold text-slate-300 rounded">20,000</button>
-                    <button onclick="setPaidAmount(25000)" class="py-0.5 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[8px] font-bold text-slate-300 rounded">25,000</button>
-                    <button onclick="setPaidAmount(50000)" class="py-0.5 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[8px] font-bold text-slate-300 rounded">50,000</button>
-                  </div>
-                </div>
-
-                <!-- FINANCIAL SUMMARY ROWS -->
-                <div class="space-y-0.5 text-[10px] pt-1 border-t border-slate-800">
-                  <div class="flex justify-between items-center text-slate-400">
-                    <span>کۆی سەرەتایی:</span>
-                    <span id="cashierSubtotal" class="font-bold text-slate-200 font-mono text-[11px]">0 د.ع</span>
-                  </div>
-                  <div class="flex justify-between items-center text-amber-400 font-bold">
-                    <span>داشکاندنی تایبەت:</span>
-                    <div class="flex items-center gap-1">
-                      <input id="cashierDiscountInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-16 bg-[#060c1c] border border-slate-700 rounded px-1 py-0 text-center font-bold text-amber-400 font-mono text-[9px]">
-                      <span class="text-[8px]">د.ع</span>
-                    </div>
-                  </div>
-                  <div class="flex justify-between items-center text-slate-400 font-bold">
-                    <span>باج (%0):</span>
-                    <div class="flex items-center gap-1">
-                      <input id="cashierTaxInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-16 bg-[#060c1c] border border-slate-700 rounded px-1 py-0 text-center font-bold text-slate-400 font-mono text-[9px]">
-                      <span class="text-[8px]">د.ع</span>
-                    </div>
-                  </div>
-                  <div class="flex justify-between items-center text-slate-300 pt-0.5 border-t border-slate-800">
-                    <span class="font-bold">ماوەی گەڕاوە (الباقي):</span>
-                    <span id="cashierChangeDisplay" class="font-black text-emerald-400 text-[11px] font-mono">0 د.ع</span>
-                  </div>
-                </div>
-
               </div>
 
-              <!-- CHECKOUT BIG BUTTONS (RAISED UPWARDS & 100% CLEAR) -->
-              <div class="space-y-1 pt-1 border-t border-slate-850">
-                <div class="grid grid-cols-2 gap-1">
-                  <button onclick="submitCashierSale(false)" class="py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-lg flex items-center justify-center gap-1 transition">
+              <!-- PAYMENT METHODS SECTION -->
+              <div class="space-y-1.5">
+                <div class="flex items-center gap-1 text-xs font-bold text-slate-300 pb-1 border-b border-slate-800">
+                  <span>🗂️</span>
+                  <span>شێواز و وردەکاری پارەدان</span>
+                </div>
+                <span class="text-[10px] text-slate-400 font-bold block">شێوازی پارەدان:</span>
+                
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button onclick="setPaymentMethod('Cash')" id="pm-Cash" class="py-1.5 px-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1 transition">
+                    <span>💵</span>
+                    <span>نەختینە (کاش)</span>
+                  </button>
+                  <button onclick="setPaymentMethod('Debt')" id="pm-Debt" class="py-1.5 px-2 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition">
+                    <span>👤</span>
+                    <span>قەرز / لەژمێر</span>
+                  </button>
+                  <button onclick="setPaymentMethod('Card')" id="pm-Card" class="py-1.5 px-2 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition">
+                    <span>💳</span>
+                    <span>کارت</span>
+                  </button>
+                  <button onclick="setPaymentMethod('Nfc')" id="pm-Nfc" class="py-1.5 px-2 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition">
+                    <span>📱</span>
+                    <span>NFC / بێ بارکەوتن</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- RECEIVED CASH AMOUNT & QUICK BILLS GRID -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-bold text-slate-400">بڕی وەرگیراو:</span>
+                  <input id="cashierPaidInput" oninput="recalcCashierInvoice()" type="number" placeholder="0" class="w-32 bg-[#060c1c] border border-slate-700 focus:border-emerald-500 rounded-xl px-2 py-1 text-center font-black font-mono text-emerald-400 text-sm">
+                </div>
+
+                <!-- Quick Cash Bills Grid (7 Buttons) -->
+                <div class="grid grid-cols-7 gap-1">
+                  <button onclick="setPaidAmount(1000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">1,000</button>
+                  <button onclick="setPaidAmount(5000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">5,000</button>
+                  <button onclick="setPaidAmount(10000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">10,000</button>
+                  <button onclick="setPaidAmount(15000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">15,000</button>
+                  <button onclick="setPaidAmount(20000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">20,000</button>
+                  <button onclick="setPaidAmount(25000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">25,000</button>
+                  <button onclick="setPaidAmount(50000)" class="py-1 bg-[#060c1c] hover:bg-slate-800 border border-slate-800 text-[9px] font-bold text-slate-300 rounded-lg">50,000</button>
+                </div>
+              </div>
+
+              <!-- FINANCIAL SUMMARY ROWS -->
+              <div class="space-y-1 text-xs pt-1.5 border-t border-slate-800">
+                <div class="flex justify-between items-center text-slate-400">
+                  <span>کۆی سەرەتایی:</span>
+                  <span id="cashierSubtotal" class="font-bold text-slate-200 font-mono">0 د.ع</span>
+                </div>
+                <div class="flex justify-between items-center text-amber-400 font-bold">
+                  <span>داشکاندنی تایبەت:</span>
+                  <div class="flex items-center gap-1">
+                    <input id="cashierDiscountInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-20 bg-[#060c1c] border border-slate-700 rounded-lg px-2 py-0.5 text-center font-bold text-amber-400 font-mono text-xs">
+                    <span class="text-[10px]">د.ع</span>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center text-slate-400 font-bold">
+                  <span>باج (%0):</span>
+                  <div class="flex items-center gap-1">
+                    <input id="cashierTaxInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-20 bg-[#060c1c] border border-slate-700 rounded-lg px-2 py-0.5 text-center font-bold text-slate-400 font-mono text-xs">
+                    <span class="text-[10px]">د.ع</span>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center text-slate-300 pt-1 border-t border-slate-800">
+                  <span class="font-bold">ماوەی گەڕاوە (الباقي):</span>
+                  <span id="cashierChangeDisplay" class="font-black text-emerald-400 text-xs font-mono">0 د.ع</span>
+                </div>
+              </div>
+
+              <!-- CHECKOUT BIG BUTTONS (PROMINENT, LARGER & PLACED DIRECTLY BELOW SUMMARY) -->
+              <div class="space-y-2 pt-2 border-t border-slate-800">
+                <div class="grid grid-cols-2 gap-2">
+                  <button onclick="submitCashierSale(false)" class="py-3 px-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition">
                     <span>✔</span>
                     <span>فرۆشتن (بێ پسوولە)</span>
                   </button>
-                  <button onclick="submitCashierSale(true)" class="py-2 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-black text-xs rounded-xl shadow-lg flex items-center justify-center gap-1 transition">
+                  <button onclick="submitCashierSale(true)" class="py-3 px-2 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-black text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition">
                     <span>🖨️</span>
                     <span>فرۆشتن و چاپ</span>
                   </button>
                 </div>
 
                 <!-- Bottom Auxiliary Buttons -->
-                <div class="flex items-center justify-between gap-1">
-                  <button onclick="toggleSmartPrint()" id="btnSmartPrint" class="flex-1 py-0.5 bg-[#060c1c] border border-teal-500/40 text-teal-400 hover:bg-teal-950/40 rounded-lg text-[9px] font-bold flex items-center justify-center gap-0.5 transition">
+                <div class="flex items-center justify-between gap-2">
+                  <button onclick="toggleSmartPrint()" id="btnSmartPrint" class="flex-1 py-1.5 bg-[#060c1c] border border-teal-500/40 text-teal-400 hover:bg-teal-950/40 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
                     <span>⚡</span>
                     <span>چاپی سمارت</span>
                   </button>
-                  <button onclick="clearCurrentInvoice()" class="flex-1 py-0.5 bg-[#060c1c] border border-rose-500/40 text-rose-400 hover:bg-rose-950/40 rounded-lg text-[9px] font-bold flex items-center justify-center gap-0.5 transition">
+                  <button onclick="clearCurrentInvoice()" class="flex-1 py-1.5 bg-[#060c1c] border border-rose-500/40 text-rose-400 hover:bg-rose-950/40 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
                     <span>🔄</span>
                     <span>بەتاڵکردنی سەبەتە [F8]</span>
                   </button>
