@@ -192,7 +192,17 @@ function switchTab(tabId) {
     }
   }
 
-  // 4. Activate selected tab
+  // 4. Auto-hide the global top navbar when in Cashier view to give 100% full screen
+  const appTopHeader = document.getElementById('appTopHeader');
+  if (appTopHeader) {
+    if (tabId === 'cashier') {
+      appTopHeader.classList.add('hidden');
+    } else {
+      appTopHeader.classList.remove('hidden');
+    }
+  }
+
+  // 5. Activate selected tab
   const tabEl = document.getElementById(`tab-${tabId}`);
   if (tabEl) tabEl.classList.remove('hidden');
 
@@ -239,19 +249,41 @@ function toggleTheme() {
 
 function applyTheme(theme) {
   const icon = document.getElementById('themeIcon');
+  const posThemeText = document.getElementById('posThemeText');
   if (theme === 'dark') {
     document.body.classList.add('dark-theme');
     if (icon) icon.innerText = '☀️';
+    if (posThemeText) posThemeText.innerText = 'شەو';
   } else {
     document.body.classList.remove('dark-theme');
     if (icon) icon.innerText = '🌙';
+    if (posThemeText) posThemeText.innerText = 'ڕۆژ';
   }
 }
 
 function toggleLanguage() {
   state.language = state.language === 'ar' ? 'ku' : 'ar';
-  document.getElementById('langBtnText').innerText = state.language === 'ar' ? 'العربية' : 'کوردی';
-  applyLanguage(state.language);
+  setLanguage(state.language);
+}
+
+function setLanguage(lang) {
+  state.language = lang;
+  localStorage.setItem('pos_lang', lang);
+  ['ar', 'ku', 'en'].forEach(l => {
+    const btn = document.getElementById(`posLang${l.charAt(0).toUpperCase() + l.slice(1)}`);
+    if (btn) {
+      if (l === lang) {
+        btn.className = 'px-2.5 py-1 rounded-xl bg-sky-500 text-white transition';
+      } else {
+        btn.className = 'px-2.5 py-1 rounded-xl text-slate-300 hover:text-white transition';
+      }
+    }
+  });
+  const langBtnText = document.getElementById('langBtnText');
+  if (langBtnText) {
+    langBtnText.innerText = lang === 'ar' ? 'العربية' : lang === 'ku' ? 'کوردی' : 'English';
+  }
+  applyLanguage(lang);
 }
 
 function applyLanguage(lang) {
