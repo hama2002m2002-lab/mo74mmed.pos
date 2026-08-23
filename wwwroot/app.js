@@ -101,8 +101,37 @@ function setupGlobalKeyboardShortcuts() {
 // ========================================================
 // I18N LOCALIZATION DICTIONARY (ARABIC & KURDISH)
 // ========================================================
+// ========================================================
+// I18N LOCALIZATION DICTIONARY (ARABIC, KURDISH & ENGLISH)
+// ========================================================
 const i18n = {
   ar: {
+    // POS & Cashier
+    pos_btn_invoices: "الوصولات المباعة والمرجوعة",
+    pos_btn_warehouse: "المخزن F4",
+    pos_btn_return: "إرجاع مادة",
+    pos_empty_cart: "السلة فارغة، امسح الباركود أو اختر مادة من المخزن",
+    pos_search_ph: "[F3] امسح الباركود هنا (نشط)...",
+    cart_th_num: "#",
+    cart_th_name: "اسم المادة",
+    cart_th_cost: "سعر الشراء",
+    cart_th_price: "سعر البيع",
+    cart_th_type: "نوعية البيع",
+    cart_th_qty: "العدد / الكمية",
+    cart_th_total: "المجموع",
+    cart_th_del: "حذف",
+    sale_type_retail: "مفرد",
+    sale_type_wholesale: "جملة",
+    sale_type_carton: "كرتون",
+    qpm_title: "اختيار سريع من المخزن (قائمة المواد السريعة)",
+    inv_modal_title: "الوصولات المباعة والمرتجعة (فواتير المبيعات)",
+    inv_filter_all: "جميع الفواتير (الكل)",
+    inv_filter_completed: "المباعة (Completed)",
+    inv_filter_returned: "المرتجعة (Returned)",
+    refresh_btn: "تحديث",
+    close_btn: "إغلاق",
+
+    // Add Product Form
     ap_back: "العودة للرئيسية",
     ap_title: "إضافة وتعديل مادة جديدة بالمخزن",
     ap_subtitle: "انقر مرتين على حقل الباركود للتوليد التلقائي (200245) بدون تكرار",
@@ -135,6 +164,32 @@ const i18n = {
     ap_c_profit: "ربح بيع الكرتون كاملاً:"
   },
   ku: {
+    // POS & Cashier
+    pos_btn_invoices: "پسوولە فرۆشراو و گەڕاوەکان",
+    pos_btn_warehouse: "کۆگا F4",
+    pos_btn_return: "گەڕاندنەوەی کاڵا",
+    pos_empty_cart: "سەبەتە بەتاڵە، بارکۆد لێبدە یان کاڵا هەڵبژێرە",
+    pos_search_ph: "[F3] لێرە بارکۆد لێبدە (چالاک)...",
+    cart_th_num: "#",
+    cart_th_name: "ناوی کاڵا",
+    cart_th_cost: "نرخی کڕین",
+    cart_th_price: "نرخی فرۆشتن",
+    cart_th_type: "جۆری فرۆشتن",
+    cart_th_qty: "بڕ / دانە",
+    cart_th_total: "کۆی گشتی",
+    cart_th_del: "سڕینەوە",
+    sale_type_retail: "تاک (مفرد)",
+    sale_type_wholesale: "کۆ (جملة)",
+    sale_type_carton: "کارتۆن",
+    qpm_title: "هەڵبژاردنی خێرا لە کۆگا (قائمة المواد السريعة)",
+    inv_modal_title: "پسوولە فرۆشراو و گەڕاوەکان (فواتير المبيعات)",
+    inv_filter_all: "هەموو پسوولەکان (الكل)",
+    inv_filter_completed: "فرۆشراوەکان (Completed)",
+    inv_filter_returned: "گەڕاوەکان (Returned)",
+    refresh_btn: "نوێکردنەوە",
+    close_btn: "داخستن",
+
+    // Add Product Form
     ap_back: "گەڕانەوە بۆ سەرەکی",
     ap_title: "زیادکردن و دەستکاریکردنی کاڵا لە کۆگا",
     ap_subtitle: "دووجار کلیک لەسەر خانەی بارکۆد بکە بۆ دروستکردنی بارکۆد (200245) بەبێ دووبارەبوونەوە",
@@ -165,6 +220,64 @@ const i18n = {
     ap_w_c_profit: "قازانجی کارتۆن بە کۆ:",
     ap_lbl_carton_sell: "نرخی فرۆشتنی تەواوی کارتۆن (د.ع)",
     ap_c_profit: "قازانجی فرۆشتنی کارتۆن:"
+  },
+  en: {
+    // POS & Cashier
+    pos_btn_invoices: "Invoices (Sales & Returns)",
+    pos_btn_warehouse: "Warehouse F4",
+    pos_btn_return: "Return Item",
+    pos_empty_cart: "Cart is empty. Scan a barcode or pick an item.",
+    pos_search_ph: "[F3] Scan barcode here (Active)...",
+    cart_th_num: "#",
+    cart_th_name: "Item Name",
+    cart_th_cost: "Cost Price",
+    cart_th_price: "Selling Price",
+    cart_th_type: "Sale Type",
+    cart_th_qty: "Qty",
+    cart_th_total: "Total",
+    cart_th_del: "Del",
+    sale_type_retail: "Retail",
+    sale_type_wholesale: "Wholesale",
+    sale_type_carton: "Carton",
+    qpm_title: "Quick Warehouse Selector (F4)",
+    inv_modal_title: "Sold & Returned Invoices",
+    inv_filter_all: "All Invoices",
+    inv_filter_completed: "Completed",
+    inv_filter_returned: "Returned",
+    refresh_btn: "Refresh",
+    close_btn: "Close",
+
+    // Add Product Form
+    ap_back: "Back to Main",
+    ap_title: "Add & Edit Product in Inventory",
+    ap_subtitle: "Double click barcode input to auto generate unique code (200245)",
+    ap_clear: "Clear Fields",
+    ap_save: "Save Product",
+    ap_sec1_title: "1. Product Info & Packaging",
+    ap_sec1_tag: "Double click barcode ⚡",
+    ap_lbl_barcode: "1. Barcode *",
+    ap_btn_gen: "Generate",
+    ap_lbl_name: "2. Item Name *",
+    ap_name_ph: "Item Name",
+    ap_lbl_cat: "3. Category",
+    ap_lbl_sup: "4. Supplier / Company",
+    ap_lbl_cartons: "Cartons Count",
+    ap_lbl_pieces: "Pieces / Carton",
+    ap_lbl_total: "Total Stock Items",
+    ap_lbl_alert: "Low Stock Alert At (Pieces):",
+    ap_sec2_title: "2. Cost & Prices",
+    ap_lbl_carton_purchase: "Carton Cost (IQD)",
+    ap_lbl_piece_cost_calc: "Piece Cost from Carton",
+    ap_lbl_cost: "Piece Approved Cost (IQD) *",
+    ap_lbl_retail_price: "Retail Price / Piece (IQD) *",
+    ap_r_profit: "Retail Profit:",
+    ap_r_total: "Carton Retail Val:",
+    ap_r_c_profit: "Carton Retail Profit:",
+    ap_lbl_wholesale_price: "Wholesale Price / Piece (IQD)",
+    ap_w_profit: "Wholesale Profit:",
+    ap_w_c_profit: "Carton Wholesale Profit:",
+    ap_lbl_carton_sell: "Full Carton Price (IQD)",
+    ap_c_profit: "Full Carton Profit:"
   }
 };
 
@@ -299,6 +412,15 @@ function applyLanguage(lang) {
   if (nameInput) {
     nameInput.placeholder = dict.ap_name_ph || "اسم المادة";
   }
+
+  const barcodeInput = document.getElementById('cashierBarcodeInput');
+  if (barcodeInput) {
+    barcodeInput.placeholder = dict.pos_search_ph || "[F3] لێرە بارکۆد لێبدە (چالاک)...";
+  }
+
+  // Re-render cart and tabs to apply language changes
+  renderInvoiceTabs();
+  renderCashierCart();
 }
 
 // ========================================================
@@ -650,15 +772,37 @@ function hideCashierSearchResults() {
   if (rc) rc.classList.add('hidden');
 }
 
+// Barcode Auto-Focus Controller
+let isBarcodeFocusPaused = false;
+
+function pauseBarcodeFocus() {
+  isBarcodeFocusPaused = true;
+}
+
+function resumeBarcodeFocus() {
+  isBarcodeFocusPaused = false;
+  setTimeout(() => {
+    if (state.activeTab === 'cashier' && !isBarcodeFocusPaused) {
+      const active = document.activeElement;
+      if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'SELECT' && active.tagName !== 'TEXTAREA')) {
+        document.getElementById('cashierBarcodeInput')?.focus();
+      }
+    }
+  }, 100);
+}
+
 function addItemToCurrentCart(product) {
   const currentTab = getCurrentTab();
   const prodId = product.id || product.Id;
   const prodName = product.name || product.Name || 'مادة بدون اسم';
   const prodBarcode = product.barcode || product.Barcode || '--';
-  const prodPrice = Number(product.price ?? product.Price ?? 0) || 0;
   const prodCost = Number(product.cost ?? product.Cost ?? 0) || 0;
+  const prodRetailPrice = Number(product.price ?? product.Price ?? 0) || 0;
+  const prodWholesalePrice = Number(product.wholesalePrice ?? product.WholesalePrice ?? prodRetailPrice) || prodRetailPrice;
+  const prodCartonPrice = Number(product.cartonSellingPrice ?? product.CartonSellingPrice ?? 0) || (prodRetailPrice * (Number(product.piecesPerCarton || product.ItemsPerCarton || 1) || 1));
+  const piecesPerCarton = Number(product.piecesPerCarton ?? product.ItemsPerCarton ?? 1) || 1;
 
-  const existing = currentTab.items.find(i => i.id === prodId);
+  const existing = currentTab.items.find(i => i.id === prodId && i.saleType === 'retail');
 
   if (existing) {
     existing.qty = (Number(existing.qty) || 1) + 1;
@@ -667,8 +811,13 @@ function addItemToCurrentCart(product) {
       id: prodId,
       name: prodName,
       barcode: prodBarcode,
-      price: prodPrice,
       cost: prodCost,
+      retailPrice: prodRetailPrice,
+      wholesalePrice: prodWholesalePrice,
+      cartonPrice: prodCartonPrice,
+      piecesPerCarton: piecesPerCarton,
+      saleType: 'retail',
+      price: prodRetailPrice,
       qty: 1
     });
   }
@@ -677,11 +826,41 @@ function addItemToCurrentCart(product) {
   renderCashierCart();
 }
 
+function changeCartItemSaleType(id, newType) {
+  const currentTab = getCurrentTab();
+  const item = currentTab.items.find(i => i.id === id);
+  if (item) {
+    item.saleType = newType;
+    if (newType === 'wholesale') {
+      item.price = item.wholesalePrice || item.retailPrice;
+    } else if (newType === 'carton') {
+      item.price = item.cartonPrice || (item.retailPrice * item.piecesPerCarton);
+    } else {
+      item.price = item.retailPrice;
+    }
+    renderCashierCart();
+  }
+}
+
+function setCartItemDirectQty(id, val) {
+  const currentTab = getCurrentTab();
+  const item = currentTab.items.find(i => i.id === id);
+  if (item) {
+    const parsed = parseFloat(val);
+    if (!isNaN(parsed) && parsed > 0) {
+      item.qty = parsed;
+    } else {
+      item.qty = 1;
+    }
+    recalcCashierInvoice();
+  }
+}
+
 function updateCartItemQty(id, delta) {
   const currentTab = getCurrentTab();
   const item = currentTab.items.find(i => i.id === id);
   if (item) {
-    item.qty = (Number(item.qty) || 1) + delta;
+    item.qty = Math.max(0, (Number(item.qty) || 1) + delta);
     if (item.qty <= 0) {
       currentTab.items = currentTab.items.filter(i => i.id !== id);
     }
@@ -709,9 +888,7 @@ function clearCurrentInvoice() {
 
   renderInvoiceTabs();
   renderCashierCart();
-  setTimeout(() => {
-    document.getElementById('cashierBarcodeInput')?.focus();
-  }, 50);
+  resumeBarcodeFocus();
 }
 
 function renderCashierCart() {
@@ -719,6 +896,7 @@ function renderCashierCart() {
   const emptyState = document.getElementById('cashierCartEmptyState');
   const tableWrapper = document.getElementById('cashierCartTableWrapper');
   const tbody = document.getElementById('cashierCartTbody');
+  const dict = i18n[state.language] || i18n.ar;
 
   if (!tbody) return;
 
@@ -734,27 +912,39 @@ function renderCashierCart() {
 
   tbody.innerHTML = '';
   currentTab.items.forEach((item, index) => {
+    const itemCost = Number(item.cost) || 0;
     const itemPrice = Number(item.price) || 0;
     const itemQty = Number(item.qty) || 1;
     const itemTotal = itemPrice * itemQty;
+    const saleType = item.saleType || 'retail';
 
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-800/50 transition';
+    tr.className = 'hover:bg-slate-800/50 transition border-b border-slate-800/60';
     tr.innerHTML = `
-      <td class="p-3 text-center text-slate-400 font-bold font-mono">${index + 1}</td>
-      <td class="p-3 font-bold text-white">${item.name}</td>
-      <td class="p-3 font-mono text-sky-400 text-xs">${item.barcode || '--'}</td>
-      <td class="p-3 text-center font-bold text-emerald-400 font-mono">${itemPrice.toLocaleString()} د.ع</td>
-      <td class="p-3 text-center">
-        <div class="inline-flex items-center gap-2 bg-[#0b1329] border border-slate-700 px-2 py-1 rounded-xl">
-          <button onclick="updateCartItemQty('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 font-black text-sm flex items-center justify-center">-</button>
-          <span class="font-black px-1 text-white font-mono">${itemQty}</span>
-          <button onclick="updateCartItemQty('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 font-black text-sm flex items-center justify-center">+</button>
+      <td class="p-2 text-center text-slate-400 font-bold font-mono">${index + 1}</td>
+      <td class="p-2 font-bold text-white">
+        <div>${item.name}</div>
+        <div class="text-[9px] font-mono text-sky-400">${item.barcode || '--'}</div>
+      </td>
+      <td class="p-2 text-center font-mono text-slate-400 font-semibold text-[11px]">${itemCost.toLocaleString()} د.ع</td>
+      <td class="p-2 text-center font-mono text-emerald-400 font-bold text-[11px]">${itemPrice.toLocaleString()} د.ع</td>
+      <td class="p-2 text-center">
+        <select onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" onchange="changeCartItemSaleType('${item.id}', this.value)" class="bg-[#060c1c] border border-slate-700 rounded-lg px-1.5 py-0.5 text-[10px] font-bold text-sky-400 focus:outline-none focus:border-sky-500">
+          <option value="retail" ${saleType === 'retail' ? 'selected' : ''}>${dict.sale_type_retail || 'مفرد'}</option>
+          <option value="wholesale" ${saleType === 'wholesale' ? 'selected' : ''}>${dict.sale_type_wholesale || 'جملة'}</option>
+          <option value="carton" ${saleType === 'carton' ? 'selected' : ''}>${dict.sale_type_carton || 'كرتون'}</option>
+        </select>
+      </td>
+      <td class="p-2 text-center">
+        <div class="inline-flex items-center gap-1 bg-[#060c1c] border border-slate-700 px-1 py-0.5 rounded-xl">
+          <button onclick="updateCartItemQty('${item.id}', -1)" class="w-5 h-5 rounded-lg bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 font-black text-xs flex items-center justify-center">-</button>
+          <input type="number" step="any" min="0.1" value="${itemQty}" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="setCartItemDirectQty('${item.id}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}" class="w-12 bg-transparent text-center font-black text-white font-mono text-xs focus:ring-1 focus:ring-sky-500 rounded outline-none">
+          <button onclick="updateCartItemQty('${item.id}', 1)" class="w-5 h-5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 font-black text-xs flex items-center justify-center">+</button>
         </div>
       </td>
-      <td class="p-3 text-center font-black text-emerald-300 font-mono">${itemTotal.toLocaleString()} د.ع</td>
-      <td class="p-3 text-center">
-        <button onclick="removeCartItem('${item.id}')" class="p-1.5 hover:bg-rose-500/20 text-rose-400 rounded-lg font-bold text-xs" title="سڕینەوە">🗑</button>
+      <td class="p-2 text-center font-black text-emerald-300 font-mono text-xs">${itemTotal.toLocaleString()} د.ع</td>
+      <td class="p-2 text-center">
+        <button onclick="removeCartItem('${item.id}')" class="p-1 hover:bg-rose-500/20 text-rose-400 rounded-lg font-bold text-xs" title="حذف">🗑</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -782,7 +972,7 @@ function recalcCashierInvoice() {
   if (subtotalEl) subtotalEl.innerText = `${subtotal.toLocaleString()} د.ع`;
   if (totalEl) totalEl.innerText = `${total.toLocaleString()} د.ع`;
   if (changeEl) changeEl.innerText = `${change.toLocaleString()} د.ع`;
-  if (countBadgeEl) countBadgeEl.innerText = `${totalItems} کاڵا لە سەبەتەدا`;
+  if (countBadgeEl) countBadgeEl.innerText = `${totalItems} ${state.language === 'en' ? 'Items in Cart' : state.language === 'ku' ? 'کاڵا لە سەبەتەدا' : 'مواد في السلة'}`;
 }
 
 function setPaidAmount(amt) {
@@ -800,12 +990,120 @@ function setPaymentMethod(pm) {
     const btn = document.getElementById(`pm-${m}`);
     if (btn) {
       if (m === pm) {
-        btn.className = 'py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 transition';
+        btn.className = 'py-1.5 px-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1 transition';
       } else {
-        btn.className = 'py-2 px-3 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition';
+        btn.className = 'py-1.5 px-2 bg-[#060c1c] hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1 transition';
       }
     }
   });
+}
+
+// ========================================================
+// SOLD & RETURNED INVOICES MODAL
+// ========================================================
+let allInvoicesHistory = [];
+
+async function openInvoicesHistoryModal() {
+  pauseBarcodeFocus();
+  const modal = document.getElementById('invoicesHistoryModal');
+  if (modal) modal.classList.remove('hidden');
+  await loadInvoicesHistory();
+}
+
+function closeInvoicesHistoryModal() {
+  const modal = document.getElementById('invoicesHistoryModal');
+  if (modal) modal.classList.add('hidden');
+  resumeBarcodeFocus();
+}
+
+async function loadInvoicesHistory(showAlert = false) {
+  const tbody = document.getElementById('invoicesHistoryTbody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400 font-bold">جارٍ تحميل الفواتير...</td></tr>';
+
+  const res = await callBackend('get_invoices');
+  if (res && res.success) {
+    allInvoicesHistory = res.invoices || [];
+    filterInvoicesHistory();
+    if (showAlert) {
+      alert(`✔ تم تحديث قائمة الفواتير (${allInvoicesHistory.length} فاتورة مسجلة)`);
+    }
+  } else {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-rose-400 font-bold">تعذر تحميل الفواتير</td></tr>';
+  }
+}
+
+function filterInvoicesHistory() {
+  const q = document.getElementById('inv-search-input')?.value.trim().toLowerCase() || '';
+  const statusFilter = document.getElementById('inv-status-filter')?.value || 'ALL';
+  const tbody = document.getElementById('invoicesHistoryTbody');
+  const countBadge = document.getElementById('invoicesCountBadge');
+  if (!tbody) return;
+
+  let filtered = allInvoicesHistory;
+  if (statusFilter !== 'ALL') {
+    filtered = filtered.filter(i => (i.status || 'Completed') === statusFilter);
+  }
+  if (q) {
+    filtered = filtered.filter(i => 
+      (i.invoiceNumber && i.invoiceNumber.toLowerCase().includes(q)) ||
+      (i.customerName && i.customerName.toLowerCase().includes(q))
+    );
+  }
+
+  if (countBadge) countBadge.innerText = `${filtered.length} پسوولە دۆزرایەوە (فواتير)`;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-500 font-bold">هیچ پسوولەیەک نەدۆزرایەوە (لا توجد فواتير)</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  filtered.forEach((inv) => {
+    const isReturned = inv.status === 'Returned';
+    const tr = document.createElement('tr');
+    tr.className = `hover:bg-slate-800/60 transition ${isReturned ? 'bg-rose-950/20' : ''}`;
+    tr.innerHTML = `
+      <td class="p-2.5 font-mono text-sky-400 font-bold">${inv.invoiceNumber}</td>
+      <td class="p-2.5 font-bold text-white">${inv.customerName || 'زبون نقدي'}</td>
+      <td class="p-2.5 text-center">
+        <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-300">${inv.paymentMethod || 'Cash'}</span>
+      </td>
+      <td class="p-2.5 text-center font-mono font-black text-emerald-400">${Number(inv.totalAmount || 0).toLocaleString()} د.ع</td>
+      <td class="p-2.5 text-center">
+        ${isReturned 
+          ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">گەڕاوە (مرتجع)</span>'
+          : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">فرۆشراو (مباعة)</span>'}
+      </td>
+      <td class="p-2.5 text-center text-slate-400 text-[11px] font-mono">${inv.createdAt || '--'}</td>
+      <td class="p-2.5 text-center">
+        <div class="flex items-center justify-center gap-1">
+          <button onclick="reprintInvoiceReceipt('${inv.invoiceNumber}')" class="px-2 py-1 bg-sky-900/60 hover:bg-sky-800 text-sky-300 rounded-lg text-[10px] font-bold" title="إعادة طباعة">🖨️ چاپ</button>
+          ${!isReturned ? `<button onclick="returnInvoiceAction('${inv.invoiceNumber}')" class="px-2 py-1 bg-rose-900/60 hover:bg-rose-800 text-rose-300 rounded-lg text-[10px] font-bold" title="إرجاع الوصل">🔄 إرجاع</button>` : ''}
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function returnInvoiceAction(invoiceNumber) {
+  if (!confirm(`هل أنت متأكد من إرجاع الفاتورة ${invoiceNumber} وإعادة كامل كمياتها إلى المخزن؟`)) return;
+  const res = await callBackend('return_invoice', { invoiceNumber });
+  if (res && res.success) {
+    alert('✔ تم إرجاع الفاتورة بنجاح وإعادة رصيد المواد إلى المخزن!');
+    await loadInvoicesHistory();
+    await loadProducts();
+    await loadInventory();
+    await loadDashboard();
+  } else {
+    alert('تعذر إرجاع الفاتورة: ' + (res?.message || ''));
+  }
+}
+
+function reprintInvoiceReceipt(invoiceNumber) {
+  const inv = allInvoicesHistory.find(i => i.invoiceNumber === invoiceNumber);
+  if (!inv) return;
+  window.print();
 }
 
 async function submitCashierSale(printReceipt = false) {

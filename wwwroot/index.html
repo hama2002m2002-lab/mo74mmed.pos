@@ -485,17 +485,23 @@
               <!-- Barcode Scanner & Quick Action Buttons Row -->
               <div class="flex items-center gap-2 mb-2">
 
+                <!-- Invoices (Sales & Returns) Modal Button -->
+                <button onclick="openInvoicesHistoryModal()" class="px-3 py-1.5 bg-slate-900 border border-purple-500/40 text-purple-400 hover:bg-purple-950/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap" title="عرض الفواتير المباعة والمرتجعة">
+                  <span>🧾</span>
+                  <span data-i18n="pos_btn_invoices">پسوولەکان (المبيعات والمرتجع)</span>
+                </button>
+
                 <!-- Warehouse Modal Button with Count Badge -->
                 <button onclick="openQuickProductModal()" class="px-3 py-1.5 bg-slate-900 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-950/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap">
                   <span>📦</span>
-                  <span>کۆگا F4</span>
+                  <span data-i18n="pos_btn_warehouse">کۆگا F4</span>
                   <span id="cashierTotalProductsBadge" class="bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded-md text-[10px] font-mono font-bold">0</span>
                 </button>
 
                 <!-- Return Item Toggle Button -->
                 <button onclick="toggleReturnMode()" id="btnReturnMode" class="px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap">
                   <span>🔄</span>
-                  <span>گەڕاندنەوەی کاڵا</span>
+                  <span data-i18n="pos_btn_return">گەڕاندنەوەی کاڵا</span>
                 </button>
 
                 <!-- Glowing Golden Barcode Scanner Input Bar -->
@@ -523,7 +529,7 @@
                       <path d="M60 55L68 42L82 42L90 55L82 68L68 68Z" fill="#8b5cf6" fill-opacity="0.8" stroke="#a78bfa" stroke-width="2"/>
                     </svg>
                   </div>
-                  <span class="text-xs font-black text-slate-400">سەبەتە بەتاڵە، بارکۆد لێبدە یان کاڵا هەڵبژێرە</span>
+                  <span id="cashierEmptyCartText" data-i18n="pos_empty_cart" class="text-xs font-black text-slate-400">سەبەتە بەتاڵە، بارکۆد لێبدە یان کاڵا هەڵبژێرە</span>
                 </div>
 
                 <!-- CART ITEMS TABLE -->
@@ -531,13 +537,14 @@
                   <table class="w-full text-right text-xs">
                     <thead class="bg-[#0b1329] text-slate-400 font-bold border-b border-slate-800 sticky top-0 z-10">
                       <tr>
-                        <th class="p-2.5 text-center w-12">#</th>
-                        <th class="p-2.5">ناوی کاڵا</th>
-                        <th class="p-2.5 font-mono">الباركود</th>
-                        <th class="p-2.5 text-center">نرخی تاک</th>
-                        <th class="p-2.5 text-center">بڕ / دانە</th>
-                        <th class="p-2.5 text-center">کۆی گشتی</th>
-                        <th class="p-2.5 text-center w-14">سڕینەوە</th>
+                        <th class="p-2 text-center w-10" data-i18n="cart_th_num">#</th>
+                        <th class="p-2" data-i18n="cart_th_name">اسم المادة</th>
+                        <th class="p-2 text-center font-mono" data-i18n="cart_th_cost">سعر الشراء</th>
+                        <th class="p-2 text-center font-mono" data-i18n="cart_th_price">سعر البيع</th>
+                        <th class="p-2 text-center" data-i18n="cart_th_type">نوعية البيع</th>
+                        <th class="p-2 text-center" data-i18n="cart_th_qty">العدد / الكمية</th>
+                        <th class="p-2 text-center font-mono" data-i18n="cart_th_total">المجموع</th>
+                        <th class="p-2 text-center w-12" data-i18n="cart_th_del">حذف</th>
                       </tr>
                     </thead>
                     <tbody id="cashierCartTbody" class="divide-y divide-slate-800/80 font-bold text-white">
@@ -595,7 +602,7 @@
               <div class="space-y-1.5">
                 <div class="flex items-center justify-between text-xs">
                   <span class="font-bold text-slate-400">بڕی وەرگیراو:</span>
-                  <input id="cashierPaidInput" oninput="recalcCashierInvoice()" type="number" placeholder="0" class="w-32 bg-[#060c1c] border border-slate-700 focus:border-emerald-500 rounded-xl px-2 py-1 text-center font-black font-mono text-emerald-400 text-sm">
+                  <input id="cashierPaidInput" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="recalcCashierInvoice()" type="number" placeholder="0" class="w-32 bg-[#060c1c] border border-slate-700 focus:border-emerald-500 rounded-xl px-2 py-1 text-center font-black font-mono text-emerald-400 text-sm">
                 </div>
 
                 <!-- Quick Cash Bills Grid (7 Buttons) -->
@@ -619,14 +626,14 @@
                 <div class="flex justify-between items-center text-amber-400 font-bold">
                   <span>داشکاندنی تایبەت:</span>
                   <div class="flex items-center gap-1">
-                    <input id="cashierDiscountInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-20 bg-[#060c1c] border border-slate-700 rounded-lg px-2 py-0.5 text-center font-bold text-amber-400 font-mono text-xs">
+                    <input id="cashierDiscountInput" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="recalcCashierInvoice()" type="number" value="0" class="w-20 bg-[#060c1c] border border-slate-700 rounded-lg px-2 py-0.5 text-center font-bold text-amber-400 font-mono text-xs">
                     <span class="text-[10px]">د.ع</span>
                   </div>
                 </div>
                 <div class="flex justify-between items-center text-slate-400 font-bold">
                   <span>باج (%0):</span>
                   <div class="flex items-center gap-1">
-                    <input id="cashierTaxInput" oninput="recalcCashierInvoice()" type="number" value="0" class="w-20 bg-[#060c1c] border border-slate-700 rounded-lg px-2 py-0.5 text-center font-bold text-slate-400 font-mono text-xs">
+                    <input id="cashierTaxInput" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="recalcCashierInvoice()" type="number" value="0" class="w-20 bg-[#060c1c] border border-slate-700 rounded-lg px-2 py-0.5 text-center font-bold text-slate-400 font-mono text-xs">
                     <span class="text-[10px]">د.ع</span>
                   </div>
                 </div>
@@ -674,7 +681,7 @@
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
               <div class="flex items-center gap-2">
                 <span class="text-xl">📦</span>
-                <h3 class="font-black text-base text-white">هەڵبژاردنی خێرا لە کۆگا (قائمة المواد السريعة)</h3>
+                <h3 data-i18n="qpm_title" class="font-black text-base text-white">هەڵبژاردنی خێرا لە کۆگا (قائمة المواد السريعة)</h3>
               </div>
               <button onclick="closeQuickProductModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
             </div>
@@ -686,7 +693,60 @@
             </div>
 
             <div class="flex justify-end pt-2 border-t border-slate-800">
-              <button onclick="closeQuickProductModal()" class="px-5 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">داخستن</button>
+              <button onclick="closeQuickProductModal()" class="px-5 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl" data-i18n="close_btn">داخستن</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SOLD & RETURNED INVOICES MODAL (پسوولە فرۆشراو و گەڕاوەکان) -->
+        <div id="invoicesHistoryModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-6">
+          <div class="sh-card w-full max-w-5xl max-h-[90vh] flex flex-col p-5 space-y-4 shadow-2xl border border-slate-700">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">🧾</span>
+                <h3 data-i18n="inv_modal_title" class="font-black text-base text-white">پسوولە فرۆشراو و گەڕاوەکان (فواتير المبيعات والمرتجع)</h3>
+              </div>
+              <button onclick="closeInvoicesHistoryModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
+            </div>
+            
+            <!-- Filters Row -->
+            <div class="flex items-center gap-3">
+              <input id="inv-search-input" oninput="filterInvoicesHistory()" type="text" placeholder="گەڕان بە ژمارەی پسوولە یان کڕیار..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white font-bold">
+              <select id="inv-status-filter" onchange="filterInvoicesHistory()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-bold">
+                <option value="ALL" data-i18n="inv_filter_all">هەموو پسوولەکان (الكل)</option>
+                <option value="Completed" data-i18n="inv_filter_completed">فرۆشراوەکان (مباعة)</option>
+                <option value="Returned" data-i18n="inv_filter_returned">گەڕاوەکان (مرتجعة)</option>
+              </select>
+              <button onclick="loadInvoicesHistory(true)" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition">
+                <span>🔄</span>
+                <span data-i18n="refresh_btn">نوێکردنەوە</span>
+              </button>
+            </div>
+
+            <!-- Invoices Table -->
+            <div class="flex-1 overflow-y-auto border border-slate-800 rounded-xl">
+              <table class="w-full text-right text-xs">
+                <thead class="bg-[#0b1329] text-slate-400 font-bold border-b border-slate-800 sticky top-0">
+                  <tr>
+                    <th class="p-2.5">ژمارەی پسوولە (رقم الفاتورة)</th>
+                    <th class="p-2.5">کڕیار (الزبون)</th>
+                    <th class="p-2.5 text-center">شێوازی پارەدان</th>
+                    <th class="p-2.5 text-center">کۆی گشتی</th>
+                    <th class="p-2.5 text-center">دۆخ (الحالة)</th>
+                    <th class="p-2.5 text-center">بەروار (التاريخ)</th>
+                    <th class="p-2.5 text-center w-36">کردارەکان (الإجراءات)</th>
+                  </tr>
+                </thead>
+                <tbody id="invoicesHistoryTbody" class="divide-y divide-slate-800/80 font-bold text-white">
+                  <tr><td colspan="7" class="text-center py-6 text-slate-500">چاوەڕوان بە...</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+              <span id="invoicesCountBadge" class="text-xs text-slate-400 font-bold">0 پسوولە دۆزرایەوە</span>
+              <button onclick="closeInvoicesHistoryModal()" class="px-5 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl" data-i18n="close_btn">داخستن</button>
             </div>
           </div>
         </div>
