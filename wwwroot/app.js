@@ -1428,12 +1428,11 @@ function recalcAddProduct() {
   const pieceCostDisplayEl = document.getElementById('ap-pieceCostFromCarton');
   if (pieceCostDisplayEl) pieceCostDisplayEl.value = `${Math.round(pieceCostFromCarton).toLocaleString()} د.ع`;
 
+  const cost = Math.round(pieceCostFromCarton);
   const costInput = document.getElementById('ap-cost');
-  if (costInput && (!costInput.value || Number(costInput.value) === 0)) {
-    costInput.value = Math.round(pieceCostFromCarton);
+  if (costInput) {
+    costInput.value = cost;
   }
-
-  const cost = Number(costInput?.value || Math.round(pieceCostFromCarton));
   const price = Number(document.getElementById('ap-price')?.value || 0); // بيع مفرد
   const wholesale = Number(document.getElementById('ap-wholesalePrice')?.value || 0); // بيع جملة
   const cartonSelling = Number(document.getElementById('ap-cartonSelling')?.value || 0); // بيع كرتون
