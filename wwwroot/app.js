@@ -1699,19 +1699,23 @@ function switchAddProductMode(mode) {
 }
 
 function recalcAddProduct() {
-  const itemsPerCarton = Math.max(1, Number(document.getElementById('ap-itemsPerCarton')?.value || 1));
-  const cartonsCount = Math.max(0, Number(document.getElementById('ap-cartonsCount')?.value || 0));
+  const itemsPerCarton = Number(document.getElementById('ap-itemsPerCarton')?.value || 0);
+  const cartonsCount = Number(document.getElementById('ap-cartonsCount')?.value || 0);
   const cartonPurchase = Number(document.getElementById('ap-cartonPurchase')?.value || 0);
 
   // Total stock in pieces
   const totalPieces = itemsPerCarton * cartonsCount;
   const totalStockEl = document.getElementById('ap-totalStock');
-  if (totalStockEl) totalStockEl.value = `${totalPieces} قطعة`;
+  if (totalStockEl) {
+    totalStockEl.value = (itemsPerCarton > 0 && cartonsCount > 0) ? `${totalPieces} قطعة` : '';
+  }
 
   // Calculated Piece Cost from Carton (Readonly)
   const pieceCostFromCarton = itemsPerCarton > 0 ? (cartonPurchase / itemsPerCarton) : 0;
   const pieceCostDisplayEl = document.getElementById('ap-pieceCostFromCarton');
-  if (pieceCostDisplayEl) pieceCostDisplayEl.value = `${Math.round(pieceCostFromCarton).toLocaleString()} د.ع`;
+  if (pieceCostDisplayEl) {
+    pieceCostDisplayEl.value = pieceCostFromCarton > 0 ? `${Math.round(pieceCostFromCarton).toLocaleString()} د.ع` : '';
+  }
 
   const cost = Math.round(pieceCostFromCarton);
   const costInput = document.getElementById('ap-cost');
@@ -1723,9 +1727,9 @@ function recalcAddProduct() {
   const cartonSelling = Number(document.getElementById('ap-cartonSelling')?.value || 0); // بيع كرتون
 
   // 1. Retail calculations
-  const retailPieceProfit = price - cost;
-  const retailCartonTotal = price * itemsPerCarton;
-  const retailCartonProfit = (price - cost) * itemsPerCarton;
+  const retailPieceProfit = (price > 0 && cost > 0) ? (price - cost) : 0;
+  const retailCartonTotal = (price > 0 && itemsPerCarton > 0) ? (price * itemsPerCarton) : 0;
+  const retailCartonProfit = (price > 0 && cost > 0 && itemsPerCarton > 0) ? ((price - cost) * itemsPerCarton) : 0;
 
   const rppEl = document.getElementById('ap-retailPieceProfit');
   if (rppEl) rppEl.innerText = `${retailPieceProfit >= 0 ? '+' : ''}${Math.round(retailPieceProfit).toLocaleString()} د.ع`;
@@ -1735,8 +1739,8 @@ function recalcAddProduct() {
   if (rcpEl) rcpEl.innerText = `${retailCartonProfit >= 0 ? '+' : ''}${Math.round(retailCartonProfit).toLocaleString()} د.ع`;
 
   // 2. Wholesale calculations
-  const wholesalePieceProfit = wholesale - cost;
-  const wholesaleCartonProfit = (wholesale - cost) * itemsPerCarton;
+  const wholesalePieceProfit = (wholesale > 0 && cost > 0) ? (wholesale - cost) : 0;
+  const wholesaleCartonProfit = (wholesale > 0 && cost > 0 && itemsPerCarton > 0) ? ((wholesale - cost) * itemsPerCarton) : 0;
 
   const wppEl = document.getElementById('ap-wholesalePieceProfit');
   if (wppEl) wppEl.innerText = `${wholesalePieceProfit >= 0 ? '+' : ''}${Math.round(wholesalePieceProfit).toLocaleString()} د.ع`;
@@ -1744,25 +1748,29 @@ function recalcAddProduct() {
   if (wcpEl) wcpEl.innerText = `${wholesaleCartonProfit >= 0 ? '+' : ''}${Math.round(wholesaleCartonProfit).toLocaleString()} د.ع`;
 
   // 3. Carton calculations
-  const cartonDirectProfit = cartonSelling - cartonPurchase;
+  const cartonDirectProfit = (cartonSelling > 0 && cartonPurchase > 0) ? (cartonSelling - cartonPurchase) : 0;
   const cdpEl = document.getElementById('ap-cartonDirectProfit');
   if (cdpEl) cdpEl.innerText = `${cartonDirectProfit >= 0 ? '+' : ''}${Math.round(cartonDirectProfit).toLocaleString()} د.ع`;
 }
 
 function recalcAddProductWeight() {
-  const fardahCount = Math.max(0, Number(document.getElementById('ap-fardahCount')?.value || 0));
-  const kgPerFardah = Math.max(1, Number(document.getElementById('ap-kgPerFardah')?.value || 1));
+  const fardahCount = Number(document.getElementById('ap-fardahCount')?.value || 0);
+  const kgPerFardah = Number(document.getElementById('ap-kgPerFardah')?.value || 0);
   const fardahPurchase = Number(document.getElementById('ap-fardahPurchase')?.value || 0);
 
   // Total weight in Kg
   const totalKg = fardahCount * kgPerFardah;
   const totalKgEl = document.getElementById('ap-totalKg');
-  if (totalKgEl) totalKgEl.value = `${totalKg} كغم`;
+  if (totalKgEl) {
+    totalKgEl.value = (fardahCount > 0 && kgPerFardah > 0) ? `${totalKg} كغم` : '';
+  }
 
   // Calculated Kg Cost from Fardah (Readonly)
   const kgCostFromFardah = kgPerFardah > 0 ? (fardahPurchase / kgPerFardah) : 0;
   const kgCostDisplayEl = document.getElementById('ap-kgCostFromFardah');
-  if (kgCostDisplayEl) kgCostDisplayEl.value = `${Math.round(kgCostFromFardah).toLocaleString()} د.ع`;
+  if (kgCostDisplayEl) {
+    kgCostDisplayEl.value = kgCostFromFardah > 0 ? `${Math.round(kgCostFromFardah).toLocaleString()} د.ع` : '';
+  }
 
   const cost = Math.round(kgCostFromFardah);
   const costInput = document.getElementById('ap-cost');
@@ -1770,13 +1778,11 @@ function recalcAddProductWeight() {
     costInput.value = cost;
   }
   const kgRetailPrice = Number(document.getElementById('ap-kgRetailPrice')?.value || 0); // بيع مفرد للكيلو
-  const kgWholesalePrice = Number(document.getElementById('ap-kgWholesalePrice')?.value || 0); // بيع جملة للكيلو
-  const fardahSelling = Number(document.getElementById('ap-fardahSelling')?.value || 0); // بيع الفردة كاملة
 
   // 1. Retail Kg calculations
-  const retailKgProfit = kgRetailPrice - cost;
-  const retailFardahTotal = kgRetailPrice * kgPerFardah;
-  const retailFardahProfit = (kgRetailPrice - cost) * kgPerFardah;
+  const retailKgProfit = (kgRetailPrice > 0 && cost > 0) ? (kgRetailPrice - cost) : 0;
+  const retailFardahTotal = (kgRetailPrice > 0 && kgPerFardah > 0) ? (kgRetailPrice * kgPerFardah) : 0;
+  const retailFardahProfit = (kgRetailPrice > 0 && cost > 0 && kgPerFardah > 0) ? ((kgRetailPrice - cost) * kgPerFardah) : 0;
 
   const rkpEl = document.getElementById('ap-retailKgProfit');
   if (rkpEl) rkpEl.innerText = `${retailKgProfit >= 0 ? '+' : ''}${Math.round(retailKgProfit).toLocaleString()} د.ع`;
@@ -1784,20 +1790,6 @@ function recalcAddProductWeight() {
   if (rftEl) rftEl.innerText = `${Math.round(retailFardahTotal).toLocaleString()} د.ع`;
   const rfpEl = document.getElementById('ap-retailFardahProfit');
   if (rfpEl) rfpEl.innerText = `${retailFardahProfit >= 0 ? '+' : ''}${Math.round(retailFardahProfit).toLocaleString()} د.ع`;
-
-  // 2. Wholesale Kg calculations
-  const wholesaleKgProfit = kgWholesalePrice - cost;
-  const wholesaleFardahProfit = (kgWholesalePrice - cost) * kgPerFardah;
-
-  const wkpEl = document.getElementById('ap-wholesaleKgProfit');
-  if (wkpEl) wkpEl.innerText = `${wholesaleKgProfit >= 0 ? '+' : ''}${Math.round(wholesaleKgProfit).toLocaleString()} د.ع`;
-  const wfpEl = document.getElementById('ap-wholesaleFardahProfit');
-  if (wfpEl) wfpEl.innerText = `${wholesaleFardahProfit >= 0 ? '+' : ''}${Math.round(wholesaleFardahProfit).toLocaleString()} د.ع`;
-
-  // 3. Full Fardah calculations
-  const fardahDirectProfit = fardahSelling - fardahPurchase;
-  const fdpEl = document.getElementById('ap-fardahDirectProfit');
-  if (fdpEl) fdpEl.innerText = `${fardahDirectProfit >= 0 ? '+' : ''}${Math.round(fardahDirectProfit).toLocaleString()} د.ع`;
 }
 
 function clearAddProductForm() {
@@ -1805,32 +1797,34 @@ function clearAddProductForm() {
   document.getElementById('ap-barcode').value = '';
   document.getElementById('ap-name').value = '';
   
-  // Piece mode fields
-  document.getElementById('ap-cartonsCount').value = '5';
-  document.getElementById('ap-itemsPerCarton').value = '12';
-  document.getElementById('ap-cartonPurchase').value = '12000';
-  document.getElementById('ap-price').value = '1250';
-  document.getElementById('ap-wholesalePrice').value = '1150';
-  document.getElementById('ap-cartonSelling').value = '14000';
-  document.getElementById('ap-minStockAlert').value = '6';
+  // Piece mode fields - empty and ready for typing
+  document.getElementById('ap-cartonsCount').value = '';
+  document.getElementById('ap-itemsPerCarton').value = '';
+  document.getElementById('ap-totalStock').value = '';
+  document.getElementById('ap-cartonPurchase').value = '';
+  document.getElementById('ap-pieceCostFromCarton').value = '';
+  document.getElementById('ap-price').value = '';
+  document.getElementById('ap-wholesalePrice').value = '';
+  document.getElementById('ap-cartonSelling').value = '';
+  document.getElementById('ap-minStockAlert').value = '';
 
-  // Weight mode fields
+  // Weight mode fields - empty and ready for typing
   const fCount = document.getElementById('ap-fardahCount');
-  if (fCount) fCount.value = '10';
+  if (fCount) fCount.value = '';
   const kgPerF = document.getElementById('ap-kgPerFardah');
-  if (kgPerF) kgPerF.value = '50';
+  if (kgPerF) kgPerF.value = '';
+  const totalKg = document.getElementById('ap-totalKg');
+  if (totalKg) totalKg.value = '';
   const fPurchase = document.getElementById('ap-fardahPurchase');
-  if (fPurchase) fPurchase.value = '40000';
+  if (fPurchase) fPurchase.value = '';
+  const kgCost = document.getElementById('ap-kgCostFromFardah');
+  if (kgCost) kgCost.value = '';
   const kgRetail = document.getElementById('ap-kgRetailPrice');
-  if (kgRetail) kgRetail.value = '1000';
-  const kgWhole = document.getElementById('ap-kgWholesalePrice');
-  if (kgWhole) kgWhole.value = '900';
-  const fSelling = document.getElementById('ap-fardahSelling');
-  if (fSelling) fSelling.value = '45000';
+  if (kgRetail) kgRetail.value = '';
   const minKg = document.getElementById('ap-minKgAlert');
-  if (minKg) minKg.value = '25';
+  if (minKg) minKg.value = '';
 
-  document.getElementById('ap-cost').value = '1000';
+  document.getElementById('ap-cost').value = '0';
   document.getElementById('addProductFormTitle').innerText = 'إضافة وتعديل مادة جديدة بالمخزن';
   
   recalcAddProduct();
@@ -1854,13 +1848,11 @@ async function saveProductFull() {
   if (currentAddProductMode === 'weight') {
     const fardahCount = Math.max(0, Number(document.getElementById('ap-fardahCount')?.value || 0));
     const kgPerFardah = Math.max(1, Number(document.getElementById('ap-kgPerFardah')?.value || 1));
-    const totalKg = fardahCount * kgPerFardah;
+    const totalKg = fardahCount * (Number(document.getElementById('ap-kgPerFardah')?.value) || 0);
     const fardahPurchase = Number(document.getElementById('ap-fardahPurchase')?.value || 0);
-    const fardahSelling = Number(document.getElementById('ap-fardahSelling')?.value || 0);
     const cost = Math.round(Number(document.getElementById('ap-cost')?.value || 0));
     const price = Number(document.getElementById('ap-kgRetailPrice')?.value || 0);
-    const wholesalePrice = Number(document.getElementById('ap-kgWholesalePrice')?.value || 0);
-    const minAlert = Number(document.getElementById('ap-minKgAlert')?.value || 25);
+    const minAlert = Number(document.getElementById('ap-minKgAlert')?.value || 5);
 
     payload = {
       id: document.getElementById('ap-id')?.value || undefined,
@@ -1871,9 +1863,9 @@ async function saveProductFull() {
       unit: "كيلو",
       cost: cost,
       price: price,
-      wholesalePrice: wholesalePrice,
+      wholesalePrice: 0,
       cartonPurchasePrice: fardahPurchase,
-      cartonSellingPrice: fardahSelling,
+      cartonSellingPrice: 0,
       stockQuantity: totalKg,
       cartonsCount: fardahCount,
       piecesPerCarton: kgPerFardah,
@@ -2190,17 +2182,13 @@ function editProductFromInventory(id) {
       const fCount = document.getElementById('ap-fardahCount');
       if (fCount) fCount.value = prod.cartonsCount || Math.floor((prod.stockQuantity || 0) / (prod.piecesPerCarton || 1));
       const kgPerF = document.getElementById('ap-kgPerFardah');
-      if (kgPerF) kgPerF.value = prod.piecesPerCarton || 50;
+      if (kgPerF) kgPerF.value = prod.piecesPerCarton || '';
       const fPurchase = document.getElementById('ap-fardahPurchase');
-      if (fPurchase) fPurchase.value = prod.cartonPurchasePrice || 0;
+      if (fPurchase) fPurchase.value = prod.cartonPurchasePrice || '';
       const kgRetail = document.getElementById('ap-kgRetailPrice');
-      if (kgRetail) kgRetail.value = prod.price || 0;
-      const kgWhole = document.getElementById('ap-kgWholesalePrice');
-      if (kgWhole) kgWhole.value = prod.wholesalePrice || 0;
-      const fSelling = document.getElementById('ap-fardahSelling');
-      if (fSelling) fSelling.value = prod.cartonSellingPrice || 0;
+      if (kgRetail) kgRetail.value = prod.price || '';
       const minKg = document.getElementById('ap-minKgAlert');
-      if (minKg) minKg.value = prod.minStockAlert || 25;
+      if (minKg) minKg.value = prod.minStockAlert || 5;
       recalcAddProductWeight();
     } else {
       switchAddProductMode('piece');
