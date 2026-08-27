@@ -191,9 +191,19 @@ const i18n = {
     ap_lbl_carton_sell: "سعر بيع الكرتون كاملاً (د.ع)",
     ap_c_profit: "ربح بيع الكرتون كاملاً:",
 
-    // Add Product Weight Mode (كغم / فردة)
-    ap_mode_piece: "إضافة مواد بالعدد (قطع / كراتين)",
+    // Add Product Modes (العدد المفرد / الكراتين / الوزن والكيلو)
+    ap_mode_simple: "إضافة مواد بالعدد (قطع مباشرة)",
+    ap_mode_piece: "إضافة مواد بالكرتون (قطع / كراتين)",
     ap_mode_weight: "إضافة مواد بالوزن (فردة / كيلو)",
+    ap_lbl_simple_qty: "الكمية المتوفرة (عدد القطع) *",
+    ap_lbl_simple_alert: "تنبيه النواقص عند (قطع):",
+    ap_lbl_simple_cost: "سعر شراء القطعة الواحدة (التكلفة د.ع) *",
+    ap_lbl_simple_price: "سعر بيع المفرد للقطعة (د.ع) *",
+    ap_simple_profit: "ربح القطعة:",
+    ap_simple_total_val: "إجمالي قيمة البيع:",
+    ap_simple_expected_profit: "إجمالي الأرباح:",
+
+    // Add Product Weight Mode (كغم / فردة)
     ap_lbl_fardah_count: "عدد الفردات (أكياس/شوال)",
     ap_lbl_kg_per_fardah: "الوزن داخل الفردة (كغم)",
     ap_lbl_total_kg: "مجموع كل الوزن (كغم)",
@@ -352,9 +362,19 @@ const i18n = {
     ap_lbl_carton_sell: "نرخی فرۆشتنی تەواوی کارتۆن (د.ع)",
     ap_c_profit: "قازانجی فرۆشتنی کارتۆن:",
 
-    // Add Product Weight Mode (كغم / فردة)
-    ap_mode_piece: "زیادکردنی کاڵا بە ژمارە (دانە / کارتۆن)",
+    // Add Product Modes (العدد المفرد / الكراتين / الوزن والكيلو)
+    ap_mode_simple: "زیادکردنی کاڵا بە دانەی تاک (دانە)",
+    ap_mode_piece: "زیادکردنی کاڵا بە کارتۆن (دانە / کارتۆن)",
     ap_mode_weight: "زیادکردنی کاڵا بە کێش (فەردە / کیلۆ)",
+    ap_lbl_simple_qty: "بڕی بەردەست (ژمارەی دانەکان) *",
+    ap_lbl_simple_alert: "ئاگادارکردنەوە لە کەمی کاڵا لە (دانە):",
+    ap_lbl_simple_cost: "نرخی کڕینی دانە (تێچوون د.ع) *",
+    ap_lbl_simple_price: "نرخی فرۆشتنی تاک بۆ دانە (د.ع) *",
+    ap_simple_profit: "قازانجی دانە:",
+    ap_simple_total_val: "کۆی گشتی بەهای فرۆشتن:",
+    ap_simple_expected_profit: "کۆی گشتی قازانج:",
+
+    // Add Product Weight Mode (كغم / فردة)
     ap_lbl_fardah_count: "ژمارەی فەردەکان (کیسە/شەواڵ)",
     ap_lbl_kg_per_fardah: "کێش لەناو فەردەدا (کگم)",
     ap_lbl_total_kg: "کۆی گشتی کێش (کگم)",
@@ -513,9 +533,19 @@ const i18n = {
     ap_lbl_carton_sell: "Full Carton Price (IQD)",
     ap_c_profit: "Full Carton Profit:",
 
-    // Add Product Weight Mode (كغم / فردة)
-    ap_mode_piece: "Add by Count (Pieces / Cartons)",
+    // Add Product Modes (العدد المفرد / الكراتين / الوزن والكيلو)
+    ap_mode_simple: "Add by Count (Single Pieces)",
+    ap_mode_piece: "Add by Carton (Pieces / Cartons)",
     ap_mode_weight: "Add by Weight (Bags / Kg)",
+    ap_lbl_simple_qty: "Available Stock (Pieces Count) *",
+    ap_lbl_simple_alert: "Low Stock Alert At (Pieces):",
+    ap_lbl_simple_cost: "Piece Purchase Cost (IQD) *",
+    ap_lbl_simple_price: "Piece Retail Selling Price (IQD) *",
+    ap_simple_profit: "Piece Profit:",
+    ap_simple_total_val: "Total Selling Value:",
+    ap_simple_expected_profit: "Total Profit:",
+
+    // Add Product Weight Mode (كغم / فردة)
     ap_lbl_fardah_count: "Bags / Fardah Count",
     ap_lbl_kg_per_fardah: "Weight per Bag (Kg)",
     ap_lbl_total_kg: "Total Weight (Kg)",
@@ -1659,43 +1689,79 @@ async function deleteCurrentCategory() {
   }
 }
 
-let currentAddProductMode = 'piece'; // 'piece' or 'weight'
+let currentAddProductMode = 'simple'; // 'simple', 'piece', or 'weight'
 
 function switchAddProductMode(mode) {
   currentAddProductMode = mode;
+  const btnSimple = document.getElementById('apModeBtnSimple');
   const btnPiece = document.getElementById('apModeBtnPiece');
   const btnWeight = document.getElementById('apModeBtnWeight');
 
+  const pkgSimple = document.getElementById('ap-packaging-simple');
   const pkgPiece = document.getElementById('ap-packaging-piece');
   const pkgWeight = document.getElementById('ap-packaging-weight');
+  const priceSimple = document.getElementById('ap-pricing-simple');
   const pricePiece = document.getElementById('ap-pricing-piece');
   const priceWeight = document.getElementById('ap-pricing-weight');
 
-  if (mode === 'weight') {
+  // Reset all buttons styling
+  const defaultBtnClass = 'flex-1 py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition';
+  if (btnSimple) btnSimple.className = defaultBtnClass;
+  if (btnPiece) btnPiece.className = defaultBtnClass;
+  if (btnWeight) btnWeight.className = defaultBtnClass;
+
+  // Hide all sections
+  if (pkgSimple) pkgSimple.classList.add('hidden');
+  if (pkgPiece) pkgPiece.classList.add('hidden');
+  if (pkgWeight) pkgWeight.classList.add('hidden');
+  if (priceSimple) priceSimple.classList.add('hidden');
+  if (pricePiece) pricePiece.classList.add('hidden');
+  if (priceWeight) priceWeight.classList.add('hidden');
+
+  if (mode === 'simple') {
+    if (btnSimple) {
+      btnSimple.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 bg-emerald-600 text-white shadow-md transition';
+    }
+    if (pkgSimple) pkgSimple.classList.remove('hidden');
+    if (priceSimple) priceSimple.classList.remove('hidden');
+    recalcAddProductSimple();
+  } else if (mode === 'weight') {
     if (btnWeight) {
-      btnWeight.className = 'flex-1 py-2 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 bg-amber-500 text-white shadow-md transition';
+      btnWeight.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 bg-amber-500 text-white shadow-md transition';
     }
-    if (btnPiece) {
-      btnPiece.className = 'flex-1 py-2 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition';
-    }
-    if (pkgPiece) pkgPiece.classList.add('hidden');
     if (pkgWeight) pkgWeight.classList.remove('hidden');
-    if (pricePiece) pricePiece.classList.add('hidden');
     if (priceWeight) priceWeight.classList.remove('hidden');
     recalcAddProductWeight();
   } else {
     if (btnPiece) {
-      btnPiece.className = 'flex-1 py-2 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 bg-sky-500 text-white shadow-md transition';
-    }
-    if (btnWeight) {
-      btnWeight.className = 'flex-1 py-2 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition';
+      btnPiece.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 bg-sky-500 text-white shadow-md transition';
     }
     if (pkgPiece) pkgPiece.classList.remove('hidden');
-    if (pkgWeight) pkgWeight.classList.add('hidden');
     if (pricePiece) pricePiece.classList.remove('hidden');
-    if (priceWeight) priceWeight.classList.add('hidden');
     recalcAddProduct();
   }
+}
+
+function recalcAddProductSimple() {
+  const qty = Number(document.getElementById('ap-simpleStockQty')?.value || 0);
+  const cost = Number(document.getElementById('ap-simpleCost')?.value || 0);
+  const price = Number(document.getElementById('ap-simplePrice')?.value || 0);
+
+  const costInput = document.getElementById('ap-cost');
+  if (costInput) {
+    costInput.value = cost;
+  }
+
+  const pieceProfit = (price > 0 && cost > 0) ? (price - cost) : 0;
+  const totalSell = (price > 0 && qty > 0) ? (price * qty) : 0;
+  const totalProfit = (pieceProfit > 0 && qty > 0) ? (pieceProfit * qty) : 0;
+
+  const ppEl = document.getElementById('ap-simplePieceProfit');
+  if (ppEl) ppEl.innerText = `${pieceProfit >= 0 ? '+' : ''}${Math.round(pieceProfit).toLocaleString()} د.ع`;
+  const tsEl = document.getElementById('ap-simpleTotalSell');
+  if (tsEl) tsEl.innerText = `${Math.round(totalSell).toLocaleString()} د.ع`;
+  const tpEl = document.getElementById('ap-simpleTotalProfit');
+  if (tpEl) tpEl.innerText = `${totalProfit >= 0 ? '+' : ''}${Math.round(totalProfit).toLocaleString()} د.ع`;
 }
 
 function recalcAddProduct() {
@@ -1797,6 +1863,16 @@ function clearAddProductForm() {
   document.getElementById('ap-barcode').value = '';
   document.getElementById('ap-name').value = '';
   
+  // Simple mode fields - empty and ready for typing
+  const sQty = document.getElementById('ap-simpleStockQty');
+  if (sQty) sQty.value = '';
+  const sAlert = document.getElementById('ap-simpleMinAlert');
+  if (sAlert) sAlert.value = '';
+  const sCost = document.getElementById('ap-simpleCost');
+  if (sCost) sCost.value = '';
+  const sPrice = document.getElementById('ap-simplePrice');
+  if (sPrice) sPrice.value = '';
+
   // Piece mode fields - empty and ready for typing
   document.getElementById('ap-cartonsCount').value = '';
   document.getElementById('ap-itemsPerCarton').value = '';
@@ -1827,6 +1903,7 @@ function clearAddProductForm() {
   document.getElementById('ap-cost').value = '0';
   document.getElementById('addProductFormTitle').innerText = 'إضافة وتعديل مادة جديدة بالمخزن';
   
+  recalcAddProductSimple();
   recalcAddProduct();
   recalcAddProductWeight();
 }
@@ -1845,7 +1922,30 @@ async function saveProductFull() {
 
   let payload = {};
 
-  if (currentAddProductMode === 'weight') {
+  if (currentAddProductMode === 'simple') {
+    const stockQty = Number(document.getElementById('ap-simpleStockQty')?.value || 0);
+    const cost = Number(document.getElementById('ap-simpleCost')?.value || 0);
+    const price = Number(document.getElementById('ap-simplePrice')?.value || 0);
+    const minAlert = Number(document.getElementById('ap-simpleMinAlert')?.value || 5);
+
+    payload = {
+      id: document.getElementById('ap-id')?.value || undefined,
+      name: name,
+      barcode: barcode || undefined,
+      category: category,
+      supplierName: supplierName,
+      unit: "قطعة",
+      cost: cost,
+      price: price,
+      wholesalePrice: 0,
+      cartonPurchasePrice: 0,
+      cartonSellingPrice: 0,
+      stockQuantity: stockQty,
+      cartonsCount: 0,
+      piecesPerCarton: 1,
+      minStockAlert: minAlert
+    };
+  } else if (currentAddProductMode === 'weight') {
     const fardahCount = Math.max(0, Number(document.getElementById('ap-fardahCount')?.value || 0));
     const kgPerFardah = Math.max(1, Number(document.getElementById('ap-kgPerFardah')?.value || 1));
     const totalKg = fardahCount * (Number(document.getElementById('ap-kgPerFardah')?.value) || 0);
@@ -1903,7 +2003,8 @@ async function saveProductFull() {
 
   const res = await callBackend('save_product', payload);
   if (res && res.success) {
-    alert(`✔ تم حفظ المادة (${currentAddProductMode === 'weight' ? 'بالوزن والكيلو' : 'بالعدد والكرتون'}) بنجاح في قاعدة البيانات!`);
+    const modeLabel = currentAddProductMode === 'simple' ? 'بالعدد المفرد' : (currentAddProductMode === 'weight' ? 'بالوزن والكيلو' : 'بالكرتون والتعبئة');
+    alert(`✔ تم حفظ المادة (${modeLabel}) بنجاح في قاعدة البيانات!`);
     clearAddProductForm();
     await loadProducts();
     await loadInventory();
@@ -2190,16 +2291,27 @@ function editProductFromInventory(id) {
       const minKg = document.getElementById('ap-minKgAlert');
       if (minKg) minKg.value = prod.minStockAlert || 5;
       recalcAddProductWeight();
-    } else {
+    } else if ((prod.cartonsCount > 0 || prod.cartonPurchasePrice > 0 || prod.cartonSellingPrice > 0) && (prod.piecesPerCarton && prod.piecesPerCarton > 1)) {
       switchAddProductMode('piece');
-      document.getElementById('ap-price').value = prod.price;
-      document.getElementById('ap-wholesalePrice').value = prod.wholesalePrice || 0;
-      document.getElementById('ap-cartonPurchase').value = prod.cartonPurchasePrice || 0;
-      document.getElementById('ap-cartonSelling').value = prod.cartonSellingPrice || 0;
-      document.getElementById('ap-itemsPerCarton').value = prod.piecesPerCarton || 1;
+      document.getElementById('ap-price').value = prod.price || '';
+      document.getElementById('ap-wholesalePrice').value = prod.wholesalePrice || '';
+      document.getElementById('ap-cartonPurchase').value = prod.cartonPurchasePrice || '';
+      document.getElementById('ap-cartonSelling').value = prod.cartonSellingPrice || '';
+      document.getElementById('ap-itemsPerCarton').value = prod.piecesPerCarton || '';
       document.getElementById('ap-cartonsCount').value = prod.cartonsCount || Math.floor((prod.stockQuantity || 0) / (prod.piecesPerCarton || 1));
       document.getElementById('ap-minStockAlert').value = prod.minStockAlert || 5;
       recalcAddProduct();
+    } else {
+      switchAddProductMode('simple');
+      const sQty = document.getElementById('ap-simpleStockQty');
+      if (sQty) sQty.value = prod.stockQuantity || '';
+      const sAlert = document.getElementById('ap-simpleMinAlert');
+      if (sAlert) sAlert.value = prod.minStockAlert || 5;
+      const sCost = document.getElementById('ap-simpleCost');
+      if (sCost) sCost.value = prod.cost || '';
+      const sPrice = document.getElementById('ap-simplePrice');
+      if (sPrice) sPrice.value = prod.price || '';
+      recalcAddProductSimple();
     }
 
     document.getElementById('addProductFormTitle').innerText = 'تعديل بيانات المادة';

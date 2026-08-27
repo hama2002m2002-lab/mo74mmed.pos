@@ -805,13 +805,17 @@
             </div>
           </div>
 
-          <!-- Mode Switcher (By Pieces/Count vs By Weight/Kilo) -->
-          <div class="flex items-center justify-center gap-2 sh-card p-1.5 max-w-xl mx-auto">
-            <button id="apModeBtnPiece" onclick="switchAddProductMode('piece')" class="flex-1 py-2 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 bg-sky-500 text-white shadow-md transition">
-              <span>📦</span>
-              <span data-i18n="ap_mode_piece">إضافة مواد بالعدد (قطع / كراتين)</span>
+          <!-- Mode Switcher (3 Modes: By Simple Count / By Cartons / By Weight & Kg) -->
+          <div class="flex items-center justify-center gap-2 sh-card p-1.5 max-w-2xl mx-auto">
+            <button id="apModeBtnSimple" onclick="switchAddProductMode('simple')" class="flex-1 py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 bg-emerald-600 text-white shadow-md transition">
+              <span>🔢</span>
+              <span data-i18n="ap_mode_simple">إضافة مواد بالعدد (قطع مباشرة)</span>
             </button>
-            <button id="apModeBtnWeight" onclick="switchAddProductMode('weight')" class="flex-1 py-2 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+            <button id="apModeBtnPiece" onclick="switchAddProductMode('piece')" class="flex-1 py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+              <span>📦</span>
+              <span data-i18n="ap_mode_piece">إضافة مواد بالكرتون (قطع / كراتين)</span>
+            </button>
+            <button id="apModeBtnWeight" onclick="switchAddProductMode('weight')" class="flex-1 py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
               <span>⚖️</span>
               <span data-i18n="ap_mode_weight">إضافة مواد بالوزن (فردة / كيلو)</span>
             </button>
@@ -871,8 +875,22 @@
                 </select>
               </div>
 
-              <!-- 5A. Packaging & Quantities for COUNT / PIECE MODE -->
-              <div id="ap-packaging-piece" class="space-y-2.5">
+              <!-- 5A. Packaging for SIMPLE COUNT MODE -->
+              <div id="ap-packaging-simple" class="space-y-2.5">
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                  <div>
+                    <label data-i18n="ap_lbl_simple_qty" class="block text-[10px] text-slate-700 dark:text-slate-300 mb-1 font-bold text-center">الكمية المتوفرة (عدد القطع) *</label>
+                    <input id="ap-simpleStockQty" oninput="recalcAddProductSimple()" type="number" placeholder="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400 text-center">
+                  </div>
+                  <div>
+                    <label data-i18n="ap_lbl_simple_alert" class="block text-[10px] text-slate-700 dark:text-slate-300 mb-1 font-bold text-center">تنبيه النواقص عند (قطع):</label>
+                    <input id="ap-simpleMinAlert" type="number" placeholder="5" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 text-center">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5B. Packaging & Quantities for CARTON / PIECE MODE -->
+              <div id="ap-packaging-piece" class="space-y-2.5 hidden">
                 <div class="grid grid-cols-3 gap-2 pt-1">
                   <div>
                     <label data-i18n="ap_lbl_cartons" class="block text-[10px] text-slate-700 dark:text-slate-300 mb-1 font-bold text-center">عدد الكراتين</label>
@@ -895,7 +913,7 @@
                 </div>
               </div>
 
-              <!-- 5B. Packaging & Quantities for WEIGHT / KILO MODE -->
+              <!-- 5C. Packaging & Quantities for WEIGHT / KILO MODE -->
               <div id="ap-packaging-weight" class="space-y-2.5 hidden">
                 <div class="grid grid-cols-3 gap-2 pt-1">
                   <div>
@@ -931,9 +949,43 @@
               <input type="hidden" id="ap-cost" value="0">
 
               <!-- ============================================== -->
-              <!-- 2A. PRICING & PROFITS FOR COUNT / PIECE MODE -->
+              <!-- 2A. PRICING & PROFITS FOR SIMPLE COUNT MODE -->
               <!-- ============================================== -->
-              <div id="ap-pricing-piece" class="space-y-2.5">
+              <div id="ap-pricing-simple" class="space-y-2.5">
+                <!-- Purchase Cost per Piece -->
+                <div class="p-2 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 space-y-0.5">
+                  <label data-i18n="ap_lbl_simple_cost" class="block text-[10px] text-slate-700 dark:text-slate-300 font-bold text-center">سعر شراء القطعة الواحدة (التكلفة د.ع) *</label>
+                  <input id="ap-simpleCost" oninput="recalcAddProductSimple()" type="number" placeholder="0" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1 text-xs font-black text-slate-900 dark:text-white text-center">
+                </div>
+
+                <!-- Selling Price per Piece -->
+                <div class="p-2.5 bg-emerald-50/80 dark:bg-emerald-950/30 rounded-xl border border-emerald-300 dark:border-emerald-800 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <label data-i18n="ap_lbl_simple_price" class="text-xs font-black text-emerald-800 dark:text-emerald-300">سعر بيع المفرد للقطعة (د.ع) *</label>
+                    <input id="ap-simplePrice" oninput="recalcAddProductSimple()" type="number" placeholder="0" class="w-28 bg-white dark:bg-slate-800 border-2 border-emerald-500 rounded-lg px-2 py-1 text-xs font-black text-emerald-700 dark:text-emerald-300 text-center">
+                  </div>
+                  <!-- Profit Calculations -->
+                  <div class="pt-1 border-t border-emerald-200 dark:border-emerald-800/60 grid grid-cols-3 gap-1 text-[10px] font-bold text-center">
+                    <div>
+                      <span data-i18n="ap_simple_profit" class="text-slate-600 dark:text-slate-400 block text-[9px]">ربح القطعة:</span>
+                      <span id="ap-simplePieceProfit" class="text-emerald-700 dark:text-emerald-400 font-black">0 د.ع</span>
+                    </div>
+                    <div>
+                      <span data-i18n="ap_simple_total_val" class="text-slate-600 dark:text-slate-400 block text-[9px]">إجمالي قيمة البيع:</span>
+                      <span id="ap-simpleTotalSell" class="text-slate-900 dark:text-white font-black">0 د.ع</span>
+                    </div>
+                    <div>
+                      <span data-i18n="ap_simple_expected_profit" class="text-slate-600 dark:text-slate-400 block text-[9px]">إجمالي الأرباح:</span>
+                      <span id="ap-simpleTotalProfit" class="text-emerald-700 dark:text-emerald-400 font-black">0 د.ع</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============================================== -->
+              <!-- 2B. PRICING & PROFITS FOR CARTON / PIECE MODE -->
+              <!-- ============================================== -->
+              <div id="ap-pricing-piece" class="space-y-2.5 hidden">
                 <!-- Carton Purchase Price & Piece Cost Calculated -->
                 <div class="grid grid-cols-2 gap-2">
                   <div class="p-2 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 space-y-0.5">
@@ -1004,7 +1056,7 @@
               </div>
 
               <!-- ============================================== -->
-              <!-- 2B. PRICING & PROFITS FOR WEIGHT / KILO MODE -->
+              <!-- 2C. PRICING & PROFITS FOR WEIGHT / KILO MODE -->
               <!-- ============================================== -->
               <div id="ap-pricing-weight" class="space-y-2.5 hidden">
                 <!-- Fardah Purchase Price & Kg Cost Calculated -->
