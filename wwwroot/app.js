@@ -2379,9 +2379,16 @@ function renderSuppliersGrid(list) {
 
   list.forEach(s => {
     const card = document.createElement('div');
-    card.className = 'sh-card p-4 flex flex-col justify-between hover:shadow-lg transition border border-slate-200 dark:border-slate-800 hover:border-sky-400 dark:hover:border-sky-600';
+    card.className = 'sh-card p-4 flex flex-col justify-between hover:shadow-lg transition border border-slate-200 dark:border-slate-800 hover:border-sky-400 dark:hover:border-sky-600 space-y-3';
     
-    const balanceNum = Number(s.balance || 0);
+    const sId = s.id || s.Id;
+    const sName = s.name || s.Name || 'مندوب';
+    const sCompany = s.company || s.Company || 'شركة عامة';
+    const sPhone = s.phone || s.Phone || '';
+    const sAddress = s.address || s.Address || '';
+    const sNotes = s.notes || s.Notes || '';
+    const sProductsCount = s.productsCount || s.ProductsCount || 0;
+    const balanceNum = Number(s.balance ?? s.Balance ?? 0);
     const balanceColor = balanceNum > 0 ? 'text-amber-500 font-black' : (balanceNum < 0 ? 'text-emerald-500 font-black' : 'text-slate-500 font-bold');
 
     card.innerHTML = `
@@ -2389,56 +2396,69 @@ function renderSuppliersGrid(list) {
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-2.5">
             <div class="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center font-black text-sm">
-              ${(s.name || 'م')[0]}
+              ${sName[0] || 'م'}
             </div>
             <div>
-              <h4 class="font-black text-sm text-slate-900 dark:text-white">${s.name}</h4>
-              <span class="text-[10px] text-sky-600 dark:text-sky-400 font-bold">${s.company || 'شركة عامة'}</span>
+              <h4 class="font-black text-sm text-slate-900 dark:text-white">${sName}</h4>
+              <span class="text-[10px] text-sky-600 dark:text-sky-400 font-bold">${sCompany}</span>
             </div>
           </div>
-          <span class="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full font-bold">
-            ${s.productsCount || 0} مادة
-          </span>
+          <button onclick="openSupplierProductsModal('${sId}')" class="text-[10px] bg-slate-100 dark:bg-slate-800 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-950/60 dark:hover:text-sky-400 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 transition" title="عرض كافة المواد التابعة لهذا المندوب">
+            <span>📦</span>
+            <span>${sProductsCount} مادة</span>
+          </button>
         </div>
 
         <div class="space-y-1 text-xs text-slate-600 dark:text-slate-400 pt-1">
           <div class="flex items-center justify-between text-[11px]">
             <span class="text-slate-400 font-semibold">📞 الهاتف:</span>
-            <span class="font-mono font-bold text-slate-800 dark:text-slate-200">${s.phone || 'غير مسجل'}</span>
+            <span class="font-mono font-bold text-slate-800 dark:text-slate-200">${sPhone || 'غير مسجل'}</span>
           </div>
-          ${s.address ? `
+          ${sAddress ? `
             <div class="flex items-center justify-between text-[11px]">
               <span class="text-slate-400 font-semibold">📍 العنوان:</span>
-              <span class="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">${s.address}</span>
+              <span class="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">${sAddress}</span>
             </div>
           ` : ''}
-          ${s.notes ? `
-            <p class="text-[10px] text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 p-1.5 rounded-lg">${s.notes}</p>
+          ${sNotes ? `
+            <p class="text-[10px] text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 p-1.5 rounded-lg">${sNotes}</p>
           ` : ''}
         </div>
       </div>
 
-      <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
-        <div class="flex items-center justify-between">
+      <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+        <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl">
           <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold">المستحق بذمة الماركت:</span>
           <span class="text-sm font-mono ${balanceColor}">${Math.round(balanceNum).toLocaleString()} د.ع</span>
         </div>
 
-        <!-- Action Buttons inside Rep Account Card -->
-        <div class="grid grid-cols-2 gap-1.5 pt-1">
-          <button onclick="openSupplierPaymentModal('${s.id}')" class="py-1.5 px-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 rounded-lg text-[11px] font-black flex items-center justify-center gap-1 transition">
-            <span>💵</span>
-            <span>تسديد دفعة</span>
+        <!-- Primary Actions: Buy Products & Statement -->
+        <div class="grid grid-cols-2 gap-1.5">
+          <button onclick="openPurchaseFromSupplierModal('${sId}')" class="py-2 px-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-sm transition">
+            <span>🛒</span>
+            <span>شراء بضاعة (وصل)</span>
           </button>
-          <button onclick="openSupplierStatementModal('${s.id}')" class="py-1.5 px-2 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900 text-sky-700 dark:text-sky-300 rounded-lg text-[11px] font-black flex items-center justify-center gap-1 transition">
+          <button onclick="openSupplierStatementModal('${sId}')" class="py-2 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition">
             <span>📄</span>
-            <span>كشف حساب</span>
+            <span>كشف حساب ووصولات</span>
           </button>
-          <button onclick="openEditSupplierModal('${s.id}')" class="py-1 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition">
+        </div>
+
+        <!-- Secondary Actions: Pay, Products, Edit, Delete -->
+        <div class="grid grid-cols-4 gap-1 pt-0.5">
+          <button onclick="openSupplierPaymentModal('${sId}')" class="py-1 px-1.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 rounded-lg text-[10px] font-bold flex items-center justify-center gap-0.5 transition" title="تسديد دفعة">
+            <span>💵</span>
+            <span>تسديد</span>
+          </button>
+          <button onclick="openSupplierProductsModal('${sId}')" class="py-1 px-1.5 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900 text-sky-700 dark:text-sky-300 rounded-lg text-[10px] font-bold flex items-center justify-center gap-0.5 transition" title="عرض المواد">
+            <span>📦</span>
+            <span>المواد</span>
+          </button>
+          <button onclick="openEditSupplierModal('${sId}')" class="py-1 px-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold flex items-center justify-center gap-0.5 transition" title="تعديل">
             <span>✏️</span>
             <span>تعديل</span>
           </button>
-          <button onclick="deleteSupplierAccount('${s.id}')" class="py-1 px-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition">
+          <button onclick="deleteSupplierAccount('${sId}')" class="py-1 px-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 rounded-lg text-[10px] font-bold flex items-center justify-center gap-0.5 transition" title="حذف">
             <span>🗑️</span>
             <span>حذف</span>
           </button>
@@ -2463,16 +2483,16 @@ function openCreateSupplierModal() {
 }
 
 function openEditSupplierModal(id) {
-  const sup = suppliersData.find(s => s.id === id);
+  const sup = suppliersData.find(s => (s.id === id || s.Id === id));
   if (!sup) return;
 
-  document.getElementById('sup-id').value = sup.id;
-  document.getElementById('sup-formName').value = sup.name || '';
-  document.getElementById('sup-formCompany').value = sup.company || '';
-  document.getElementById('sup-formPhone').value = sup.phone || '';
-  document.getElementById('sup-formBalance').value = sup.balance || 0;
-  document.getElementById('sup-formAddress').value = sup.address || '';
-  document.getElementById('sup-formNotes').value = sup.notes || '';
+  document.getElementById('sup-id').value = sup.id || sup.Id;
+  document.getElementById('sup-formName').value = sup.name || sup.Name || '';
+  document.getElementById('sup-formCompany').value = sup.company || sup.Company || '';
+  document.getElementById('sup-formPhone').value = sup.phone || sup.Phone || '';
+  document.getElementById('sup-formBalance').value = sup.balance ?? sup.Balance ?? 0;
+  document.getElementById('sup-formAddress').value = sup.address || sup.Address || '';
+  document.getElementById('sup-formNotes').value = sup.notes || sup.Notes || '';
   document.getElementById('supModalTitle').innerText = 'تعديل بيانات حساب المندوب / الشركة';
   document.getElementById('supplierAccountModal')?.classList.remove('hidden');
 }
@@ -2515,8 +2535,8 @@ async function saveSupplierAccount() {
 }
 
 async function deleteSupplierAccount(id) {
-  const sup = suppliersData.find(s => s.id === id);
-  const name = sup ? sup.name : 'هذا الحساب';
+  const sup = suppliersData.find(s => (s.id === id || s.Id === id));
+  const name = sup ? (sup.name || sup.Name) : 'هذا الحساب';
 
   if (confirm(`هل أنت متأكد من رغبتك في حذف حساب: "${name}"؟`)) {
     const res = await callBackend('delete_supplier', { id });
@@ -2528,12 +2548,16 @@ async function deleteSupplierAccount(id) {
 }
 
 function openSupplierPaymentModal(id) {
-  const sup = suppliersData.find(s => s.id === id);
+  const sup = suppliersData.find(s => (s.id === id || s.Id === id));
   if (!sup) return;
 
-  document.getElementById('sp-supId').value = sup.id;
-  document.getElementById('sp-supName').innerText = `المندوب: ${sup.name} (${sup.company || 'عام'})`;
-  document.getElementById('sp-currentBalance').innerText = `${Math.round(Number(sup.balance || 0)).toLocaleString()} د.ع`;
+  const sName = sup.name || sup.Name;
+  const sCompany = sup.company || sup.Company;
+  const sBal = sup.balance ?? sup.Balance ?? 0;
+
+  document.getElementById('sp-supId').value = sup.id || sup.Id;
+  document.getElementById('sp-supName').innerText = `المندوب: ${sName} (${sCompany || 'عام'})`;
+  document.getElementById('sp-currentBalance').innerText = `${Math.round(Number(sBal)).toLocaleString()} د.ع`;
   document.getElementById('sp-amount').value = '';
   document.getElementById('sp-receiptNo').value = '';
   document.getElementById('sp-notes').value = '';
@@ -2573,20 +2597,359 @@ async function submitSupplierPayment() {
   }
 }
 
-async function openSupplierStatementModal(id) {
-  const sup = suppliersData.find(s => s.id === id);
+// ========================================================
+// SUPPLIER PRODUCTS (مواد المندوب المسجلة)
+// ========================================================
+let currentSupplierProducts = [];
+
+async function openSupplierProductsModal(id) {
+  const sup = suppliersData.find(s => (s.id === id || s.Id === id));
   if (!sup) return;
 
-  document.getElementById('stmt-supName').innerText = `كشف حساب: ${sup.name}`;
-  document.getElementById('stmt-supCompany').innerText = `الشركة: ${sup.company || 'غير محدد'} | الهاتف: ${sup.phone || '--'}`;
-  document.getElementById('stmt-currentBalance').innerText = `${Math.round(Number(sup.balance || 0)).toLocaleString()} د.ع`;
+  const sId = sup.id || sup.Id;
+  const sName = sup.name || sup.Name;
+  const sCompany = sup.company || sup.Company;
+
+  document.getElementById('spm-supName').innerText = `مواد المندوب: ${sName}`;
+  document.getElementById('spm-supCompany').innerText = `الشركة: ${sCompany || 'عام'}`;
+
+  const addNewBtn = document.getElementById('spm-addNewProductBtn');
+  if (addNewBtn) {
+    addNewBtn.onclick = () => {
+      closeSupplierProductsModal();
+      switchTab('addProduct');
+      setTimeout(() => {
+        const supInput = document.getElementById('ap-supplier');
+        if (supInput) supInput.value = sName;
+      }, 100);
+    };
+  }
+
+  const tbody = document.getElementById('supplierProductsTableBody');
+  if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">جاري تحميل مواد المندوب...</td></tr>`;
+
+  document.getElementById('supplierProductsModal')?.classList.remove('hidden');
+
+  const res = await callBackend('get_supplier_products', { supplierId: sId });
+  if (res && res.success && res.products) {
+    currentSupplierProducts = res.products;
+    const countEl = document.getElementById('spm-productsCount');
+    if (countEl) countEl.innerText = `${currentSupplierProducts.length} مادة مسجلة`;
+
+    if (currentSupplierProducts.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">لا توجد مواد مسجلة لهذا المندوب بعد</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = '';
+    currentSupplierProducts.forEach(p => {
+      const pCost = Number(p.cost || p.Cost || 0);
+      const pPrice = Number(p.price || p.Price || 0);
+      const pStock = Number(p.stockQuantity || p.StockQuantity || 0);
+      const pProfit = Math.max(0, pPrice - pCost);
+
+      const row = document.createElement('tr');
+      row.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+      row.innerHTML = `
+        <td class="p-2.5 font-mono text-slate-500">${p.barcode || p.Barcode || '--'}</td>
+        <td class="p-2.5 font-bold text-slate-900 dark:text-white">${p.name || p.Name}</td>
+        <td class="p-2.5 text-center font-bold font-mono text-sky-600 dark:text-sky-400">${pStock} ${p.unit || 'قطعة'}</td>
+        <td class="p-2.5 text-center font-mono text-slate-700 dark:text-slate-300">${pCost.toLocaleString()} د.ع</td>
+        <td class="p-2.5 text-center font-mono text-slate-700 dark:text-slate-300">${pPrice.toLocaleString()} د.ع</td>
+        <td class="p-2.5 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">${pProfit.toLocaleString()} د.ع</td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+}
+
+function closeSupplierProductsModal() {
+  document.getElementById('supplierProductsModal')?.classList.add('hidden');
+}
+
+// ========================================================
+// PURCHASE FROM SUPPLIER & OFFICIAL INVOICE RECEIPT
+// ========================================================
+let pfsItems = [];
+let pfsCurrentSupplierId = null;
+
+async function openPurchaseFromSupplierModal(id) {
+  const sup = suppliersData.find(s => (s.id === id || s.Id === id));
+  if (!sup) return;
+
+  pfsCurrentSupplierId = sup.id || sup.Id;
+  const sName = sup.name || sup.Name;
+  const sCompany = sup.company || sup.Company;
+
+  document.getElementById('pfs-supId').value = pfsCurrentSupplierId;
+  document.getElementById('pfs-supName').innerText = `شراء وتوريد مواد من المندوب: ${sName}`;
+  document.getElementById('pfs-supCompany').innerText = `الشركة: ${sCompany || 'عام'} | الهاتف: ${sup.phone || sup.Phone || '--'}`;
+
+  // Reset inputs
+  pfsItems = [];
+  renderPfsItemsTable();
+  document.getElementById('pfs-itemName').value = '';
+  document.getElementById('pfs-itemBarcode').value = '';
+  document.getElementById('pfs-itemQty').value = '1';
+  document.getElementById('pfs-itemCost').value = '';
+  document.getElementById('pfsNotes').value = '';
+
+  // Load existing products for dropdown
+  const select = document.getElementById('pfs-existingProductSelect');
+  if (select) {
+    select.innerHTML = '<option value="">-- اختيار من مواد المندوب السابقة أو كتابة مادة جديدة --</option>';
+    const res = await callBackend('get_supplier_products', { supplierId: pfsCurrentSupplierId });
+    if (res && res.success && res.products) {
+      currentSupplierProducts = res.products;
+      res.products.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id || p.Id;
+        opt.innerText = `${p.name || p.Name} (باركود: ${p.barcode || p.Barcode || '--'} | تكلفة: ${(p.cost || p.Cost || 0).toLocaleString()} د.ع)`;
+        select.appendChild(opt);
+      });
+    }
+  }
+
+  document.getElementById('purchaseFromSupplierModal')?.classList.remove('hidden');
+  document.getElementById('pfs-itemName')?.focus();
+}
+
+function handlePfsProductSelect() {
+  const select = document.getElementById('pfs-existingProductSelect');
+  const prodId = select?.value;
+  if (!prodId) return;
+
+  const prod = currentSupplierProducts.find(p => (p.id === prodId || p.Id === prodId));
+  if (prod) {
+    document.getElementById('pfs-itemName').value = prod.name || prod.Name || '';
+    document.getElementById('pfs-itemBarcode').value = prod.barcode || prod.Barcode || '';
+    document.getElementById('pfs-itemCost').value = prod.cost || prod.Cost || 0;
+    document.getElementById('pfs-itemQty')?.focus();
+  }
+}
+
+function addPfsItemToInvoice() {
+  const name = document.getElementById('pfs-itemName')?.value.trim();
+  if (!name) {
+    alert('يرجى كتابة أو اختيار اسم المادة أولاً!');
+    document.getElementById('pfs-itemName')?.focus();
+    return;
+  }
+
+  const barcode = document.getElementById('pfs-itemBarcode')?.value.trim() || '';
+  const qty = Number(document.getElementById('pfs-itemQty')?.value || 1);
+  const cost = Number(document.getElementById('pfs-itemCost')?.value || 0);
+
+  if (qty <= 0) {
+    alert('الكمية يجب أن تكون أكبر من 0');
+    return;
+  }
+  if (cost <= 0) {
+    alert('يرجى تحديد سعر شراء / تكلفة القطعة بشكل صحيح!');
+    document.getElementById('pfs-itemCost')?.focus();
+    return;
+  }
+
+  const prodId = document.getElementById('pfs-existingProductSelect')?.value || undefined;
+
+  pfsItems.push({
+    productId: prodId,
+    name: name,
+    barcode: barcode,
+    quantity: qty,
+    unitCost: cost,
+    totalPrice: qty * cost,
+    unit: 'قطعة'
+  });
+
+  // Reset inputs for next item
+  document.getElementById('pfs-itemName').value = '';
+  document.getElementById('pfs-itemBarcode').value = '';
+  document.getElementById('pfs-itemQty').value = '1';
+  document.getElementById('pfs-itemCost').value = '';
+  document.getElementById('pfs-existingProductSelect').value = '';
+
+  renderPfsItemsTable();
+  document.getElementById('pfs-itemName')?.focus();
+}
+
+function removePfsItem(index) {
+  pfsItems.splice(index, 1);
+  renderPfsItemsTable();
+}
+
+function renderPfsItemsTable() {
+  const tbody = document.getElementById('pfsItemsTableBody');
+  const totalEl = document.getElementById('pfsTotalAmount');
+  if (!tbody) return;
+
+  if (pfsItems.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">لم يتم إضافة مواد للفاتورة بعد</td></tr>`;
+    if (totalEl) totalEl.innerText = '0 د.ع';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  let grandTotal = 0;
+
+  pfsItems.forEach((item, idx) => {
+    grandTotal += item.totalPrice;
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="p-2.5 font-bold text-slate-900 dark:text-white">${item.name}</td>
+      <td class="p-2.5 font-mono text-slate-500">${item.barcode || '--'}</td>
+      <td class="p-2.5 text-center font-mono font-bold">${item.quantity}</td>
+      <td class="p-2.5 text-center font-mono text-emerald-600 dark:text-emerald-400 font-bold">${item.unitCost.toLocaleString()} د.ع</td>
+      <td class="p-2.5 text-center font-mono font-black text-slate-900 dark:text-white">${item.totalPrice.toLocaleString()} د.ع</td>
+      <td class="p-2.5 text-center">
+        <button onclick="removePfsItem(${idx})" class="w-6 h-6 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition">✕</button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  if (totalEl) totalEl.innerText = `${grandTotal.toLocaleString()} د.ع`;
+}
+
+function closePurchaseFromSupplierModal() {
+  document.getElementById('purchaseFromSupplierModal')?.classList.add('hidden');
+}
+
+async function savePurchaseInvoiceAndGenerateReceipt() {
+  if (pfsItems.length === 0) {
+    alert('يرجى إضافة مادة واحدة على الأقل لفاتورة الشراء!');
+    return;
+  }
+
+  const supId = document.getElementById('pfs-supId')?.value;
+  const payMethod = document.querySelector('input[name="pfsPayMethod"]:checked')?.value || 'credit';
+  const isPaid = (payMethod === 'cash');
+  const notes = document.getElementById('pfsNotes')?.value.trim();
+  const invoiceNumber = `PUR-${Date.now()}`;
+
+  const payload = {
+    supplierId: supId,
+    invoiceNumber: invoiceNumber,
+    isPaid: isPaid,
+    notes: notes,
+    items: pfsItems
+  };
+
+  const res = await callBackend('create_purchase_invoice', payload);
+  if (res && res.success) {
+    alert(`✔ تم حفظ فاتورة الشراء وتحديث رصيد المخزن بنجاح! رقم الوصل: ${invoiceNumber}`);
+    closePurchaseFromSupplierModal();
+    await loadSuppliers();
+    await loadProducts(); // Update inventory
+    // Open the official receipt preview modal immediately!
+    await openPurchaseReceiptModal(invoiceNumber);
+  }
+}
+
+// ========================================================
+// OFFICIAL RECEIPT PREVIEW & PRINT (عرض وطباعة الوصل)
+// ========================================================
+async function openPurchaseReceiptModal(invoiceNumber, orderId) {
+  const res = await callBackend('get_purchase_invoice_details', {
+    invoiceNumber: invoiceNumber || undefined,
+    orderId: orderId || undefined
+  });
+
+  if (!res || !res.success || !res.order) {
+    alert('تعذر تحميل تفاصيل الوصل!');
+    return;
+  }
+
+  const o = res.order;
+  document.getElementById('rcpt-num').innerText = o.invoiceNumber || '--';
+  document.getElementById('rcpt-date').innerText = o.date || '--';
+  document.getElementById('rcpt-supName').innerText = o.supplierName || '--';
+  document.getElementById('rcpt-supCompany').innerText = o.company || 'شركة عامة';
+  document.getElementById('rcpt-supPhone').innerText = o.phone || '--';
+  document.getElementById('rcpt-grandTotal').innerText = `${Number(o.totalAmount || 0).toLocaleString()} د.ع`;
+  document.getElementById('rcpt-notes').innerText = o.notes || 'لا توجد ملاحظات';
+
+  const tbody = document.getElementById('rcpt-itemsTableBody');
+  if (tbody) {
+    tbody.innerHTML = '';
+    (o.items || []).forEach(it => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="p-2 border-l border-slate-300">${it.productName}</td>
+        <td class="p-2 text-center font-mono font-bold border-l border-slate-300">${it.quantity} ${it.unitType || 'قطعة'}</td>
+        <td class="p-2 text-center font-mono border-l border-slate-300">${Number(it.unitPrice).toLocaleString()} د.ع</td>
+        <td class="p-2 text-center font-mono font-bold">${Number(it.totalPrice).toLocaleString()} د.ع</td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  document.getElementById('purchaseReceiptModal')?.classList.remove('hidden');
+}
+
+function closePurchaseReceiptModal() {
+  document.getElementById('purchaseReceiptModal')?.classList.add('hidden');
+}
+
+function printPurchaseReceipt() {
+  const content = document.getElementById('printablePurchaseReceipt')?.innerHTML;
+  if (!content) return;
+
+  const printWindow = window.open('', '_blank', 'width=700,height=800');
+  if (!printWindow) {
+    window.print();
+    return;
+  }
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="utf-8">
+      <title>وصل استلام بضاعة</title>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; direction: rtl; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: right; }
+        th { background: #f0f0f0; }
+        .text-center { text-align: center; }
+        .font-mono { font-family: monospace; }
+        .font-bold { font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      ${content}
+      <script>
+        window.onload = function() {
+          window.print();
+          setTimeout(() => { window.close(); }, 500);
+        };
+      </script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
+async function openSupplierStatementModal(id) {
+  const sup = suppliersData.find(s => (s.id === id || s.Id === id));
+  if (!sup) return;
+
+  const sName = sup.name || sup.Name;
+  const sCompany = sup.company || sup.Company;
+  const sPhone = sup.phone || sup.Phone;
+  const sBal = sup.balance ?? sup.Balance ?? 0;
+
+  document.getElementById('stmt-supName').innerText = `كشف حساب: ${sName}`;
+  document.getElementById('stmt-supCompany').innerText = `الشركة: ${sCompany || 'غير محدد'} | الهاتف: ${sPhone || '--'}`;
+  document.getElementById('stmt-currentBalance').innerText = `${Math.round(Number(sBal)).toLocaleString()} د.ع`;
 
   const tbody = document.getElementById('supplierStatementTableBody');
-  if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">جاري تحميل كشف الحركات...</td></tr>`;
+  if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">جاري تحميل كشف الحركات والوصولات...</td></tr>`;
 
   document.getElementById('supplierStatementModal')?.classList.remove('hidden');
 
-  const res = await callBackend('get_supplier_transactions', { supplierId: sup.id });
+  const res = await callBackend('get_supplier_transactions', { supplierId: sup.id || sup.Id });
   if (res && res.success && res.transactions && res.transactions.length > 0) {
     tbody.innerHTML = '';
     res.transactions.forEach(t => {
@@ -2597,18 +2960,24 @@ async function openSupplierStatementModal(id) {
       
       const amountColor = isPayment ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold';
 
+      const hasReceipt = t.invoiceNumber && t.invoiceNumber.startsWith('PUR-');
+      const actionBtn = hasReceipt
+        ? `<button onclick="openPurchaseReceiptModal('${t.invoiceNumber}')" class="px-2 py-0.5 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 text-sky-700 dark:text-sky-300 rounded-lg text-[10px] font-bold flex items-center gap-1"><span>👁️</span><span>عرض الوصل</span></button>`
+        : `<span class="text-slate-400 text-[10px] font-mono">${t.invoiceNumber || '--'}</span>`;
+
       const row = document.createElement('tr');
+      row.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition';
       row.innerHTML = `
         <td class="p-2.5 text-slate-500 font-mono">${t.date || '--'}</td>
         <td class="p-2.5">${typeBadge}</td>
         <td class="p-2.5 text-center font-mono ${amountColor}">${Number(t.amount).toLocaleString()} د.ع</td>
-        <td class="p-2.5 font-mono text-slate-600 dark:text-slate-400">${t.invoiceNumber || '--'}</td>
+        <td class="p-2.5">${actionBtn}</td>
         <td class="p-2.5 text-slate-700 dark:text-slate-300 font-semibold">${t.description || '--'}</td>
       `;
       tbody.appendChild(row);
     });
   } else {
-    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">لا توجد حركات مالية مسجلة لهذا المندوب بعد</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">لا توجد حركات مالية أو وصولات مسجلة لهذا المندوب بعد</td></tr>`;
   }
 }
 

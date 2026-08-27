@@ -396,6 +396,25 @@ public class PosBridgeService
                         await db.SaveChangesAsync();
                     }
 
+                    // Look up or link supplier
+                    Guid? supId = null;
+                    if (!string.IsNullOrWhiteSpace(supplierName))
+                    {
+                        var sup = await db.Suppliers.FirstOrDefaultAsync(s => s.Name == supplierName && !s.IsDeleted);
+                        if (sup == null)
+                        {
+                            sup = new Supplier
+                            {
+                                Id = Guid.NewGuid(),
+                                Name = supplierName,
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            await db.Suppliers.AddAsync(sup);
+                            await db.SaveChangesAsync();
+                        }
+                        supId = sup.Id;
+                    }
+
                     if (id.HasValue)
                     {
                         var existing = await db.Products.FindAsync(id.Value);
@@ -404,6 +423,7 @@ public class PosBridgeService
                             existing.Name = name;
                             existing.Barcode = barcode;
                             existing.CategoryId = category.Id;
+                            existing.SupplierId = supId;
                             existing.SupplierName = supplierName;
                             existing.Unit = unit;
                             existing.Cost = cost;
@@ -426,6 +446,7 @@ public class PosBridgeService
                             Name = name,
                             Barcode = string.IsNullOrWhiteSpace(barcode) ? DateTime.Now.Ticks.ToString() : barcode,
                             CategoryId = category.Id,
+                            SupplierId = supId,
                             SupplierName = supplierName,
                             Unit = unit,
                             Cost = cost,
@@ -998,16 +1019,221 @@ public class PosBridgeService
                         success = true,
                         suppliers = sups.Select(s => new
                         {
-                            s.Id,
-                            s.Name,
-                            s.Company,
-                            s.Phone,
-                            s.Address,
-                            s.Balance,
-                            s.OpeningBalance,
-                            s.Notes,
+                            id = s.Id,
+                            name = s.Name,
+                            company = string.IsNullOrWhiteSpace(s.Company) ? "شركة عامة" : s.Company,
+                            phone = s.Phone ?? "",
+                            address = s.Address ?? "",
+                            balance = s.Balance,
+                            openingBalance = s.OpeningBalance,
+                            notes = s.Notes ?? "",
                             productsCount = s.Products.Count
                         })
+                    });
+                }
+
+                case "get_supplier_products":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var supId = doc.RootElement.GetProperty("supplierId").GetGuid();
+                    var sup = await db.Suppliers.FindAsync(supId);
+                    var supName = sup?.Name;
+
+                    var prods = await db.Products
+                        .Where(p => !p.IsDeleted && (p.SupplierId == supId || (supName != null && p.SupplierName == supName)))
+                        .OrderBy(p => p.Name)
+                        .ToListAsync();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        products = prods.Select(p => new
+                        {
+                            id = p.Id,
+                            name = p.Name,
+                            barcode = p.Barcode,
+                            price = p.Price,
+                            cost = p.Cost,
+                            stockQuantity = p.StockQuantity,
+                            unit = p.Unit,
+                            cartonsCount = p.CartonsCount,
+                            itemsPerCarton = p.ItemsPerCarton,
+                            cartonPurchasePrice = p.CartonPurchasePrice,
+                            cartonSellingPrice = p.CartonSellingPrice
+                        })
+                    });
+                }
+
+                case "create_purchase_invoice":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var root = doc.RootElement;
+                    var supId = root.GetProperty("supplierId").GetGuid();
+                    var isPaid = root.TryGetProperty("isPaid", out var ipProp) && ipProp.GetBoolean();
+                    var notes = root.TryGetProperty("notes", out var np) ? np.GetString() : "";
+                    var invoiceNumber = root.TryGetProperty("invoiceNumber", out var inp) ? inp.GetString() : $"PUR-{DateTime.Now:yyyyMMddHHmmss}";
+
+                    var sup = await db.Suppliers.FindAsync(supId);
+                    if (sup == null) return JsonSerializer.Serialize(new { success = false, message = "المندوب غير موجود" });
+
+                    decimal totalAmount = 0m;
+                    var itemsList = new List<SupplierOrderItem>();
+
+                    if (root.TryGetProperty("items", out var itemsElem) && itemsElem.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var item in itemsElem.EnumerateArray())
+                        {
+                            string pName = item.GetProperty("name").GetString() ?? "";
+                            string barcode = item.TryGetProperty("barcode", out var bp) ? bp.GetString() ?? "" : "";
+                            decimal qty = item.GetProperty("quantity").GetDecimal();
+                            decimal unitCost = item.GetProperty("unitCost").GetDecimal();
+                            string unit = item.TryGetProperty("unit", out var up) ? up.GetString() ?? "قطعة" : "قطعة";
+                            decimal itemTotal = qty * unitCost;
+                            totalAmount += itemTotal;
+
+                            Guid? prodId = null;
+                            if (item.TryGetProperty("productId", out var pidProp) && !string.IsNullOrEmpty(pidProp.GetString()))
+                            {
+                                if (Guid.TryParse(pidProp.GetString(), out var pid)) prodId = pid;
+                            }
+
+                            // Update product inventory stock in database!
+                            Product? targetProd = null;
+                            if (prodId.HasValue) targetProd = await db.Products.FindAsync(prodId.Value);
+                            if (targetProd == null && !string.IsNullOrWhiteSpace(barcode))
+                            {
+                                targetProd = await db.Products.FirstOrDefaultAsync(p => p.Barcode == barcode && !p.IsDeleted);
+                            }
+                            if (targetProd == null && !string.IsNullOrWhiteSpace(pName))
+                            {
+                                targetProd = await db.Products.FirstOrDefaultAsync(p => p.Name == pName && !p.IsDeleted);
+                            }
+
+                            if (targetProd != null)
+                            {
+                                targetProd.StockQuantity += qty;
+                                if (unitCost > 0) targetProd.Cost = unitCost;
+                                targetProd.SupplierId = sup.Id;
+                                targetProd.SupplierName = sup.Name;
+                                targetProd.UpdatedAt = DateTime.UtcNow;
+                            }
+                            else
+                            {
+                                // Create new product if it doesn't exist
+                                var newP = new Product
+                                {
+                                    Id = Guid.NewGuid(),
+                                    Name = pName,
+                                    Barcode = string.IsNullOrWhiteSpace(barcode) ? DateTime.Now.Ticks.ToString() : barcode,
+                                    Cost = unitCost,
+                                    Price = unitCost * 1.25m,
+                                    StockQuantity = qty,
+                                    Unit = unit,
+                                    SupplierId = sup.Id,
+                                    SupplierName = sup.Name,
+                                    CreatedAt = DateTime.UtcNow
+                                };
+                                await db.Products.AddAsync(newP);
+                                targetProd = newP;
+                            }
+
+                            itemsList.Add(new SupplierOrderItem
+                            {
+                                Id = Guid.NewGuid(),
+                                ProductId = targetProd?.Id,
+                                ProductName = pName,
+                                Barcode = barcode,
+                                Quantity = qty,
+                                UnitPrice = unitCost,
+                                UnitType = unit,
+                                Notes = notes
+                            });
+                        }
+                    }
+
+                    var order = new SupplierOrder
+                    {
+                        Id = Guid.NewGuid(),
+                        OrderNumber = invoiceNumber,
+                        OrderDate = DateTime.UtcNow,
+                        SupplierId = sup.Id,
+                        SupplierName = sup.Name,
+                        RepresentativeName = sup.Name,
+                        MarketName = "7amo Market",
+                        TotalAmount = totalAmount,
+                        Notes = notes,
+                        Status = OrderStatus.Delivered,
+                        IsConvertedToInvoice = true,
+                        Items = itemsList
+                    };
+                    await db.SupplierOrders.AddAsync(order);
+
+                    // Record financial transaction on supplier account
+                    var sService = new SupplierService(db);
+                    if (!isPaid)
+                    {
+                        // Credit purchase: Add to supplier balance (Market owes supplier)
+                        await sService.AddTransactionAsync(sup.Id, "Purchase", totalAmount, $"فاتورة شراء مواد - وصل رقم {invoiceNumber}", invoiceNumber);
+                    }
+                    else
+                    {
+                        // Paid in cash: record purchase and payment
+                        await sService.AddTransactionAsync(sup.Id, "Purchase", totalAmount, $"فاتورة شراء مواد مسددة نقداً - وصل رقم {invoiceNumber}", invoiceNumber);
+                        await sService.AddTransactionAsync(sup.Id, "Payment", totalAmount, $"تسديد نقدي مباشر عن وصل شراء رقم {invoiceNumber}", invoiceNumber);
+                    }
+
+                    await db.SaveChangesAsync();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        orderId = order.Id,
+                        invoiceNumber = order.OrderNumber,
+                        totalAmount = order.TotalAmount
+                    });
+                }
+
+                case "get_purchase_invoice_details":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    string invoiceNumber = "";
+                    Guid orderId = Guid.Empty;
+                    if (doc.RootElement.TryGetProperty("invoiceNumber", out var inp)) invoiceNumber = inp.GetString() ?? "";
+                    if (doc.RootElement.TryGetProperty("orderId", out var oidProp) && !string.IsNullOrEmpty(oidProp.GetString()))
+                    {
+                        Guid.TryParse(oidProp.GetString(), out orderId);
+                    }
+
+                    var order = await db.SupplierOrders
+                        .Include(o => o.Items)
+                        .Include(o => o.Supplier)
+                        .FirstOrDefaultAsync(o => (orderId != Guid.Empty && o.Id == orderId) || (!string.IsNullOrEmpty(invoiceNumber) && o.OrderNumber == invoiceNumber));
+
+                    if (order == null) return JsonSerializer.Serialize(new { success = false, message = "الوصل غير موجود" });
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        order = new
+                        {
+                            id = order.Id,
+                            invoiceNumber = order.OrderNumber,
+                            date = order.OrderDate.ToString("yyyy-MM-dd HH:mm"),
+                            supplierName = order.Supplier?.Name ?? order.SupplierName,
+                            company = order.Supplier?.Company ?? "شركة عامة",
+                            phone = order.Supplier?.Phone ?? "--",
+                            totalAmount = order.TotalAmount,
+                            notes = order.Notes,
+                            items = order.Items.Select(it => new
+                            {
+                                productName = it.ProductName,
+                                barcode = it.Barcode,
+                                quantity = it.Quantity,
+                                unitPrice = it.UnitPrice,
+                                totalPrice = it.Quantity * it.UnitPrice,
+                                unitType = it.UnitType
+                            })
+                        }
                     });
                 }
 
