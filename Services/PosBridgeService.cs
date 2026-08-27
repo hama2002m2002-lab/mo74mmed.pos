@@ -1109,10 +1109,17 @@ public class PosBridgeService
                                 targetProd = await db.Products.FirstOrDefaultAsync(p => p.Name == pName && !p.IsDeleted);
                             }
 
+                            decimal cartonsCount = item.TryGetProperty("cartonsCount", out var ccp) ? ccp.GetDecimal() : 0m;
+                            decimal cartonPurchasePrice = item.TryGetProperty("cartonPurchasePrice", out var cpp) ? cpp.GetDecimal() : 0m;
+                            decimal itemsPerCarton = item.TryGetProperty("itemsPerCarton", out var ipc) ? ipc.GetDecimal() : 1m;
+
                             if (targetProd != null)
                             {
                                 targetProd.StockQuantity += qty;
+                                if (cartonsCount > 0) targetProd.CartonsCount += cartonsCount;
                                 if (unitCost > 0) targetProd.Cost = unitCost;
+                                if (cartonPurchasePrice > 0) targetProd.CartonPurchasePrice = cartonPurchasePrice;
+                                if (itemsPerCarton > 1) targetProd.ItemsPerCarton = itemsPerCarton;
                                 targetProd.SupplierId = sup.Id;
                                 targetProd.SupplierName = sup.Name;
                                 targetProd.UpdatedAt = DateTime.UtcNow;
@@ -1128,6 +1135,9 @@ public class PosBridgeService
                                     Cost = unitCost,
                                     Price = unitCost * 1.25m,
                                     StockQuantity = qty,
+                                    CartonsCount = cartonsCount,
+                                    CartonPurchasePrice = cartonPurchasePrice,
+                                    ItemsPerCarton = itemsPerCarton,
                                     Unit = unit,
                                     SupplierId = sup.Id,
                                     SupplierName = sup.Name,

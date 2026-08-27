@@ -674,6 +674,7 @@ function switchTab(tabId) {
   }
   if (tabId === 'dashboard') loadDashboard();
   if (tabId === 'inventory') loadInventory();
+  if (tabId === 'purchase') initPurchaseTab();
   if (tabId === 'repOrders') loadRepOrders();
   if (tabId === 'suppliers') loadSuppliers();
   if (tabId === 'customers') loadCustomers();
@@ -2983,6 +2984,468 @@ async function openSupplierStatementModal(id) {
 
 function closeSupplierStatementModal() {
   document.getElementById('supplierStatementModal')?.classList.add('hidden');
+}
+
+// ========================================================
+// VIEW 5: PURCHASE & RECEIVING (شراء وتوريد مواد للمخزن)
+// ========================================================
+let purInvoiceItems = [];
+let purCurrentProduct = null;
+let purInputMode = 'piece'; // 'piece' or 'carton'
+
+async function initPurchaseTab() {
+  // Ensure products list is loaded for auto-search
+  if (!state.products || state.products.length === 0) {
+    await loadProducts();
+  }
+
+  // Load suppliers dropdown
+  const supSelect = document.getElementById('pur-supplierSelect');
+  if (supSelect) {
+    supSelect.innerHTML = '<option value="">-- اختر المندوب أو الشركة الموردة --</option>';
+    const res = await callBackend('get_suppliers');
+    if (res && res.success && res.suppliers) {
+      suppliersData = res.suppliers;
+      res.suppliers.forEach(s => {
+        const sId = s.id || s.Id;
+        const sName = s.name || s.Name;
+        const sCompany = s.company || s.Company || 'عام';
+        const opt = document.createElement('option');
+        opt.value = sId;
+        opt.innerText = `${sName} (${sCompany}) - الرصيد: ${Math.round(Number(s.balance ?? s.Balance ?? 0)).toLocaleString()} د.ع`;
+        supSelect.appendChild(opt);
+      });
+    }
+  }
+
+  // Generate clean invoice number if empty
+  const invNoEl = document.getElementById('pur-invoiceNumber');
+  if (invNoEl && !invNoEl.value) {
+    invNoEl.value = `PUR-${Date.now()}`;
+  }
+
+  // Reset inputs
+  setPurchaseInputMode('piece');
+  renderPurchaseInvoiceTable();
+
+  setTimeout(() => {
+    document.getElementById('pur-barcodeSearch')?.focus();
+  }, 100);
+}
+
+function handlePurchaseSupplierChange() {
+  const supId = document.getElementById('pur-supplierSelect')?.value;
+  // If a supplier is selected, we can optionally filter or recommend products
+}
+
+function setPurchaseInputMode(mode) {
+  purInputMode = mode;
+  const btnPiece = document.getElementById('pur-mode-piece');
+  const btnCarton = document.getElementById('pur-mode-carton');
+  const cartonQtyContainer = document.getElementById('pur-itemsPerCarton-container');
+  const qtyLabel = document.getElementById('pur-qty-label');
+
+  if (mode === 'carton') {
+    if (btnPiece) btnPiece.className = 'flex-1 py-1 text-center text-xs font-black rounded-lg transition text-slate-500 hover:text-slate-900 dark:hover:text-white';
+    if (btnCarton) btnCarton.className = 'flex-1 py-1 text-center text-xs font-black rounded-lg transition bg-white dark:bg-slate-900 text-sky-600 shadow-sm';
+    if (cartonQtyContainer) cartonQtyContainer.classList.remove('hidden');
+    if (qtyLabel) qtyLabel.innerText = 'عدد الكراتين *';
+
+    // If a product is selected and has carton packaging info, set itemsPerCarton
+    if (purCurrentProduct) {
+      const ipc = Number(purCurrentProduct.itemsPerCarton || purCurrentProduct.ItemsPerCarton || 1);
+      const ipcInput = document.getElementById('pur-itemsPerCarton');
+      if (ipcInput) ipcInput.value = ipc > 1 ? ipc : 12;
+
+      const cCost = Number(purCurrentProduct.cartonPurchasePrice || purCurrentProduct.CartonPurchasePrice || 0);
+      const newCostInput = document.getElementById('pur-newCost');
+      if (newCostInput && cCost > 0) newCostInput.value = cCost;
+
+      const oldBadge = document.getElementById('pur-oldCostBadge');
+      if (oldBadge) oldBadge.innerText = `${(cCost > 0 ? cCost : (purCurrentProduct.cost * ipc)).toLocaleString()} د.ع (كرتون)`;
+    }
+  } else {
+    if (btnPiece) btnPiece.className = 'flex-1 py-1 text-center text-xs font-black rounded-lg transition bg-white dark:bg-slate-900 text-sky-600 shadow-sm';
+    if (btnCarton) btnCarton.className = 'flex-1 py-1 text-center text-xs font-black rounded-lg transition text-slate-500 hover:text-slate-900 dark:hover:text-white';
+    if (cartonQtyContainer) cartonQtyContainer.classList.add('hidden');
+    if (qtyLabel) qtyLabel.innerText = 'العدد بالقطعة / المفرد *';
+
+    if (purCurrentProduct) {
+      const pCost = Number(purCurrentProduct.cost || purCurrentProduct.Cost || 0);
+      const newCostInput = document.getElementById('pur-newCost');
+      if (newCostInput) newCostInput.value = pCost;
+
+      const oldBadge = document.getElementById('pur-oldCostBadge');
+      if (oldBadge) oldBadge.innerText = `${pCost.toLocaleString()} د.ع (قطعة)`;
+    }
+  }
+
+  recalcPurchaseCurrentItem();
+}
+
+function handlePurchaseSearchInput() {
+  const query = (document.getElementById('pur-barcodeSearch')?.value || '').trim().toLowerCase();
+  const dropdown = document.getElementById('pur-searchSuggestions');
+  if (!dropdown) return;
+
+  if (!query) {
+    dropdown.classList.add('hidden');
+    dropdown.innerHTML = '';
+    return;
+  }
+
+  const matches = (state.products || []).filter(p => 
+    (p.barcode && p.barcode.toLowerCase().includes(query)) ||
+    (p.name && p.name.toLowerCase().includes(query))
+  ).slice(0, 10);
+
+  if (matches.length === 0) {
+    dropdown.innerHTML = `
+      <div class="p-3 text-xs text-slate-400 text-center">
+        <span>لا توجد مادة بهذا الاسم/الباركود بالمخزن.</span>
+        <span class="block text-[10px] text-sky-500 font-bold mt-1">سيتم إضافتها كمادة جديدة في المخزن والوصل</span>
+      </div>
+    `;
+    dropdown.classList.remove('hidden');
+    return;
+  }
+
+  dropdown.innerHTML = '';
+  matches.forEach(p => {
+    const itemEl = document.createElement('div');
+    itemEl.className = 'p-2.5 hover:bg-sky-50 dark:hover:bg-slate-800/80 cursor-pointer flex items-center justify-between text-xs transition';
+    itemEl.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-900 dark:text-white">${p.name}</span>
+        <span class="text-slate-400 font-mono text-[10px]">(${p.barcode})</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-[10px] text-slate-400">رصيد: <b class="text-sky-600">${p.stockQuantity}</b></span>
+        <span class="text-xs font-black text-emerald-600 font-mono">شراء: ${Number(p.cost).toLocaleString()} د.ع</span>
+      </div>
+    `;
+    itemEl.onclick = () => {
+      selectPurchaseProduct(p);
+      dropdown.classList.add('hidden');
+    };
+    dropdown.appendChild(itemEl);
+  });
+  dropdown.classList.remove('hidden');
+}
+
+function handlePurchaseSearchKeydown(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const query = (document.getElementById('pur-barcodeSearch')?.value || '').trim();
+    if (!query) return;
+
+    // Check exact barcode match first
+    const exact = (state.products || []).find(p => p.barcode === query || p.name.toLowerCase() === query.toLowerCase());
+    if (exact) {
+      selectPurchaseProduct(exact);
+      document.getElementById('pur-searchSuggestions')?.classList.add('hidden');
+      return;
+    }
+
+    // Check first partial match
+    const partial = (state.products || []).find(p => 
+      (p.barcode && p.barcode.includes(query)) ||
+      (p.name && p.name.toLowerCase().includes(query.toLowerCase()))
+    );
+    if (partial) {
+      selectPurchaseProduct(partial);
+      document.getElementById('pur-searchSuggestions')?.classList.add('hidden');
+      return;
+    }
+
+    // If not found in warehouse, treat as new item with this barcode / name
+    purCurrentProduct = {
+      name: query,
+      barcode: query,
+      cost: 0,
+      stockQuantity: 0,
+      unit: 'قطعة'
+    };
+    showPurchaseSelectedStrip(purCurrentProduct, true);
+    document.getElementById('pur-searchSuggestions')?.classList.add('hidden');
+    document.getElementById('pur-newCost')?.focus();
+  }
+}
+
+function selectPurchaseProduct(prod) {
+  purCurrentProduct = prod;
+  document.getElementById('pur-barcodeSearch').value = `${prod.name} (${prod.barcode})`;
+  showPurchaseSelectedStrip(prod, false);
+
+  const cost = Number(prod.cost || prod.Cost || 0);
+  const oldCostBadge = document.getElementById('pur-oldCostBadge');
+  if (oldCostBadge) oldCostBadge.innerText = `${cost.toLocaleString()} د.ع (قطعة)`;
+
+  const newCostInput = document.getElementById('pur-newCost');
+  if (newCostInput) newCostInput.value = cost > 0 ? cost : '';
+
+  // Auto-set supplier if linked
+  if (prod.supplierId || prod.SupplierId) {
+    const sId = prod.supplierId || prod.SupplierId;
+    const supSelect = document.getElementById('pur-supplierSelect');
+    if (supSelect && supSelect.querySelector(`option[value="${sId}"]`)) {
+      supSelect.value = sId;
+    }
+  }
+
+  // Detect carton default if itemsPerCarton > 1
+  const ipc = Number(prod.itemsPerCarton || prod.ItemsPerCarton || 1);
+  if (ipc > 1) {
+    setPurchaseInputMode('carton');
+  } else {
+    setPurchaseInputMode('piece');
+  }
+
+  recalcPurchaseCurrentItem();
+  document.getElementById('pur-itemQty')?.focus();
+  document.getElementById('pur-itemQty')?.select();
+}
+
+function showPurchaseSelectedStrip(prod, isNew) {
+  const strip = document.getElementById('pur-selectedProdStrip');
+  if (!strip) return;
+
+  document.getElementById('pur-stripName').innerText = `المادة: ${prod.name}`;
+  document.getElementById('pur-stripBarcode').innerText = `(باركود: ${prod.barcode || 'تلقائي'})`;
+  document.getElementById('pur-stripStock').innerText = isNew ? 'مادة جديدة غير مسجلة' : `الرصيد الحالي بالمخزن: ${prod.stockQuantity || 0}`;
+
+  strip.classList.remove('hidden');
+}
+
+function recalcPurchaseCurrentItem() {
+  const qty = Number(document.getElementById('pur-itemQty')?.value || 1);
+  const newCost = Number(document.getElementById('pur-newCost')?.value || 0);
+  const oldCost = purCurrentProduct ? Number(purCurrentProduct.cost || purCurrentProduct.Cost || 0) : 0;
+
+  let totalItemPrice = 0;
+  let totalPieces = qty;
+
+  if (purInputMode === 'carton') {
+    const ipc = Number(document.getElementById('pur-itemsPerCarton')?.value || 1);
+    totalPieces = qty * ipc;
+    totalItemPrice = qty * newCost; // newCost is per carton in carton mode
+  } else {
+    totalItemPrice = qty * newCost; // newCost is per piece in piece mode
+  }
+
+  const stripTotal = document.getElementById('pur-stripTotalCalc');
+  if (stripTotal) stripTotal.innerText = `إجمالي البند: ${Math.round(totalItemPrice).toLocaleString()} د.ع (${totalPieces} قطعة)`;
+
+  // Price difference badge
+  const diffBadge = document.getElementById('pur-priceDiffBadge');
+  if (diffBadge && newCost > 0 && oldCost > 0) {
+    const diff = newCost - oldCost;
+    if (diff > 0) {
+      diffBadge.className = 'h-9 px-3 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-800 flex items-center justify-center text-xs font-black text-rose-600 dark:text-rose-400 gap-1';
+      diffBadge.innerHTML = `<span>🔺 ارتفع السعر: +${diff.toLocaleString()} د.ع</span>`;
+    } else if (diff < 0) {
+      diffBadge.className = 'h-9 px-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs font-black text-emerald-600 dark:text-emerald-400 gap-1';
+      diffBadge.innerHTML = `<span>🔻 انخفض السعر: ${diff.toLocaleString()} د.ع</span>`;
+    } else {
+      diffBadge.className = 'h-9 px-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center text-xs font-bold text-slate-400';
+      diffBadge.innerHTML = `<span>السعر ثابت لم يتغير</span>`;
+    }
+  } else if (diffBadge) {
+    diffBadge.className = 'h-9 px-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center text-xs font-bold text-slate-400';
+    diffBadge.innerHTML = `<span>السعر لم يتغير</span>`;
+  }
+}
+
+function addPurchaseItemToInvoice() {
+  const searchVal = document.getElementById('pur-barcodeSearch')?.value.trim();
+  if (!purCurrentProduct && !searchVal) {
+    alert('يرجى اختيار مادة من المخزن أو كتابة اسمها والباركود أولاً!');
+    document.getElementById('pur-barcodeSearch')?.focus();
+    return;
+  }
+
+  const pName = purCurrentProduct ? purCurrentProduct.name : searchVal;
+  const pBarcode = purCurrentProduct ? (purCurrentProduct.barcode || '') : '';
+  const qty = Number(document.getElementById('pur-itemQty')?.value || 1);
+  const newCost = Number(document.getElementById('pur-newCost')?.value || 0);
+  const oldCost = purCurrentProduct ? Number(purCurrentProduct.cost || purCurrentProduct.Cost || 0) : 0;
+
+  if (qty <= 0) {
+    alert('الكمية يجب أن تكون أكبر من 0!');
+    document.getElementById('pur-itemQty')?.focus();
+    return;
+  }
+  if (newCost <= 0) {
+    alert('يرجى تحديد سعر الشراء الجديد بشكل صحيح (أكبر من 0)!');
+    document.getElementById('pur-newCost')?.focus();
+    return;
+  }
+
+  let packagingText = `${qty} قطعة`;
+  let totalPieces = qty;
+  let cartonCount = 0;
+  let itemsPerCarton = 1;
+  let unitCostForDb = newCost;
+  let cartonPurchaseForDb = 0;
+  let totalRowAmount = 0;
+
+  if (purInputMode === 'carton') {
+    itemsPerCarton = Number(document.getElementById('pur-itemsPerCarton')?.value || 1);
+    cartonCount = qty;
+    totalPieces = cartonCount * itemsPerCarton;
+    packagingText = `${cartonCount} كرتون (${itemsPerCarton} ق/ك)`;
+    cartonPurchaseForDb = newCost;
+    unitCostForDb = itemsPerCarton > 0 ? (newCost / itemsPerCarton) : newCost;
+    totalRowAmount = cartonCount * newCost;
+  } else {
+    totalRowAmount = qty * newCost;
+    unitCostForDb = newCost;
+  }
+
+  purInvoiceItems.push({
+    productId: purCurrentProduct ? (purCurrentProduct.id || purCurrentProduct.Id) : undefined,
+    name: pName,
+    barcode: pBarcode,
+    packagingText: packagingText,
+    inputMode: purInputMode,
+    quantity: totalPieces,
+    cartonsCount: cartonCount,
+    itemsPerCarton: itemsPerCarton,
+    cartonPurchasePrice: cartonPurchaseForDb,
+    unitCost: unitCostForDb,
+    displayNewCost: newCost,
+    oldCost: oldCost,
+    totalPrice: totalRowAmount,
+    unit: 'قطعة'
+  });
+
+  // Clear current item inputs for next product
+  purCurrentProduct = null;
+  document.getElementById('pur-barcodeSearch').value = '';
+  document.getElementById('pur-itemQty').value = '1';
+  document.getElementById('pur-newCost').value = '';
+  document.getElementById('pur-oldCostBadge').innerText = '0 د.ع';
+  document.getElementById('pur-selectedProdStrip')?.classList.add('hidden');
+  document.getElementById('pur-priceDiffBadge').innerHTML = '<span>السعر لم يتغير</span>';
+
+  renderPurchaseInvoiceTable();
+  document.getElementById('pur-barcodeSearch')?.focus();
+}
+
+function removePurchaseInvoiceItem(idx) {
+  purInvoiceItems.splice(idx, 1);
+  renderPurchaseInvoiceTable();
+}
+
+function renderPurchaseInvoiceTable() {
+  const tbody = document.getElementById('pur-invoiceTableBody');
+  const countBadge = document.getElementById('pur-itemsCountBadge');
+  const piecesEl = document.getElementById('pur-totalPieces');
+  const grandTotalEl = document.getElementById('pur-grandTotalDisplay');
+
+  if (!tbody) return;
+
+  if (purInvoiceItems.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400">لم يتم إضافة مواد إلى وصل الشراء بعد</td></tr>`;
+    if (countBadge) countBadge.innerText = '0 مادة في الوصل';
+    if (piecesEl) piecesEl.innerText = '0 قطعة';
+    if (grandTotalEl) grandTotalEl.innerText = '0 د.ع';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  let grandTotal = 0;
+  let grandPieces = 0;
+
+  purInvoiceItems.forEach((item, idx) => {
+    grandTotal += item.totalPrice;
+    grandPieces += item.quantity;
+
+    const costDiff = item.displayNewCost - item.oldCost;
+    const diffBadge = item.oldCost > 0 
+      ? (costDiff > 0 ? `<span class="text-rose-500 font-bold text-[10px] block">🔺 +${costDiff.toLocaleString()}</span>` : (costDiff < 0 ? `<span class="text-emerald-500 font-bold text-[10px] block">🔻 ${costDiff.toLocaleString()}</span>` : ''))
+      : '';
+
+    const row = document.createElement('tr');
+    row.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition';
+    row.innerHTML = `
+      <td class="p-3 text-slate-400 font-mono">${idx + 1}</td>
+      <td class="p-3 font-bold text-slate-900 dark:text-white">${item.name}</td>
+      <td class="p-3 font-mono text-slate-500">${item.barcode || '--'}</td>
+      <td class="p-3 text-center font-bold text-sky-600 dark:text-sky-400">${item.packagingText}</td>
+      <td class="p-3 text-center font-black font-mono">${item.quantity} قطعة</td>
+      <td class="p-3 text-center font-mono text-slate-400">${item.oldCost ? item.oldCost.toLocaleString() + ' د.ع' : '--'}</td>
+      <td class="p-3 text-center font-mono font-black text-emerald-600 dark:text-emerald-400">
+        ${item.displayNewCost.toLocaleString()} د.ع
+        ${diffBadge}
+      </td>
+      <td class="p-3 text-center font-mono font-black text-slate-900 dark:text-white">${item.totalPrice.toLocaleString()} د.ع</td>
+      <td class="p-3 text-center">
+        <button onclick="removePurchaseInvoiceItem(${idx})" class="w-6 h-6 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition">✕</button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  if (countBadge) countBadge.innerText = `${purInvoiceItems.length} مادة في الوصل`;
+  if (piecesEl) piecesEl.innerText = `${grandPieces.toLocaleString()} قطعة`;
+  if (grandTotalEl) grandTotalEl.innerText = `${Math.round(grandTotal).toLocaleString()} د.ع`;
+}
+
+function resetPurchaseForm() {
+  purInvoiceItems = [];
+  purCurrentProduct = null;
+  document.getElementById('pur-barcodeSearch').value = '';
+  document.getElementById('pur-itemQty').value = '1';
+  document.getElementById('pur-newCost').value = '';
+  document.getElementById('pur-oldCostBadge').innerText = '0 د.ع';
+  document.getElementById('pur-selectedProdStrip')?.classList.add('hidden');
+  document.getElementById('pur-invoiceNotes').value = '';
+  document.getElementById('pur-invoiceNumber').value = `PUR-${Date.now()}`;
+  renderPurchaseInvoiceTable();
+}
+
+async function finalizePurchaseInvoice() {
+  if (purInvoiceItems.length === 0) {
+    alert('يرجى إضافة مادة واحدة على الأقل لفاتورة الشراء أولاً!');
+    document.getElementById('pur-barcodeSearch')?.focus();
+    return;
+  }
+
+  const supId = document.getElementById('pur-supplierSelect')?.value;
+  if (!supId) {
+    alert('يرجى اختيار المندوب أو الشركة الموردة قبل تأكيد الشراء!');
+    document.getElementById('pur-supplierSelect')?.focus();
+    return;
+  }
+
+  const payMethod = document.querySelector('input[name="pur-payMethod"]:checked')?.value || 'credit';
+  const isPaid = (payMethod === 'cash');
+  const notes = document.getElementById('pur-invoiceNotes')?.value.trim();
+  const invoiceNumber = document.getElementById('pur-invoiceNumber')?.value || `PUR-${Date.now()}`;
+
+  const payload = {
+    supplierId: supId,
+    invoiceNumber: invoiceNumber,
+    isPaid: isPaid,
+    notes: notes,
+    items: purInvoiceItems
+  };
+
+  const res = await callBackend('create_purchase_invoice', payload);
+  if (res && res.success) {
+    alert(`✔ تم تأكيد الشراء وتحديث رصيد المخزن والأسعار بنجاح! رقم الوصل: ${invoiceNumber}`);
+    
+    // Refresh all data
+    await loadSuppliers();
+    await loadProducts();
+
+    // Open official printable receipt modal
+    await openPurchaseReceiptModal(invoiceNumber);
+
+    // Reset form for next invoice
+    resetPurchaseForm();
+  }
 }
 
 async function loadUsers() {
