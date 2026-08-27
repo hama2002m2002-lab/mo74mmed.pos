@@ -70,7 +70,13 @@
               <span>المخزن ورصيد المواد</span>
             </button>
 
-            <!-- 5. Customers / Debts -->
+            <!-- 5. Suppliers / Reps -->
+            <button onclick="switchTab('suppliers')" id="sidebar-suppliers" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i data-lucide="handshake" class="w-4 h-4 text-slate-400"></i>
+              <span>المناديب والشركات</span>
+            </button>
+
+            <!-- 6. Customers / Debts -->
             <button onclick="switchTab('customers')" id="sidebar-customers" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
               <span>الزبائن وحسابات الآجل</span>
@@ -1476,11 +1482,204 @@
         </div>
 
         <!-- ======================================================== -->
-        <!-- VIEW 6: SUPPLIERS -->
+        <!-- VIEW 6: SUPPLIERS & REPRESENTATIVES (المناديب والشركات) -->
         <!-- ======================================================== -->
         <div id="tab-suppliers" class="tab-content hidden space-y-4">
-          <h2 class="text-xl font-black">المناديب والشركات الموردة</h2>
-          <div id="suppliersCardsGrid" class="grid grid-cols-3 gap-4"></div>
+          
+          <!-- Top Header Bar -->
+          <div class="flex items-center justify-between sh-card px-5 py-3">
+            <div class="flex items-center gap-3">
+              <button onclick="switchTab('dashboard')" class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
+                <span>🔙</span>
+                <span>العودة للرئيسية</span>
+              </button>
+              <div>
+                <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>🤝</span>
+                  <span>حسابات المناديب والشركات الموردة</span>
+                </h2>
+                <p class="text-[11px] text-slate-400">إدارة حسابات الموردين، أرصدة المستحقات، وسندات الصرف وكشوفات الحساب</p>
+              </div>
+            </div>
+
+            <!-- Add Supplier Account Button -->
+            <button onclick="openCreateSupplierModal()" class="px-5 py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-2 transition">
+              <span>➕</span>
+              <span>إنشاء حساب مندوب / شركة جديدة</span>
+            </button>
+          </div>
+
+          <!-- KPI Summary Cards -->
+          <div class="grid grid-cols-3 gap-3.5">
+            <div class="sh-card p-4 flex items-center justify-between border-r-4 border-sky-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">إجمالي عدد المناديب والشركات</span>
+                <span id="sup-totalCount" class="text-xl font-black text-sky-600 dark:text-sky-400 font-mono">0 مندوب</span>
+              </div>
+              <div class="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold text-lg">🤝</div>
+            </div>
+
+            <div class="sh-card p-4 flex items-center justify-between border-r-4 border-amber-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">إجمالي المستحقات للمناديب</span>
+                <span id="sup-totalDebts" class="text-xl font-black text-amber-500 font-mono">0 د.ع</span>
+              </div>
+              <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-lg">💰</div>
+            </div>
+
+            <div class="sh-card p-4 flex items-center justify-between">
+              <div class="w-full">
+                <label class="text-[10px] text-slate-400 font-bold block mb-1">بحث سريع في حسابات المناديب:</label>
+                <input id="sup-searchInput" oninput="filterSuppliersGrid()" type="text" placeholder="بحث بالاسم، الشركة، أو الهاتف..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-white">
+              </div>
+            </div>
+          </div>
+
+          <!-- Suppliers Cards Grid -->
+          <div id="suppliersCardsGrid" class="grid grid-cols-3 gap-4">
+            <!-- Populated dynamically via JS -->
+          </div>
+
+        </div>
+
+        <!-- MODAL: Create / Edit Supplier Account -->
+        <div id="supplierAccountModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 w-full max-w-md space-y-4 shadow-2xl animate-scale-up">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🤝</span>
+                <h3 id="supModalTitle" class="font-black text-sm text-slate-800 dark:text-white">إنشاء حساب مندوب أو شركة جديدة</h3>
+              </div>
+              <button onclick="closeSupplierModal()" class="text-slate-400 hover:text-rose-500 text-lg font-bold">✕</button>
+            </div>
+
+            <input type="hidden" id="sup-id">
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">اسم المندوب / الشخص المسؤول *</label>
+                <input id="sup-formName" type="text" placeholder="مثال: أحمد علي" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">اسم الشركة أو المصنع المورد</label>
+                <input id="sup-formCompany" type="text" placeholder="مثال: شركة الفرات للأغذية" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white">
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">رقم الهاتف</label>
+                  <input id="sup-formPhone" type="text" placeholder="07XXXXXXXXX" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white text-center font-mono">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">الرصيد الافتتاحي (د.ع)</label>
+                  <input id="sup-formBalance" type="number" placeholder="0" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-600 dark:text-amber-400 text-center font-mono">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">العنوان / المنطقة</label>
+                <input id="sup-formAddress" type="text" placeholder="مثال: بغداد - جميلة" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ملاحظات إضافية</label>
+                <textarea id="sup-formNotes" rows="2" placeholder="ملاحظات حول المندوب ومواعيد التوريد..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white resize-none"></textarea>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button onclick="closeSupplierModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-xs font-bold rounded-xl">إلغاء</button>
+              <button onclick="saveSupplierAccount()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-md">حفظ الحساب</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODAL: Supplier Payment (تسديد دفعة مالية) -->
+        <div id="supplierPaymentModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl animate-scale-up">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">💵</span>
+                <h3 class="font-black text-sm text-slate-800 dark:text-white">تسديد دفعة مالية للمندوب</h3>
+              </div>
+              <button onclick="closeSupplierPaymentModal()" class="text-slate-400 hover:text-rose-500 text-lg font-bold">✕</button>
+            </div>
+
+            <input type="hidden" id="sp-supId">
+
+            <div class="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-2xl border border-amber-200 dark:border-amber-800 text-center">
+              <span class="text-xs text-slate-500 dark:text-slate-400 block font-bold" id="sp-supName">المندوب: --</span>
+              <span class="text-[10px] text-slate-400 block mt-0.5">الرصيد المستحق حالياً:</span>
+              <span id="sp-currentBalance" class="text-base font-black text-amber-600 dark:text-amber-400 font-mono">0 د.ع</span>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">المبلغ المدفوع (د.ع) *</label>
+                <input id="sp-amount" type="number" placeholder="0" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-black text-emerald-600 dark:text-emerald-400 text-center font-mono">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">رقم الوصل / السند</label>
+                <input id="sp-receiptNo" type="text" placeholder="رقم السند أو الوصل" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white text-center">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ملاحظات الدفعة</label>
+                <input id="sp-notes" type="text" placeholder="مثال: تسديد نقدي عن فاتورة السكر" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white">
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button onclick="closeSupplierPaymentModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-xs font-bold rounded-xl">إلغاء</button>
+              <button onclick="submitSupplierPayment()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-md">تأكيد التسديد</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODAL: Supplier Account Statement (كشف حساب المندوب) -->
+        <div id="supplierStatementModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 w-full max-w-2xl space-y-4 shadow-2xl animate-scale-up flex flex-col max-h-[85vh]">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">📄</span>
+                <div>
+                  <h3 id="stmt-supName" class="font-black text-sm text-slate-800 dark:text-white">كشف حساب المندوب</h3>
+                  <p id="stmt-supCompany" class="text-[10px] text-slate-400">الشركة: --</p>
+                </div>
+              </div>
+              <button onclick="closeSupplierStatementModal()" class="text-slate-400 hover:text-rose-500 text-lg font-bold">✕</button>
+            </div>
+
+            <!-- Current Balance Summary -->
+            <div class="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700">
+              <span class="text-xs text-slate-600 dark:text-slate-300 font-bold">الرصيد المستحق حالياً بذمة الماركت:</span>
+              <span id="stmt-currentBalance" class="text-base font-black text-amber-500 font-mono">0 د.ع</span>
+            </div>
+
+            <!-- Transactions Table -->
+            <div class="overflow-y-auto flex-1 border border-slate-100 dark:border-slate-800 rounded-2xl">
+              <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold sticky top-0 border-b border-slate-100 dark:border-slate-800">
+                  <tr>
+                    <th class="p-2.5">التاريخ والوقت</th>
+                    <th class="p-2.5">نوع الحركة</th>
+                    <th class="p-2.5 text-center">المبلغ (د.ع)</th>
+                    <th class="p-2.5">رقم السند/الفاتورة</th>
+                    <th class="p-2.5">البيان / الملاحظات</th>
+                  </tr>
+                </thead>
+                <tbody id="supplierStatementTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tr><td colspan="5" class="text-center py-6 text-slate-400">لا توجد حركات سابقة</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button onclick="closeSupplierStatementModal()" class="px-5 py-2 bg-slate-100 dark:bg-slate-800 text-xs font-bold rounded-xl">إغلاق</button>
+            </div>
+          </div>
         </div>
 
         <!-- ======================================================== -->

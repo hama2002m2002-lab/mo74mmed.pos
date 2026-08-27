@@ -1004,9 +1004,79 @@ public class PosBridgeService
                             s.Phone,
                             s.Address,
                             s.Balance,
+                            s.OpeningBalance,
+                            s.Notes,
                             productsCount = s.Products.Count
                         })
                     });
+                }
+
+                case "save_supplier":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var root = doc.RootElement;
+                    Guid supId = Guid.Empty;
+                    if (root.TryGetProperty("id", out var idProp) && !string.IsNullOrEmpty(idProp.GetString()))
+                    {
+                        Guid.TryParse(idProp.GetString(), out supId);
+                    }
+                    string name = root.GetProperty("name").GetString() ?? "";
+                    string? company = root.TryGetProperty("company", out var cp) ? cp.GetString() : null;
+                    string? phone = root.TryGetProperty("phone", out var pp) ? pp.GetString() : null;
+                    string? address = root.TryGetProperty("address", out var ap) ? ap.GetString() : null;
+                    string? notes = root.TryGetProperty("notes", out var ntp) ? ntp.GetString() : null;
+                    decimal balance = root.TryGetProperty("balance", out var bp) ? bp.GetDecimal() : 0.0m;
+
+                    Supplier? sup = null;
+                    if (supId != Guid.Empty)
+                    {
+                        sup = await db.Suppliers.FindAsync(supId);
+                    }
+
+                    if (sup == null)
+                    {
+                        sup = new Supplier
+                        {
+                            Id = supId != Guid.Empty ? supId : Guid.NewGuid(),
+                            Name = name,
+                            Company = company,
+                            Phone = phone,
+                            Address = address,
+                            Notes = notes,
+                            OpeningBalance = balance,
+                            Balance = balance,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await db.Suppliers.AddAsync(sup);
+                    }
+                    else
+                    {
+                        sup.Name = name;
+                        sup.Company = company;
+                        sup.Phone = phone;
+                        sup.Address = address;
+                        sup.Notes = notes;
+                        sup.Balance = balance;
+                        sup.UpdatedAt = DateTime.UtcNow;
+                        sup.IsDeleted = false;
+                    }
+
+                    await db.SaveChangesAsync();
+                    return JsonSerializer.Serialize(new { success = true, supplierId = sup.Id });
+                }
+
+                case "delete_supplier":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var supId = doc.RootElement.GetProperty("id").GetGuid();
+                    var sup = await db.Suppliers.FindAsync(supId);
+                    if (sup != null)
+                    {
+                        sup.IsDeleted = true;
+                        sup.UpdatedAt = DateTime.UtcNow;
+                        await db.SaveChangesAsync();
+                    }
+                    return JsonSerializer.Serialize(new { success = true });
                 }
 
                 case "add_supplier_payment":
@@ -1020,6 +1090,27 @@ public class PosBridgeService
                     var sService = new SupplierService(db);
                     await sService.AddTransactionAsync(supId, "Payment", amount, notes, recNo);
                     return JsonSerializer.Serialize(new { success = true });
+                }
+
+                case "get_supplier_transactions":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var supId = doc.RootElement.GetProperty("supplierId").GetGuid();
+                    var sService = new SupplierService(db);
+                    var trans = await sService.GetSupplierTransactionsAsync(supId);
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        transactions = trans.Select(t => new
+                        {
+                            t.Id,
+                            t.TransactionType,
+                            t.Amount,
+                            t.Description,
+                            t.InvoiceNumber,
+                            date = t.TransactionDate.ToString("yyyy-MM-dd HH:mm")
+                        })
+                    });
                 }
 
                 // ==========================================

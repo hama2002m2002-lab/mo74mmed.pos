@@ -2318,33 +2318,302 @@ function editProductFromInventory(id) {
   }
 }
 
+let suppliersData = [];
+
 async function loadSuppliers() {
   const res = await callBackend('get_suppliers');
   if (!res || !res.success) return;
 
+  suppliersData = res.suppliers || [];
+
+  // Update KPIs
+  const totalCountEl = document.getElementById('sup-totalCount');
+  if (totalCountEl) totalCountEl.innerText = `${suppliersData.length} مندوب / شركة`;
+
+  const totalDebts = suppliersData.reduce((sum, s) => sum + Number(s.balance || 0), 0);
+  const totalDebtsEl = document.getElementById('sup-totalDebts');
+  if (totalDebtsEl) totalDebtsEl.innerText = `${Math.round(totalDebts).toLocaleString()} د.ع`;
+
+  renderSuppliersGrid(suppliersData);
+}
+
+function filterSuppliersGrid() {
+  const query = (document.getElementById('sup-searchInput')?.value || '').trim().toLowerCase();
+  if (!query) {
+    renderSuppliersGrid(suppliersData);
+    return;
+  }
+
+  const filtered = suppliersData.filter(s => 
+    (s.name && s.name.toLowerCase().includes(query)) ||
+    (s.company && s.company.toLowerCase().includes(query)) ||
+    (s.phone && s.phone.toLowerCase().includes(query)) ||
+    (s.address && s.address.toLowerCase().includes(query))
+  );
+
+  renderSuppliersGrid(filtered);
+}
+
+function renderSuppliersGrid(list) {
   const grid = document.getElementById('suppliersCardsGrid');
   if (!grid) return;
 
   grid.innerHTML = '';
-  (res.suppliers || []).forEach(s => {
-    const card = document.createElement('div');
-    card.className = 'sh-card p-5 flex flex-col justify-between';
-    card.innerHTML = `
-      <div>
-        <div class="flex items-center justify-between mb-2">
-          <h4 class="font-black text-base">${s.name}</h4>
-          <span class="text-[10px] bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-400 px-2.5 py-0.5 rounded-full font-bold">مندوب</span>
+
+  if (!list || list.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-3 sh-card p-12 text-center space-y-3">
+        <div class="w-16 h-16 mx-auto rounded-3xl bg-sky-500/10 text-sky-500 flex items-center justify-center text-3xl font-bold">
+          🤝
         </div>
-        <p class="text-xs text-slate-400 mb-1">الشركة: ${s.company || 'غير محدد'}</p>
-        <p class="text-xs text-slate-400">الهاتف: ${s.phone || '--'}</p>
+        <h4 class="font-black text-base text-slate-800 dark:text-white">لا توجد حسابات مناديب أو شركات مسجلة</h4>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto">يمكنك البدء بإنشاء حساب للمندوب أو الشركة الموردة لتنظيم الفواتير والدفعات والمستحقات بدقة</p>
+        <button onclick="openCreateSupplierModal()" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs rounded-xl shadow-md inline-flex items-center gap-2 transition">
+          <span>➕</span>
+          <span>إنشاء أول حساب مندوب الآن</span>
+        </button>
       </div>
-      <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-        <span class="text-xs text-slate-400 font-bold">الرصيد المستحق:</span>
-        <span class="text-sm font-black text-amber-500">${Number(s.balance).toLocaleString()} د.ع</span>
+    `;
+    return;
+  }
+
+  list.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'sh-card p-4 flex flex-col justify-between hover:shadow-lg transition border border-slate-200 dark:border-slate-800 hover:border-sky-400 dark:hover:border-sky-600';
+    
+    const balanceNum = Number(s.balance || 0);
+    const balanceColor = balanceNum > 0 ? 'text-amber-500 font-black' : (balanceNum < 0 ? 'text-emerald-500 font-black' : 'text-slate-500 font-bold');
+
+    card.innerHTML = `
+      <div class="space-y-2.5">
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center font-black text-sm">
+              ${(s.name || 'م')[0]}
+            </div>
+            <div>
+              <h4 class="font-black text-sm text-slate-900 dark:text-white">${s.name}</h4>
+              <span class="text-[10px] text-sky-600 dark:text-sky-400 font-bold">${s.company || 'شركة عامة'}</span>
+            </div>
+          </div>
+          <span class="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full font-bold">
+            ${s.productsCount || 0} مادة
+          </span>
+        </div>
+
+        <div class="space-y-1 text-xs text-slate-600 dark:text-slate-400 pt-1">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="text-slate-400 font-semibold">📞 الهاتف:</span>
+            <span class="font-mono font-bold text-slate-800 dark:text-slate-200">${s.phone || 'غير مسجل'}</span>
+          </div>
+          ${s.address ? `
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-slate-400 font-semibold">📍 العنوان:</span>
+              <span class="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">${s.address}</span>
+            </div>
+          ` : ''}
+          ${s.notes ? `
+            <p class="text-[10px] text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 p-1.5 rounded-lg">${s.notes}</p>
+          ` : ''}
+        </div>
+      </div>
+
+      <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold">المستحق بذمة الماركت:</span>
+          <span class="text-sm font-mono ${balanceColor}">${Math.round(balanceNum).toLocaleString()} د.ع</span>
+        </div>
+
+        <!-- Action Buttons inside Rep Account Card -->
+        <div class="grid grid-cols-2 gap-1.5 pt-1">
+          <button onclick="openSupplierPaymentModal('${s.id}')" class="py-1.5 px-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 rounded-lg text-[11px] font-black flex items-center justify-center gap-1 transition">
+            <span>💵</span>
+            <span>تسديد دفعة</span>
+          </button>
+          <button onclick="openSupplierStatementModal('${s.id}')" class="py-1.5 px-2 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900 text-sky-700 dark:text-sky-300 rounded-lg text-[11px] font-black flex items-center justify-center gap-1 transition">
+            <span>📄</span>
+            <span>كشف حساب</span>
+          </button>
+          <button onclick="openEditSupplierModal('${s.id}')" class="py-1 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition">
+            <span>✏️</span>
+            <span>تعديل</span>
+          </button>
+          <button onclick="deleteSupplierAccount('${s.id}')" class="py-1 px-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition">
+            <span>🗑️</span>
+            <span>حذف</span>
+          </button>
+        </div>
       </div>
     `;
     grid.appendChild(card);
   });
+}
+
+function openCreateSupplierModal() {
+  document.getElementById('sup-id').value = '';
+  document.getElementById('sup-formName').value = '';
+  document.getElementById('sup-formCompany').value = '';
+  document.getElementById('sup-formPhone').value = '';
+  document.getElementById('sup-formBalance').value = '';
+  document.getElementById('sup-formAddress').value = '';
+  document.getElementById('sup-formNotes').value = '';
+  document.getElementById('supModalTitle').innerText = 'إنشاء حساب مندوب أو شركة جديدة';
+  document.getElementById('supplierAccountModal')?.classList.remove('hidden');
+  document.getElementById('sup-formName')?.focus();
+}
+
+function openEditSupplierModal(id) {
+  const sup = suppliersData.find(s => s.id === id);
+  if (!sup) return;
+
+  document.getElementById('sup-id').value = sup.id;
+  document.getElementById('sup-formName').value = sup.name || '';
+  document.getElementById('sup-formCompany').value = sup.company || '';
+  document.getElementById('sup-formPhone').value = sup.phone || '';
+  document.getElementById('sup-formBalance').value = sup.balance || 0;
+  document.getElementById('sup-formAddress').value = sup.address || '';
+  document.getElementById('sup-formNotes').value = sup.notes || '';
+  document.getElementById('supModalTitle').innerText = 'تعديل بيانات حساب المندوب / الشركة';
+  document.getElementById('supplierAccountModal')?.classList.remove('hidden');
+}
+
+function closeSupplierModal() {
+  document.getElementById('supplierAccountModal')?.classList.add('hidden');
+}
+
+async function saveSupplierAccount() {
+  const name = document.getElementById('sup-formName')?.value.trim();
+  if (!name) {
+    alert('يرجى كتابة اسم المندوب أو الشخص المسؤول أولاً!');
+    document.getElementById('sup-formName')?.focus();
+    return;
+  }
+
+  const id = document.getElementById('sup-id')?.value || undefined;
+  const company = document.getElementById('sup-formCompany')?.value.trim() || undefined;
+  const phone = document.getElementById('sup-formPhone')?.value.trim() || undefined;
+  const balance = Number(document.getElementById('sup-formBalance')?.value || 0);
+  const address = document.getElementById('sup-formAddress')?.value.trim() || undefined;
+  const notes = document.getElementById('sup-formNotes')?.value.trim() || undefined;
+
+  const payload = {
+    id,
+    name,
+    company,
+    phone,
+    balance,
+    address,
+    notes
+  };
+
+  const res = await callBackend('save_supplier', payload);
+  if (res && res.success) {
+    alert(`✔ تم حفظ حساب المندوب (${name}) بنجاح!`);
+    closeSupplierModal();
+    await loadSuppliers();
+  }
+}
+
+async function deleteSupplierAccount(id) {
+  const sup = suppliersData.find(s => s.id === id);
+  const name = sup ? sup.name : 'هذا الحساب';
+
+  if (confirm(`هل أنت متأكد من رغبتك في حذف حساب: "${name}"؟`)) {
+    const res = await callBackend('delete_supplier', { id });
+    if (res && res.success) {
+      alert(`✔ تم حذف الحساب بنجاح!`);
+      await loadSuppliers();
+    }
+  }
+}
+
+function openSupplierPaymentModal(id) {
+  const sup = suppliersData.find(s => s.id === id);
+  if (!sup) return;
+
+  document.getElementById('sp-supId').value = sup.id;
+  document.getElementById('sp-supName').innerText = `المندوب: ${sup.name} (${sup.company || 'عام'})`;
+  document.getElementById('sp-currentBalance').innerText = `${Math.round(Number(sup.balance || 0)).toLocaleString()} د.ع`;
+  document.getElementById('sp-amount').value = '';
+  document.getElementById('sp-receiptNo').value = '';
+  document.getElementById('sp-notes').value = '';
+
+  document.getElementById('supplierPaymentModal')?.classList.remove('hidden');
+  document.getElementById('sp-amount')?.focus();
+}
+
+function closeSupplierPaymentModal() {
+  document.getElementById('supplierPaymentModal')?.classList.add('hidden');
+}
+
+async function submitSupplierPayment() {
+  const supId = document.getElementById('sp-supId')?.value;
+  const amount = Number(document.getElementById('sp-amount')?.value || 0);
+  if (amount <= 0) {
+    alert('يرجى كتابة مبلغ التسديد بشكل صحيح (أكبر من 0)!');
+    document.getElementById('sp-amount')?.focus();
+    return;
+  }
+
+  const receiptNumber = document.getElementById('sp-receiptNo')?.value.trim();
+  const notes = document.getElementById('sp-notes')?.value.trim();
+
+  const payload = {
+    supplierId: supId,
+    amount: amount,
+    receiptNumber: receiptNumber || undefined,
+    notes: notes || undefined
+  };
+
+  const res = await callBackend('add_supplier_payment', payload);
+  if (res && res.success) {
+    alert(`✔ تم تسجيل وتأكيد تسديد الدفعة بقيمة ${amount.toLocaleString()} د.ع بنجاح!`);
+    closeSupplierPaymentModal();
+    await loadSuppliers();
+  }
+}
+
+async function openSupplierStatementModal(id) {
+  const sup = suppliersData.find(s => s.id === id);
+  if (!sup) return;
+
+  document.getElementById('stmt-supName').innerText = `كشف حساب: ${sup.name}`;
+  document.getElementById('stmt-supCompany').innerText = `الشركة: ${sup.company || 'غير محدد'} | الهاتف: ${sup.phone || '--'}`;
+  document.getElementById('stmt-currentBalance').innerText = `${Math.round(Number(sup.balance || 0)).toLocaleString()} د.ع`;
+
+  const tbody = document.getElementById('supplierStatementTableBody');
+  if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">جاري تحميل كشف الحركات...</td></tr>`;
+
+  document.getElementById('supplierStatementModal')?.classList.remove('hidden');
+
+  const res = await callBackend('get_supplier_transactions', { supplierId: sup.id });
+  if (res && res.success && res.transactions && res.transactions.length > 0) {
+    tbody.innerHTML = '';
+    res.transactions.forEach(t => {
+      const isPayment = (t.transactionType === 'Payment' || t.transactionType === 'دفع');
+      const typeBadge = isPayment
+        ? `<span class="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold text-[10px]">تسديد دفعة</span>`
+        : `<span class="bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 px-2 py-0.5 rounded-full font-bold text-[10px]">فاتورة شراء</span>`;
+      
+      const amountColor = isPayment ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold';
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="p-2.5 text-slate-500 font-mono">${t.date || '--'}</td>
+        <td class="p-2.5">${typeBadge}</td>
+        <td class="p-2.5 text-center font-mono ${amountColor}">${Number(t.amount).toLocaleString()} د.ع</td>
+        <td class="p-2.5 font-mono text-slate-600 dark:text-slate-400">${t.invoiceNumber || '--'}</td>
+        <td class="p-2.5 text-slate-700 dark:text-slate-300 font-semibold">${t.description || '--'}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  } else {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">لا توجد حركات مالية مسجلة لهذا المندوب بعد</td></tr>`;
+  }
+}
+
+function closeSupplierStatementModal() {
+  document.getElementById('supplierStatementModal')?.classList.add('hidden');
 }
 
 async function loadUsers() {
