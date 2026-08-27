@@ -1113,13 +1113,36 @@ public class PosBridgeService
                             decimal cartonPurchasePrice = item.TryGetProperty("cartonPurchasePrice", out var cpp) ? cpp.GetDecimal() : 0m;
                             decimal itemsPerCarton = item.TryGetProperty("itemsPerCarton", out var ipc) ? ipc.GetDecimal() : 1m;
 
+                            // 1. Calculate the new unit price per piece
+                            decimal newPieceCost = unitCost;
+                            if (cartonsCount > 0 && itemsPerCarton > 0 && cartonPurchasePrice > 0)
+                            {
+                                newPieceCost = cartonPurchasePrice / itemsPerCarton;
+                            }
+
                             if (targetProd != null)
                             {
-                                targetProd.StockQuantity += qty;
-                                if (cartonsCount > 0) targetProd.CartonsCount += cartonsCount;
-                                if (unitCost > 0) targetProd.Cost = unitCost;
-                                if (cartonPurchasePrice > 0) targetProd.CartonPurchasePrice = cartonPurchasePrice;
-                                if (itemsPerCarton > 1) targetProd.ItemsPerCarton = itemsPerCarton;
+                                decimal currentStock = Math.Max(0, targetProd.StockQuantity);
+                                decimal oldCost = targetProd.Cost > 0 ? targetProd.Cost : newPieceCost;
+                                decimal purchasedQty = qty;
+
+                                // 2. Calculate Weighted Average Cost (متوسط التكلفة المرجح)
+                                decimal newWeightedCost = newPieceCost;
+                                if (currentStock > 0 && (currentStock + purchasedQty) > 0)
+                                {
+                                    newWeightedCost = ((currentStock * oldCost) + (purchasedQty * newPieceCost)) / (currentStock + purchasedQty);
+                                }
+
+                                targetProd.Cost = Math.Round(newWeightedCost, 2);
+                                targetProd.StockQuantity += purchasedQty;
+
+                                if (cartonsCount > 0)
+                                {
+                                    targetProd.CartonsCount += cartonsCount;
+                                    targetProd.CartonPurchasePrice = cartonPurchasePrice;
+                                    if (itemsPerCarton > 1) targetProd.ItemsPerCarton = itemsPerCarton;
+                                }
+
                                 targetProd.SupplierId = sup.Id;
                                 targetProd.SupplierName = sup.Name;
                                 targetProd.UpdatedAt = DateTime.UtcNow;
@@ -1132,8 +1155,8 @@ public class PosBridgeService
                                     Id = Guid.NewGuid(),
                                     Name = pName,
                                     Barcode = string.IsNullOrWhiteSpace(barcode) ? DateTime.Now.Ticks.ToString() : barcode,
-                                    Cost = unitCost,
-                                    Price = unitCost * 1.25m,
+                                    Cost = Math.Round(newPieceCost, 2),
+                                    Price = Math.Round(newPieceCost * 1.25m, 2),
                                     StockQuantity = qty,
                                     CartonsCount = cartonsCount,
                                     CartonPurchasePrice = cartonPurchasePrice,
