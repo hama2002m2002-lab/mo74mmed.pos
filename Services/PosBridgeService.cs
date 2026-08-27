@@ -358,6 +358,7 @@ public class PosBridgeService
                             cartonProfit = p.CartonProfit,
                             totalCost = p.Cost * p.StockQuantity,
                             totalRetailValue = p.Price * p.StockQuantity,
+                            unit = p.Unit ?? "قطعة",
                             createdAt = p.CreatedAt.ToString("yyyy/MM/dd")
                         })
                     });
@@ -367,12 +368,15 @@ public class PosBridgeService
                 {
                     using var doc = JsonDocument.Parse(payloadJson);
                     var r = doc.RootElement;
-                    Guid? id = r.TryGetProperty("id", out var idProp) && idProp.ValueKind == JsonValueKind.String && Guid.TryParse(idProp.GetString(), out var g) ? g : null;
+                    Guid? id = r.TryGetProperty("id", out var idProp) && !string.IsNullOrWhiteSpace(idProp.GetString()) 
+                        ? Guid.Parse(idProp.GetString()!) 
+                        : null;
 
                     string name = r.GetProperty("name").GetString() ?? "";
-                    string barcode = r.TryGetProperty("barcode", out var bp) ? bp.GetString() ?? "" : "";
-                    string categoryName = r.TryGetProperty("category", out var cp) ? cp.GetString() ?? "عام" : "عام";
+                    string barcode = r.TryGetProperty("barcode", out var bProp) ? bProp.GetString() ?? "" : "";
+                    string categoryName = r.TryGetProperty("category", out var cProp) ? cProp.GetString() ?? "عام" : "عام";
                     string supplierName = r.TryGetProperty("supplierName", out var supProp) ? supProp.GetString() ?? "" : "";
+                    string unit = r.TryGetProperty("unit", out var unitProp) ? unitProp.GetString() ?? "قطعة" : "قطعة";
                     decimal cost = r.TryGetProperty("cost", out var cst) ? cst.GetDecimal() : 0m;
                     decimal price = r.TryGetProperty("price", out var prc) ? prc.GetDecimal() : 0m;
                     decimal wholesale = r.TryGetProperty("wholesalePrice", out var wp) ? wp.GetDecimal() : 0m;
@@ -401,6 +405,7 @@ public class PosBridgeService
                             existing.Barcode = barcode;
                             existing.CategoryId = category.Id;
                             existing.SupplierName = supplierName;
+                            existing.Unit = unit;
                             existing.Cost = cost;
                             existing.Price = price;
                             existing.WholesalePrice = wholesale;
@@ -422,6 +427,7 @@ public class PosBridgeService
                             Barcode = string.IsNullOrWhiteSpace(barcode) ? DateTime.Now.Ticks.ToString() : barcode,
                             CategoryId = category.Id,
                             SupplierName = supplierName,
+                            Unit = unit,
                             Cost = cost,
                             Price = price,
                             WholesalePrice = wholesale,
