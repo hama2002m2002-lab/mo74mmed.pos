@@ -70,40 +70,25 @@
               <span>المخزن ورصيد المواد</span>
             </button>
 
-            <!-- 5. Rep Orders (Notice) -->
-            <button onclick="switchTab('repOrders')" id="sidebar-repOrders" class="sidebar-item w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative">
-              <div class="flex items-center gap-3">
-                <i data-lucide="truck" class="w-4 h-4 text-slate-400"></i>
-                <span>طلبيات المناديب والمحلات</span>
-              </div>
-              <span id="repBadgeSidebar" class="hidden text-[9px] bg-rose-500 text-white font-bold px-1.5 py-0.2 rounded-full">0</span>
-            </button>
-
-            <!-- 6. Suppliers -->
-            <button onclick="switchTab('suppliers')" id="sidebar-suppliers" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-              <i data-lucide="handshake" class="w-4 h-4 text-slate-400"></i>
-              <span>المناديب والشركات</span>
-            </button>
-
-            <!-- 7. Customers / Debts -->
+            <!-- 5. Customers / Debts -->
             <button onclick="switchTab('customers')" id="sidebar-customers" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
               <span>الزبائن وحسابات الآجل</span>
             </button>
 
-            <!-- 8. Stock Audit -->
+            <!-- 6. Stock Audit -->
             <button onclick="switchTab('stockAudit')" id="sidebar-stockAudit" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="clipboard-check" class="w-4 h-4 text-slate-400"></i>
               <span>الجرد ومطابقة الرفوف</span>
             </button>
 
-            <!-- 9. Damaged / Expired Items -->
+            <!-- 7. Damaged / Expired Items -->
             <button onclick="switchTab('damagedItems')" id="sidebar-damagedItems" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400"></i>
               <span>المواد التالفة والمنتهية</span>
             </button>
 
-            <!-- 10. Reports & Profits -->
+            <!-- 8. Reports & Profits -->
             <button onclick="switchTab('reports')" id="sidebar-reports" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="bar-chart-3" class="w-4 h-4 text-slate-400"></i>
               <span>التقارير والأرباح</span>
@@ -131,14 +116,6 @@
             </button>
           </nav>
         </div>
-      </div>
-
-      <!-- Cloud Sync & Mobile Rep Quick Portal -->
-      <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
-        <button onclick="openRepPortalModal()" class="w-full py-2 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 text-sky-600 dark:text-sky-400 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm">
-          <i data-lucide="qr-code" class="w-4 h-4"></i>
-          <span>باركود تطبيق المندوب للموبايل</span>
-        </button>
       </div>
     </aside>
 
