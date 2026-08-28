@@ -34,7 +34,6 @@ public class PosBridgeService
 
                     var todayStats = await saleService.GetTodayStatsAsync();
                     var monthStats = await saleService.GetMonthlyStatsAsync();
-                    int totalProducts = await prodService.GetTotalProductsCountAsync();
                     var lowStock = await prodService.GetLowStockProductsAsync(8);
                     var recentSales = await saleService.GetRecentSalesAsync(6);
 
@@ -70,6 +69,12 @@ public class PosBridgeService
                     decimal cardMonth = monthSales.Where(s => s.PaymentMethod == "Card" || s.PaymentMethod == "Visa").Sum(s => s.TotalAmount);
                     decimal debtMonth = monthSales.Where(s => s.PaymentMethod == "Debt").Sum(s => s.TotalAmount);
 
+                    var prodsList = await db.Products.AsNoTracking().Where(p => !p.IsDeleted).ToListAsync();
+                    int totalProducts = prodsList.Count;
+                    decimal totalStockPieces = prodsList.Sum(p => p.StockQuantity);
+                    decimal totalStockCostValue = prodsList.Sum(p => p.Cost * p.StockQuantity);
+                    decimal totalStockRetailValue = prodsList.Sum(p => p.Price * p.StockQuantity);
+
                     return JsonSerializer.Serialize(new
                     {
                         success = true,
@@ -77,6 +82,9 @@ public class PosBridgeService
                         todayInvoices = todayStats.TotalSalesCount,
                         monthlyRevenue = monthStats.MonthlyRevenue,
                         totalProducts = totalProducts,
+                        totalStockPieces = totalStockPieces,
+                        totalStockCostValue = totalStockCostValue,
+                        totalStockRetailValue = totalStockRetailValue,
                         lowStockCount = lowStock.Count,
                         lowStockProducts = lowStock.Select(p => new { p.Id, p.Name, p.StockQuantity, p.MinStockAlert, p.Price, p.Cost }),
                         recentSales = recentSales.Select(s => new { s.Id, s.InvoiceNumber, s.TotalAmount, s.PaymentMethod, createdAt = s.CreatedAt.ToString("yyyy/MM/dd hh:mm tt") }),
@@ -185,26 +193,42 @@ public class PosBridgeService
                         var price = it.GetProperty("price").GetDecimal();
                         var cost = it.TryGetProperty("cost", out var cs) ? cs.GetDecimal() : 0m;
                         var name = it.GetProperty("name").GetString() ?? "";
+                        var saleType = it.TryGetProperty("saleType", out var st) ? st.GetString() ?? "retail" : "retail";
+                        var ppc = it.TryGetProperty("piecesPerCarton", out var ppcProp) ? ppcProp.GetDecimal() : 1m;
+                        var barcode = it.TryGetProperty("barcode", out var bc) ? bc.GetString() ?? "" : "";
 
                         decimal itemTotal = qty * price;
                         totalAmount += itemTotal;
                         totalCost += (qty * cost);
 
+                        string displayName = name;
+                        if (saleType == "carton" && !displayName.Contains("(كرتون)"))
+                            displayName = $"{displayName} (كرتون)";
+                        else if (saleType == "wholesale" && !displayName.Contains("(جملة)"))
+                            displayName = $"{displayName} (جملة)";
+
                         saleItems.Add(new SaleItem
                         {
                             Id = Guid.NewGuid(),
                             ProductId = prodId,
-                            ProductName = name,
+                            ProductName = displayName,
+                            Barcode = barcode,
                             Quantity = qty,
                             UnitPrice = price,
                             TotalPrice = itemTotal
                         });
 
-                        // Deduct Stock
+                        // Deduct Stock: When selling by carton, deduct (qty * piecesPerCarton)
                         var dbProd = await db.Products.FindAsync(prodId);
                         if (dbProd != null)
                         {
-                            dbProd.StockQuantity = Math.Max(0, dbProd.StockQuantity - qty);
+                            decimal deduction = qty;
+                            if (saleType == "carton")
+                            {
+                                decimal itemsInCarton = ppc > 0 ? ppc : (dbProd.ItemsPerCarton > 0 ? dbProd.ItemsPerCarton : 1m);
+                                deduction = qty * itemsInCarton;
+                            }
+                            dbProd.StockQuantity = Math.Max(0, dbProd.StockQuantity - deduction);
                             dbProd.UpdatedAt = DateTime.UtcNow;
                         }
                     }
@@ -304,7 +328,12 @@ public class PosBridgeService
                         var prod = await db.Products.FindAsync(item.ProductId);
                         if (prod != null)
                         {
-                            prod.StockQuantity += item.Quantity;
+                            decimal itemsToRestore = item.Quantity;
+                            if (item.ProductName.Contains("(كرتون)"))
+                            {
+                                itemsToRestore = item.Quantity * (prod.ItemsPerCarton > 0 ? prod.ItemsPerCarton : 1m);
+                            }
+                            prod.StockQuantity += itemsToRestore;
                             prod.UpdatedAt = DateTime.UtcNow;
                         }
                     }
@@ -359,7 +388,42 @@ public class PosBridgeService
                             totalCost = p.Cost * p.StockQuantity,
                             totalRetailValue = p.Price * p.StockQuantity,
                             unit = p.Unit ?? "قطعة",
+                            expiryDate = p.ExpiryDate.HasValue ? p.ExpiryDate.Value.ToString("yyyy/MM/dd") : null,
+                            daysToExpiry = p.ExpiryDate.HasValue ? (int)(p.ExpiryDate.Value.Date - DateTime.Today).TotalDays : (int?)null,
                             createdAt = p.CreatedAt.ToString("yyyy/MM/dd")
+                        })
+                    });
+                }
+
+                case "get_expiring_products":
+                {
+                    var today = DateTime.Today;
+                    var prods = await db.Products
+                        .Include(p => p.Category)
+                        .AsNoTracking()
+                        .Where(p => !p.IsDeleted && p.ExpiryDate.HasValue)
+                        .OrderBy(p => p.ExpiryDate)
+                        .ToListAsync();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        products = prods.Select(p => new
+                        {
+                            id = p.Id,
+                            name = p.Name,
+                            barcode = p.Barcode ?? "",
+                            category = p.Category?.Name ?? "عام",
+                            supplierId = p.SupplierId,
+                            supplierName = p.SupplierName ?? "",
+                            stockQuantity = p.StockQuantity,
+                            cost = p.Cost,
+                            price = p.Price,
+                            totalLossValue = p.Cost * p.StockQuantity,
+                            expiryDate = p.ExpiryDate!.Value.ToString("yyyy/MM/dd"),
+                            daysRemaining = (int)(p.ExpiryDate.Value.Date - today).TotalDays,
+                            isExpired = p.ExpiryDate.Value.Date < today,
+                            isCritical = (p.ExpiryDate.Value.Date - today).TotalDays >= 0 && (p.ExpiryDate.Value.Date - today).TotalDays <= 30
                         })
                     });
                 }
@@ -386,6 +450,12 @@ public class PosBridgeService
                     decimal cartonsCount = r.TryGetProperty("cartonsCount", out var ccp) ? ccp.GetDecimal() : 0m;
                     decimal minAlert = r.TryGetProperty("minStockAlert", out var ma) ? ma.GetDecimal() : 5m;
                     decimal itemsPerCarton = r.TryGetProperty("piecesPerCarton", out var ppc) ? ppc.GetDecimal() : 1m;
+
+                    DateTime? expiryDate = null;
+                    if (r.TryGetProperty("expiryDate", out var expProp) && !string.IsNullOrWhiteSpace(expProp.GetString()))
+                    {
+                        if (DateTime.TryParse(expProp.GetString(), out var expDt)) expiryDate = expDt;
+                    }
 
                     // Ensure category
                     var category = await db.Categories.FirstOrDefaultAsync(c => c.Name == categoryName);
@@ -435,6 +505,7 @@ public class PosBridgeService
                             existing.CartonsCount = cartonsCount;
                             existing.MinStockAlert = minAlert;
                             existing.ItemsPerCarton = itemsPerCarton;
+                            existing.ExpiryDate = expiryDate;
                             existing.UpdatedAt = DateTime.UtcNow;
                         }
                     }
@@ -458,6 +529,7 @@ public class PosBridgeService
                             CartonsCount = cartonsCount,
                             MinStockAlert = minAlert,
                             ItemsPerCarton = itemsPerCarton,
+                            ExpiryDate = expiryDate,
                             CreatedAt = DateTime.UtcNow
                         };
                         await db.Products.AddAsync(newProd);
@@ -1028,6 +1100,55 @@ public class PosBridgeService
                     decimal totalDiscountAll = sales.Sum(s => s.DiscountAmount);
                     decimal totalReturnsAmount = returnSales.Sum(s => s.TotalAmount);
 
+                    // Profit breakdown by sale type (Retail, Wholesale, Carton)
+                    decimal retailSalesTotal = 0m;
+                    decimal retailProfitTotal = 0m;
+                    decimal wholesaleSalesTotal = 0m;
+                    decimal wholesaleProfitTotal = 0m;
+                    decimal cartonSalesTotal = 0m;
+                    decimal cartonProfitTotal = 0m;
+
+                    foreach (var s in sales.Where(x => !x.IsReturnSale))
+                    {
+                        foreach (var itm in s.Items)
+                        {
+                            var p = itm.Product;
+                            if (itm.ProductName.Contains("(كرتون)"))
+                            {
+                                decimal cartonCost = (p != null && p.CartonPurchasePrice > 0)
+                                    ? p.CartonPurchasePrice
+                                    : ((p?.Cost ?? 0m) * (p?.ItemsPerCarton > 0 ? p.ItemsPerCarton : 1m));
+                                decimal itmProfit = itm.TotalPrice - (cartonCost * itm.Quantity);
+                                cartonSalesTotal += itm.TotalPrice;
+                                cartonProfitTotal += itmProfit;
+                            }
+                            else if (itm.ProductName.Contains("(جملة)"))
+                            {
+                                decimal pieceCost = p?.Cost ?? 0m;
+                                decimal itmProfit = itm.TotalPrice - (pieceCost * itm.Quantity);
+                                wholesaleSalesTotal += itm.TotalPrice;
+                                wholesaleProfitTotal += itmProfit;
+                            }
+                            else
+                            {
+                                decimal pieceCost = p?.Cost ?? 0m;
+                                decimal itmProfit = itm.TotalPrice - (pieceCost * itm.Quantity);
+                                retailSalesTotal += itm.TotalPrice;
+                                retailProfitTotal += itmProfit;
+                            }
+                        }
+                    }
+
+                    // Stock projected profits by mode
+                    decimal projectedRetailProfit = products.Sum(p => p.StockQuantity * Math.Max(0, p.Price - p.Cost));
+                    decimal projectedWholesaleProfit = products.Sum(p => p.StockQuantity * Math.Max(0, (p.WholesalePrice > 0 ? p.WholesalePrice : p.Price) - p.Cost));
+                    decimal projectedCartonProfit = products.Sum(p => {
+                        decimal cartons = p.ItemsPerCarton > 0 ? (p.StockQuantity / p.ItemsPerCarton) : 0;
+                        decimal cartonCost = p.CartonPurchasePrice > 0 ? p.CartonPurchasePrice : (p.Cost * p.ItemsPerCarton);
+                        decimal cartonSell = p.CartonSellingPrice > 0 ? p.CartonSellingPrice : (p.Price * p.ItemsPerCarton);
+                        return cartons * Math.Max(0, cartonSell - cartonCost);
+                    });
+
                     // Inventory valuation
                     decimal totalStockCostValue = products.Sum(p => p.StockQuantity * p.Cost);
                     decimal totalStockRetailValue = products.Sum(p => p.StockQuantity * p.Price);
@@ -1158,6 +1279,15 @@ public class PosBridgeService
                         totalProfitAll,
                         totalDiscountAll,
                         totalReturnsAmount,
+                        retailSalesTotal,
+                        retailProfitTotal,
+                        wholesaleSalesTotal,
+                        wholesaleProfitTotal,
+                        cartonSalesTotal,
+                        cartonProfitTotal,
+                        projectedRetailProfit,
+                        projectedWholesaleProfit,
+                        projectedCartonProfit,
                         returnSalesCount = returnSales.Count,
                         salesList = sales.Take(50).Select(s => new
                         {
@@ -1615,6 +1745,69 @@ public class PosBridgeService
                     var sService = new SupplierService(db);
                     await sService.AddTransactionAsync(supId, "Payment", amount, notes, recNo);
                     return JsonSerializer.Serialize(new { success = true });
+                }
+
+                case "return_to_supplier":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var root = doc.RootElement;
+                    var supId = root.GetProperty("supplierId").GetGuid();
+                    var prodId = root.TryGetProperty("productId", out var pidProp) && !string.IsNullOrEmpty(pidProp.GetString()) && Guid.TryParse(pidProp.GetString(), out var pid) ? pid : (Guid?)null;
+                    string barcode = root.TryGetProperty("barcode", out var bp) ? bp.GetString() ?? "" : "";
+                    string prodName = root.TryGetProperty("productName", out var pnp) ? pnp.GetString() ?? "" : "";
+                    decimal qty = root.GetProperty("quantity").GetDecimal();
+                    decimal unitCost = root.GetProperty("unitCost").GetDecimal();
+                    string reason = root.TryGetProperty("reason", out var rp) ? rp.GetString() ?? "إرجاع بضاعة لمندوب" : "إرجاع بضاعة لمندوب";
+                    string financialAction = root.TryGetProperty("financialAction", out var fap) ? fap.GetString() ?? "deduct_balance" : "deduct_balance";
+                    string notes = root.TryGetProperty("notes", out var np) ? np.GetString() ?? "" : "";
+                    string returnNumber = root.TryGetProperty("returnNumber", out var rnp) ? rnp.GetString() ?? $"RET-{DateTime.Now:yyyyMMddHHmmss}" : $"RET-{DateTime.Now:yyyyMMddHHmmss}";
+
+                    var sup = await db.Suppliers.FindAsync(supId);
+                    if (sup == null) return JsonSerializer.Serialize(new { success = false, message = "المندوب غير موجود" });
+
+                    Product? targetProd = null;
+                    if (prodId.HasValue) targetProd = await db.Products.FindAsync(prodId.Value);
+                    if (targetProd == null && !string.IsNullOrWhiteSpace(barcode))
+                        targetProd = await db.Products.FirstOrDefaultAsync(p => p.Barcode == barcode && !p.IsDeleted);
+                    if (targetProd == null && !string.IsNullOrWhiteSpace(prodName))
+                        targetProd = await db.Products.FirstOrDefaultAsync(p => p.Name == prodName && !p.IsDeleted);
+
+                    if (targetProd != null)
+                    {
+                        targetProd.StockQuantity = Math.Max(0, targetProd.StockQuantity - qty);
+                        if (targetProd.ItemsPerCarton > 0)
+                            targetProd.CartonsCount = Math.Floor(targetProd.StockQuantity / targetProd.ItemsPerCarton);
+                        targetProd.UpdatedAt = DateTime.UtcNow;
+                        prodName = targetProd.Name;
+                    }
+
+                    decimal totalAmount = qty * unitCost;
+                    var sService = new SupplierService(db);
+
+                    if (financialAction == "cash_refund")
+                    {
+                        await sService.AddTransactionAsync(supId, "ReturnCash", totalAmount, $"إرجاع بضاعة ({prodName} × {qty}) - استرداد نقدي فوري - وصل {returnNumber} ({reason})", returnNumber);
+                    }
+                    else
+                    {
+                        // Deduct from supplier debt / balance
+                        await sService.AddTransactionAsync(supId, "Return", totalAmount, $"إرجاع بضاعة ({prodName} × {qty}) - خصم من حساب المورد - وصل {returnNumber} ({reason})", returnNumber);
+                    }
+
+                    await db.SaveChangesAsync();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        returnNumber,
+                        supplierName = sup.Name,
+                        productName = prodName,
+                        quantity = qty,
+                        unitCost = unitCost,
+                        totalAmount = totalAmount,
+                        financialAction = financialAction,
+                        message = $"تم تسجيل إرجاع {qty} من ({prodName}) للمندوب ({sup.Name}) بنجاح!"
+                    });
                 }
 
                 case "get_supplier_transactions":

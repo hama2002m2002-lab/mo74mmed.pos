@@ -4,21 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>7amo.pos Market - نظام إدارة السوبرماركت ونقاط البيع</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Local Offline Core Libraries -->
+  <script src="libs/tailwindcss.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class'
     }
   </script>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- SheetJS Excel Library -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-  <!-- Tesseract OCR for smart receipt scanning -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- Chart.js Offline -->
+  <script src="libs/chart.min.js"></script>
+  <!-- Lucide Icons Offline -->
+  <script src="libs/lucide.min.js"></script>
+  <!-- SheetJS Excel Library Offline -->
+  <script src="libs/xlsx.full.min.js"></script>
+  <!-- Tesseract OCR Offline -->
+  <script src="libs/tesseract.min.js"></script>
+  <!-- QR Code Offline Generator -->
+  <script src="libs/qrcode.min.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="flex flex-col h-screen overflow-hidden select-none">
@@ -72,37 +74,52 @@
               <span>المخزن ورصيد المواد</span>
             </button>
 
-            <!-- 5. Purchase & Invoices (شراء وتوريد مواد للمخزن) -->
-            <button onclick="switchTab('purchase')" id="sidebar-purchase" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 transition">
-              <i data-lucide="truck" class="w-4 h-4 text-sky-500"></i>
-              <span>شراء وتوريد مواد للمخزن</span>
+            <!-- 5. Expiring Soon Products (كم يوم باقي لانتهاء الصلاحية) -->
+            <button onclick="switchTab('expiringProducts')" id="sidebar-expiringProducts" class="sidebar-item w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50/90 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200/80 dark:border-rose-800/50 transition">
+              <div class="flex items-center gap-3">
+                <i data-lucide="calendar-clock" class="w-4 h-4 text-rose-500"></i>
+                <span>صلاحية المواد (كم يوم باقي)</span>
+              </div>
+              <span id="sidebar-expiringCountBadge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white">0</span>
             </button>
 
-            <!-- 6. Suppliers / Reps -->
+            <!-- 6. Purchase & Invoices (فواتير الشراء وتوريد البضائع) -->
+            <button onclick="switchTab('purchase')" id="sidebar-purchase" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 transition">
+              <i data-lucide="truck" class="w-4 h-4 text-sky-500"></i>
+              <span>فواتير الشراء وتوريد البضائع</span>
+            </button>
+
+            <!-- 7. Return items to supplier (إرجاع مواد إلى مندوب / مورد) -->
+            <button onclick="openSupplierReturnModal()" id="sidebar-returnSupplier" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50/80 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/60 dark:border-amber-800/40 transition">
+              <i data-lucide="rotate-ccw" class="w-4 h-4 text-amber-500"></i>
+              <span>إرجاع مواد إلى مندوب / مورد</span>
+            </button>
+
+            <!-- 8. Suppliers / Reps -->
             <button onclick="switchTab('suppliers')" id="sidebar-suppliers" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="handshake" class="w-4 h-4 text-slate-400"></i>
               <span>المناديب والشركات</span>
             </button>
 
-            <!-- 6. Customers / Debts -->
+            <!-- 9. Customers / Debts -->
             <button onclick="switchTab('customers')" id="sidebar-customers" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
               <span>الزبائن وحسابات الآجل</span>
             </button>
 
-            <!-- 6. Stock Audit -->
+            <!-- 10. Stock Audit -->
             <button onclick="switchTab('stockAudit')" id="sidebar-stockAudit" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="clipboard-check" class="w-4 h-4 text-slate-400"></i>
               <span>الجرد ومطابقة الرفوف</span>
             </button>
 
-            <!-- 7. Damaged / Expired Items -->
+            <!-- 11. Damaged / Expired Items -->
             <button onclick="switchTab('damagedItems')" id="sidebar-damagedItems" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400"></i>
               <span>المواد التالفة والمنتهية</span>
             </button>
 
-            <!-- 8. Reports & Profits -->
+            <!-- 12. Reports & Profits -->
             <button onclick="switchTab('reports')" id="sidebar-reports" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="bar-chart-3" class="w-4 h-4 text-slate-400"></i>
               <span>التقارير والأرباح</span>
@@ -143,7 +160,7 @@
         <!-- Search Input -->
         <div class="relative w-80">
           <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute right-3.5 top-2.5"></i>
-          <input type="text" placeholder="بحث سريع عن مادة، باركود، أو فاتورة..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full pr-10 pl-4 py-1.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none">
+          <input id="globalTopSearchInput" onkeydown="if(event.key==='Enter'){handleGlobalTopSearch(this.value);}" type="text" placeholder="بحث سريع عن مادة، باركود، أو فاتورة (Enter)..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full pr-10 pl-4 py-1.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-sky-500">
         </div>
 
         <!-- Header Actions -->
@@ -194,15 +211,21 @@
             <!-- LEFT 8-COLUMN MAIN BLOCK -->
             <div class="col-span-8 space-y-4">
 
-              <!-- Market Banner Card -->
-              <div class="sh-banner p-6 relative overflow-hidden flex items-center justify-between">
+              <!-- Market Banner Card with Interactive Warehouse Stock Button -->
+              <div class="sh-banner p-6 relative overflow-hidden flex items-center justify-between shadow-lg">
                 <div class="space-y-2 z-10 max-w-md">
                   <h2 class="text-xl font-black text-white leading-snug">
                     مبيعات الماركت وحركة الصندوق في تصاعد ممتاز بنسبة 30% عن الشهر السابق
                   </h2>
-                  <div class="flex items-center gap-3 text-xs text-sky-100 font-mono pt-1">
-                    <span>📦 أصناف المخزن متوفرة</span>
-                    <span>🛒 الكاشير متصل وجاهز</span>
+                  <div class="flex items-center gap-2 text-xs font-bold pt-1.5 flex-wrap">
+                    <button type="button" onclick="switchTab('inventory')" class="px-3.5 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-black flex items-center gap-2 transition cursor-pointer backdrop-blur-md border border-white/30 shadow-xs hover:scale-105 active:scale-95">
+                      <span>📦 رصيد ومتبقي المخزن:</span>
+                      <span id="dashRemainingStockBadge" class="bg-white text-sky-900 px-2.5 py-0.5 rounded-lg font-black font-mono shadow-xs">0 مادة</span>
+                      <span class="text-sky-200">عرض الكل ‹</span>
+                    </button>
+                    <button type="button" onclick="switchTab('cashier')" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-black flex items-center gap-1.5 transition cursor-pointer shadow-sm hover:scale-105 active:scale-95">
+                      <span>🛒 الكاشير السريع (F1)</span>
+                    </button>
                   </div>
                 </div>
                 <div class="text-5xl opacity-90 select-none animate-bounce">
@@ -210,38 +233,42 @@
                 </div>
               </div>
 
-              <!-- 4 KPI Summary Cards Row -->
+              <!-- 4 KPI Summary Cards Row (All Clickable & Interactive) -->
               <div class="grid grid-cols-4 gap-3">
-                <div class="sh-card p-4">
+                <div onclick="switchTab('reports')" class="sh-card p-4 cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500 transition shadow-sm hover:shadow-md group">
                   <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold">
-                    <span>مبيعات اليوم</span>
+                    <span class="group-hover:text-emerald-500 transition">مبيعات اليوم</span>
                     <span class="text-emerald-500 font-black">↑ 15%</span>
                   </div>
                   <div id="kpiTodayRevenue" class="text-xl font-black text-slate-800 dark:text-white mt-1">0 د.ع</div>
+                  <span class="text-[10px] text-emerald-500 font-bold block mt-1">انقر لعرض تقارير المبيعات ↗</span>
                 </div>
 
-                <div class="sh-card p-4">
+                <div onclick="openInvoicesHistoryModal()" class="sh-card p-4 cursor-pointer hover:border-sky-400 dark:hover:border-sky-500 transition shadow-sm hover:shadow-md group">
                   <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold">
-                    <span>فواتير اليوم</span>
+                    <span class="group-hover:text-sky-500 transition">فواتير اليوم</span>
                     <span class="text-sky-500 font-black">فاتورة</span>
                   </div>
                   <div id="kpiTodayInvoices" class="text-2xl font-black text-slate-800 dark:text-white mt-1">0</div>
+                  <span class="text-[10px] text-sky-500 font-bold block mt-1">سجل فواتير البيع ↗</span>
                 </div>
 
-                <div class="sh-card p-4">
+                <div onclick="switchTab('inventory'); filterInventoryLowStockOnly();" class="sh-card p-4 cursor-pointer hover:border-amber-400 dark:hover:border-amber-500 transition shadow-sm hover:shadow-md group">
                   <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold">
-                    <span>نواقص المخزن</span>
+                    <span class="group-hover:text-amber-500 transition">نواقص المخزن</span>
                     <span class="text-rose-500 font-black">↓ بحاجة للطلب</span>
                   </div>
                   <div id="kpiLowStockCount" class="text-2xl font-black text-amber-500 mt-1">0</div>
+                  <span class="text-[10px] text-amber-500 font-bold block mt-1">فحص النواقص في المخزن ↗</span>
                 </div>
 
-                <div class="sh-card p-4">
+                <div onclick="switchTab('reports')" class="sh-card p-4 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition shadow-sm hover:shadow-md group">
                   <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold">
-                    <span>مبيعات الشهر</span>
+                    <span class="group-hover:text-indigo-500 transition">مبيعات الشهر</span>
                     <span class="text-emerald-500 font-black">↑ 23%</span>
                   </div>
                   <div id="kpiMonthlyRevenue" class="text-xl font-black text-slate-800 dark:text-white mt-1">0 د.ع</div>
+                  <span class="text-[10px] text-indigo-500 font-bold block mt-1">التقرير المالي الشهري ↗</span>
                 </div>
               </div>
 
@@ -251,13 +278,13 @@
                 <div class="col-span-5 sh-card p-4 flex flex-col justify-between">
                   <div class="flex items-center justify-between">
                     <h3 class="text-xs font-black text-slate-800 dark:text-white">توزيع طرق الدفع (نقد / آجل)</h3>
-                    <span class="text-slate-400 text-xs cursor-pointer">•••</span>
+                    <button type="button" onclick="switchTab('reports')" class="text-slate-400 hover:text-sky-500 text-xs">•••</button>
                   </div>
 
                   <div class="h-40 relative flex items-center justify-center my-2">
                     <canvas id="attendanceChart"></canvas>
                     <div class="absolute text-center">
-                      <div class="text-xl font-black text-slate-800 dark:text-white">80%</div>
+                      <div id="dashPaymentRatioText" class="text-xl font-black text-slate-800 dark:text-white">80%</div>
                       <div class="text-[10px] text-slate-400">نقداً</div>
                     </div>
                   </div>
@@ -272,64 +299,61 @@
                 <div class="col-span-7 sh-card p-4 flex flex-col justify-between">
                   <div class="flex items-center justify-between mb-2">
                     <h3 class="text-xs font-black text-slate-800 dark:text-white">مقارنة مبيعات الأقسام الأسبوعية</h3>
-                    <select class="text-[10px] font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1">
-                      <option>أسبوعي ⌵</option>
-                      <option>شهري</option>
+                    <select onchange="updateWeeklyChartMode(this.value)" class="text-[10px] font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 cursor-pointer">
+                      <option value="weekly">أسبوعي ⌵</option>
+                      <option value="monthly">شهري</option>
                     </select>
                   </div>
 
-                  <div class="h-44 relative">
+                  <div class="h-40 relative my-2">
                     <canvas id="performanceChart"></canvas>
                   </div>
 
-                  <div class="flex items-center justify-center gap-4 text-[10px] font-bold text-slate-400 pt-1">
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-400"></span> غذائية</span>
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> منظفات</span>
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400"></span> مشروبات</span>
+                  <div class="flex items-center justify-center gap-4 text-[11px] font-bold pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <span class="flex items-center gap-1.5 text-sky-500"><span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block"></span> غذائية</span>
+                    <span class="flex items-center gap-1.5 text-amber-500"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> منظفات</span>
+                    <span class="flex items-center gap-1.5 text-purple-500"><span class="w-2.5 h-2.5 rounded-full bg-purple-400 inline-block"></span> مشروبات</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Bottom Row (Market Tasks & Hourly Activity) -->
+              <!-- Bottom Row: Agenda & Activity Spline -->
               <div class="grid grid-cols-12 gap-4">
-                <!-- Market Tasks -->
-                <div class="col-span-5 sh-card p-4 space-y-3">
+                <!-- Daily Tasks -->
+                <div class="col-span-5 sh-card p-4 flex flex-col justify-between space-y-2">
                   <div class="flex items-center justify-between">
                     <h3 class="text-xs font-black text-slate-800 dark:text-white">مهام الماركت اليومية</h3>
-                    <button class="text-[10px] font-bold text-sky-500 hover:text-sky-600">+ مهمة جديدة</button>
+                    <button type="button" onclick="promptAddDashboardTask()" class="text-[10px] font-bold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer">+ مهمة جديدة</button>
                   </div>
-                  <div class="space-y-2 text-xs">
-                    <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <div id="dashTasksContainer" class="space-y-2 text-xs">
+                    <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                       <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" class="rounded text-sky-500">
+                        <input type="checkbox" onchange="toggleTaskState(this)" class="rounded text-sky-500 cursor-pointer">
                         <div>
                           <div class="font-bold text-slate-700 dark:text-slate-200">استلام بضاعة شركة الألبان</div>
                           <div class="text-[10px] text-slate-400">اليوم الساعة 10:00 ص</div>
                         </div>
                       </label>
-                      <div class="flex gap-1 text-slate-400"><span>✏</span></div>
                     </div>
 
-                    <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                       <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked class="rounded text-sky-500">
+                        <input type="checkbox" checked onchange="toggleTaskState(this)" class="rounded text-sky-500 cursor-pointer">
                         <div>
-                          <div class="font-bold text-slate-700 dark:text-slate-200">جرد رفوف الزيوت والمعلبات</div>
-                          <div class="text-[10px] text-slate-400">تم الإنجاز</div>
+                          <div class="font-bold text-slate-700 dark:text-slate-200 line-through text-slate-400">جرد رفوف الزيوت والمعلبات</div>
+                          <div class="text-[10px] text-emerald-500 font-bold">تم الإنجاز</div>
                         </div>
                       </label>
-                      <div class="flex gap-1 text-slate-400"><span>✏</span></div>
                     </div>
 
-                    <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                       <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked class="rounded text-sky-500">
+                        <input type="checkbox" checked onchange="toggleTaskState(this)" class="rounded text-sky-500 cursor-pointer">
                         <div>
-                          <div class="font-bold text-slate-700 dark:text-slate-200">تسديد دفعة مندوب المنظفات</div>
-                          <div class="text-[10px] text-slate-400">تم التسديد</div>
+                          <div class="font-bold text-slate-700 dark:text-slate-200 line-through text-slate-400">تسديد دفعة مندوب المنظفات</div>
+                          <div class="text-[10px] text-emerald-500 font-bold">تم التسديد</div>
                         </div>
                       </label>
-                      <div class="flex gap-1 text-slate-400"><span>✏</span></div>
                     </div>
                   </div>
                 </div>
@@ -348,48 +372,55 @@
 
             </div>
 
-            <!-- RIGHT 4-COLUMN BLOCK (CALENDAR & MARKET AGENDA) -->
+            <!-- RIGHT 4-COLUMN BLOCK (DYNAMIC WORKING CALENDAR & MARKET AGENDA) -->
             <div class="col-span-4 space-y-4">
-              <!-- Calendar -->
-              <div class="sh-card p-5 space-y-3">
+              <!-- Dynamic Calendar Widget -->
+              <div class="sh-card p-5 space-y-3 shadow-sm">
                 <div class="flex items-center justify-between">
-                  <button class="text-slate-400 hover:text-slate-700">‹</button>
-                  <h3 class="text-xs font-black text-slate-800 dark:text-white">آب 2026 - التقويم</h3>
-                  <button class="text-slate-400 hover:text-slate-700">›</button>
+                  <button type="button" onclick="prevDashCalendarMonth()" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-900 text-slate-600 dark:text-slate-300 flex items-center justify-center font-black transition cursor-pointer text-sm">‹</button>
+                  <h3 id="dashCalHeader" class="text-xs font-black text-slate-800 dark:text-white flex items-center gap-1.5">
+                    <span>📅</span>
+                    <span id="dashCalHeaderText">التقويم</span>
+                  </h3>
+                  <button type="button" onclick="nextDashCalendarMonth()" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-900 text-slate-600 dark:text-slate-300 flex items-center justify-center font-black transition cursor-pointer text-sm">›</button>
                 </div>
 
-                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400">
-                  <span>أحد</span><span>إثن</span><span>ثلا</span><span>أرب</span><span>خمي</span><span>جمع</span><span>سبت</span>
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 border-b border-slate-100 dark:border-slate-800/80 pb-1.5">
+                  <span>سبت</span><span>أحد</span><span>إثن</span><span>ثلا</span><span>أرب</span><span>خمي</span><span>جمع</span>
                 </div>
 
-                <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
-                  <span class="text-slate-300">28</span><span class="text-slate-300">29</span><span class="text-slate-300">30</span><span class="text-slate-300">31</span><span>01</span><span>02</span><span>03</span>
-                  <span>04</span><span>05</span><span>06</span><span>07</span><span>08</span><span>09</span><span>10</span>
-                  <span>11</span><span>12</span><span>13</span><span>14</span><span class="bg-sky-100 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 rounded-lg font-black py-0.5">22</span><span>16</span><span>17</span>
-                  <span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span>
-                  <span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span><span class="text-slate-300">01</span>
+                <div id="dashCalGrid" class="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
+                  <!-- Dynamically rendered by renderDashboardCalendar() -->
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-slate-400">
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> اليوم الحالي</span>
+                  <button type="button" onclick="resetDashCalendarToToday()" class="text-sky-500 hover:underline">الرجوع لليوم</button>
                 </div>
               </div>
 
-              <!-- Market Deliveries / Agenda -->
-              <div class="sh-card p-5 space-y-3">
+              <!-- Market Deliveries / Agenda (Connected to Suppliers) -->
+              <div class="sh-card p-5 space-y-3 shadow-sm">
                 <div class="flex items-center justify-between">
-                  <h3 class="text-xs font-black text-slate-800 dark:text-white">مواعيد وصول المناديب اليوم</h3>
-                  <span class="text-slate-400 text-xs cursor-pointer">•••</span>
+                  <h3 class="text-xs font-black text-slate-800 dark:text-white flex items-center gap-1.5">
+                    <span>🚚</span>
+                    <span>مواعيد وصول المناديب اليوم</span>
+                  </h3>
+                  <button type="button" onclick="switchTab('suppliers')" class="text-slate-400 hover:text-sky-500 text-xs font-bold transition">إدارة الموردين ↗</button>
                 </div>
 
-                <div class="p-3 rounded-2xl border-l-4 border-l-sky-500 bg-sky-50/50 dark:bg-slate-900/50 space-y-1">
+                <div onclick="switchTab('purchases')" class="p-3 rounded-2xl border-l-4 border-l-sky-500 bg-sky-50/50 dark:bg-slate-900/50 space-y-1 cursor-pointer hover:bg-sky-100/50 transition">
                   <div class="flex items-center justify-between text-[10px]">
                     <span class="font-bold text-slate-700 dark:text-slate-200">شركة الشرق للمشروبات</span>
-                    <span class="text-slate-400 font-mono">11:00 AM</span>
+                    <span class="text-sky-600 dark:text-sky-400 font-mono font-bold">11:00 AM</span>
                   </div>
                   <div class="text-xs font-bold text-slate-800 dark:text-white">تفريغ 20 كرتون عصائر ومياه</div>
                 </div>
 
-                <div class="p-3 rounded-2xl border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-slate-900/50 space-y-1">
+                <div onclick="switchTab('suppliers')" class="p-3 rounded-2xl border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-slate-900/50 space-y-1 cursor-pointer hover:bg-amber-100/50 transition">
                   <div class="flex items-center justify-between text-[10px]">
                     <span class="font-bold text-slate-700 dark:text-slate-200">مندوب شركة الفرات للزيوت</span>
-                    <span class="text-slate-400 font-mono">03:30 PM</span>
+                    <span class="text-amber-600 dark:text-amber-400 font-mono font-bold">03:30 PM</span>
                   </div>
                   <div class="text-xs font-bold text-slate-800 dark:text-white">تجديد رصيد زيت الطعام</div>
                 </div>
@@ -535,7 +566,6 @@
                       <tr>
                         <th class="p-2 text-center w-10" data-i18n="cart_th_num">#</th>
                         <th class="p-2" data-i18n="cart_th_name">اسم المادة</th>
-                        <th class="p-2 text-center font-mono" data-i18n="cart_th_cost">سعر الشراء</th>
                         <th class="p-2 text-center font-mono" data-i18n="cart_th_price">سعر البيع</th>
                         <th class="p-2 text-center" data-i18n="cart_th_type">نوعية البيع</th>
                         <th class="p-2 text-center" data-i18n="cart_th_qty">العدد / الكمية</th>
@@ -864,6 +894,38 @@
                 <select id="ap-supplier" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1.5 text-xs text-slate-900 dark:text-white font-bold text-center">
                   <option value="">بدون مندوب (مباشر)</option>
                 </select>
+              </div>
+
+              <!-- 5. Expiry Date & Calendar (تقويم لمعرفة تاريخ انتهاء الصلاحية وكم يوم باقي) -->
+              <div class="p-3 bg-gradient-to-r from-slate-50 to-sky-50/40 dark:from-slate-900 dark:to-slate-800/90 rounded-2xl border-2 border-sky-400/40 dark:border-sky-500/30 space-y-2 shadow-xs">
+                <div class="flex items-center justify-between">
+                  <label data-i18n="ap_lbl_expiry" class="block text-xs text-sky-700 dark:text-sky-300 font-black flex items-center gap-1.5">
+                    <span>📅</span>
+                    <span>5. تقويم تاريخ انتهاء الصلاحية</span>
+                  </label>
+                  <button type="button" onclick="clearExpiryDate()" class="text-[11px] text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold hover:underline transition">
+                    مسح التاريخ ✕
+                  </button>
+                </div>
+                
+                <!-- Quick Preset Date Buttons -->
+                <div class="flex items-center gap-1.5 text-[10px] font-bold">
+                  <span class="text-slate-500 dark:text-slate-400">خيارات سريعة:</span>
+                  <button type="button" onclick="addMonthsToExpiry(3)" class="px-2 py-0.5 rounded-lg bg-sky-100 hover:bg-sky-200 dark:bg-sky-950/60 dark:hover:bg-sky-900 text-sky-700 dark:text-sky-300 transition">+3 أشهر</button>
+                  <button type="button" onclick="addMonthsToExpiry(6)" class="px-2 py-0.5 rounded-lg bg-sky-100 hover:bg-sky-200 dark:bg-sky-950/60 dark:hover:bg-sky-900 text-sky-700 dark:text-sky-300 transition">+6 أشهر</button>
+                  <button type="button" onclick="addMonthsToExpiry(12)" class="px-2 py-0.5 rounded-lg bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 transition">+سنة واحدة</button>
+                  <button type="button" onclick="addMonthsToExpiry(24)" class="px-2 py-0.5 rounded-lg bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 transition">+سنتين</button>
+                </div>
+
+                <div class="relative">
+                  <input id="ap-expiryDate" oninput="updateExpiryDaysRemaining()" onchange="updateExpiryDaysRemaining()" type="date" class="w-full bg-white dark:bg-slate-800 border-2 border-sky-300 dark:border-sky-700 rounded-xl px-3 py-2 text-sm font-black text-slate-900 dark:text-white text-center focus:border-sky-500 transition shadow-xs cursor-pointer">
+                </div>
+
+                <!-- Expiry Days Remaining Display (تحتها يقول كم ايام متبقي) -->
+                <div id="ap-expiryStatusBox" class="p-2 rounded-xl text-center text-xs font-black flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60 transition-all shadow-inner">
+                  <span id="ap-expiryStatusIcon" class="text-sm">⏳</span>
+                  <span id="ap-expiryDaysText">لم يتم تحديد تاريخ انتهاء الصلاحية (اختياري)</span>
+                </div>
               </div>
 
               <!-- 5A. Packaging for SIMPLE COUNT MODE -->
@@ -1516,6 +1578,10 @@
 
             <!-- Quick Actions -->
             <div class="flex items-center gap-2">
+              <button onclick="openSupplierReturnModal()" class="px-4 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-xl text-xs font-black flex items-center gap-1.5 transition">
+                <span>↩️</span>
+                <span>إرجاع مواد إلى مندوب</span>
+              </button>
               <button onclick="openReceiptPhotoModal('file')" class="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 transition" title="رفع صورة وصل محفوظة في الجهاز أو التقاطها بالكاميرا">
                 <span>📸</span>
                 <span>قراءة صورة الوصل (من الجهاز / كاميرا)</span>
@@ -1753,11 +1819,17 @@
               </div>
             </div>
 
-            <!-- Add Supplier Account Button -->
-            <button onclick="openCreateSupplierModal()" class="px-5 py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-2 transition">
-              <span>➕</span>
-              <span>إنشاء حساب مندوب / شركة جديدة</span>
-            </button>
+            <!-- Header Actions -->
+            <div class="flex items-center gap-2">
+              <button onclick="openSupplierReturnModal()" class="px-4 py-2 bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-black text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition">
+                <span>↩️</span>
+                <span>إرجاع مواد إلى مندوب</span>
+              </button>
+              <button onclick="openCreateSupplierModal()" class="px-5 py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-2 transition">
+                <span>➕</span>
+                <span>إنشاء حساب مندوب / شركة جديدة</span>
+              </button>
+            </div>
           </div>
 
           <!-- KPI Summary Cards -->
@@ -2164,6 +2236,147 @@
         </div>
 
         <!-- ======================================================== -->
+        <!-- MODAL: RETURN ITEMS TO SUPPLIER / REPRESENTATIVE (إرجاع مواد إلى مندوب / مورد) -->
+        <!-- ======================================================== -->
+        <div id="supplierReturnModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 w-full max-w-2xl space-y-4 shadow-2xl animate-scale-up max-h-[95vh] overflow-y-auto">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl font-bold">
+                  ↩️
+                </div>
+                <div>
+                  <h3 class="font-black text-base text-slate-800 dark:text-white">إرجاع مواد إلى مندوب / مورد</h3>
+                  <p class="text-xs text-slate-400">إنقاص كمية المواد من المخزن، وتعديل حساب المندوب أو استرجاع كاش</p>
+                </div>
+              </div>
+              <button onclick="closeSupplierReturnModal()" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-rose-500 flex items-center justify-center font-bold text-base transition">✕</button>
+            </div>
+
+            <!-- Return Form -->
+            <div class="space-y-3.5 text-xs">
+              
+              <!-- Row 1: Select Supplier -->
+              <div>
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">المندوب / المورد المستلم للمرتجع *</label>
+                <select id="ret-supplierSelect" onchange="handleSupplierReturnSupplierChange()" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 font-bold text-slate-800 dark:text-white focus:outline-none focus:border-amber-500">
+                  <option value="">-- اختر المندوب أو الشركة --</option>
+                </select>
+              </div>
+
+              <!-- Row 2: Select / Search Product -->
+              <div class="grid grid-cols-12 gap-3">
+                <div class="col-span-5">
+                  <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">بحث سريع بالباركود / الاسم</label>
+                  <input id="ret-barcodeSearch" oninput="handleSupplierReturnBarcodeSearch()" type="text" placeholder="امسح الباركود أو اكتب الاسم..." class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-amber-500 font-mono">
+                </div>
+
+                <div class="col-span-7">
+                  <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">اختيار المادة المرجعة *</label>
+                  <select id="ret-productSelect" onchange="handleSupplierReturnProductChange()" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-slate-800 dark:text-white focus:outline-none focus:border-amber-500">
+                    <option value="">-- اختر المادة من القائمة --</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Product Info Badge Card (Visible when product selected) -->
+              <div id="ret-productInfoCard" class="hidden p-3.5 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 rounded-2xl space-y-2">
+                <div class="flex items-center justify-between">
+                  <span id="ret-infoName" class="font-black text-amber-950 dark:text-amber-200 text-xs">اسم المادة</span>
+                  <span id="ret-infoBarcode" class="font-mono text-[11px] text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-lg">باركود</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center text-[11px] pt-1 border-t border-amber-200/60 dark:border-amber-800/40">
+                  <div class="bg-white/80 dark:bg-slate-900/60 p-1.5 rounded-xl border border-amber-100 dark:border-slate-800">
+                    <span class="text-slate-400 block text-[10px]">المتوفر في المخزن</span>
+                    <b id="ret-infoStock" class="text-slate-800 dark:text-white font-mono text-xs">0 قطعة</b>
+                  </div>
+                  <div class="bg-white/80 dark:bg-slate-900/60 p-1.5 rounded-xl border border-amber-100 dark:border-slate-800">
+                    <span class="text-slate-400 block text-[10px]">سعر الشراء والتكلفة</span>
+                    <b id="ret-infoCost" class="text-emerald-600 dark:text-emerald-400 font-mono text-xs">0 د.ع</b>
+                  </div>
+                  <div class="bg-white/80 dark:bg-slate-900/60 p-1.5 rounded-xl border border-amber-100 dark:border-slate-800">
+                    <span class="text-slate-400 block text-[10px]">رصيد الكراتين</span>
+                    <b id="ret-infoCartons" class="text-amber-600 dark:text-amber-400 font-mono text-xs">0 كرتون</b>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 3: Quantities and Price -->
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">الكمية المرجعة (قطع) *</label>
+                  <input id="ret-quantity" oninput="calculateSupplierReturnTotal()" type="number" min="1" step="1" value="1" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-black text-slate-800 dark:text-white font-mono focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div>
+                  <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">سعر الشراء / الإرجاع (للقطعة)</label>
+                  <input id="ret-unitCost" oninput="calculateSupplierReturnTotal()" type="number" min="0" step="50" value="0" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-black text-emerald-600 dark:text-emerald-400 font-mono focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div>
+                  <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">إجمالي المبلغ المسترجع</label>
+                  <div class="h-9 px-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between">
+                    <span id="ret-totalAmountText" class="font-black text-rose-600 dark:text-rose-400 font-mono text-sm">0 د.ع</span>
+                    <span class="text-[10px] text-slate-400 font-bold">د.ع</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 4: Return Reason & Financial Action -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">سبب إرجاع البضاعة *</label>
+                  <select id="ret-reason" class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                    <option value="تالف / معيب عند الاستلام">⚠️ بضاعة تالفة أو معيبة عند الاستلام</option>
+                    <option value="منتهي الصلاحية">⏳ انتهاء أو قرب انتهاء الصلاحية</option>
+                    <option value="راكد بطيء الحركة">📉 بضاعة راكدة غير مرغوبة</option>
+                    <option value="توريد زائد / خطأ بالطلب">📦 خطأ في التوريد أو كمية زائدة</option>
+                    <option value="استبدال أصناف">🔄 استبدال بأصناف أخرى</option>
+                    <option value="أخرى">📝 سبب آخر (موضح بالملاحظات)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">التسوية المالية وقيمة المرتجع *</label>
+                  <div class="space-y-1.5 pt-0.5">
+                    <label class="flex items-center gap-2 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer">
+                      <input type="radio" name="ret-financialAction" value="deduct_balance" checked class="accent-amber-500">
+                      <span class="font-bold text-slate-700 dark:text-slate-200 text-[11px]">💳 خصم من دين وحساب المندوب</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer">
+                      <input type="radio" name="ret-financialAction" value="cash_refund" class="accent-emerald-500">
+                      <span class="font-bold text-slate-700 dark:text-slate-200 text-[11px]">💵 استرداد نقدي فوري للصندوق (كاش)</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 5: Notes -->
+              <div>
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">ملاحظات إضافية (اختياري)</label>
+                <input id="ret-notes" type="text" placeholder="مثال: تم تسليم البضاعة للمندوب باليد / رقم الوصل السابق..." class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none">
+              </div>
+
+            </div>
+
+            <!-- Modal Footer Buttons -->
+            <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+              <button onclick="closeSupplierReturnModal()" class="px-5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition">
+                إلغاء
+              </button>
+              
+              <button onclick="submitSupplierReturn()" id="btnSubmitSupplierReturn" class="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-2 transition">
+                <span>↩️</span>
+                <span>تأكيد إرجاع البضاعة وخصم المخزن</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ======================================================== -->
         <!-- VIEW 7: CUSTOMERS & CREDIT DEBTS (الزبائن وحسابات الآجل) -->
         <!-- ======================================================== -->
         <div id="tab-customers" class="tab-content hidden space-y-4">
@@ -2448,6 +2661,127 @@
         </div>
 
         <!-- ======================================================== -->
+        <!-- VIEW 9.5: EXPIRING SOON & EXPIRED PRODUCTS (المواد قريبة من انتهاء الصلاحية) -->
+        <!-- ======================================================== -->
+        <div id="tab-expiringProducts" class="tab-content hidden space-y-4">
+          
+          <!-- Top Header Bar -->
+          <div class="flex items-center justify-between sh-card px-5 py-3">
+            <div class="flex items-center gap-3">
+              <button onclick="switchTab('dashboard')" class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
+                <span>🔙</span>
+                <span>العودة للرئيسية</span>
+              </button>
+              <div>
+                <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>⏳</span>
+                  <span>المواد قريبة انتهاء الصلاحية والمنتهية (رادار الصلاحيات)</span>
+                </h2>
+                <p class="text-[11px] text-slate-400">تتبع ذكي لتوايخ انتهاء صلاحية المواد بالمخزن، تنبيهات الفترات الحرجة، وإمكانية إرجاعها للمندوب فوراً</p>
+              </div>
+            </div>
+
+            <!-- Quick Action Toolbar -->
+            <div class="flex items-center gap-2">
+              <button onclick="openSupplierReturnModal()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-1.5 transition">
+                <span>↩️</span>
+                <span>إرجاع مادة للمندوب</span>
+              </button>
+              <button onclick="openAddDamagedModal()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-1.5 transition">
+                <span>⚠️</span>
+                <span>تحويل للتوالف</span>
+              </button>
+              <button onclick="loadExpiringProducts()" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl flex items-center gap-1 transition">
+                <span>🔄</span>
+                <span>تحديث</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Summary Cards -->
+          <div class="grid grid-cols-4 gap-3.5">
+            <!-- 1. Total Expiring / Expired Products -->
+            <div class="sh-card p-4 flex items-center justify-between border-r-4 border-amber-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">إجمالي المواد المسجلة بالصلاحية</span>
+                <span id="exp-totalCount" class="text-xl font-black text-amber-500 font-mono">0 مادة</span>
+              </div>
+              <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-lg">⏳</div>
+            </div>
+
+            <!-- 2. Expired Products (Critical) -->
+            <div class="sh-card p-4 flex items-center justify-between border-r-4 border-rose-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">منتهية الصلاحية فعلياً</span>
+                <span id="exp-expiredCount" class="text-xl font-black text-rose-500 font-mono">0 مادة</span>
+              </div>
+              <div class="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center font-bold text-lg">🔴</div>
+            </div>
+
+            <!-- 3. Critical (Under 30 Days) -->
+            <div class="sh-card p-4 flex items-center justify-between border-r-4 border-orange-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">حرجة (أقل من 30 يوم)</span>
+                <span id="exp-criticalCount" class="text-xl font-black text-orange-500 font-mono">0 مادة</span>
+              </div>
+              <div class="w-10 h-10 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center font-bold text-lg">⚠️</div>
+            </div>
+
+            <!-- 4. Total Potential Loss Value -->
+            <div class="sh-card p-4 flex items-center justify-between border-r-4 border-purple-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">قيمة البضاعة المهددة بالخسارة</span>
+                <span id="exp-totalLossValue" class="text-xl font-black text-purple-600 dark:text-purple-400 font-mono">0 د.ع</span>
+              </div>
+              <div class="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold text-lg">💰</div>
+            </div>
+          </div>
+
+          <!-- Filter & Search Controls -->
+          <div class="sh-card p-4 space-y-3">
+            <div class="flex items-center justify-between gap-3">
+              <!-- Search Bar -->
+              <div class="relative flex-1">
+                <input id="exp-searchInput" oninput="filterExpiringProductsTable()" type="text" placeholder="بحث باسم المادة، الباركود، أو اسم المندوب..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-amber-500">
+              </div>
+
+              <!-- Time Threshold Filter Pills -->
+              <div class="flex items-center gap-1.5 text-xs font-bold">
+                <button onclick="setExpiringFilter('all')" id="exp-filter-all" class="px-3 py-1.5 rounded-xl bg-amber-500 text-white transition">الكل</button>
+                <button onclick="setExpiringFilter('expired')" id="exp-filter-expired" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 text-rose-600 dark:text-rose-400 transition">🔴 منتهية الصلاحية</button>
+                <button onclick="setExpiringFilter('30')" id="exp-filter-30" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-amber-100 text-amber-600 dark:text-amber-400 transition">🟠 أقل من شهر (30 يوم)</button>
+                <button onclick="setExpiringFilter('60')" id="exp-filter-60" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-yellow-100 text-yellow-600 dark:text-yellow-400 transition">🟡 أقل من شهرين (60 يوم)</button>
+                <button onclick="setExpiringFilter('90')" id="exp-filter-90" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 text-sky-600 dark:text-sky-400 transition">🟢 أقل من 3 أشهر (90 يوم)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expiring Items Table -->
+          <div class="sh-card p-4 overflow-x-auto">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                <tr>
+                  <th class="p-3">#</th>
+                  <th class="p-3">اسم المادة</th>
+                  <th class="p-3">الباركود</th>
+                  <th class="p-3">المندوب المورد</th>
+                  <th class="p-3 text-center">الكمية بالمخزن</th>
+                  <th class="p-3 text-center">سعر التكلفة</th>
+                  <th class="p-3 text-center">إجمالي القيمة</th>
+                  <th class="p-3 text-center">تاريخ الانتهاء</th>
+                  <th class="p-3 text-center">الحالة والمتبقي</th>
+                  <th class="p-3 text-center">إجراءات سريعة</th>
+                </tr>
+              </thead>
+              <tbody id="expiringTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr><td colspan="10" class="text-center py-8 text-slate-400">جاري فحص وتدقيق تواريخ الصلاحية...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- ======================================================== -->
         <!-- VIEW 10: COMPREHENSIVE REPORTS & ANALYTICS (مركز التقارير الشاملة والذكية) -->
         <!-- ======================================================== -->
         <div id="tab-reports" class="tab-content hidden space-y-4">
@@ -2500,6 +2834,73 @@
               <span class="text-[11px] text-slate-400 font-bold block">الديون المتبقية للزبائن</span>
               <span id="rep-customersDebtsTotal" class="text-base font-black text-rose-500 font-mono">0 د.ع</span>
               <span id="rep-suppliersDebtsTotal" class="text-[10px] text-slate-400 font-bold block mt-0.5">ديون الموردين: 0 د.ع</span>
+            </div>
+          </div>
+
+          <!-- Profit Breakdown by Sale Mode (حساب الأرباح حسب نوع البيع: كرتون / مفرد / جملة) -->
+          <div class="sh-card p-4 space-y-3 bg-gradient-to-r from-slate-900/50 via-slate-800/40 to-slate-900/50 border border-sky-500/30">
+            <div class="flex items-center justify-between border-b border-slate-700/50 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-base">💰</span>
+                <div>
+                  <h3 class="text-sm font-black text-white">تفصيل وحساب الأرباح حسب نوعية البيع (مفرد / كرتون / جملة)</h3>
+                  <p class="text-[11px] text-slate-400">حساب دقيق للأرباح المحققة والأرباح المتوقعة في المخزن لكل نمط بيع</p>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-black text-xs">مباشر ودقيق</span>
+            </div>
+
+            <div class="grid grid-cols-4 gap-3">
+              <!-- 1. Retail Profit -->
+              <div class="p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 space-y-1">
+                <div class="flex items-center justify-between text-xs font-bold text-emerald-400">
+                  <span>🟢 أرباح بيع المفرد (قطعة)</span>
+                  <span>Retail</span>
+                </div>
+                <div id="rep-retailProfit" class="text-lg font-black text-emerald-300 font-mono">+0 د.ع</div>
+                <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold pt-1 border-t border-emerald-900/40">
+                  <span>المبيعات: <span id="rep-retailSalesTotal" class="font-mono text-emerald-200">0</span></span>
+                  <span>المتوقع: <span id="rep-projRetailProfit" class="font-mono text-emerald-200">0</span></span>
+                </div>
+              </div>
+
+              <!-- 2. Carton Profit -->
+              <div class="p-3.5 rounded-2xl bg-purple-950/30 border border-purple-500/40 space-y-1">
+                <div class="flex items-center justify-between text-xs font-bold text-purple-400">
+                  <span>🟣 أرباح بيع الكرتون (جملة كراتين)</span>
+                  <span>Carton</span>
+                </div>
+                <div id="rep-cartonProfit" class="text-lg font-black text-purple-300 font-mono">+0 د.ع</div>
+                <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold pt-1 border-t border-purple-900/40">
+                  <span>المبيعات: <span id="rep-cartonSalesTotal" class="font-mono text-purple-200">0</span></span>
+                  <span>المتوقع: <span id="rep-projCartonProfit" class="font-mono text-purple-200">0</span></span>
+                </div>
+              </div>
+
+              <!-- 3. Wholesale Profit -->
+              <div class="p-3.5 rounded-2xl bg-sky-950/30 border border-sky-500/40 space-y-1">
+                <div class="flex items-center justify-between text-xs font-bold text-sky-400">
+                  <span>🔵 أرباح بيع الجملة</span>
+                  <span>Wholesale</span>
+                </div>
+                <div id="rep-wholesaleProfit" class="text-lg font-black text-sky-300 font-mono">+0 د.ع</div>
+                <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold pt-1 border-t border-sky-900/40">
+                  <span>المبيعات: <span id="rep-wholesaleSalesTotal" class="font-mono text-sky-200">0</span></span>
+                  <span>المتوقع: <span id="rep-projWholesaleProfit" class="font-mono text-sky-200">0</span></span>
+                </div>
+              </div>
+
+              <!-- 4. Combined Total Profit -->
+              <div class="p-3.5 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-1">
+                <div class="flex items-center justify-between text-xs font-bold text-amber-400">
+                  <span>⭐ إجمالي صافي الأرباح المحققة</span>
+                  <span>Total Profit</span>
+                </div>
+                <div id="rep-totalProfitCombined" class="text-lg font-black text-amber-300 font-mono">+0 د.ع</div>
+                <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold pt-1 border-t border-amber-900/40">
+                  <span>إجمالي الإيرادات: <span id="rep-totalRevenueAllCombined" class="font-mono text-amber-200">0</span></span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2922,7 +3323,7 @@
                 <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl space-y-2 text-xs">
                   <div class="flex justify-between items-center">
                     <span class="text-slate-400 font-bold">الإصدار المثبت حالياً:</span>
-                    <span id="settingsAppVersion" class="font-mono font-black text-sky-500">v1.6.0 Pro</span>
+                    <span id="settingsAppVersion" class="font-mono font-black text-sky-500">v1.7.0 Pro</span>
                   </div>
                   <div class="flex justify-between items-center">
                     <span class="text-slate-400 font-bold">حالة خادم التحديثات:</span>
@@ -3024,7 +3425,7 @@
       <h3 class="text-lg font-black">📲 تطبيق المندوب والمحلات للموبايل</h3>
       <p class="text-xs text-slate-400">امسح الباركود لفتح بوابة إرسال الطلبيات مباشرة بالسحابة</p>
       <div class="bg-white p-3 rounded-2xl w-44 h-44 mx-auto flex items-center justify-center shadow-md">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://hama2002m2002-lab.github.io/mo74mmed.pos/" alt="QR" class="w-full h-full">
+        <div id="repQrCodeContainer" class="w-full h-full flex items-center justify-center"></div>
       </div>
       <button onclick="closeRepPortalModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl">إغلاق</button>
     </div>

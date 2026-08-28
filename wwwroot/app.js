@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderInvoiceTabs();
   renderCashierCart();
   await loadDashboard();
+  await loadExpiringProducts();
   await loadRepOrders(false); // Initial load without sound alert
 
   // Setup C# Push Event Listener
@@ -82,7 +83,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function setupGlobalKeyboardShortcuts() {
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'F12') {
+    if (e.key === 'F5' || (e.ctrlKey && (e.key === 'r' || e.key === 'R'))) {
+      e.preventDefault();
+      window.location.reload();
+    } else if (e.key === 'F12') {
       e.preventDefault();
       submitCashierSale();
     } else if (e.key === 'F1') {
@@ -173,6 +177,7 @@ const i18n = {
     ap_name_ph: "اسم المادة",
     ap_lbl_cat: "3. تصنيف المادة",
     ap_lbl_sup: "4. اسم المندوب / الشركة الموردة",
+    ap_lbl_expiry: "5. تاريخ انتهاء الصلاحية",
     ap_lbl_cartons: "عدد الكراتين",
     ap_lbl_pieces: "المواد بالكرتون",
     ap_lbl_total: "مجموع كل المواد",
@@ -344,6 +349,7 @@ const i18n = {
     ap_name_ph: "ناوی کاڵا",
     ap_lbl_cat: "٣. پۆلێنی کاڵا (جۆر)",
     ap_lbl_sup: "٤. ناوی مەندوب / کۆمپانیا",
+    ap_lbl_expiry: "٥. بەرواری بەسەرچوون (مێژووی بەسەرچوون)",
     ap_lbl_cartons: "ژمارەی کارتۆن",
     ap_lbl_pieces: "دانە لە کارتۆندا",
     ap_lbl_total: "کۆی گشتی هەموو کاڵاکان",
@@ -515,6 +521,7 @@ const i18n = {
     ap_name_ph: "Item Name",
     ap_lbl_cat: "3. Category",
     ap_lbl_sup: "4. Supplier / Company",
+    ap_lbl_expiry: "5. Expiry Date",
     ap_lbl_cartons: "Cartons Count",
     ap_lbl_pieces: "Pieces / Carton",
     ap_lbl_total: "Total Stock Items",
@@ -680,6 +687,7 @@ function switchTab(tabId) {
   if (tabId === 'customers') loadCustomers();
   if (tabId === 'stockAudit') loadStockAudit();
   if (tabId === 'damagedItems') loadDamagedItems();
+  if (tabId === 'expiringProducts') loadExpiringProducts();
   if (tabId === 'reports') loadReports();
   if (tabId === 'users') loadUsers();
   if (tabId === 'printing') loadPrintingSettings();
@@ -789,18 +797,239 @@ function applyLanguage(lang) {
 // ========================================================
 // DASHBOARD CHARTS
 // ========================================================
+let currentDashCalYear = new Date().getFullYear();
+let currentDashCalMonth = new Date().getMonth();
+let selectedDashCalDate = new Date().getDate();
+
+const monthNamesAr = [
+  'كانون الثاني (1)', 'شباط (2)', 'آذار (3)', 'نيسان (4)', 
+  'أيار (5)', 'حزيران (6)', 'تموز (7)', 'آب (8)', 
+  'أيلول (9)', 'تشرين الأول (10)', 'تشرين الثاني (11)', 'كانون الأول (12)'
+];
+
+function renderDashboardCalendar() {
+  const headerEl = document.getElementById('dashCalHeaderText');
+  const gridEl = document.getElementById('dashCalGrid');
+  if (!gridEl) return;
+
+  if (headerEl) {
+    headerEl.innerText = `${monthNamesAr[currentDashCalMonth]} ${currentDashCalYear}`;
+  }
+
+  gridEl.innerHTML = '';
+
+  const realToday = new Date();
+  const isCurrentMonthYear = (realToday.getFullYear() === currentDashCalYear && realToday.getMonth() === currentDashCalMonth);
+  const realDateToday = realToday.getDate();
+
+  // First day of current month
+  const firstDay = new Date(currentDashCalYear, currentDashCalMonth, 1);
+  // Days in current month
+  const daysInMonth = new Date(currentDashCalYear, currentDashCalMonth + 1, 0).getDate();
+  // Days in previous month
+  const daysInPrevMonth = new Date(currentDashCalYear, currentDashCalMonth, 0).getDate();
+
+  // Saturday-based start index (Saturday=0, Sunday=1, Monday=2, Tuesday=3, Wednesday=4, Thursday=5, Friday=6)
+  // JS getDay(): Sunday=0, Monday=1, ..., Saturday=6
+  const startDayOffset = (firstDay.getDay() + 1) % 7;
+
+  // Render preceding month days
+  for (let i = startDayOffset - 1; i >= 0; i--) {
+    const prevDayNum = daysInPrevMonth - i;
+    const span = document.createElement('span');
+    span.className = 'py-1 text-slate-300 dark:text-slate-600 select-none text-[11px]';
+    span.innerText = prevDayNum < 10 ? `0${prevDayNum}` : prevDayNum;
+    gridEl.appendChild(span);
+  }
+
+  // Render current month days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    const isToday = isCurrentMonthYear && (d === realDateToday);
+    const isSelected = (d === selectedDashCalDate);
+
+    if (isToday) {
+      btn.className = 'py-1 rounded-xl bg-emerald-500 text-slate-950 font-black shadow-md scale-105 transition hover:bg-emerald-400 border border-emerald-300 text-xs';
+    } else if (isSelected) {
+      btn.className = 'py-1 rounded-xl bg-sky-500 text-white font-black shadow-xs transition text-xs';
+    } else {
+      btn.className = 'py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition text-xs font-bold';
+    }
+
+    btn.innerText = d < 10 ? `0${d}` : d;
+    btn.onclick = () => selectDashCalendarDate(d);
+    gridEl.appendChild(btn);
+  }
+
+  // Render trailing next month days to complete 7-column grid
+  const totalCellsRendered = startDayOffset + daysInMonth;
+  const remainingCells = (7 - (totalCellsRendered % 7)) % 7;
+  for (let n = 1; n <= remainingCells; n++) {
+    const span = document.createElement('span');
+    span.className = 'py-1 text-slate-300 dark:text-slate-600 select-none text-[11px]';
+    span.innerText = `0${n}`;
+    gridEl.appendChild(span);
+  }
+}
+
+function prevDashCalendarMonth() {
+  currentDashCalMonth--;
+  if (currentDashCalMonth < 0) {
+    currentDashCalMonth = 11;
+    currentDashCalYear--;
+  }
+  renderDashboardCalendar();
+}
+
+function nextDashCalendarMonth() {
+  currentDashCalMonth++;
+  if (currentDashCalMonth > 11) {
+    currentDashCalMonth = 0;
+    currentDashCalYear++;
+  }
+  renderDashboardCalendar();
+}
+
+function resetDashCalendarToToday() {
+  const now = new Date();
+  currentDashCalYear = now.getFullYear();
+  currentDashCalMonth = now.getMonth();
+  selectedDashCalDate = now.getDate();
+  renderDashboardCalendar();
+}
+
+function selectDashCalendarDate(day) {
+  selectedDashCalDate = day;
+  renderDashboardCalendar();
+  const dateStr = `${currentDashCalYear}/${String(currentDashCalMonth + 1).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+  // Show quick info or switch to invoices of this day if user wants
+  console.log('Selected date:', dateStr);
+}
+
+function filterInventoryLowStockOnly() {
+  const searchInput = document.getElementById('invSearchInput');
+  if (searchInput) {
+    searchInput.value = '';
+  }
+  const statusFilter = document.getElementById('invStatusFilter');
+  if (statusFilter) {
+    statusFilter.value = 'LOW';
+    filterInventory();
+  }
+}
+
+function toggleTaskState(chk) {
+  const labelDiv = chk.closest('label')?.querySelector('div > div:first-child');
+  const subDiv = chk.closest('label')?.querySelector('div > div:last-child');
+  if (chk.checked) {
+    if (labelDiv) {
+      labelDiv.classList.add('line-through', 'text-slate-400');
+      labelDiv.classList.remove('text-slate-700', 'dark:text-slate-200');
+    }
+    if (subDiv) {
+      subDiv.innerText = 'تم الإنجاز ✔';
+      subDiv.className = 'text-[10px] text-emerald-500 font-bold';
+    }
+  } else {
+    if (labelDiv) {
+      labelDiv.classList.remove('line-through', 'text-slate-400');
+      labelDiv.classList.add('text-slate-700', 'dark:text-slate-200');
+    }
+    if (subDiv) {
+      subDiv.innerText = 'قيد الانتظار ⏳';
+      subDiv.className = 'text-[10px] text-slate-400';
+    }
+  }
+}
+
+function promptAddDashboardTask() {
+  const taskText = prompt('أدخل نص المهمة الجديدة للماركت:');
+  if (!taskText || !taskText.trim()) return;
+
+  const container = document.getElementById('dashTasksContainer');
+  if (!container) return;
+
+  const row = document.createElement('div');
+  row.className = 'flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition';
+  row.innerHTML = `
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input type="checkbox" onchange="toggleTaskState(this)" class="rounded text-sky-500 cursor-pointer">
+      <div>
+        <div class="font-bold text-slate-700 dark:text-slate-200">${taskText.trim()}</div>
+        <div class="text-[10px] text-sky-500 font-bold">مضافة حديثاً ⚡</div>
+      </div>
+    </label>
+  `;
+  container.prepend(row);
+}
+
+function updateWeeklyChartMode(mode) {
+  renderPerformanceChart();
+}
+
 async function loadDashboard() {
   const res = await callBackend('get_dashboard_data');
   if (res && res.success) {
-    document.getElementById('kpiTodayRevenue').innerText = Number(res.todayRevenue || 0).toLocaleString() + ' د.ع';
-    document.getElementById('kpiTodayInvoices').innerText = Number(res.todayInvoices || 0).toLocaleString();
-    document.getElementById('kpiMonthlyRevenue').innerText = Number(res.monthlyRevenue || 0).toLocaleString() + ' د.ع';
-    document.getElementById('kpiLowStockCount').innerText = Number(res.lowStockCount || 0).toLocaleString();
+    const revEl = document.getElementById('kpiTodayRevenue');
+    if (revEl) revEl.innerText = Number(res.todayRevenue || 0).toLocaleString() + ' د.ع';
+
+    const invEl = document.getElementById('kpiTodayInvoices');
+    if (invEl) invEl.innerText = Number(res.todayInvoices || 0).toLocaleString();
+
+    const mRevEl = document.getElementById('kpiMonthlyRevenue');
+    if (mRevEl) mRevEl.innerText = Number(res.monthlyRevenue || 0).toLocaleString() + ' د.ع';
+
+    const lowEl = document.getElementById('kpiLowStockCount');
+    if (lowEl) lowEl.innerText = Number(res.lowStockCount || 0).toLocaleString();
+
+    // Remaining Stock Badge in Banner
+    const stockBadge = document.getElementById('dashRemainingStockBadge');
+    if (stockBadge) {
+      stockBadge.innerText = `${Number(res.totalProducts || 0).toLocaleString()} مادة (${Number(res.totalStockPieces || 0).toLocaleString()} قطعة)`;
+    }
+
+    // Payment donut ratio
+    const cashVal = Number(res.payments?.cash || 0);
+    const debtVal = Number(res.payments?.debt || 0);
+    if (cashVal + debtVal > 0) {
+      const cashPct = Math.round((cashVal / (cashVal + debtVal)) * 100);
+      const ratioEl = document.getElementById('dashPaymentRatioText');
+      if (ratioEl) ratioEl.innerText = `${cashPct}%`;
+    }
   }
 
+  renderDashboardCalendar();
   renderAttendanceChart();
   renderPerformanceChart();
   renderActivitySplineChart();
+}
+
+function handleGlobalTopSearch(query) {
+  if (!query || !query.trim()) return;
+  const q = query.trim().toLowerCase();
+  // Check if invoice query
+  if (q.startsWith('inv-') || q.startsWith('ret-')) {
+    openInvoicesHistoryModal();
+    setTimeout(() => {
+      const input = document.getElementById('inv-search-input');
+      if (input) {
+        input.value = q;
+        filterInvoicesHistory();
+      }
+    }, 200);
+    return;
+  }
+  // Otherwise switch to Inventory view and search
+  switchTab('inventory');
+  setTimeout(() => {
+    const invInput = document.getElementById('invSearchInput');
+    if (invInput) {
+      invInput.value = q;
+      filterInventory();
+      invInput.focus();
+    }
+  }, 200);
 }
 
 function renderAttendanceChart() {
@@ -1156,6 +1385,8 @@ function resumeBarcodeFocus() {
   }, 100);
 }
 
+let lastAddedCartItemId = null;
+
 function addItemToCurrentCart(product) {
   const currentTab = getCurrentTab();
   const prodId = product.id || product.Id;
@@ -1164,15 +1395,21 @@ function addItemToCurrentCart(product) {
   const prodCost = Number(product.cost ?? product.Cost ?? 0) || 0;
   const prodRetailPrice = Number(product.price ?? product.Price ?? 0) || 0;
   const prodWholesalePrice = Number(product.wholesalePrice ?? product.WholesalePrice ?? prodRetailPrice) || prodRetailPrice;
-  const prodCartonPrice = Number(product.cartonSellingPrice ?? product.CartonSellingPrice ?? 0) || (prodRetailPrice * (Number(product.piecesPerCarton || product.ItemsPerCarton || 1) || 1));
   const piecesPerCarton = Number(product.piecesPerCarton ?? product.ItemsPerCarton ?? 1) || 1;
+  const prodCartonPrice = Number(product.cartonSellingPrice ?? product.CartonSellingPrice ?? 0) || (prodRetailPrice * piecesPerCarton);
 
-  const existing = currentTab.items.find(i => i.id === prodId && i.saleType === 'retail');
+  const existingIndex = currentTab.items.findIndex(i => i.id === prodId && (i.saleType || 'retail') === 'retail');
 
-  if (existing) {
+  if (existingIndex !== -1) {
+    const existing = currentTab.items[existingIndex];
     existing.qty = (Number(existing.qty) || 1) + 1;
+    // Move to TOP (beginning of cart list)
+    currentTab.items.splice(existingIndex, 1);
+    currentTab.items.unshift(existing);
+    lastAddedCartItemId = existing.cartItemId || existing.id;
   } else {
-    currentTab.items.push({
+    const newItem = {
+      cartItemId: 'citem_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8),
       id: prodId,
       name: prodName,
       barcode: prodBarcode,
@@ -1184,22 +1421,25 @@ function addItemToCurrentCart(product) {
       saleType: 'retail',
       price: prodRetailPrice,
       qty: 1
-    });
+    };
+    // Add to TOP (beginning of cart list)
+    currentTab.items.unshift(newItem);
+    lastAddedCartItemId = newItem.cartItemId;
   }
 
   renderInvoiceTabs();
   renderCashierCart();
 }
 
-function changeCartItemSaleType(id, newType) {
+function changeCartItemSaleType(cartKey, newType) {
   const currentTab = getCurrentTab();
-  const item = currentTab.items.find(i => i.id === id);
+  const item = currentTab.items.find(i => (i.cartItemId && i.cartItemId === cartKey) || i.id === cartKey);
   if (item) {
     item.saleType = newType;
     if (newType === 'wholesale') {
       item.price = item.wholesalePrice || item.retailPrice;
     } else if (newType === 'carton') {
-      item.price = item.cartonPrice || (item.retailPrice * item.piecesPerCarton);
+      item.price = item.cartonPrice || (item.retailPrice * (item.piecesPerCarton || 1));
     } else {
       item.price = item.retailPrice;
     }
@@ -1207,9 +1447,9 @@ function changeCartItemSaleType(id, newType) {
   }
 }
 
-function setCartItemDirectQty(id, val) {
+function setCartItemDirectQty(cartKey, val) {
   const currentTab = getCurrentTab();
-  const item = currentTab.items.find(i => i.id === id);
+  const item = currentTab.items.find(i => (i.cartItemId && i.cartItemId === cartKey) || i.id === cartKey);
   if (item) {
     const parsed = parseFloat(val);
     if (!isNaN(parsed) && parsed > 0) {
@@ -1221,22 +1461,22 @@ function setCartItemDirectQty(id, val) {
   }
 }
 
-function updateCartItemQty(id, delta) {
+function updateCartItemQty(cartKey, delta) {
   const currentTab = getCurrentTab();
-  const item = currentTab.items.find(i => i.id === id);
+  const item = currentTab.items.find(i => (i.cartItemId && i.cartItemId === cartKey) || i.id === cartKey);
   if (item) {
     item.qty = Math.max(0, (Number(item.qty) || 1) + delta);
     if (item.qty <= 0) {
-      currentTab.items = currentTab.items.filter(i => i.id !== id);
+      currentTab.items = currentTab.items.filter(i => (i.cartItemId ? i.cartItemId !== cartKey : i.id !== cartKey));
     }
   }
   renderInvoiceTabs();
   renderCashierCart();
 }
 
-function removeCartItem(id) {
+function removeCartItem(cartKey) {
   const currentTab = getCurrentTab();
-  currentTab.items = currentTab.items.filter(i => i.id !== id);
+  currentTab.items = currentTab.items.filter(i => (i.cartItemId ? i.cartItemId !== cartKey : i.id !== cartKey));
   renderInvoiceTabs();
   renderCashierCart();
 }
@@ -1244,6 +1484,7 @@ function removeCartItem(id) {
 function clearCurrentInvoice() {
   const currentTab = getCurrentTab();
   currentTab.items = [];
+  lastAddedCartItemId = null;
   const discountInput = document.getElementById('cashierDiscountInput');
   const paidInput = document.getElementById('cashierPaidInput');
   const taxInput = document.getElementById('cashierTaxInput');
@@ -1277,24 +1518,40 @@ function renderCashierCart() {
 
   tbody.innerHTML = '';
   currentTab.items.forEach((item, index) => {
-    const itemCost = Number(item.cost) || 0;
+    if (!item.cartItemId) {
+      item.cartItemId = 'citem_' + (item.id || 'x') + '_' + index + '_' + Date.now();
+    }
+    const cartKey = item.cartItemId;
     const itemPrice = Number(item.price) || 0;
     const itemQty = Number(item.qty) || 1;
     const itemTotal = itemPrice * itemQty;
     const saleType = item.saleType || 'retail';
+    const isTopNewItem = (index === 0);
 
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-800/50 transition border-b border-slate-800/60';
+    // Newly added item at top gets a prominent green highlight and badge
+    if (isTopNewItem) {
+      tr.className = 'bg-emerald-950/40 dark:bg-emerald-950/60 border-y-2 border-emerald-500 shadow-md text-emerald-100 font-bold transition duration-300';
+    } else {
+      tr.className = 'hover:bg-slate-800/50 transition border-b border-slate-800/60';
+    }
+
     tr.innerHTML = `
-      <td class="p-2 text-center text-slate-400 font-bold font-mono">${index + 1}</td>
-      <td class="p-2 font-bold text-white">
-        <div>${item.name}</div>
-        <div class="text-[9px] font-mono text-sky-400">${item.barcode || '--'}</div>
-      </td>
-      <td class="p-2 text-center font-mono text-slate-400 font-semibold text-[11px]">${itemCost.toLocaleString()} د.ع</td>
-      <td class="p-2 text-center font-mono text-emerald-400 font-bold text-[11px]">${itemPrice.toLocaleString()} د.ع</td>
       <td class="p-2 text-center">
-        <select onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" onchange="changeCartItemSaleType('${item.id}', this.value)" class="bg-[#060c1c] border border-slate-700 rounded-lg px-1.5 py-0.5 text-[10px] font-bold text-sky-400 focus:outline-none focus:border-sky-500">
+        ${isTopNewItem 
+          ? `<span class="w-6 h-6 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs inline-flex items-center justify-center shadow-xs">#${index + 1}</span>`
+          : `<span class="text-slate-400 font-bold font-mono text-xs">#${index + 1}</span>`}
+      </td>
+      <td class="p-2 font-bold ${isTopNewItem ? 'text-emerald-200' : 'text-white'}">
+        <div class="flex items-center gap-1.5">
+          <span>${item.name}</span>
+          ${isTopNewItem ? '<span class="text-[9px] bg-emerald-500/30 text-emerald-300 px-1.5 py-0.2 rounded font-black">جديد ★</span>' : ''}
+        </div>
+        <div class="text-[9px] font-mono ${isTopNewItem ? 'text-emerald-400' : 'text-sky-400'}">${item.barcode || '--'}</div>
+      </td>
+      <td class="p-2 text-center font-mono text-emerald-400 font-bold text-xs">${itemPrice.toLocaleString()} د.ع</td>
+      <td class="p-2 text-center">
+        <select onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" onchange="changeCartItemSaleType('${cartKey}', this.value)" class="bg-[#060c1c] border border-slate-700 rounded-lg px-1.5 py-0.5 text-[10px] font-bold text-sky-400 focus:outline-none focus:border-sky-500">
           <option value="retail" ${saleType === 'retail' ? 'selected' : ''}>${dict.sale_type_retail || 'مفرد'}</option>
           <option value="wholesale" ${saleType === 'wholesale' ? 'selected' : ''}>${dict.sale_type_wholesale || 'جملة'}</option>
           <option value="carton" ${saleType === 'carton' ? 'selected' : ''}>${dict.sale_type_carton || 'كرتون'}</option>
@@ -1302,14 +1559,14 @@ function renderCashierCart() {
       </td>
       <td class="p-2 text-center">
         <div class="inline-flex items-center gap-1 bg-[#060c1c] border border-slate-700 px-1 py-0.5 rounded-xl">
-          <button onclick="updateCartItemQty('${item.id}', -1)" class="w-5 h-5 rounded-lg bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 font-black text-xs flex items-center justify-center">-</button>
-          <input type="number" step="any" min="0.1" value="${itemQty}" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="setCartItemDirectQty('${item.id}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}" class="w-12 bg-transparent text-center font-black text-white font-mono text-xs focus:ring-1 focus:ring-sky-500 rounded outline-none">
-          <button onclick="updateCartItemQty('${item.id}', 1)" class="w-5 h-5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 font-black text-xs flex items-center justify-center">+</button>
+          <button onclick="updateCartItemQty('${cartKey}', -1)" class="w-5 h-5 rounded-lg bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 font-black text-xs flex items-center justify-center">-</button>
+          <input type="number" step="any" min="0.1" value="${itemQty}" onfocus="pauseBarcodeFocus()" onblur="resumeBarcodeFocus()" oninput="setCartItemDirectQty('${cartKey}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}" class="w-12 bg-transparent text-center font-black text-white font-mono text-xs focus:ring-1 focus:ring-sky-500 rounded outline-none">
+          <button onclick="updateCartItemQty('${cartKey}', 1)" class="w-5 h-5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 font-black text-xs flex items-center justify-center">+</button>
         </div>
       </td>
       <td class="p-2 text-center font-black text-emerald-300 font-mono text-xs">${itemTotal.toLocaleString()} د.ع</td>
       <td class="p-2 text-center">
-        <button onclick="removeCartItem('${item.id}')" class="p-1 hover:bg-rose-500/20 text-rose-400 rounded-lg font-bold text-xs" title="حذف">🗑</button>
+        <button onclick="removeCartItem('${cartKey}')" class="p-1 hover:bg-rose-500/20 text-rose-400 rounded-lg font-bold text-xs" title="حذف">🗑</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -1859,11 +2116,82 @@ function recalcAddProductWeight() {
   if (rfpEl) rfpEl.innerText = `${retailFardahProfit >= 0 ? '+' : ''}${Math.round(retailFardahProfit).toLocaleString()} د.ع`;
 }
 
+function updateExpiryDaysRemaining() {
+  const expInput = document.getElementById('ap-expiryDate');
+  const box = document.getElementById('ap-expiryStatusBox');
+  const icon = document.getElementById('ap-expiryStatusIcon');
+  const text = document.getElementById('ap-expiryDaysText');
+  if (!expInput || !box || !text) return;
+
+  const val = expInput.value;
+  if (!val) {
+    box.className = 'p-2 rounded-xl text-center text-xs font-bold flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60 transition-all';
+    if (icon) icon.innerText = '⏳';
+    text.innerText = 'لم يتم تحديد تاريخ انتهاء الصلاحية (اختياري)';
+    return;
+  }
+
+  const parts = val.split('-');
+  if (parts.length !== 3) return;
+
+  const expDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const diffTime = expDate.getTime() - today.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays > 60) {
+    box.className = 'p-2 rounded-xl text-center text-xs font-black flex items-center justify-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 transition-all';
+    if (icon) icon.innerText = '🟢';
+    text.innerText = `متبقي ${diffDays.toLocaleString()} يوماً على انتهاء الصلاحية (${val})`;
+  } else if (diffDays > 0) {
+    box.className = 'p-2 rounded-xl text-center text-xs font-black flex items-center justify-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700 transition-all';
+    if (icon) icon.innerText = '⚠️';
+    text.innerText = `تنبيه: متبقي فقط ${diffDays} يوماً على انتهاء الصلاحية (${val})`;
+  } else if (diffDays === 0) {
+    box.className = 'p-2 rounded-xl text-center text-xs font-black flex items-center justify-center gap-1.5 bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-400 dark:border-rose-700 animate-pulse transition-all';
+    if (icon) icon.innerText = '🚨';
+    text.innerText = `تحذير: تاريخ انتهاء الصلاحية هو اليوم (${val})!`;
+  } else {
+    const expiredDays = Math.abs(diffDays);
+    box.className = 'p-2 rounded-xl text-center text-xs font-black flex items-center justify-center gap-1.5 bg-rose-200 dark:bg-rose-900/80 text-rose-900 dark:text-rose-100 border border-rose-400 dark:border-rose-600 transition-all';
+    if (icon) icon.innerText = '⛔';
+    text.innerText = `تحذير شديد: منتهية الصلاحية منذ ${expiredDays.toLocaleString()} يوماً (${val})!`;
+  }
+}
+
+function clearExpiryDate() {
+  const expInput = document.getElementById('ap-expiryDate');
+  if (expInput) {
+    expInput.value = '';
+    updateExpiryDaysRemaining();
+  }
+}
+
+function addMonthsToExpiry(months) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + months);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const expEl = document.getElementById('ap-expiryDate');
+  if (expEl) {
+    expEl.value = `${yyyy}-${mm}-${dd}`;
+    updateExpiryDaysRemaining();
+  }
+}
+
 function clearAddProductForm() {
   document.getElementById('ap-id').value = '';
   document.getElementById('ap-barcode').value = '';
   document.getElementById('ap-name').value = '';
   
+  // Expiry date reset
+  const expEl = document.getElementById('ap-expiryDate');
+  if (expEl) expEl.value = '';
+  updateExpiryDaysRemaining();
+
   // Simple mode fields - empty and ready for typing
   const sQty = document.getElementById('ap-simpleStockQty');
   if (sQty) sQty.value = '';
@@ -1920,6 +2248,7 @@ async function saveProductFull() {
   const barcode = document.getElementById('ap-barcode')?.value.trim();
   const category = document.getElementById('ap-categorySelect')?.value || 'عام';
   const supplierName = document.getElementById('ap-supplier')?.value || '';
+  const expiryDate = document.getElementById('ap-expiryDate')?.value || undefined;
 
   let payload = {};
 
@@ -1944,7 +2273,8 @@ async function saveProductFull() {
       stockQuantity: stockQty,
       cartonsCount: 0,
       piecesPerCarton: 1,
-      minStockAlert: minAlert
+      minStockAlert: minAlert,
+      expiryDate: expiryDate
     };
   } else if (currentAddProductMode === 'weight') {
     const fardahCount = Math.max(0, Number(document.getElementById('ap-fardahCount')?.value || 0));
@@ -1970,7 +2300,8 @@ async function saveProductFull() {
       stockQuantity: totalKg,
       cartonsCount: fardahCount,
       piecesPerCarton: kgPerFardah,
-      minStockAlert: minAlert
+      minStockAlert: minAlert,
+      expiryDate: expiryDate
     };
   } else {
     const itemsPerCarton = Math.max(1, Number(document.getElementById('ap-itemsPerCarton')?.value || 1));
@@ -1998,7 +2329,8 @@ async function saveProductFull() {
       stockQuantity: totalStock,
       cartonsCount: cartonsCount,
       piecesPerCarton: itemsPerCarton,
-      minStockAlert: minAlert
+      minStockAlert: minAlert,
+      expiryDate: expiryDate
     };
   }
 
@@ -2276,6 +2608,17 @@ function editProductFromInventory(id) {
     document.getElementById('ap-categorySelect').value = prod.category || 'عام';
     document.getElementById('ap-supplier').value = prod.supplierName || '';
     document.getElementById('ap-cost').value = prod.cost;
+
+    const expEl = document.getElementById('ap-expiryDate');
+    if (expEl) {
+      if (prod.expiryDate) {
+        const cleanDate = String(prod.expiryDate).replace(/\//g, '-').split('T')[0];
+        expEl.value = cleanDate;
+      } else {
+        expEl.value = '';
+      }
+      updateExpiryDaysRemaining();
+    }
 
     const isWeight = (prod.unit === 'كيلو' || prod.unit === 'كغم');
 
@@ -2595,6 +2938,293 @@ async function submitSupplierPayment() {
     alert(`✔ تم تسجيل وتأكيد تسديد الدفعة بقيمة ${amount.toLocaleString()} د.ع بنجاح!`);
     closeSupplierPaymentModal();
     await loadSuppliers();
+  }
+}
+
+// ========================================================
+// RETURN ITEMS TO SUPPLIER / REPRESENTATIVE (إرجاع مواد إلى مندوب / مورد)
+// ========================================================
+async function openSupplierReturnModal(targetSupplierId = null, targetProductId = null) {
+  // 1. Ensure inventory data is loaded
+  if (!inventoryData || inventoryData.length === 0) {
+    await loadInventory();
+  }
+
+  // 2. Ensure suppliers data is loaded
+  if (!suppliersData || suppliersData.length === 0) {
+    await loadSuppliers();
+  }
+
+  // 3. Populate Suppliers Dropdown
+  const supSelect = document.getElementById('ret-supplierSelect');
+  if (supSelect) {
+    supSelect.innerHTML = '<option value="">-- اختر المندوب أو الشركة الموردة --</option>';
+    const sups = (suppliersData && suppliersData.length > 0) ? suppliersData : (state.suppliers || []);
+    sups.forEach(s => {
+      const sId = s.id || s.Id;
+      const sName = s.name || s.Name;
+      const sComp = s.company || s.Company || 'شركة';
+      const sBal = Number(s.balance ?? s.Balance ?? 0);
+      supSelect.innerHTML += `<option value="${sId}">${sName} (${sComp}) - الرصيد: ${sBal.toLocaleString()} د.ع</option>`;
+    });
+
+    if (targetSupplierId) {
+      supSelect.value = targetSupplierId;
+    }
+  }
+
+  // 4. Populate Products Dropdown
+  populateSupplierReturnProductsDropdown(targetSupplierId, targetProductId);
+
+  // 5. Reset other form fields
+  const barcodeInput = document.getElementById('ret-barcodeSearch');
+  if (barcodeInput) barcodeInput.value = '';
+
+  const qtyInput = document.getElementById('ret-quantity');
+  if (qtyInput) qtyInput.value = 1;
+
+  const notesInput = document.getElementById('ret-notes');
+  if (notesInput) notesInput.value = '';
+
+  const reasonSelect = document.getElementById('ret-reason');
+  if (reasonSelect) reasonSelect.value = 'تالف / معيب عند الاستلام';
+
+  // 6. If target product provided, trigger select
+  if (targetProductId) {
+    const prodSelect = document.getElementById('ret-productSelect');
+    if (prodSelect) {
+      prodSelect.value = targetProductId;
+      handleSupplierReturnProductChange();
+    }
+  } else {
+    document.getElementById('ret-productInfoCard')?.classList.add('hidden');
+    const unitCostInput = document.getElementById('ret-unitCost');
+    if (unitCostInput) unitCostInput.value = 0;
+    calculateSupplierReturnTotal();
+  }
+
+  // 7. Show Modal
+  document.getElementById('supplierReturnModal')?.classList.remove('hidden');
+  setTimeout(() => {
+    document.getElementById('ret-barcodeSearch')?.focus();
+  }, 100);
+}
+
+function closeSupplierReturnModal() {
+  document.getElementById('supplierReturnModal')?.classList.add('hidden');
+}
+
+function populateSupplierReturnProductsDropdown(filterSupplierId = null, selectedProdId = null) {
+  const prodSelect = document.getElementById('ret-productSelect');
+  if (!prodSelect) return;
+
+  prodSelect.innerHTML = '<option value="">-- اختر المادة من المخزن --</option>';
+
+  let prods = inventoryData || [];
+  if (filterSupplierId) {
+    const sup = suppliersData.find(s => (s.id === filterSupplierId || s.Id === filterSupplierId));
+    const supName = sup ? (sup.name || sup.Name) : '';
+    if (supName) {
+      const supplierProds = prods.filter(p => p.supplierName === supName || p.supplierId === filterSupplierId);
+      if (supplierProds.length > 0) {
+        prods = supplierProds;
+      }
+    }
+  }
+
+  prods.forEach(p => {
+    const pId = p.id || p.Id;
+    const pName = p.name || p.Name;
+    const pBarcode = p.barcode || p.Barcode || '';
+    const pStock = Number(p.stockQuantity ?? p.StockQuantity ?? 0);
+    const pCost = Number(p.cost ?? p.Cost ?? 0);
+    prodSelect.innerHTML += `<option value="${pId}">${pName} ${pBarcode ? `(${pBarcode})` : ''} - متوفر: ${pStock} | تكلفة: ${pCost.toLocaleString()} د.ع</option>`;
+  });
+
+  if (selectedProdId) {
+    prodSelect.value = selectedProdId;
+  }
+}
+
+function handleSupplierReturnSupplierChange() {
+  const supId = document.getElementById('ret-supplierSelect')?.value;
+  populateSupplierReturnProductsDropdown(supId);
+  handleSupplierReturnProductChange();
+}
+
+function handleSupplierReturnProductChange() {
+  const prodSelect = document.getElementById('ret-productSelect');
+  const selectedId = prodSelect?.value;
+  const infoCard = document.getElementById('ret-productInfoCard');
+
+  if (!selectedId) {
+    infoCard?.classList.add('hidden');
+    const unitCostInput = document.getElementById('ret-unitCost');
+    if (unitCostInput) unitCostInput.value = 0;
+    calculateSupplierReturnTotal();
+    return;
+  }
+
+  const prod = (inventoryData || []).find(p => (p.id === selectedId || p.Id === selectedId));
+  if (!prod) return;
+
+  const pName = prod.name || prod.Name;
+  const pBarcode = prod.barcode || prod.Barcode || 'بدون باركود';
+  const pStock = Number(prod.stockQuantity ?? prod.StockQuantity ?? 0);
+  const pCost = Number(prod.cost ?? prod.Cost ?? 0);
+  const pCartons = Number(prod.cartonsCount ?? prod.CartonsCount ?? 0);
+
+  // Update info badge
+  const infoName = document.getElementById('ret-infoName');
+  if (infoName) infoName.innerText = pName;
+
+  const infoBarcode = document.getElementById('ret-infoBarcode');
+  if (infoBarcode) infoBarcode.innerText = pBarcode;
+
+  const infoStock = document.getElementById('ret-infoStock');
+  if (infoStock) infoStock.innerText = `${pStock.toLocaleString()} قطعة`;
+
+  const infoCost = document.getElementById('ret-infoCost');
+  if (infoCost) infoCost.innerText = `${pCost.toLocaleString()} د.ع`;
+
+  const infoCartons = document.getElementById('ret-infoCartons');
+  if (infoCartons) infoCartons.innerText = `${pCartons.toLocaleString()} كرتون`;
+
+  infoCard?.classList.remove('hidden');
+
+  // Auto-set unit cost
+  const unitCostInput = document.getElementById('ret-unitCost');
+  if (unitCostInput) unitCostInput.value = pCost;
+
+  // Auto-select supplier if product has a linked supplier and supplier wasn't selected
+  const supSelect = document.getElementById('ret-supplierSelect');
+  if (supSelect && !supSelect.value && prod.supplierId) {
+    supSelect.value = prod.supplierId;
+  }
+
+  calculateSupplierReturnTotal();
+}
+
+function handleSupplierReturnBarcodeSearch() {
+  const query = document.getElementById('ret-barcodeSearch')?.value.trim().toLowerCase();
+  if (!query) return;
+
+  const prod = (inventoryData || []).find(p => {
+    const b = (p.barcode || p.Barcode || '').toLowerCase();
+    const n = (p.name || p.Name || '').toLowerCase();
+    return b === query || n.includes(query);
+  });
+
+  if (prod) {
+    const prodSelect = document.getElementById('ret-productSelect');
+    if (prodSelect) {
+      prodSelect.value = prod.id || prod.Id;
+      handleSupplierReturnProductChange();
+    }
+  }
+}
+
+function calculateSupplierReturnTotal() {
+  const qty = Number(document.getElementById('ret-quantity')?.value || 0);
+  const unitCost = Number(document.getElementById('ret-unitCost')?.value || 0);
+  const total = Math.max(0, qty * unitCost);
+
+  const totalEl = document.getElementById('ret-totalAmountText');
+  if (totalEl) {
+    totalEl.innerText = `${Math.round(total).toLocaleString()} د.ع`;
+  }
+}
+
+async function submitSupplierReturn() {
+  const supId = document.getElementById('ret-supplierSelect')?.value;
+  if (!supId) {
+    alert('يرجى اختيار المندوب أو الشركة المستلمة للمرتجع أولاً!');
+    document.getElementById('ret-supplierSelect')?.focus();
+    return;
+  }
+
+  const prodId = document.getElementById('ret-productSelect')?.value;
+  if (!prodId) {
+    alert('يرجى اختيار المادة المراد إرجاعها من المخزن!');
+    document.getElementById('ret-productSelect')?.focus();
+    return;
+  }
+
+  const prod = (inventoryData || []).find(p => (p.id === prodId || p.Id === prodId));
+  const pName = prod ? (prod.name || prod.Name) : 'المادة';
+  const currentStock = prod ? Number(prod.stockQuantity ?? prod.StockQuantity ?? 0) : 0;
+
+  const qty = Number(document.getElementById('ret-quantity')?.value || 0);
+  if (qty <= 0) {
+    alert('يرجى تحديد كمية الإرجاع بشكل صحيح (أكبر من 0)!');
+    document.getElementById('ret-quantity')?.focus();
+    return;
+  }
+
+  if (qty > currentStock) {
+    if (!confirm(`تنبيه: الكمية المرجعة (${qty}) أكبر من الرصيد المتوفر حالياً في المخزن (${currentStock})!\nهل ترغب بالمتابعة وتعديل الرصيد؟`)) {
+      return;
+    }
+  }
+
+  const unitCost = Number(document.getElementById('ret-unitCost')?.value || 0);
+  const reason = document.getElementById('ret-reason')?.value || 'إرجاع بضاعة';
+  const financialAction = document.querySelector('input[name="ret-financialAction"]:checked')?.value || 'deduct_balance';
+  const notes = document.getElementById('ret-notes')?.value.trim() || '';
+
+  const returnNumber = `RET-${Date.now().toString().slice(-6)}`;
+  const totalAmount = qty * unitCost;
+
+  const confirmMsg = `تأكيد إرجاع المواد إلى المندوب:\n\n` +
+    `• المادة: ${pName}\n` +
+    `• الكمية: ${qty} قطعة\n` +
+    `• سعر الإرجاع: ${unitCost.toLocaleString()} د.ع\n` +
+    `• الإجمالي: ${totalAmount.toLocaleString()} د.ع\n` +
+    `• التسوية المالية: ${financialAction === 'cash_refund' ? 'استرداد نقدي فوري للصندوق' : 'خصم من دين وحساب المندوب'}\n\n` +
+    `هل أنت متأكد من تنفيذ عملية الإرجاع وخصم المخزن؟`;
+
+  if (!confirm(confirmMsg)) return;
+
+  const btnSubmit = document.getElementById('btnSubmitSupplierReturn');
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerText = 'جاري تسجيل الإرجاع...';
+  }
+
+  try {
+    const payload = {
+      supplierId: supId,
+      productId: prodId,
+      barcode: prod?.barcode || '',
+      productName: pName,
+      quantity: qty,
+      unitCost: unitCost,
+      reason: reason,
+      financialAction: financialAction,
+      notes: notes,
+      returnNumber: returnNumber
+    };
+
+    const res = await callBackend('return_to_supplier', payload);
+
+    if (res && res.success) {
+      alert(`✔ ${res.message || 'تم تسجيل عملية الإرجاع للمندوب بنجاح!'}\nرقم وصل الإرجاع: ${res.returnNumber || returnNumber}`);
+      closeSupplierReturnModal();
+
+      // Refresh data
+      await loadInventory();
+      await loadSuppliers();
+      await loadDashboardData();
+    } else {
+      alert(`❌ حدث خطأ أثناء الإرجاع: ${res?.message || 'فشلت العملية'}`);
+    }
+  } catch (err) {
+    alert(`❌ خطأ: ${err.message}`);
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<span>↩️</span><span>تأكيد إرجاع البضاعة وخصم المخزن</span>';
+    }
   }
 }
 
@@ -4409,6 +5039,28 @@ async function updateOrderStatus(id, status) {
 }
 
 function openRepPortalModal() {
+  const container = document.getElementById('repQrCodeContainer');
+  if (container) {
+    container.innerHTML = '';
+    try {
+      if (typeof QRCode !== 'undefined') {
+        const storeId = state?.storeSettings?.StoreId || '';
+        const url = storeId 
+          ? `https://hama2002m2002-lab.github.io/mo74mmed.pos/?store=${storeId}` 
+          : 'https://hama2002m2002-lab.github.io/mo74mmed.pos/';
+        new QRCode(container, {
+          text: url,
+          width: 140,
+          height: 140,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+    } catch (e) {
+      console.warn('QR generation error:', e);
+    }
+  }
   document.getElementById('repModal')?.classList.remove('hidden');
 }
 
@@ -4438,7 +5090,7 @@ async function loadSettingsInfo() {
   const res = await callBackend('get_app_info');
   if (res && res.success) {
     const verEl = document.getElementById('settingsAppVersion');
-    if (verEl) verEl.innerText = res.version || 'v1.6.0 Pro';
+    if (verEl) verEl.innerText = res.version || 'v1.7.0 Pro';
 
     const stEl = document.getElementById('settingsStoreId');
     if (stEl) stEl.innerText = res.storeId || 'MARKET-DEFAULT-01';
@@ -5287,16 +5939,195 @@ function renderDamagedTable(list) {
   });
 }
 
-function openAddDamagedModal() {
+function openAddDamagedModal(preselectedProdId = null) {
   const select = document.getElementById('adm-productSelect');
   if (select) {
     select.innerHTML = '<option value="">-- اختر مادة من المخزن --</option>';
-    state.products.forEach(p => {
+    const prods = (inventoryData && inventoryData.length > 0) ? inventoryData : (state.products || []);
+    prods.forEach(p => {
       select.innerHTML += `<option value="${p.id}">${p.name} (رصيد: ${p.stockQuantity})</option>`;
     });
+    if (preselectedProdId) {
+      select.value = preselectedProdId;
+    }
   }
   document.getElementById('adm-quantity').value = '1';
   document.getElementById('addDamagedModal')?.classList.remove('hidden');
+}
+
+// ========================================================
+// EXPIRING PRODUCTS MANAGEMENT (المواد قريبة من انتهاء الصلاحية)
+// ========================================================
+let expiringProductsData = [];
+let currentExpiringFilter = 'all';
+
+async function loadExpiringProducts() {
+  const res = await callBackend('get_expiring_products');
+  let prods = [];
+  if (res && res.success && res.products) {
+    prods = res.products;
+  } else {
+    // Fallback: parse from inventoryData
+    if (!inventoryData || inventoryData.length === 0) await loadInventory();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    prods = (inventoryData || []).filter(p => p.expiryDate).map(p => {
+      const expDate = new Date(p.expiryDate);
+      const diffTime = expDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return {
+        id: p.id,
+        name: p.name,
+        barcode: p.barcode || '',
+        category: p.category || 'عام',
+        supplierId: p.supplierId,
+        supplierName: p.supplierName || 'بدون مندوب',
+        stockQuantity: Number(p.stockQuantity || 0),
+        cost: Number(p.cost || 0),
+        price: Number(p.price || 0),
+        totalLossValue: Number(p.cost || 0) * Number(p.stockQuantity || 0),
+        expiryDate: p.expiryDate,
+        daysRemaining: diffDays,
+        isExpired: diffDays < 0,
+        isCritical: diffDays >= 0 && diffDays <= 30
+      };
+    });
+  }
+
+  expiringProductsData = prods;
+
+  // 1. Calculate KPI Stats
+  const totalCount = expiringProductsData.length;
+  const expiredCount = expiringProductsData.filter(p => p.daysRemaining < 0).length;
+  const criticalCount = expiringProductsData.filter(p => p.daysRemaining >= 0 && p.daysRemaining <= 30).length;
+  const totalLoss = expiringProductsData.reduce((sum, p) => sum + (Number(p.totalLossValue) || 0), 0);
+
+  // Update UI Elements
+  const totalEl = document.getElementById('exp-totalCount');
+  if (totalEl) totalEl.innerText = `${totalCount.toLocaleString()} مادة`;
+
+  const expEl = document.getElementById('exp-expiredCount');
+  if (expEl) expEl.innerText = `${expiredCount.toLocaleString()} مادة`;
+
+  const critEl = document.getElementById('exp-criticalCount');
+  if (critEl) critEl.innerText = `${criticalCount.toLocaleString()} مادة`;
+
+  const lossEl = document.getElementById('exp-totalLossValue');
+  if (lossEl) lossEl.innerText = `${Math.round(totalLoss).toLocaleString()} د.ع`;
+
+  // Update sidebar badge
+  const sidebarBadge = document.getElementById('sidebar-expiringCountBadge');
+  if (sidebarBadge) {
+    const alertCount = expiredCount + criticalCount;
+    if (alertCount > 0) {
+      sidebarBadge.innerText = alertCount.toString();
+      sidebarBadge.classList.remove('hidden');
+    } else {
+      sidebarBadge.classList.add('hidden');
+    }
+  }
+
+  filterExpiringProductsTable();
+}
+
+function setExpiringFilter(filterKey) {
+  currentExpiringFilter = filterKey;
+
+  // Update filter buttons styling
+  ['all', 'expired', '30', '60', '90'].forEach(k => {
+    const btn = document.getElementById(`exp-filter-${k}`);
+    if (btn) {
+      if (k === filterKey) {
+        btn.className = 'px-3 py-1.5 rounded-xl bg-amber-500 text-white font-black shadow-xs transition';
+      } else {
+        btn.className = 'px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 transition';
+      }
+    }
+  });
+
+  filterExpiringProductsTable();
+}
+
+function filterExpiringProductsTable() {
+  const query = (document.getElementById('exp-searchInput')?.value || '').toLowerCase().trim();
+  const tbody = document.getElementById('expiringTableBody');
+  if (!tbody) return;
+
+  let filtered = expiringProductsData.filter(p => {
+    // Search matching
+    const matchQuery = !query || 
+      (p.name && p.name.toLowerCase().includes(query)) ||
+      (p.barcode && p.barcode.toLowerCase().includes(query)) ||
+      (p.supplierName && p.supplierName.toLowerCase().includes(query));
+
+    if (!matchQuery) return false;
+
+    // Time filter
+    if (currentExpiringFilter === 'expired') return p.daysRemaining < 0;
+    if (currentExpiringFilter === '30') return p.daysRemaining >= 0 && p.daysRemaining <= 30;
+    if (currentExpiringFilter === '60') return p.daysRemaining >= 0 && p.daysRemaining <= 60;
+    if (currentExpiringFilter === '90') return p.daysRemaining >= 0 && p.daysRemaining <= 90;
+
+    return true;
+  });
+
+  // Sort: most urgent first (lowest daysRemaining)
+  filtered.sort((a, b) => a.daysRemaining - b.daysRemaining);
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-slate-400 font-bold">لا توجد مواد تطابق معايير البحث أو الفلتر المحدد</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((item, index) => {
+    let badgeClass = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+    let statusText = `متبقي ${item.daysRemaining} يوم`;
+
+    if (item.daysRemaining < 0) {
+      badgeClass = 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30';
+      statusText = `🔴 منتهية منذ ${Math.abs(item.daysRemaining)} يوم`;
+    } else if (item.daysRemaining <= 30) {
+      badgeClass = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 animate-pulse';
+      statusText = `🟠 حرجة (${item.daysRemaining} يوم)`;
+    } else if (item.daysRemaining <= 60) {
+      badgeClass = 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30';
+      statusText = `🟡 قريبة (${item.daysRemaining} يوم)`;
+    } else if (item.daysRemaining <= 90) {
+      badgeClass = 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30';
+      statusText = `🟢 ${item.daysRemaining} يوم`;
+    }
+
+    return `
+      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition ${item.daysRemaining < 0 ? 'bg-rose-950/10' : ''}">
+        <td class="p-3 font-mono font-bold text-slate-400">${index + 1}</td>
+        <td class="p-3 font-black text-slate-900 dark:text-white">${item.name}</td>
+        <td class="p-3 font-mono text-[11px] text-slate-500">${item.barcode || '--'}</td>
+        <td class="p-3 font-bold text-slate-700 dark:text-slate-300">${item.supplierName || 'بدون مندوب'}</td>
+        <td class="p-3 text-center font-mono font-black text-slate-900 dark:text-white">${Number(item.stockQuantity).toLocaleString()}</td>
+        <td class="p-3 text-center font-mono font-bold text-slate-600 dark:text-slate-300">${Number(item.cost).toLocaleString()} د.ع</td>
+        <td class="p-3 text-center font-mono font-black text-rose-600 dark:text-rose-400">${Number(item.totalLossValue).toLocaleString()} د.ع</td>
+        <td class="p-3 text-center font-mono font-bold text-slate-800 dark:text-slate-200">${item.expiryDate || '--'}</td>
+        <td class="p-3 text-center">
+          <span class="px-2.5 py-1 rounded-xl text-[11px] font-black inline-block ${badgeClass}">
+            ${statusText}
+          </span>
+        </td>
+        <td class="p-3 text-center">
+          <div class="flex items-center justify-center gap-1.5">
+            <button onclick="openSupplierReturnModal('${item.supplierId || ''}', '${item.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-black shadow-xs flex items-center gap-1 transition" title="إرجاع البضاعة للمندوب">
+              <span>↩️</span>
+              <span>إرجاع</span>
+            </button>
+            <button onclick="openAddDamagedModal('${item.id}')" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[10px] font-black shadow-xs flex items-center gap-1 transition" title="تحويل للتوالف">
+              <span>⚠️</span>
+              <span>إتلاف</span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function closeAddDamagedModal() {
@@ -5375,6 +6206,40 @@ async function loadReportsDashboard() {
 
     const supDebtsEl = document.getElementById('rep-suppliersDebtsTotal');
     if (supDebtsEl) supDebtsEl.innerText = `ديون الموردين: ${Number(res.totalSupplierBalancesOwed || 0).toLocaleString()} د.ع`;
+
+    // 2. Profit Breakdown by Sale Type (Retail / Carton / Wholesale)
+    const retProfEl = document.getElementById('rep-retailProfit');
+    if (retProfEl) retProfEl.innerText = `+${Number(res.retailProfitTotal || 0).toLocaleString()} د.ع`;
+
+    const retSalesEl = document.getElementById('rep-retailSalesTotal');
+    if (retSalesEl) retSalesEl.innerText = `${Number(res.retailSalesTotal || 0).toLocaleString()} د.ع`;
+
+    const projRetEl = document.getElementById('rep-projRetailProfit');
+    if (projRetEl) projRetEl.innerText = `${Number(res.projectedRetailProfit || 0).toLocaleString()} د.ع`;
+
+    const carProfEl = document.getElementById('rep-cartonProfit');
+    if (carProfEl) carProfEl.innerText = `+${Number(res.cartonProfitTotal || 0).toLocaleString()} د.ع`;
+
+    const carSalesEl = document.getElementById('rep-cartonSalesTotal');
+    if (carSalesEl) carSalesEl.innerText = `${Number(res.cartonSalesTotal || 0).toLocaleString()} د.ع`;
+
+    const projCarEl = document.getElementById('rep-projCartonProfit');
+    if (projCarEl) projCarEl.innerText = `${Number(res.projectedCartonProfit || 0).toLocaleString()} د.ع`;
+
+    const whoProfEl = document.getElementById('rep-wholesaleProfit');
+    if (whoProfEl) whoProfEl.innerText = `+${Number(res.wholesaleProfitTotal || 0).toLocaleString()} د.ع`;
+
+    const whoSalesEl = document.getElementById('rep-wholesaleSalesTotal');
+    if (whoSalesEl) whoSalesEl.innerText = `${Number(res.wholesaleSalesTotal || 0).toLocaleString()} د.ع`;
+
+    const projWhoEl = document.getElementById('rep-projWholesaleProfit');
+    if (projWhoEl) projWhoEl.innerText = `${Number(res.projectedWholesaleProfit || 0).toLocaleString()} د.ع`;
+
+    const totProfEl = document.getElementById('rep-totalProfitCombined');
+    if (totProfEl) totProfEl.innerText = `+${Number(res.totalProfitAll || 0).toLocaleString()} د.ع`;
+
+    const totRevEl = document.getElementById('rep-totalRevenueAllCombined');
+    if (totRevEl) totRevEl.innerText = `${Number(res.totalRevenueAll || 0).toLocaleString()} د.ع`;
   }
 }
 

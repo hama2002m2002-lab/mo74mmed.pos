@@ -43,7 +43,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Cairo', 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   user-select: none;
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }

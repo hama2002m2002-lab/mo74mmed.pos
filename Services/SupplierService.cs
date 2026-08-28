@@ -143,7 +143,7 @@ public class SupplierService : ISupplierService
         var supplier = await db.Suppliers.FindAsync(supplierId);
         if (supplier != null)
         {
-            if (type == "Payment" || type == "دفع")
+            if (type == "Payment" || type == "دفع" || type == "Return" || type == "إرجاع")
             {
                 supplier.Balance -= amount;
             }
