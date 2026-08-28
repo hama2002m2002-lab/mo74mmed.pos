@@ -1032,7 +1032,7 @@ public class PosBridgeService
                     decimal totalStockCostValue = products.Sum(p => p.StockQuantity * p.Cost);
                     decimal totalStockRetailValue = products.Sum(p => p.StockQuantity * p.Price);
                     decimal projectedGrossProfit = totalStockRetailValue - totalStockCostValue;
-                    int lowStockCount = products.Count(p => p.StockQuantity <= (p.MinStockLevel > 0 ? p.MinStockLevel : 5));
+                    int lowStockCount = products.Count(p => p.StockQuantity <= (p.MinStockAlert > 0 ? p.MinStockAlert : 5));
 
                     // Top Selling Items (Fast Moving)
                     var topItems = sales.Where(s => !s.IsReturnSale).SelectMany(s => s.Items)
