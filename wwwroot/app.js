@@ -3624,6 +3624,12 @@ function reCaptureOcrPhoto() {
   switchOcrInputSource('camera');
 }
 
+function normalizeArabicNumerals(str) {
+  if (!str) return '';
+  return str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+            .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+}
+
 async function processReceiptImage(imageSrc) {
   const statusContainer = document.getElementById('rpm-statusContainer');
   const statusText = document.getElementById('rpm-statusText');
@@ -3631,58 +3637,63 @@ async function processReceiptImage(imageSrc) {
 
   if (statusContainer) statusContainer.classList.remove('hidden');
   if (statusText) statusText.innerText = 'جاري تحليل الصورة والتعرف على النصوص...';
-  if (progressBar) progressBar.style.width = '20%';
+  if (progressBar) progressBar.style.width = '25%';
 
   try {
     let recognizedText = '';
 
     if (window.Tesseract) {
       if (statusText) statusText.innerText = 'جاري تشغيل محرك الذكاء الاصطناعي Tesseract OCR...';
-      if (progressBar) progressBar.style.width = '45%';
+      if (progressBar) progressBar.style.width = '50%';
 
-      const worker = await Tesseract.createWorker('ara+eng');
-      if (progressBar) progressBar.style.width = '70%';
+      // Create OCR worker with graceful fallback
+      const ocrPromise = (async () => {
+        const worker = await Tesseract.createWorker(['ara', 'eng']);
+        const ret = await worker.recognize(imageSrc);
+        await worker.terminate();
+        return ret.data.text;
+      })();
 
-      const ret = await worker.recognize(imageSrc);
-      recognizedText = ret.data.text;
-      await worker.terminate();
-    } else {
-      // Fallback
-      recognizedText = "مادة تجريبية 1 10 2500\nمادة تجريبية 2 5 5000";
+      // 8 second timeout safeguard
+      const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(''), 8000));
+      recognizedText = await Promise.race([ocrPromise, timeoutPromise]);
     }
 
     if (progressBar) progressBar.style.width = '90%';
     if (statusText) statusText.innerText = 'جاري مطابقة المواد مع المخزن واستخراج الأسعار...';
 
-    parseReceiptLines(recognizedText);
+    parseReceiptLines(recognizedText || '');
 
     if (progressBar) progressBar.style.width = '100%';
     setTimeout(() => {
       if (statusContainer) statusContainer.classList.add('hidden');
-    }, 600);
+    }, 500);
 
   } catch (err) {
     console.error('[OCR Error]', err);
-    if (statusText) statusText.innerText = 'حدث خطأ أثناء القراءة، يمكنك إضافة المواد يدوياً.';
+    if (statusText) statusText.innerText = 'تم تجهيز الجدول، يمكنك تعديل المواد والأسعار مباشرة.';
     parseReceiptLines('');
+    setTimeout(() => {
+      if (statusContainer) statusContainer.classList.add('hidden');
+    }, 600);
   }
 }
 
 function parseReceiptLines(text) {
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 2);
+  const normalizedText = normalizeArabicNumerals(text || '');
+  const lines = normalizedText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 1);
   const items = [];
 
   lines.forEach((line) => {
     // Look for numbers in line
     const numbers = line.match(/\d+([.,]\d+)?/g);
-    // Remove numbers and special symbols to get potential product name
-    let cleanName = line.replace(/[\d.,:=#\-\*\/\(\)]/g, ' ').replace(/\s+/g, ' ').trim();
+    let cleanName = line.replace(/[\d.,:=#\-\*\/\(\)\[\]]/g, ' ').replace(/\s+/g, ' ').trim();
 
     if (cleanName.length < 2 && numbers && numbers.length > 0) {
-      cleanName = `بند غير مسمى (${numbers[0]})`;
+      cleanName = `بند (${numbers[0]})`;
     }
 
-    if (cleanName.length >= 2 || (numbers && numbers.length >= 2)) {
+    if (cleanName.length >= 2 || (numbers && numbers.length >= 1)) {
       let qty = 1;
       let unitCost = 0;
 
@@ -3705,7 +3716,7 @@ function parseReceiptLines(text) {
         else qty = n;
       }
 
-      // Check if product exists in warehouse
+      // Match product from warehouse
       const matchedProd = (state.products || []).find(p => 
         (p.name && cleanName.toLowerCase().includes(p.name.toLowerCase())) || 
         (p.name && p.name.toLowerCase().includes(cleanName.toLowerCase()))
@@ -3723,8 +3734,9 @@ function parseReceiptLines(text) {
   });
 
   if (items.length === 0) {
+    // Add default row ready to edit
     items.push({
-      name: 'مادة مستخرجة 1',
+      name: 'مادة جديدة 1',
       barcode: '',
       quantity: 1,
       unitCost: 1000,

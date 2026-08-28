@@ -1397,11 +1397,13 @@ public class PosBridgeService
                 // ==========================================
                 case "get_app_info":
                 {
+                    var asmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                    string verStr = asmVer != null ? $"{asmVer.Major}.{asmVer.Minor}.{asmVer.Build}" : "1.4.0";
                     return JsonSerializer.Serialize(new
                     {
                         success = true,
                         appName = "7amo.pos",
-                        version = "2.5.0 Pro",
+                        version = $"v{verStr} Pro",
                         storeId = StoreSettingsService.Instance.Settings.StoreId,
                         portalUrl = "https://hama2002m2002-lab.github.io/mo74mmed.pos/",
                         localPortalUrl = "http://localhost:5000"
