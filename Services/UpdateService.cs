@@ -103,54 +103,63 @@ public class UpdateService
     {
         AutoUpdater.CheckForUpdateEvent -= AutoUpdaterOnCheckForUpdateEvent;
 
-        var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-        string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.5.0";
-        bool isKu = LocalizationManager.Instance.IsKurdish;
+        if (Application.Current?.Dispatcher == null) return;
 
-        if (args.Error == null)
+        Application.Current.Dispatcher.Invoke(() =>
         {
-            if (args.IsUpdateAvailable)
+            try
             {
-                string msg = isKu
-                    ? $"وەشانی نوێی بەرنامە بەردەستە ({args.CurrentVersion})!\nوەشانی ئێستای تۆ: ({installedVer})\n\nئایا دەتەوێت نوێکردنەوەی ڕاستەوخۆ دابەزێنیت و دابمەزرێنیت؟"
-                    : $"يوجد إصدار جديد متوفر من البرنامج ({args.CurrentVersion})!\nالإصدار المثبت لديك حالياً: ({installedVer})\n\nهل ترغب في تنزيل أحدث إصدار وتثبيته مباشرة الآن بنقرة واحدة؟";
+                var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.5.0";
+                bool isKu = LocalizationManager.Instance.IsKurdish;
 
-                string title = isKu ? "نوێکردنەوەی نوێ بەردەستە 🚀" : "تحديث جديد متوفر 🚀";
-
-                var dialogResult = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Information);
-
-                if (dialogResult == MessageBoxResult.Yes)
+                if (args.Error == null)
                 {
-                    try
+                    if (args.IsUpdateAvailable)
                     {
-                        if (AutoUpdater.DownloadUpdate(args))
+                        string msg = isKu
+                            ? $"وەشانی نوێی بەرنامە بەردەستە ({args.CurrentVersion})!\nوەشانی ئێستای تۆ: ({installedVer})\n\nئایا دەتەوێت نوێکردنەوەی ڕاستەوخۆ دابەزێنیت و دابمەزرێنیت؟"
+                            : $"يوجد إصدار جديد متوفر من البرنامج ({args.CurrentVersion})!\nالإصدار المثبت لديك حالياً: ({installedVer})\n\nهل ترغب في تنزيل أحدث إصدار وتثبيته مباشرة الآن بنقرة واحدة؟";
+
+                        string title = isKu ? "نوێکردنەوەی نوێ بەردەستە 🚀" : "تحديث جديد متوفر 🚀";
+
+                        var dialogResult = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Information);
+
+                        if (dialogResult == MessageBoxResult.Yes)
                         {
-                            Application.Current.Shutdown();
+                            try
+                            {
+                                if (AutoUpdater.DownloadUpdate(args))
+                                {
+                                    Application.Current.Shutdown();
+                                }
+                            }
+                            catch (Exception exception)
+                            {
+                                MessageBox.Show(exception.Message, isKu ? "هەڵە لە نوێکردنەوە" : "خطأ في التحديث", MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
                         }
                     }
-                    catch (Exception exception)
+                    else if (_isCurrentCheckManual)
                     {
-                        MessageBox.Show(exception.Message, isKu ? "هەڵە لە نوێکردنەوە" : "خطأ في التحديث", MessageBoxButton.OK, MessageBoxImage.Error);
+                        string msg = isKu
+                            ? $"تۆ نوێترین وەشانی فەرمیی بەرنامەت بەکارهێناوە (v{installedVer}) ✔"
+                            : $"أنت تستخدم أحدث إصدار من البرنامج بالفعل (v{installedVer}) ✔";
+
+                        MessageBox.Show(msg, isKu ? "پشکنینی نوێکردنەوە" : "فحص التحديثات", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                 }
-            }
-            else if (_isCurrentCheckManual)
-            {
-                string msg = isKu
-                    ? $"تۆ نوێترین وەشانی فەرمیی بەرنامەت بەکارهێناوە (v{installedVer}) ✔"
-                    : $"أنت تستخدم أحدث إصدار من البرنامج بالفعل (v{installedVer}) ✔";
+                else if (_isCurrentCheckManual)
+                {
+                    string msg = isKu
+                        ? $"تۆ نوێترین وەشانی بەرنامەت بەکارهێناوە (v{installedVer}) ✔"
+                        : $"أنت تستخدم أحدث إصدار من البرنامج بالفعل (v{installedVer}) ✔";
 
-                MessageBox.Show(msg, isKu ? "پشکنینی نوێکردنەوە" : "فحص التحديثات", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(msg, isKu ? "پشکنینی نوێکردنەوە" : "فحص التحديثات", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
-        }
-        else if (_isCurrentCheckManual)
-        {
-            string msg = isKu
-                ? $"تۆ نوێترین وەشانی بەرنامەت بەکارهێناوە (v{installedVer}) ✔"
-                : $"أنت تستخدم أحدث إصدار من البرنامج بالفعل (v{installedVer}) ✔";
-
-            MessageBox.Show(msg, isKu ? "پشکنینی نوێکردنەوە" : "فحص التحديثات", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
+            catch { }
+        });
     }
 
     public async Task RollbackToPreviousVersionAsync()
