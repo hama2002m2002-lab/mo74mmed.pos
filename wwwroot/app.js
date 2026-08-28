@@ -5325,11 +5325,23 @@ async function saveNewDamagedItem() {
 }
 
 // ========================================================
-// 5. REPORTS & FINANCIAL ANALYTICS (التقارير والأرباح)
+// 5. COMPREHENSIVE REPORTS & FINANCIAL ANALYTICS (مركز التقارير الشاملة)
 // ========================================================
+let reportsDashboardData = null;
+let currentReportKey = 'pnl_statement';
+let currentReportPeriod = 'all';
+let currentFilteredRows = [];
+
 async function loadReports() {
-  const res = await callBackend('get_reports');
+  await loadReportsDashboard();
+}
+
+async function loadReportsDashboard() {
+  const res = await callBackend('get_comprehensive_reports');
   if (res && res.success) {
+    reportsDashboardData = res;
+
+    // 1. Fill Quick KPI Summary Cards
     const todaySalesEl = document.getElementById('rep-todaySales');
     if (todaySalesEl) todaySalesEl.innerText = `${Number(res.todayTotal || 0).toLocaleString()} د.ع`;
 
@@ -5342,32 +5354,748 @@ async function loadReports() {
     const monthSalesEl = document.getElementById('rep-monthSales');
     if (monthSalesEl) monthSalesEl.innerText = `${Number(res.monthTotal || 0).toLocaleString()} د.ع`;
 
+    const monthGrowthEl = document.getElementById('rep-monthGrowth');
+    if (monthGrowthEl) {
+      const growth = res.monthGrowthRate || 0;
+      monthGrowthEl.innerText = `${growth >= 0 ? '▲ +' : '▼ '}${growth}% نمو`;
+      monthGrowthEl.className = growth >= 0 ? 'text-[10px] text-emerald-500 font-bold block mt-0.5' : 'text-[10px] text-rose-500 font-bold block mt-0.5';
+    }
+
     const monthProfitEl = document.getElementById('rep-monthProfit');
     if (monthProfitEl) monthProfitEl.innerText = `+${Number(res.monthProfit || 0).toLocaleString()} د.ع`;
 
-    const monthInvoicesEl = document.getElementById('rep-monthInvoices');
-    if (monthInvoicesEl) monthInvoicesEl.innerText = `${res.monthInvoicesCount || 0} فواتير`;
+    const stockCostEl = document.getElementById('rep-stockCost');
+    if (stockCostEl) stockCostEl.innerText = `${Number(res.totalStockCostValue || 0).toLocaleString()} د.ع`;
 
-    // Render Top Items
-    const topTbody = document.getElementById('rep-topItemsTable');
-    if (topTbody) {
-      if (!res.topItems || res.topItems.length === 0) {
-        topTbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400">لا توجد مبيعات مسجلة حتى الآن</td></tr>';
-      } else {
-        topTbody.innerHTML = '';
-        res.topItems.forEach((it, idx) => {
-          topTbody.innerHTML += `
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-              <td class="p-3 text-center text-slate-400 font-bold">${idx + 1}</td>
-              <td class="p-3 font-bold text-slate-800 dark:text-white">${it.name}</td>
-              <td class="p-3 text-center font-bold text-emerald-500 font-mono">${it.qty} قطعة</td>
-              <td class="p-3 text-center font-black text-sky-500 font-mono">${Number(it.total).toLocaleString()} د.ع</td>
+    const stockRetailEl = document.getElementById('rep-stockRetail');
+    if (stockRetailEl) stockRetailEl.innerText = `بسعر البيع: ${Number(res.totalStockRetailValue || 0).toLocaleString()} د.ع`;
+
+    const custDebtsEl = document.getElementById('rep-customersDebtsTotal');
+    if (custDebtsEl) custDebtsEl.innerText = `${Number(res.totalCustomerDebtsOwed || 0).toLocaleString()} د.ع`;
+
+    const supDebtsEl = document.getElementById('rep-suppliersDebtsTotal');
+    if (supDebtsEl) supDebtsEl.innerText = `ديون الموردين: ${Number(res.totalSupplierBalancesOwed || 0).toLocaleString()} د.ع`;
+  }
+}
+
+// Open Detailed Report Modal
+async function openDetailedReport(reportKey, period = 'all') {
+  currentReportKey = reportKey;
+  currentReportPeriod = period;
+
+  if (!reportsDashboardData) {
+    await loadReportsDashboard();
+  }
+
+  const modal = document.getElementById('reportDetailModal');
+  if (!modal) return;
+
+  const titleEl = document.getElementById('rdm-title');
+  const subtitleEl = document.getElementById('rdm-subtitle');
+  const iconEl = document.getElementById('rdm-icon');
+  const badgeEl = document.getElementById('rdm-badge');
+
+  // Configure Report Metadata
+  const reportConfigs = {
+    // 1. Financial & Sales
+    pnl_statement: { title: 'التقرير المالي الشامل والأرباح الصافية (P&L)', icon: '📈', badge: 'الحركة المالية', sub: 'ملخص شامل للمبيعات، تكلفة البضاعة المباعة (COGS)، إجمالي الخصومات، وصافي الأرباح' },
+    sales_detailed: { title: 'تقارير المبيعات وفواتير الكاشير التفصيلية', icon: '🛒', badge: 'المبيعات', sub: 'سجل تفصيلي لكافة فواتير المبيعات الصادرة، الكاشير، طريقة الدفع، والربح المحقق' },
+    returns_refunds: { title: 'تقارير المرجوعات والمسترجعات وقيمتها', icon: '🔄', badge: 'المرتجعات', sub: 'كشف فواتير وبنود المواد المرتجعة للزبائن مع أسباب الإرجاع' },
+    cashier_sales: { title: 'تقارير حسابات ومبيعات الكاشيرية', icon: '👤', badge: 'أداء الكاشير', sub: 'إجمالي المبيعات، الفواتير المنجزة، وصافي الأرباح لكل موظف كاشير' },
+    payment_liquidity: { title: 'تفصيل وسائل الدفع والسيولة النقدية', icon: '💳', badge: 'السيولة النقدية', sub: 'توزيع المقبوضات حسب طرق الدفع: نقد (كاش)، بطاقات/دفع إلكتروني، وآجل (ديون)' },
+    period_comparison: { title: 'مقارنة الفترات والاتجاهات ومعدل النمو', icon: '📅', badge: 'المقارنات', sub: 'مقارنة أداء المبيعات والأرباح بين الأشهر والفترات المختلفة وحساب نسبة النمو' },
+
+    // 2. Inventory & Damaged
+    inventory_audit: { title: 'تقارير وسجلات جرد المخزون الفعلي والفروقات', icon: '📋', badge: 'الجرد الفعلي', sub: 'سجلات جرد المخزن، الفروقات بين الرصيد الفعلي والنظام، وحساب نسب العجز والزيادة' },
+    inventory_valuation: { title: 'جرد وتقييم المخزون (بسعر الشراء والبيع)', icon: '💰', badge: 'تقييم المخزون', sub: 'إجمالي قيمة المواد المتوفرة في المخزن بسعر التكلفة وسعر البيع والأرباح المتوقعة' },
+    item_turnover: { title: 'حركة ودوران البضائع (الأكثر والأقل مبيعاً والراكد)', icon: '🔁', badge: 'حركة البضائع', sub: 'تصنيف المواد إلى سريعة الحركة (Top Selling) وبطيئة الحركة والراكدة (Dead Stock)' },
+    damaged_waste: { title: 'تقارير المواد التالفة والهالك والتسويات', icon: '⚠️', badge: 'الهالك والتوالف', sub: 'قائمة بكافة المواد التالفة ومنتهية الصلاحية مع قيمة الخسائر المالية وأسباب التلف' },
+    stock_alerts_expiry: { title: 'التنبيهات المتقدمة ونواقص الرفوف والصلاحية', icon: '⏰', badge: 'تنبيهات المخزن', sub: 'قائمة المواد التي شارفت على النفاد تحت حد الأمان والمواد القريبة من انتهاء الصلاحية' },
+
+    // 3. Purchases & Suppliers
+    purchases_invoices: { title: 'تقارير الشراء وفواتير المشتريات والتوريد', icon: '📑', badge: 'فواتير الشراء', sub: 'سجل فواتير توريد البضاعة من المندوبين والشركات مع الدفعات النقدية والآجلة' },
+    suppliers_statement: { title: 'كشف حساب وحركة الموردين والشركات', icon: '📖', badge: 'حسابات الموردين', sub: 'أرصدة المندوبين والشركات والديون المستحقة لهم والدفعات المسددة' },
+    purchase_price_history: { title: 'سجل تاريخ وتغير أسعار الشراء والتكلفة', icon: '⏳', badge: 'أسعار الشراء', sub: 'متابعة تغيرات أسعار شراء المواد صعوداً وهبوطاً ومقارنة التكلفة القديمة والجديدة' },
+
+    // 4. Customers & Debts
+    customers_debts_aging: { title: 'الذمم المدينة وسجلات الديون وأعمارها', icon: '📉', badge: 'ديون الزبائن', sub: 'كشف حساب الزبائن المدينين، إجمالي الديون، المبالغ المسددة، والرصيد المتبقي' },
+    loyalty_top_customers: { title: 'نقاط الولاء وقائمة أفضل الزبائن المميزين', icon: '⭐', badge: 'الزبائن المميزون', sub: 'قائمة الزبائن الأكثر شراءً في السوبرماركت مع سجل المشتريات ونقاط الولاء' },
+
+    // 5. Security & Z-Report
+    shift_zreport: { title: 'إغلاق الورديات اليومية وصندوق الكاشير (Z-Report)', icon: '🔒', badge: 'إغلاق الوردية', sub: 'تقرير المطابقة اليومية للصندوق، إجمالي المبيعات النقدية، المصاريف، وصافي النقد الفعلي' },
+    security_void_logs: { title: 'سجل العمليات المشبوهة والإلغاءات والتعديلات', icon: '🚨', badge: 'التدقيق والأمان', sub: 'سجل الفواتير الملغاة أو المرتجعة، الفواتير الصفرية، وحالات الخصم المرتفع' },
+
+    // 6. Analytics & Operational
+    cashier_hourly: { title: 'حسابات ومبيعات الكاشيرية على مدار اليوم', icon: '👥', badge: 'مبيعات الكاشير', sub: 'توزيع حركة مبيعات كل كاشير ومعدل الفواتير خلال ساعات العمل' },
+    peak_hours: { title: 'تحليل ساعات الذروة والازدحام (24 ساعة)', icon: '🔥', badge: 'ساعات الذروة', sub: 'توزيع المبيعات على مدار 24 ساعة لتحديد أوقات الذروة وازدحام الماركت بدقة' },
+    basket_size: { title: 'تحليل حجم وسلة الشراء ومتوسط الفاتورة', icon: '🛍️', badge: 'سلة الشراء', sub: 'متوسط قيمة الفاتورة الواحدة ومتوسط عدد القطع في كل عملية بيع' },
+    cashier_efficiency: { title: 'تقرير أداء وسرعة الكاشيرية', icon: '⚡', badge: 'كفاءة الكاشير', sub: 'معدل إنجاز الفواتير بالساعة وسرعة خدمة الزبائن لكل كاشير' }
+  };
+
+  const cfg = reportConfigs[reportKey] || reportConfigs.pnl_statement;
+  if (titleEl) titleEl.innerText = cfg.title;
+  if (subtitleEl) subtitleEl.innerText = cfg.sub;
+  if (iconEl) iconEl.innerText = cfg.icon;
+  if (badgeEl) badgeEl.innerText = cfg.badge;
+
+  // Reset Period button styles
+  document.querySelectorAll('.rdm-period-btn').forEach(btn => {
+    if (btn.getAttribute('data-period') === currentReportPeriod) {
+      btn.className = 'rdm-period-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-indigo-600 text-white shadow-sm';
+    } else {
+      btn.className = 'rdm-period-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100';
+    }
+  });
+
+  // Render Table and KPIs for this Report
+  renderActiveReportContent();
+
+  modal.classList.remove('hidden');
+}
+
+function closeDetailedReportModal() {
+  document.getElementById('reportDetailModal')?.classList.add('hidden');
+}
+
+function filterReportByPeriod(period) {
+  currentReportPeriod = period;
+  document.querySelectorAll('.rdm-period-btn').forEach(btn => {
+    if (btn.getAttribute('data-period') === period) {
+      btn.className = 'rdm-period-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-indigo-600 text-white shadow-sm';
+    } else {
+      btn.className = 'rdm-period-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100';
+    }
+  });
+  renderActiveReportContent();
+}
+
+function renderActiveReportContent() {
+  const d = reportsDashboardData || {};
+  const kpiContainer = document.getElementById('rdm-kpiContainer');
+  const tableContainer = document.getElementById('rdm-tableContainer');
+  const footerCount = document.getElementById('rdm-footerCount');
+
+  if (!kpiContainer || !tableContainer) return;
+
+  // Helper date filtering on array of objects having .date string (yyyy/MM/dd)
+  function filterByPeriod(items) {
+    if (!items || !Array.isArray(items)) return [];
+    if (currentReportPeriod === 'all') return items;
+
+    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '/');
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yestStr = yesterday.toISOString().slice(0, 10).replace(/-/g, '/');
+
+    return items.filter(it => {
+      if (!it.date) return true;
+      if (currentReportPeriod === 'today') return it.date.startsWith(todayStr);
+      if (currentReportPeriod === 'yesterday') return it.date.startsWith(yestStr);
+      if (currentReportPeriod === 'month') return it.date.startsWith(todayStr.slice(0, 7));
+      return true;
+    });
+  }
+
+  let kpiHtml = '';
+  let tableHtml = '';
+  let rowCount = 0;
+
+  // Render Based on currentReportKey
+  switch (currentReportKey) {
+    case 'pnl_statement':
+    case 'sales_detailed': {
+      const sales = filterByPeriod(d.salesList || []);
+      currentFilteredRows = sales;
+      rowCount = sales.length;
+
+      const totalRev = sales.reduce((acc, s) => acc + (s.totalAmount || s.TotalAmount || 0), 0);
+      const totalProf = sales.reduce((acc, s) => acc + (s.profit || 0), 0);
+      const totalDisc = sales.reduce((acc, s) => acc + (s.discountAmount || s.DiscountAmount || 0), 0);
+      const margin = totalRev > 0 ? Math.round((totalProf / totalRev) * 100, 1) : 0;
+
+      kpiHtml = `
+        <div class="sh-card p-3 border-r-4 border-emerald-500">
+          <span class="text-[10px] text-slate-400 font-bold block">إجمالي الإيرادات (المبيعات)</span>
+          <span class="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono">${totalRev.toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-teal-500">
+          <span class="text-[10px] text-slate-400 font-bold block">صافي الأرباح المحققة</span>
+          <span class="text-sm font-black text-teal-600 dark:text-teal-400 font-mono">+${totalProf.toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-indigo-500">
+          <span class="text-[10px] text-slate-400 font-bold block">نسبة هامش الربح (Margin %)</span>
+          <span class="text-sm font-black text-indigo-500 font-mono">${margin}%</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-sky-500">
+          <span class="text-[10px] text-slate-400 font-bold block">إجمالي الخصومات الممنوحة</span>
+          <span class="text-sm font-black text-sky-500 font-mono">${totalDisc.toLocaleString()} د.ع</span>
+        </div>
+      `;
+
+      tableHtml = `
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold sticky top-0 border-b border-slate-100 dark:border-slate-800">
+            <tr>
+              <th class="p-3">رقم الفاتورة</th>
+              <th class="p-3">التاريخ والوقت</th>
+              <th class="p-3">الكاشير</th>
+              <th class="p-3">الزبون</th>
+              <th class="p-3 text-center">طريقة الدفع</th>
+              <th class="p-3 text-center">الخصم</th>
+              <th class="p-3 text-center">إجمالي الفاتورة</th>
+              <th class="p-3 text-center">صافي الربح</th>
             </tr>
-          `;
-        });
-      }
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+            ${sales.length === 0 ? '<tr><td colspan="8" class="text-center py-8 text-slate-400 font-sans">لا توجد مبيعات في هذه الفترة</td></tr>' : 
+              sales.map(s => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <td class="p-3 font-bold text-slate-900 dark:text-white">${s.invoiceNumber}</td>
+                  <td class="p-3 text-slate-500 text-[11px] font-sans">${s.date}</td>
+                  <td class="p-3 font-sans text-slate-700 dark:text-slate-300 font-bold">${s.cashier}</td>
+                  <td class="p-3 font-sans text-slate-500">${s.customer}</td>
+                  <td class="p-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.paymentMethod === 'Debt' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/60' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60'} font-sans">${s.paymentMethod === 'Debt' ? 'دين' : 'نقد'}</span></td>
+                  <td class="p-3 text-center text-slate-400">${(s.discountAmount || 0).toLocaleString()}</td>
+                  <td class="p-3 text-center font-black text-slate-900 dark:text-white">${Number(s.totalAmount || s.TotalAmount).toLocaleString()} د.ع</td>
+                  <td class="p-3 text-center font-black text-emerald-500">+${Number(s.profit || 0).toLocaleString()} د.ع</td>
+                </tr>
+              `).join('')}
+          </tbody>
+        </table>
+      `;
+      break;
+    }
+
+    case 'returns_refunds': {
+      const returns = filterByPeriod(d.returnsList || []);
+      currentFilteredRows = returns;
+      rowCount = returns.length;
+      const totalRefunds = returns.reduce((acc, r) => acc + (r.totalAmount || r.TotalAmount || 0), 0);
+
+      kpiHtml = `
+        <div class="sh-card p-3 border-r-4 border-rose-500">
+          <span class="text-[10px] text-slate-400 font-bold block">إجمالي مبالغ المرتجعات</span>
+          <span class="text-sm font-black text-rose-500 font-mono">${totalRefunds.toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-amber-500">
+          <span class="text-[10px] text-slate-400 font-bold block">عدد فواتير المرتجع</span>
+          <span class="text-sm font-black text-amber-500 font-mono">${returns.length} فواتير</span>
+        </div>
+      `;
+
+      tableHtml = `
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold sticky top-0 border-b border-slate-100 dark:border-slate-800">
+            <tr>
+              <th class="p-3">رقم فاتورة المرتجع</th>
+              <th class="p-3">التاريخ والوقت</th>
+              <th class="p-3">الكاشير المسؤول</th>
+              <th class="p-3">ملاحظات وسبب الإرجاع</th>
+              <th class="p-3 text-center">المبلغ المرجع</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+            ${returns.length === 0 ? '<tr><td colspan="5" class="text-center py-8 text-slate-400 font-sans">لا توجد مرتجعات مسجلة في هذه الفترة</td></tr>' :
+              returns.map(r => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <td class="p-3 font-bold text-rose-500">${r.invoiceNumber}</td>
+                  <td class="p-3 text-slate-500 text-[11px] font-sans">${r.date}</td>
+                  <td class="p-3 font-sans text-slate-700 dark:text-slate-300 font-bold">${r.cashier}</td>
+                  <td class="p-3 font-sans text-slate-500">${r.notes}</td>
+                  <td class="p-3 text-center font-black text-rose-500">-${Number(r.totalAmount || r.TotalAmount).toLocaleString()} د.ع</td>
+                </tr>
+              `).join('')}
+          </tbody>
+        </table>
+      `;
+      break;
+    }
+
+    case 'inventory_valuation': {
+      kpiHtml = `
+        <div class="sh-card p-3 border-r-4 border-amber-500">
+          <span class="text-[10px] text-slate-400 font-bold block">إجمالي قيمة المخزن (بسعر التكلفة)</span>
+          <span class="text-sm font-black text-amber-600 dark:text-amber-400 font-mono">${Number(d.totalStockCostValue || 0).toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-emerald-500">
+          <span class="text-[10px] text-slate-400 font-bold block">إجمالي قيمة المخزن (بسعر البيع)</span>
+          <span class="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono">${Number(d.totalStockRetailValue || 0).toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-indigo-500">
+          <span class="text-[10px] text-slate-400 font-bold block">الأرباح المتوقعة عند البيع</span>
+          <span class="text-sm font-black text-indigo-500 font-mono">+${Number(d.projectedGrossProfit || 0).toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-sky-500">
+          <span class="text-[10px] text-slate-400 font-bold block">عدد الأصناف المتوفرة</span>
+          <span class="text-sm font-black text-sky-500 font-mono">${d.totalProductsCount || 0} مادة</span>
+        </div>
+      `;
+
+      const prods = (window.productsData || []).filter(p => !p.isDeleted);
+      currentFilteredRows = prods;
+      rowCount = prods.length;
+
+      tableHtml = `
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold sticky top-0 border-b border-slate-100 dark:border-slate-800">
+            <tr>
+              <th class="p-3">اسم المادة</th>
+              <th class="p-3">الباركود</th>
+              <th class="p-3">التصنيف</th>
+              <th class="p-3 text-center">الرصيد بالمخزن</th>
+              <th class="p-3 text-center">سعر التكلفة</th>
+              <th class="p-3 text-center">سعر البيع</th>
+              <th class="p-3 text-center">إجمالي التكلفة</th>
+              <th class="p-3 text-center">إجمالي البيع</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+            ${prods.map(p => `
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                <td class="p-3 font-bold font-sans text-slate-900 dark:text-white">${p.name || p.Name}</td>
+                <td class="p-3 text-slate-400">${p.barcode || p.Barcode || '--'}</td>
+                <td class="p-3 font-sans text-slate-500">${p.categoryName || 'عام'}</td>
+                <td class="p-3 text-center font-bold text-sky-600">${p.stockQuantity || p.StockQuantity || 0}</td>
+                <td class="p-3 text-center text-slate-500">${Number(p.cost || p.Cost || 0).toLocaleString()}</td>
+                <td class="p-3 text-center font-bold text-slate-800 dark:text-white">${Number(p.price || p.Price || 0).toLocaleString()}</td>
+                <td class="p-3 text-center font-black text-amber-600">${(Number(p.stockQuantity || p.StockQuantity || 0) * Number(p.cost || p.Cost || 0)).toLocaleString()} د.ع</td>
+                <td class="p-3 text-center font-black text-emerald-600">${(Number(p.stockQuantity || p.StockQuantity || 0) * Number(p.price || p.Price || 0)).toLocaleString()} د.ع</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      break;
+    }
+
+    case 'item_turnover': {
+      const top = d.topItems || [];
+      const stagnant = d.stagnantItems || [];
+      currentFilteredRows = top;
+      rowCount = top.length + stagnant.length;
+
+      kpiHtml = `
+        <div class="sh-card p-3 border-r-4 border-emerald-500">
+          <span class="text-[10px] text-slate-400 font-bold block">المواد سريعة الدوران (الأكثر طلباً)</span>
+          <span class="text-sm font-black text-emerald-600 font-mono">${top.length} أصناف</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-rose-500">
+          <span class="text-[10px] text-slate-400 font-bold block">المواد بطيئة الحركة / الراكدة</span>
+          <span class="text-sm font-black text-rose-500 font-mono">${stagnant.length} أصناف</span>
+        </div>
+      `;
+
+      tableHtml = `
+        <div class="space-y-4 p-2">
+          <div>
+            <h4 class="font-black text-xs text-emerald-600 mb-2 flex items-center gap-1.5">
+              <span>🔥</span>
+              <span>المواد الأكثر مبيعاً ودوراناً (Top Sellers)</span>
+            </h4>
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold border-b">
+                <tr>
+                  <th class="p-2.5">#</th>
+                  <th class="p-2.5">اسم المادة</th>
+                  <th class="p-2.5">الباركود</th>
+                  <th class="p-2.5 text-center">الكمية المباعة</th>
+                  <th class="p-2.5 text-center">إجمالي المبيعات</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+                ${top.map((t, idx) => `
+                  <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                    <td class="p-2.5 text-center text-slate-400 font-sans">${idx + 1}</td>
+                    <td class="p-2.5 font-bold font-sans text-slate-900 dark:text-white">${t.name}</td>
+                    <td class="p-2.5 text-slate-400">${t.barcode || '--'}</td>
+                    <td class="p-2.5 text-center font-bold text-emerald-500 font-sans">${t.qty} قطعة</td>
+                    <td class="p-2.5 text-center font-black text-slate-900 dark:text-white">${Number(t.total).toLocaleString()} د.ع</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      break;
+    }
+
+    case 'damaged_waste': {
+      const damaged = filterByPeriod(d.damagedItems || []);
+      currentFilteredRows = damaged;
+      rowCount = damaged.length;
+      const totalLoss = damaged.reduce((acc, i) => acc + (i.lossAmount || 0), 0);
+
+      kpiHtml = `
+        <div class="sh-card p-3 border-r-4 border-rose-500">
+          <span class="text-[10px] text-slate-400 font-bold block">إجمالي الخسائر المالية للهالك والتوالف</span>
+          <span class="text-sm font-black text-rose-500 font-mono">${totalLoss.toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-amber-500">
+          <span class="text-[10px] text-slate-400 font-bold block">عدد عمليات الإتلاف المسجلة</span>
+          <span class="text-sm font-black text-amber-500 font-mono">${damaged.length} عملية</span>
+        </div>
+      `;
+
+      tableHtml = `
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold sticky top-0 border-b border-slate-100 dark:border-slate-800">
+            <tr>
+              <th class="p-3">اسم المادة</th>
+              <th class="p-3">الباركود</th>
+              <th class="p-3 text-center">الكمية التالفة</th>
+              <th class="p-3 text-center">قيمة الخسارة</th>
+              <th class="p-3">سبب التلف</th>
+              <th class="p-3">الإجراء المتخذ</th>
+              <th class="p-3">التاريخ والوقت</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+            ${damaged.length === 0 ? '<tr><td colspan="7" class="text-center py-8 text-slate-400 font-sans">لا توجد مواد تالفة مسجلة في هذه الفترة</td></tr>' :
+              damaged.map(i => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <td class="p-3 font-bold font-sans text-slate-900 dark:text-white">${i.productName}</td>
+                  <td class="p-3 text-slate-400">${i.barcode || '--'}</td>
+                  <td class="p-3 text-center font-bold text-rose-500 font-sans">${i.quantity} قطعة</td>
+                  <td class="p-3 text-center font-black text-rose-500">${Number(i.lossAmount).toLocaleString()} د.ع</td>
+                  <td class="p-3 font-sans text-slate-600 dark:text-slate-300 font-bold">${i.reason}</td>
+                  <td class="p-3 font-sans text-slate-400">${i.actionTaken}</td>
+                  <td class="p-3 text-slate-500 text-[11px] font-sans">${i.date}</td>
+                </tr>
+              `).join('')}
+          </tbody>
+        </table>
+      `;
+      break;
+    }
+
+    case 'purchases_invoices': {
+      const purchases = filterByPeriod(d.purchasesList || []);
+      currentFilteredRows = purchases;
+      rowCount = purchases.length;
+      const totalPurch = purchases.reduce((acc, p) => acc + (p.totalAmount || p.TotalAmount || 0), 0);
+      const totalPaid = purchases.reduce((acc, p) => acc + (p.paidAmount || p.PaidAmount || 0), 0);
+      const totalRemaining = purchases.reduce((acc, p) => acc + (p.remaining || 0), 0);
+
+      kpiHtml = `
+        <div class="sh-card p-3 border-r-4 border-sky-500">
+          <span class="text-[10px] text-slate-400 font-bold block">إجمالي قيمة المشتريات والتوريد</span>
+          <span class="text-sm font-black text-sky-500 font-mono">${totalPurch.toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-emerald-500">
+          <span class="text-[10px] text-slate-400 font-bold block">المبالغ المدفوعة للموردين</span>
+          <span class="text-sm font-black text-emerald-500 font-mono">${totalPaid.toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-rose-500">
+          <span class="text-[10px] text-slate-400 font-bold block">الديون المتبقية للموردين</span>
+          <span class="text-sm font-black text-rose-500 font-mono">${totalRemaining.toLocaleString()} د.ع</span>
+        </div>
+      `;
+
+      tableHtml = `
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold sticky top-0 border-b border-slate-100 dark:border-slate-800">
+            <tr>
+              <th class="p-3">رقم فاتورة الشراء</th>
+              <th class="p-3">المندوب / الشركة</th>
+              <th class="p-3">التاريخ والوقت</th>
+              <th class="p-3 text-center">نوع الدفع</th>
+              <th class="p-3 text-center">إجمالي الفاتورة</th>
+              <th class="p-3 text-center">المدفوع</th>
+              <th class="p-3 text-center">المتبقي (دين)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+            ${purchases.length === 0 ? '<tr><td colspan="7" class="text-center py-8 text-slate-400 font-sans">لا توجد فواتير شراء في هذه الفترة</td></tr>' :
+              purchases.map(p => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <td class="p-3 font-bold text-slate-900 dark:text-white">${p.invoiceNumber}</td>
+                  <td class="p-3 font-sans font-bold text-sky-600">${p.supplierName}</td>
+                  <td class="p-3 text-slate-500 text-[11px] font-sans">${p.date}</td>
+                  <td class="p-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${p.paymentMethod === 'Debt' ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'} font-sans">${p.paymentMethod === 'Debt' ? 'دين' : 'نقد'}</span></td>
+                  <td class="p-3 text-center font-black text-slate-900 dark:text-white">${Number(p.totalAmount || p.TotalAmount).toLocaleString()} د.ع</td>
+                  <td class="p-3 text-center font-bold text-emerald-600">${Number(p.paidAmount || p.PaidAmount).toLocaleString()} د.ع</td>
+                  <td class="p-3 text-center font-black text-rose-500">${Number(p.remaining || 0).toLocaleString()} د.ع</td>
+                </tr>
+              `).join('')}
+          </tbody>
+        </table>
+      `;
+      break;
+    }
+
+    case 'customers_debts_aging': {
+      const custs = d.customersDebts || [];
+      currentFilteredRows = custs;
+      rowCount = custs.length;
+      const totalDebts = custs.reduce((acc, c) => acc + (c.remaining || 0), 0);
+      const totalPaid = custs.reduce((acc, c) => acc + (c.totalPaid || 0), 0);
+
+      kpiHtml = `
+        <div class="sh-card p-3 border-r-4 border-rose-500">
+          <span class="text-[10px] text-slate-400 font-bold block">إجمالي الديون المتبقية بذمة الزبائن</span>
+          <span class="text-sm font-black text-rose-500 font-mono">${totalDebts.toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-emerald-500">
+          <span class="text-[10px] text-slate-400 font-bold block">إجمالي المبالغ المسددة والمقبوضة</span>
+          <span class="text-sm font-black text-emerald-500 font-mono">${totalPaid.toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-purple-500">
+          <span class="text-[10px] text-slate-400 font-bold block">عدد الزبائن المدينين</span>
+          <span class="text-sm font-black text-purple-500 font-mono">${custs.filter(c => c.remaining > 0).length} زبون</span>
+        </div>
+      `;
+
+      tableHtml = `
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold sticky top-0 border-b border-slate-100 dark:border-slate-800">
+            <tr>
+              <th class="p-3">اسم الزبون</th>
+              <th class="p-3">رقم الهاتف</th>
+              <th class="p-3 text-center">إجمالي الدين الأصلي</th>
+              <th class="p-3 text-center">المبلغ المسدد</th>
+              <th class="p-3 text-center">المتبقي بذمته (دين حالي)</th>
+              <th class="p-3">آخر حركة</th>
+              <th class="p-3">تاريخ التسجيل</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+            ${custs.length === 0 ? '<tr><td colspan="7" class="text-center py-8 text-slate-400 font-sans">لا توجد ديون مسجلة للزبائن</td></tr>' :
+              custs.map(c => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <td class="p-3 font-bold font-sans text-slate-900 dark:text-white">${c.customerName}</td>
+                  <td class="p-3 text-slate-400">${c.phone || '--'}</td>
+                  <td class="p-3 text-center text-slate-500">${Number(c.totalDebt).toLocaleString()} د.ع</td>
+                  <td class="p-3 text-center text-emerald-600 font-bold">${Number(c.totalPaid).toLocaleString()} د.ع</td>
+                  <td class="p-3 text-center font-black text-rose-500">${Number(c.remaining).toLocaleString()} د.ع</td>
+                  <td class="p-3 font-sans text-slate-600 dark:text-slate-300 font-bold">${c.lastTransaction || 'دين'}</td>
+                  <td class="p-3 text-slate-400 font-sans">${c.date}</td>
+                </tr>
+              `).join('')}
+          </tbody>
+        </table>
+      `;
+      break;
+    }
+
+    case 'shift_zreport': {
+      const z = d.zReport || {};
+      kpiHtml = `
+        <div class="sh-card p-3 border-r-4 border-emerald-500">
+          <span class="text-[10px] text-slate-400 font-bold block">إجمالي المقبوضات النقدية (الكاش)</span>
+          <span class="text-sm font-black text-emerald-500 font-mono">${Number(z.totalCashSales || 0).toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-indigo-500">
+          <span class="text-[10px] text-slate-400 font-bold block">عدد الفواتير الصادرة اليوم</span>
+          <span class="text-sm font-black text-indigo-500 font-mono">${z.invoicesCount || 0} فاتورة</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-rose-500">
+          <span class="text-[10px] text-slate-400 font-bold block">إجمالي الخصومات اليومية</span>
+          <span class="text-sm font-black text-rose-500 font-mono">${Number(z.totalDiscounts || 0).toLocaleString()} د.ع</span>
+        </div>
+      `;
+
+      tableHtml = `
+        <div class="max-w-xl mx-auto p-4 border border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-800/40 space-y-3 font-mono text-xs">
+          <div class="text-center border-b pb-2 border-slate-200 dark:border-slate-700">
+            <span class="text-base font-black font-sans block text-slate-900 dark:text-white">📄 تقرير إغلاق الصندوق والوردية (Z-Report)</span>
+            <span class="text-xs text-slate-400 font-sans">تاريخ الوردية: ${z.reportDate || '--'} | وقت الإغلاق: ${z.closingTime || '--'}</span>
+          </div>
+          <div class="space-y-2 divide-y divide-slate-100 dark:divide-slate-700">
+            <div class="flex justify-between pt-1"><span>إجمالي المبيعات النقدية (Cash):</span><span class="font-bold text-emerald-500">${Number(z.totalCashSales || 0).toLocaleString()} د.ع</span></div>
+            <div class="flex justify-between pt-1"><span>إجمالي المبيعات الآجلة (Credit):</span><span class="font-bold text-rose-500">${Number(z.totalCreditSales || 0).toLocaleString()} د.ع</span></div>
+            <div class="flex justify-between pt-1"><span>إجمالي الخصومات الممنوحة:</span><span class="font-bold text-slate-500">${Number(z.totalDiscounts || 0).toLocaleString()} د.ع</span></div>
+            <div class="flex justify-between pt-1"><span>عدد الفواتير المنفذة:</span><span class="font-bold text-sky-500">${z.invoicesCount || 0} فاتورة</span></div>
+            <div class="flex justify-between pt-2 text-sm font-black border-t-2 border-slate-800 dark:border-slate-200">
+              <span class="font-sans">صافي النقد الواجب توفره بالدرج:</span>
+              <span class="text-emerald-500 font-mono">${Number(z.netCashInDrawer || 0).toLocaleString()} د.ع</span>
+            </div>
+          </div>
+        </div>
+      `;
+      break;
+    }
+
+    case 'peak_hours': {
+      const hours = d.hourlyStats || [];
+      currentFilteredRows = hours;
+      rowCount = hours.length;
+
+      kpiHtml = `
+        <div class="sh-card p-3 border-r-4 border-indigo-500">
+          <span class="text-[10px] text-slate-400 font-bold block">تحليل نشاط مدار 24 ساعة</span>
+          <span class="text-sm font-black text-indigo-500 font-mono">24 فترة زمنية</span>
+        </div>
+      `;
+
+      tableHtml = `
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold sticky top-0 border-b border-slate-100 dark:border-slate-800">
+            <tr>
+              <th class="p-3">الساعة</th>
+              <th class="p-3 text-center">عدد الفواتير</th>
+              <th class="p-3 text-center">إجمالي المبيعات</th>
+              <th class="p-3">مؤشر كثافة الإقبال</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+            ${hours.map(h => {
+              const maxSales = Math.max(...hours.map(x => x.total || 0), 1);
+              const barPercent = Math.min(100, Math.round(((h.total || 0) / maxSales) * 100));
+              return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <td class="p-3 font-bold font-sans">${h.label}</td>
+                  <td class="p-3 text-center font-bold text-sky-500">${h.count || 0}</td>
+                  <td class="p-3 text-center font-black text-emerald-500">${Number(h.total || 0).toLocaleString()} د.ع</td>
+                  <td class="p-3">
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                      <div class="bg-gradient-to-r from-indigo-500 to-emerald-500 h-full rounded-full" style="width: ${barPercent}%"></div>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+      break;
+    }
+
+    default: {
+      // Default to standard sales table
+      const sales = filterByPeriod(d.salesList || []);
+      currentFilteredRows = sales;
+      rowCount = sales.length;
+
+      tableHtml = `
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold sticky top-0 border-b border-slate-100 dark:border-slate-800">
+            <tr>
+              <th class="p-3">رقم الفاتورة</th>
+              <th class="p-3">التاريخ والوقت</th>
+              <th class="p-3">الكاشير</th>
+              <th class="p-3 text-center">طريقة الدفع</th>
+              <th class="p-3 text-center">إجمالي الفاتورة</th>
+              <th class="p-3 text-center">صافي الربح</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+            ${sales.map(s => `
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                <td class="p-3 font-bold">${s.invoiceNumber}</td>
+                <td class="p-3 text-slate-500 text-[11px] font-sans">${s.date}</td>
+                <td class="p-3 font-sans font-bold">${s.cashier}</td>
+                <td class="p-3 text-center font-sans">${s.paymentMethod}</td>
+                <td class="p-3 text-center font-black text-slate-900 dark:text-white">${Number(s.totalAmount || s.TotalAmount).toLocaleString()} د.ع</td>
+                <td class="p-3 text-center font-black text-emerald-500">+${Number(s.profit || 0).toLocaleString()} د.ع</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      break;
     }
   }
+
+  kpiContainer.innerHTML = kpiHtml;
+  tableContainer.innerHTML = tableHtml;
+  if (footerCount) footerCount.innerText = `عدد السجلات: ${rowCount}`;
+}
+
+// Live Search inside Open Report
+function filterReportTableLive() {
+  const q = document.getElementById('rdm-searchInput')?.value.toLowerCase().trim();
+  const rows = document.querySelectorAll('#rdm-tableContainer tbody tr');
+  rows.forEach(tr => {
+    const text = tr.innerText.toLowerCase();
+    if (!q || text.includes(q)) {
+      tr.style.display = '';
+    } else {
+      tr.style.display = 'none';
+    }
+  });
+}
+
+// Export Current Report to Excel (CSV with UTF-8 BOM)
+function exportCurrentReportToExcel() {
+  const table = document.querySelector('#rdm-tableContainer table');
+  if (!table) {
+    alert('لا توجد بيانات متاحة للتصدير حالياً!');
+    return;
+  }
+
+  let csvContent = '\uFEFF'; // UTF-8 BOM for Arabic support in Excel
+  const rows = table.querySelectorAll('tr');
+
+  rows.forEach(row => {
+    if (row.style.display === 'none') return;
+    const cols = row.querySelectorAll('th, td');
+    const rowData = [];
+    cols.forEach(col => {
+      let val = col.innerText.replace(/"/g, '""').trim();
+      rowData.push(`"${val}"`);
+    });
+    csvContent += rowData.join(',') + '\r\n';
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  const dateStamp = new Date().toISOString().slice(0, 10);
+  link.setAttribute('download', `تقرير_${currentReportKey}_${dateStamp}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Print Current Report
+function printCurrentReport() {
+  const title = document.getElementById('rdm-title')?.innerText || 'تقرير نظام 7amo POS';
+  const tableHtml = document.getElementById('rdm-tableContainer')?.innerHTML || '';
+  const dateStr = new Date().toLocaleString('ar-IQ');
+
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('يرجى السماح بالنوافذ المنبثقة للطباعة!');
+    return;
+  }
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="utf-8">
+      <title>${title}</title>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; direction: rtl; padding: 20px; color: #111; }
+        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+        .header h2 { margin: 0; font-size: 20px; }
+        .header p { margin: 5px 0 0; font-size: 12px; color: #666; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: right; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .footer { text-align: center; margin-top: 30px; font-size: 10px; color: #888; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h2>7amo Market - ${title}</h2>
+        <p>تاريخ ووقت الطباعة: ${dateStr}</p>
+      </div>
+      <div>
+        ${tableHtml}
+      </div>
+      <div class="footer">
+        تم استخراج هذا التقرير آلياً عبر نظام 7amo POS لإدارة السوبرماركت
+      </div>
+      <script>
+        window.onload = function() { window.print(); window.close(); };
+      </script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
 }
 
 // ========================================================

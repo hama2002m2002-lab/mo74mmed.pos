@@ -961,45 +961,311 @@ public class PosBridgeService
                 }
 
                 case "get_reports":
+                case "get_comprehensive_reports":
                 {
+                    var now = DateTime.Now;
                     var today = DateTime.Today;
+                    var startOfMonth = new DateTime(today.Year, today.Month, 1);
+                    var startOfPrevMonth = startOfMonth.AddMonths(-1);
+                    var endOfPrevMonth = startOfMonth.AddDays(-1);
+
+                    // 1. Fetch Sales with Items
                     var sales = await db.Sales
                         .Include(s => s.Items)
                         .ThenInclude(i => i.Product)
+                        .Include(s => s.User)
                         .AsNoTracking()
+                        .OrderByDescending(s => s.CreatedAt)
                         .ToListAsync();
 
-                    var todaySales = sales.Where(s => s.CreatedAt.Date == today).ToList();
-                    var monthSales = sales.Where(s => s.CreatedAt.Year == today.Year && s.CreatedAt.Month == today.Month).ToList();
+                    // 2. Fetch Products
+                    var products = await db.Products
+                        .Include(p => p.Category)
+                        .AsNoTracking()
+                        .Where(p => !p.IsDeleted)
+                        .ToListAsync();
 
+                    // 3. Fetch Purchases
+                    var purchases = await db.PurchaseInvoices
+                        .Include(p => p.Items)
+                        .AsNoTracking()
+                        .OrderByDescending(p => p.CreatedAt)
+                        .ToListAsync();
+
+                    // 4. Fetch Suppliers
+                    var suppliers = await db.Suppliers
+                        .AsNoTracking()
+                        .Where(s => !s.IsDeleted)
+                        .ToListAsync();
+
+                    // 5. Fetch Customer Debts
+                    var customerDebts = await db.CustomerDebts
+                        .AsNoTracking()
+                        .OrderByDescending(c => c.CreatedAt)
+                        .ToListAsync();
+
+                    // 6. Fetch Damaged Items
+                    var damagedItems = await db.DamagedItems
+                        .AsNoTracking()
+                        .OrderByDescending(d => d.CreatedAt)
+                        .ToListAsync();
+
+                    // Filtered sets
+                    var todaySales = sales.Where(s => s.CreatedAt.Date == today && !s.IsReturnSale).ToList();
+                    var monthSales = sales.Where(s => s.CreatedAt >= startOfMonth && !s.IsReturnSale).ToList();
+                    var prevMonthSales = sales.Where(s => s.CreatedAt >= startOfPrevMonth && s.CreatedAt <= endOfPrevMonth && !s.IsReturnSale).ToList();
+                    var returnSales = sales.Where(s => s.IsReturnSale).ToList();
+
+                    // Financial metrics
                     decimal todayTotal = todaySales.Sum(s => s.TotalAmount);
                     decimal todayProfit = todaySales.Sum(s => s.InvoiceNetProfit);
-
                     decimal monthTotal = monthSales.Sum(s => s.TotalAmount);
                     decimal monthProfit = monthSales.Sum(s => s.InvoiceNetProfit);
+                    decimal prevMonthTotal = prevMonthSales.Sum(s => s.TotalAmount);
 
-                    var topItems = sales.SelectMany(s => s.Items)
-                        .GroupBy(i => i.ProductName)
+                    decimal totalRevenueAll = sales.Where(s => !s.IsReturnSale).Sum(s => s.TotalAmount);
+                    decimal totalProfitAll = sales.Where(s => !s.IsReturnSale).Sum(s => s.InvoiceNetProfit);
+                    decimal totalDiscountAll = sales.Sum(s => s.DiscountAmount);
+                    decimal totalReturnsAmount = returnSales.Sum(s => s.TotalAmount);
+
+                    // Inventory valuation
+                    decimal totalStockCostValue = products.Sum(p => p.StockQuantity * p.Cost);
+                    decimal totalStockRetailValue = products.Sum(p => p.StockQuantity * p.Price);
+                    decimal projectedGrossProfit = totalStockRetailValue - totalStockCostValue;
+                    int lowStockCount = products.Count(p => p.StockQuantity <= (p.MinStockLevel > 0 ? p.MinStockLevel : 5));
+
+                    // Top Selling Items (Fast Moving)
+                    var topItems = sales.Where(s => !s.IsReturnSale).SelectMany(s => s.Items)
+                        .GroupBy(i => new { i.ProductName, i.Barcode })
                         .Select(g => new
                         {
-                            name = g.Key,
+                            name = g.Key.ProductName,
+                            barcode = g.Key.Barcode,
                             qty = g.Sum(x => x.Quantity),
                             total = g.Sum(x => x.TotalPrice)
                         })
                         .OrderByDescending(x => x.qty)
-                        .Take(6)
+                        .Take(30)
                         .ToList();
+
+                    // Slow Moving / Stagnant Items (High stock, low or 0 sales)
+                    var soldProductNames = sales.Where(s => s.CreatedAt >= DateTime.UtcNow.AddDays(-30))
+                        .SelectMany(s => s.Items).Select(i => i.ProductName).ToHashSet();
+
+                    var stagnantItems = products.Where(p => p.StockQuantity > 0 && !soldProductNames.Contains(p.Name))
+                        .OrderByDescending(p => p.StockQuantity * p.Cost)
+                        .Take(30)
+                        .Select(p => new
+                        {
+                            p.Name,
+                            p.Barcode,
+                            category = p.Category?.Name ?? "عام",
+                            p.StockQuantity,
+                            costValue = p.StockQuantity * p.Cost,
+                            p.Cost,
+                            p.Price
+                        })
+                        .ToList();
+
+                    // Damaged summary
+                    decimal totalDamagedLoss = damagedItems.Sum(d => d.TotalLossAmount);
+
+                    // Purchases & Suppliers summary
+                    decimal totalPurchasesAll = purchases.Sum(p => p.TotalAmount);
+                    decimal totalPurchasesCash = purchases.Where(p => p.PaymentMethod == "Cash").Sum(p => p.TotalAmount);
+                    decimal totalPurchasesDebt = purchases.Where(p => p.PaymentMethod == "Debt" || p.PaymentMethod == "Partial").Sum(p => p.RemainingAmount);
+                    decimal totalSupplierBalancesOwed = suppliers.Sum(s => s.Balance);
+
+                    // Customers Debts summary
+                    decimal totalCustomerDebtsOwed = customerDebts.Sum(c => c.RemainingBalance);
+                    decimal totalCustomerPaid = customerDebts.Sum(c => c.TotalPaid);
+
+                    // Payment Method Stats
+                    var paymentStats = sales.Where(s => !s.IsReturnSale)
+                        .GroupBy(s => string.IsNullOrWhiteSpace(s.PaymentMethod) ? "Cash" : s.PaymentMethod)
+                        .Select(g => new
+                        {
+                            method = g.Key,
+                            total = g.Sum(s => s.TotalAmount),
+                            count = g.Count()
+                        })
+                        .ToList();
+
+                    // Cashier Stats
+                    var cashierStats = sales.Where(s => !s.IsReturnSale)
+                        .GroupBy(s => s.User != null ? s.User.FullName : "الكاشير الرئيسي")
+                        .Select(g => new
+                        {
+                            cashierName = g.Key,
+                            totalSales = g.Sum(s => s.TotalAmount),
+                            netProfit = g.Sum(s => s.InvoiceNetProfit),
+                            invoicesCount = g.Count(),
+                            avgInvoice = g.Count() > 0 ? Math.Round(g.Sum(s => s.TotalAmount) / g.Count(), 0) : 0
+                        })
+                        .ToList();
+
+                    // Hourly Traffic (24 Hours)
+                    var hourlyStats = new List<object>();
+                    for (int h = 0; h < 24; h++)
+                    {
+                        var hSales = sales.Where(s => s.CreatedAt.Hour == h && !s.IsReturnSale).ToList();
+                        hourlyStats.Add(new
+                        {
+                            hour = h,
+                            label = $"{h:00}:00",
+                            total = hSales.Sum(s => s.TotalAmount),
+                            count = hSales.Count
+                        });
+                    }
+
+                    // Security / Void / Suspicious operations (Cancelled, returned, zero price, heavy discounts)
+                    var suspiciousSales = sales.Where(s => s.IsReturnSale || s.DiscountAmount > 5000 || s.TotalAmount <= 0)
+                        .Take(30)
+                        .Select(s => new
+                        {
+                            s.Id,
+                            invoiceNumber = s.InvoiceNumber,
+                            date = s.CreatedAt.ToString("yyyy/MM/dd hh:mm tt"),
+                            cashier = s.User?.FullName ?? "الكاشير",
+                            s.TotalAmount,
+                            s.DiscountAmount,
+                            type = s.IsReturnSale ? "مرتجع / إلغاء" : (s.TotalAmount <= 0 ? "فاتورة صفرية" : "خصم استثنائي"),
+                            itemsCount = s.Items.Count
+                        })
+                        .ToList();
+
+                    // Basket size statistics
+                    int validSalesCount = sales.Count(s => !s.IsReturnSale);
+                    decimal avgBasketValue = validSalesCount > 0 ? Math.Round(totalRevenueAll / validSalesCount, 0) : 0;
+                    decimal avgItemsPerBasket = validSalesCount > 0 ? Math.Round((decimal)sales.Where(s => !s.IsReturnSale).Sum(s => s.Items.Sum(i => i.Quantity)) / validSalesCount, 1) : 0;
 
                     return JsonSerializer.Serialize(new
                     {
                         success = true,
+                        // Quick KPI Cards
                         todayTotal,
                         todayProfit,
                         todayInvoicesCount = todaySales.Count,
                         monthTotal,
                         monthProfit,
                         monthInvoicesCount = monthSales.Count,
-                        topItems
+                        prevMonthTotal,
+                        monthGrowthRate = prevMonthTotal > 0 ? Math.Round(((monthTotal - prevMonthTotal) / prevMonthTotal) * 100, 1) : 0,
+
+                        // Detailed sections
+                        // 1. Financial
+                        totalRevenueAll,
+                        totalProfitAll,
+                        totalDiscountAll,
+                        totalReturnsAmount,
+                        returnSalesCount = returnSales.Count,
+                        salesList = sales.Take(50).Select(s => new
+                        {
+                            s.Id,
+                            invoiceNumber = s.InvoiceNumber,
+                            date = s.CreatedAt.ToString("yyyy/MM/dd hh:mm tt"),
+                            cashier = s.User?.FullName ?? "الكاشير",
+                            customer = s.CustomerName ?? "زبون عام",
+                            paymentMethod = s.PaymentMethod,
+                            s.TotalAmount,
+                            profit = s.InvoiceNetProfit,
+                            s.DiscountAmount,
+                            itemsCount = s.Items.Count,
+                            status = s.Status
+                        }),
+                        returnsList = returnSales.Take(30).Select(s => new
+                        {
+                            s.Id,
+                            invoiceNumber = s.InvoiceNumber,
+                            date = s.CreatedAt.ToString("yyyy/MM/dd hh:mm tt"),
+                            cashier = s.User?.FullName ?? "الكاشير",
+                            s.TotalAmount,
+                            notes = s.Notes ?? "استرجاع بضاعة"
+                        }),
+                        paymentStats,
+                        cashierStats,
+
+                        // 2. Inventory & Damaged
+                        totalProductsCount = products.Count,
+                        totalStockCostValue,
+                        totalStockRetailValue,
+                        projectedGrossProfit,
+                        lowStockCount,
+                        topItems,
+                        stagnantItems,
+                        damagedItems = damagedItems.Take(50).Select(d => new
+                        {
+                            d.Id,
+                            productName = d.ProductName,
+                            barcode = d.Barcode ?? "",
+                            d.Quantity,
+                            lossAmount = d.TotalLossAmount,
+                            reason = d.Reason,
+                            actionTaken = d.Notes ?? "إتلاف",
+                            date = d.CreatedAt.ToString("yyyy/MM/dd hh:mm tt")
+                        }),
+                        totalDamagedLoss,
+
+                        // 3. Purchases & Suppliers
+                        totalPurchasesAll,
+                        totalPurchasesCash,
+                        totalPurchasesDebt,
+                        totalSupplierBalancesOwed,
+                        purchasesList = purchases.Take(50).Select(p => new
+                        {
+                            p.Id,
+                            invoiceNumber = p.InvoiceNumber,
+                            supplierName = p.SupplierName,
+                            p.TotalAmount,
+                            p.PaidAmount,
+                            remaining = p.RemainingAmount,
+                            paymentMethod = p.PaymentMethod,
+                            date = p.CreatedAt.ToString("yyyy/MM/dd hh:mm tt"),
+                            itemsCount = p.Items.Count
+                        }),
+                        suppliersSummary = suppliers.Select(s => new
+                        {
+                            s.Id,
+                            s.Name,
+                            company = s.Company ?? "شركة عامة",
+                            phone = s.Phone ?? "",
+                            balance = s.Balance
+                        }),
+
+                        // 4. Customers & Debts
+                        totalCustomerDebtsOwed,
+                        totalCustomerPaid,
+                        debtorsCount = customerDebts.Count(c => c.RemainingBalance > 0),
+                        customersDebts = customerDebts.Select(c => new
+                        {
+                            c.Id,
+                            customerName = c.CustomerName,
+                            phone = c.PhoneNumber ?? "",
+                            totalDebt = c.TotalDebt,
+                            totalPaid = c.TotalPaid,
+                            remaining = c.RemainingBalance,
+                            lastTransaction = c.LastTransactionType,
+                            date = c.CreatedAt.ToString("yyyy/MM/dd")
+                        }),
+
+                        // 5. Security & Z-Report
+                        suspiciousSales,
+                        zReport = new
+                        {
+                            reportDate = today.ToString("yyyy/MM/dd"),
+                            openingTime = "08:00 ص",
+                            closingTime = now.ToString("hh:mm tt"),
+                            totalCashSales = todaySales.Where(s => s.PaymentMethod == "Cash" || string.IsNullOrEmpty(s.PaymentMethod)).Sum(s => s.TotalAmount),
+                            totalCreditSales = todaySales.Where(s => s.PaymentMethod == "Debt").Sum(s => s.TotalAmount),
+                            totalDiscounts = todaySales.Sum(s => s.DiscountAmount),
+                            netCashInDrawer = todaySales.Where(s => s.PaymentMethod == "Cash" || string.IsNullOrEmpty(s.PaymentMethod)).Sum(s => s.TotalAmount),
+                            invoicesCount = todaySales.Count
+                        },
+
+                        // 6. Analytics & Operational
+                        hourlyStats,
+                        avgBasketValue,
+                        avgItemsPerBasket
                     });
                 }
 
