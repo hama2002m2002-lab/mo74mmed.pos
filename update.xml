@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <item>
-    <version>1.4.0</version>
-    <url>https://github.com/hama2002m2002-lab/mo74mmed.pos/releases/download/v1.4.0/payload.zip</url>
-    <changelog></changelog>
+    <version>1.5.0</version>
+    <url>https://github.com/hama2002m2002-lab/mo74mmed.pos/releases/download/v1.5.0/payload.zip</url>
+    <changelog>https://github.com/hama2002m2002-lab/mo74mmed.pos</changelog>
     <mandatory>false</mandatory>
 </item>

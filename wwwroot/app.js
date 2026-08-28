@@ -3607,21 +3607,87 @@ function handleOcrFileUpload(e) {
   reader.readAsDataURL(file);
 }
 
+let ocrCurrentRotation = 0;
+let ocrOriginalImageSrc = null;
+
 function showOcrPreviewThumbnail(dataUrl) {
+  ocrOriginalImageSrc = dataUrl;
+  ocrCurrentRotation = 0;
   const previewContainer = document.getElementById('rpm-previewContainer');
   const previewImg = document.getElementById('rpm-previewImg');
   const camContainer = document.getElementById('rpm-cameraContainer');
   const fileContainer = document.getElementById('rpm-fileContainer');
 
-  if (previewImg) previewImg.src = dataUrl;
+  if (previewImg) {
+    previewImg.src = dataUrl;
+    previewImg.style.transform = 'rotate(0deg)';
+  }
   if (previewContainer) previewContainer.classList.remove('hidden');
   if (camContainer) camContainer.classList.add('hidden');
   if (fileContainer) fileContainer.classList.add('hidden');
 }
 
+function rotateOcrImage(deg) {
+  ocrCurrentRotation = (ocrCurrentRotation + deg) % 360;
+  const img = document.getElementById('rpm-previewImg');
+  if (img) img.style.transform = `rotate(${ocrCurrentRotation}deg)`;
+
+  if (ocrOriginalImageSrc) {
+    const tempImg = new Image();
+    tempImg.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (Math.abs(ocrCurrentRotation) === 90 || Math.abs(ocrCurrentRotation) === 270) {
+        canvas.width = tempImg.height;
+        canvas.height = tempImg.width;
+      } else {
+        canvas.width = tempImg.width;
+        canvas.height = tempImg.height;
+      }
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((ocrCurrentRotation * Math.PI) / 180);
+      ctx.drawImage(tempImg, -tempImg.width / 2, -tempImg.height / 2);
+      const rotatedData = canvas.toDataURL('image/jpeg', 0.95);
+      processReceiptImage(rotatedData);
+    };
+    tempImg.src = ocrOriginalImageSrc;
+  }
+}
+
+function enhanceOcrContrast() {
+  const img = document.getElementById('rpm-previewImg');
+  if (!img || !ocrOriginalImageSrc) return;
+
+  const tempImg = new Image();
+  tempImg.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = tempImg.width;
+    canvas.height = tempImg.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(tempImg, 0, 0);
+
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const v = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+      const contrast = 1.35;
+      const factor = (259 * (contrast * 128 + 255)) / (255 * (259 - contrast * 128));
+      const nv = Math.min(255, Math.max(0, factor * (v - 128) + 128));
+      d[i] = nv;
+      d[i + 1] = nv;
+      d[i + 2] = nv;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    const enhancedData = canvas.toDataURL('image/jpeg', 0.95);
+    img.src = enhancedData;
+    processReceiptImage(enhancedData);
+  };
+  tempImg.src = ocrOriginalImageSrc;
+}
+
 function reCaptureOcrPhoto() {
   document.getElementById('rpm-previewContainer')?.classList.add('hidden');
-  switchOcrInputSource('camera');
+  switchOcrInputSource('file');
 }
 
 function normalizeArabicNumerals(str) {

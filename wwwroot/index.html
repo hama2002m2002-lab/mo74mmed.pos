@@ -2976,9 +2976,19 @@
           </div>
 
           <!-- Image Preview Thumbnail (After capture/upload) -->
-          <div id="rpm-previewContainer" class="hidden relative bg-slate-900 rounded-xl overflow-hidden max-h-28 border border-purple-500/40 flex items-center justify-center">
-            <img id="rpm-previewImg" class="max-h-28 object-contain" alt="Receipt Preview">
-            <button onclick="reCaptureOcrPhoto()" class="absolute top-1 left-1 bg-black/60 hover:bg-black text-white text-[10px] px-2 py-0.5 rounded-lg">إعادة التقاط 🔄</button>
+          <div id="rpm-previewContainer" class="hidden relative bg-slate-900 rounded-2xl overflow-hidden p-2 border border-purple-500/40 space-y-2">
+            <div class="relative max-h-40 flex items-center justify-center overflow-hidden rounded-xl bg-black/40">
+              <img id="rpm-previewImg" class="max-h-40 object-contain transition-transform duration-200" alt="Receipt Preview">
+            </div>
+            <!-- Image Adjustment Tools -->
+            <div class="flex items-center justify-between gap-1 pt-1">
+              <div class="flex gap-1">
+                <button type="button" onclick="rotateOcrImage(-90)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold rounded-lg" title="تدوير يسار 90 درجة">⟲ تدوير</button>
+                <button type="button" onclick="rotateOcrImage(90)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold rounded-lg" title="تدوير يمين 90 درجة">⟳ تدوير</button>
+                <button type="button" onclick="enhanceOcrContrast()" class="px-2 py-1 bg-purple-900/60 hover:bg-purple-800 text-purple-200 text-[10px] font-bold rounded-lg" title="تحسين وضوح النص">✨ زيادة التباين</button>
+              </div>
+              <button type="button" onclick="reCaptureOcrPhoto()" class="bg-rose-950/60 hover:bg-rose-900 text-rose-300 text-[10px] font-bold px-2 py-1 rounded-lg">إعادة رفع 🔄</button>
+            </div>
           </div>
 
           <!-- Scanning Status / Progress -->
