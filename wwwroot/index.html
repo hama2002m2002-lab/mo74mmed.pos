@@ -56,13 +56,7 @@
               <span>لوحة التحكم (داشبۆرد)</span>
             </button>
 
-            <!-- 2. Cashier -->
-            <button onclick="switchTab('cashier')" id="sidebar-cashier" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 transition">
-              <i data-lucide="shopping-cart" class="w-4 h-4 text-emerald-500"></i>
-              <span>شاشة الكاشير والبيع</span>
-            </button>
-
-            <!-- 3. Warehouse Hub (زر المخزن الرئيسي - يفتح واجهة المخزن الكاملة) -->
+            <!-- 2. Warehouse Hub (زر المخزن وإدارة المواد) -->
             <button onclick="switchTab('warehouseHub')" id="sidebar-warehouseHub" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50/90 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/50 border border-sky-200/80 dark:border-sky-800/60 transition shadow-xs">
               <div class="flex items-center gap-3">
                 <i data-lucide="boxes" class="w-4.5 h-4.5 text-sky-500"></i>
@@ -71,37 +65,34 @@
               <i data-lucide="chevron-left" class="w-4 h-4 text-sky-400"></i>
             </button>
 
-            <!-- 4. Purchase & Invoices (فواتير الشراء وتوريد البضائع) -->
-            <button onclick="switchTab('purchase')" id="sidebar-purchase" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 transition">
-              <i data-lucide="truck" class="w-4 h-4 text-sky-500"></i>
-              <span>فواتير الشراء وتوريد البضائع</span>
+            <!-- 3. Invoices Hub (زر الفواتير والمبيعات) -->
+            <button onclick="switchTab('invoicesHub')" id="sidebar-invoicesHub" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/90 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/80 dark:border-emerald-800/60 transition shadow-xs">
+              <div class="flex items-center gap-3">
+                <i data-lucide="receipt" class="w-4.5 h-4.5 text-emerald-500"></i>
+                <span class="font-black text-xs">الفواتير والمبيعات</span>
+              </div>
+              <i data-lucide="chevron-left" class="w-4 h-4 text-emerald-400"></i>
             </button>
 
-            <!-- 5. Return items to supplier (إرجاع مواد إلى مندوب / مورد) -->
-            <button onclick="openSupplierReturnModal()" id="sidebar-returnSupplier" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50/80 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/60 dark:border-amber-800/40 transition">
-              <i data-lucide="rotate-ccw" class="w-4 h-4 text-amber-500"></i>
-              <span>إرجاع مواد إلى مندوب / مورد</span>
-            </button>
-
-            <!-- 6. Suppliers / Reps -->
+            <!-- 4. Suppliers / Reps -->
             <button onclick="switchTab('suppliers')" id="sidebar-suppliers" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="handshake" class="w-4 h-4 text-slate-400"></i>
               <span>المناديب والشركات</span>
             </button>
 
-            <!-- 7. Customers / Debts -->
+            <!-- 5. Customers / Debts -->
             <button onclick="switchTab('customers')" id="sidebar-customers" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
               <span>الزبائن وحسابات الآجل</span>
             </button>
 
-            <!-- 8. Damaged / Expired Items -->
+            <!-- 6. Damaged / Expired Items -->
             <button onclick="switchTab('damagedItems')" id="sidebar-damagedItems" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400"></i>
               <span>المواد التالفة والمنتهية</span>
             </button>
 
-            <!-- 9. Reports & Profits -->
+            <!-- 7. Reports & Profits -->
             <button onclick="switchTab('reports')" id="sidebar-reports" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="bar-chart-3" class="w-4 h-4 text-slate-400"></i>
               <span>التقارير والأرباح</span>
@@ -1135,6 +1126,177 @@
             </div>
 
           </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- VIEW: INVOICES & SALES HUB (بوابة إدارة الفواتير والمبيعات) -->
+        <!-- ======================================================== -->
+        <div id="tab-invoicesHub" class="tab-content hidden space-y-5">
+
+          <!-- Top Header Bar -->
+          <div class="sh-card p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <button onclick="switchTab('dashboard')" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 transition">
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                <span>العودة للرئيسية</span>
+              </button>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center text-xl shadow-md shadow-emerald-500/20">
+                  🧾
+                </div>
+                <div>
+                  <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>بوابة إدارة الفواتير والمبيعات</span>
+                    <span class="text-[10px] bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 font-mono px-2 py-0.5 rounded-full">Invoices & Sales Hub</span>
+                  </h2>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">إدارة عمليات البيع، فواتير الكاشير، فواتير الشراء والتوريد، والمرتجعات والمبيعات</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Action: Fast Search Invoices -->
+            <div class="relative w-72">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute right-3.5 top-2.5"></i>
+              <input id="invoicesHubSearchInput" onkeydown="if(event.key==='Enter'){handleInvoicesHubSearch(this.value);}" type="text" placeholder="بحث برقم الفاتورة (INV-...)..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pr-10 pl-3 py-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-500">
+            </div>
+          </div>
+
+          <!-- Quick Statistics Strip (مؤشرات الفواتير الحية) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+            <div class="sh-card p-3.5 rounded-2xl flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg font-bold">
+                🛒
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block">فواتير مبيعات اليوم</span>
+                <span id="invHubTodayCount" class="text-sm font-black text-emerald-500 font-mono">0 فاتورة</span>
+              </div>
+            </div>
+
+            <div class="sh-card p-3.5 rounded-2xl flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center text-lg font-bold">
+                💰
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block">مبيعات اليوم الإجمالية</span>
+                <span id="invHubTodayRevenue" class="text-sm font-black text-sky-500 font-mono">0 د.ع</span>
+              </div>
+            </div>
+
+            <div class="sh-card p-3.5 rounded-2xl flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center text-lg font-bold">
+                📅
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block">مبيعات الشهر الإجمالية</span>
+                <span id="invHubMonthRevenue" class="text-sm font-black text-indigo-500 font-mono">0 د.ع</span>
+              </div>
+            </div>
+
+            <div class="sh-card p-3.5 rounded-2xl flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-lg font-bold">
+                🚚
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block">فواتير التوريد والشراء</span>
+                <span id="invHubPurchasesCount" class="text-sm font-black text-amber-500 font-mono">0 فاتورة</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE 4 MAIN INVOICE ACTION BUTTONS / CARDS (الأزرار الأربعة الرئيسية للفواتير) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- 1. زر شاشة الكاشير والبيع -->
+            <div onclick="switchTab('cashier')" class="sh-card p-5 rounded-2xl border-2 border-emerald-500/30 hover:border-emerald-500 cursor-pointer group transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br from-slate-900/40 via-slate-900/20 to-emerald-950/20">
+              <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-slate-950 transition duration-300 shadow-md">
+                  🛒
+                </div>
+                <span class="px-3 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono">
+                  نقطة البيع (POS) [F2]
+                </span>
+              </div>
+              <h3 class="text-base font-black text-slate-900 dark:text-white group-hover:text-emerald-400 transition mb-1">
+                1. شاشة الكاشير والبيع السريع
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                إجراء عمليات البيع السريعة، قراءة الباركود، الفواتير المتعددة، وطباعة وصولات الزبائن مباشرة مع حساب الأرباح.
+              </p>
+              <div class="flex items-center justify-between text-xs font-bold text-emerald-500 border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
+                <span>فتح شاشة الكاشير والبيع</span>
+                <i data-lucide="arrow-left" class="w-4 h-4 transform group-hover:-translate-x-1.5 transition"></i>
+              </div>
+            </div>
+
+            <!-- 2. زر فواتير الشراء وتوريد البضائع -->
+            <div onclick="switchTab('purchase')" class="sh-card p-5 rounded-2xl border-2 border-sky-500/30 hover:border-sky-500 cursor-pointer group transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br from-slate-900/40 via-slate-900/20 to-sky-950/20">
+              <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-sky-500 group-hover:text-white transition duration-300 shadow-md">
+                  🚚
+                </div>
+                <span class="px-3 py-1 rounded-full text-[10px] font-black bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                  توريد المندوبين والشركات
+                </span>
+              </div>
+              <h3 class="text-base font-black text-slate-900 dark:text-white group-hover:text-sky-400 transition mb-1">
+                2. فواتير الشراء وتوريد البضائع
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                تسجيل فواتير الشراء الواردة من الشركات والموردين، تحديث أسعار التكلفة، وإضافة البضاعة لأرصدة المخزن.
+              </p>
+              <div class="flex items-center justify-between text-xs font-bold text-sky-500 border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
+                <span>فتح فواتير الشراء والتوريد</span>
+                <i data-lucide="arrow-left" class="w-4 h-4 transform group-hover:-translate-x-1.5 transition"></i>
+              </div>
+            </div>
+
+            <!-- 3. زر إرجاع مواد إلى مندوب / مورد -->
+            <div onclick="openSupplierReturnModal()" class="sh-card p-5 rounded-2xl border-2 border-amber-500/30 hover:border-amber-500 cursor-pointer group transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br from-slate-900/40 via-slate-900/20 to-amber-950/20">
+              <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-slate-950 transition duration-300 shadow-md">
+                  🔄
+                </div>
+                <span class="px-3 py-1 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  المرتجعات والمستحقات
+                </span>
+              </div>
+              <h3 class="text-base font-black text-slate-900 dark:text-white group-hover:text-amber-400 transition mb-1">
+                3. إرجاع مواد إلى مندوب / مورد
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                إرجاع المواد التالفة أو الزائدة للمندوب، خصمها من المخزن، وتسجيل المبالغ المستردة أو خصمها من ديون المورد.
+              </p>
+              <div class="flex items-center justify-between text-xs font-bold text-amber-500 border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
+                <span>تسجيل إرجاع بضاعة لمورد</span>
+                <i data-lucide="arrow-left" class="w-4 h-4 transform group-hover:-translate-x-1.5 transition"></i>
+              </div>
+            </div>
+
+            <!-- 4. زر سجل فواتير المبيعات والمرتجع -->
+            <div onclick="openInvoicesHistoryModal()" class="sh-card p-5 rounded-2xl border-2 border-purple-500/30 hover:border-purple-500 cursor-pointer group transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br from-slate-900/40 via-slate-900/20 to-purple-950/20">
+              <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-purple-500 group-hover:text-white transition duration-300 shadow-md">
+                  📑
+                </div>
+                <span class="px-3 py-1 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-400 border border-purple-500/30 font-mono">
+                  الأرشيف والمبيعات [F4]
+                </span>
+              </div>
+              <h3 class="text-base font-black text-slate-900 dark:text-white group-hover:text-purple-400 transition mb-1">
+                4. سجل فواتير المبيعات والمبيعات
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                استعراض كامل فواتير المبيعات الصادرة، إعادة طباعة الوصولات، كشف المرتجعات، وتفاصيل أرباح كل فاتورة.
+              </p>
+              <div class="flex items-center justify-between text-xs font-bold text-purple-500 border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
+                <span>فتح أرشيف وسجل الفواتير</span>
+                <i data-lucide="arrow-left" class="w-4 h-4 transform group-hover:-translate-x-1.5 transition"></i>
+              </div>
+            </div>
+
+          </div>
+
         </div>
 
         <!-- ======================================================== -->
@@ -3473,7 +3635,7 @@
                 <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl space-y-2 text-xs">
                   <div class="flex justify-between items-center">
                     <span class="text-slate-400 font-bold">الإصدار المثبت حالياً:</span>
-                    <span id="settingsAppVersion" class="font-mono font-black text-sky-500">v1.7.2 Pro</span>
+                    <span id="settingsAppVersion" class="font-mono font-black text-sky-500">v1.7.3 Pro</span>
                   </div>
                   <div class="flex justify-between items-center">
                     <span class="text-slate-400 font-bold">حالة خادم التحديثات:</span>

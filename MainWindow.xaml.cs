@@ -16,7 +16,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-        string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.7.2";
+        string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.7.3";
         Title = $"7amo.pos PRO v{installedVer} - نظام إدارة المبيعات والمخازن فائق السرعة";
 
         Loaded += async (s, e) =>

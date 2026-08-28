@@ -669,6 +669,7 @@ function switchTab(tabId) {
   if (sideBtn) sideBtn.classList.add('sidebar-item-active');
 
   if (tabId === 'warehouseHub') loadWarehouseHub();
+  if (tabId === 'invoicesHub') loadInvoicesHub();
   if (tabId === 'cashier') {
     loadProducts();
     setTimeout(() => {
@@ -695,6 +696,42 @@ function switchTab(tabId) {
   if (tabId === 'settings') loadSettingsInfo();
 
   lucide.createIcons();
+}
+
+async function loadInvoicesHub() {
+  const res = await callBackend('get_dashboard_data');
+  if (res && res.success) {
+    const todayCountEl = document.getElementById('invHubTodayCount');
+    if (todayCountEl) todayCountEl.innerText = `${(res.todayInvoices || 0).toLocaleString()} فاتورة`;
+
+    const todayRevEl = document.getElementById('invHubTodayRevenue');
+    if (todayRevEl) todayRevEl.innerText = `${Number(res.todayRevenue || 0).toLocaleString()} د.ع`;
+
+    const monthRevEl = document.getElementById('invHubMonthRevenue');
+    if (monthRevEl) monthRevEl.innerText = `${Number(res.monthlyRevenue || 0).toLocaleString()} د.ع`;
+  }
+
+  // Purchases count
+  const purchRes = await callBackend('get_all_purchases');
+  if (purchRes && purchRes.success) {
+    const pCountEl = document.getElementById('invHubPurchasesCount');
+    if (pCountEl) pCountEl.innerText = `${(purchRes.purchases?.length || 0).toLocaleString()} فاتورة شراء`;
+  }
+
+  lucide.createIcons();
+}
+
+function handleInvoicesHubSearch(query) {
+  if (!query || !query.trim()) return;
+  openInvoicesHistoryModal();
+  setTimeout(() => {
+    const input = document.getElementById('inv-search-input');
+    if (input) {
+      input.value = query.trim();
+      filterInvoicesHistory();
+      input.focus();
+    }
+  }, 200);
 }
 
 async function loadWarehouseHub() {
@@ -5130,7 +5167,7 @@ async function loadSettingsInfo() {
   const res = await callBackend('get_app_info');
   if (res && res.success) {
     const verEl = document.getElementById('settingsAppVersion');
-    if (verEl) verEl.innerText = res.version || 'v1.7.2 Pro';
+    if (verEl) verEl.innerText = res.version || 'v1.7.3 Pro';
 
     const stEl = document.getElementById('settingsStoreId');
     if (stEl) stEl.innerText = res.storeId || 'MARKET-DEFAULT-01';
