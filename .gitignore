@@ -7,6 +7,7 @@ installer_output/
 installer_project/bin/
 installer_project/obj/
 *.zip
+!payload.zip
 
 ## Visual Studio & IDE
 .vs/
