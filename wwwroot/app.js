@@ -3701,10 +3701,8 @@ let purCurrentProduct = null;
 let purInputMode = 'piece'; // 'piece' or 'carton'
 
 async function initPurchaseTab() {
-  // Ensure products list is loaded for auto-search
-  if (!state.products || state.products.length === 0) {
-    await loadProducts();
-  }
+  // Always load latest products for instant barcode match
+  await loadProducts();
 
   // Load suppliers dropdown
   const supSelect = document.getElementById('pur-supplierSelect');
@@ -3732,6 +3730,7 @@ async function initPurchaseTab() {
   }
 
   // Reset inputs
+  cancelPurchaseNewProductMode();
   setPurchaseInputMode('piece');
   renderPurchaseInvoiceTable();
 
@@ -3771,7 +3770,6 @@ async function initPurchaseTab() {
 
 function handlePurchaseSupplierChange() {
   const supId = document.getElementById('pur-supplierSelect')?.value;
-  // If a supplier is selected, we can optionally filter or recommend products
 }
 
 function setPurchaseInputMode(mode) {
@@ -3837,9 +3835,17 @@ function handlePurchaseSearchInput() {
 
   if (matches.length === 0) {
     dropdown.innerHTML = `
-      <div class="p-3 text-xs text-slate-400 text-center">
-        <span>لا توجد مادة بهذا الاسم/الباركود بالمخزن.</span>
-        <span class="block text-[10px] text-sky-500 font-bold mt-1">سيتم إضافتها كمادة جديدة في المخزن والوصل</span>
+      <div class="p-3 bg-amber-50 dark:bg-slate-800/90 rounded-xl border border-amber-300 dark:border-amber-700/60 cursor-pointer hover:bg-amber-100 dark:hover:bg-slate-800 transition" onclick="prepareAddNewPurchaseProduct('${query.replace(/'/g, "\\'")}')">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-base">➕</span>
+            <div>
+              <span class="font-bold text-slate-900 dark:text-white text-xs">مادة جديدة بالباركود: <b class="text-sky-500 font-mono">${query}</b></span>
+              <span class="block text-[10px] text-slate-500 dark:text-slate-400">انقر لتحديد اسم المادة وسعر بيعها وإضافتها للوصل والمخزن فوراً</span>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 bg-sky-500 text-white rounded-lg font-bold text-xs shadow-xs">إدخال المادة</span>
+        </div>
       </div>
     `;
     dropdown.classList.remove('hidden');
@@ -3894,21 +3900,55 @@ function handlePurchaseSearchKeydown(e) {
       return;
     }
 
-    // If not found in warehouse, treat as new item with this barcode / name
-    purCurrentProduct = {
-      name: query,
-      barcode: query,
-      cost: 0,
-      stockQuantity: 0,
-      unit: 'قطعة'
-    };
-    showPurchaseSelectedStrip(purCurrentProduct, true);
-    document.getElementById('pur-searchSuggestions')?.classList.add('hidden');
-    document.getElementById('pur-newCost')?.focus();
+    // If not found in warehouse, prepare as new item
+    prepareAddNewPurchaseProduct(query);
   }
 }
 
+function prepareAddNewPurchaseProduct(query) {
+  document.getElementById('pur-searchSuggestions')?.classList.add('hidden');
+  purCurrentProduct = {
+    name: '',
+    barcode: query,
+    cost: 0,
+    price: 0,
+    stockQuantity: 0,
+    unit: 'قطعة',
+    isNew: true
+  };
+
+  const detailsBox = document.getElementById('pur-newProductDetailsBox');
+  if (detailsBox) detailsBox.classList.remove('hidden');
+
+  const nameInput = document.getElementById('pur-newProdName');
+  if (nameInput) {
+    nameInput.value = isNaN(query) ? query : '';
+    nameInput.focus();
+  }
+
+  showPurchaseSelectedStrip(purCurrentProduct, true);
+  const oldCostBadge = document.getElementById('pur-oldCostBadge');
+  if (oldCostBadge) oldCostBadge.innerText = 'مادة جديدة (0 د.ع)';
+
+  const newCostInput = document.getElementById('pur-newCost');
+  if (newCostInput) newCostInput.value = '';
+}
+
+function cancelPurchaseNewProductMode() {
+  const detailsBox = document.getElementById('pur-newProductDetailsBox');
+  if (detailsBox) detailsBox.classList.add('hidden');
+  const nameInput = document.getElementById('pur-newProdName');
+  if (nameInput) nameInput.value = '';
+  const priceInput = document.getElementById('pur-newProdSellingPrice');
+  if (priceInput) priceInput.value = '';
+  const expInput = document.getElementById('pur-newProdExpiry');
+  if (expInput) expInput.value = '';
+  purCurrentProduct = null;
+  document.getElementById('pur-selectedProdStrip')?.classList.add('hidden');
+}
+
 function selectPurchaseProduct(prod) {
+  cancelPurchaseNewProductMode();
   purCurrentProduct = prod;
   document.getElementById('pur-barcodeSearch').value = `${prod.name} (${prod.barcode})`;
   showPurchaseSelectedStrip(prod, false);
@@ -3946,9 +3986,9 @@ function showPurchaseSelectedStrip(prod, isNew) {
   const strip = document.getElementById('pur-selectedProdStrip');
   if (!strip) return;
 
-  document.getElementById('pur-stripName').innerText = `المادة: ${prod.name}`;
+  document.getElementById('pur-stripName').innerText = isNew ? `مادة جديدة بالباركود: ${prod.barcode}` : `المادة: ${prod.name}`;
   document.getElementById('pur-stripBarcode').innerText = `(باركود: ${prod.barcode || 'تلقائي'})`;
-  document.getElementById('pur-stripStock').innerText = isNew ? 'مادة جديدة غير مسجلة' : `الرصيد الحالي بالمخزن: ${prod.stockQuantity || 0}`;
+  document.getElementById('pur-stripStock').innerText = isNew ? 'مادة جديدة غير مسجلة بالمخزن' : `الرصيد الحالي بالمخزن: ${prod.stockQuantity || 0}`;
 
   strip.classList.remove('hidden');
 }
@@ -3994,17 +4034,34 @@ function recalcPurchaseCurrentItem() {
 
 function addPurchaseItemToInvoice() {
   const searchVal = document.getElementById('pur-barcodeSearch')?.value.trim();
-  if (!purCurrentProduct && !searchVal) {
+  const isNewMode = purCurrentProduct?.isNew || !document.getElementById('pur-newProductDetailsBox')?.classList.contains('hidden');
+
+  let pName = purCurrentProduct ? purCurrentProduct.name : searchVal;
+  let pBarcode = purCurrentProduct ? (purCurrentProduct.barcode || searchVal) : searchVal;
+  let pSellingPrice = 0;
+  let pExpiryDate = '';
+
+  if (isNewMode) {
+    const enteredName = document.getElementById('pur-newProdName')?.value.trim();
+    if (!enteredName) {
+      alert('يرجى كتابة اسم المادة الجديدة أولاً!');
+      document.getElementById('pur-newProdName')?.focus();
+      return;
+    }
+    pName = enteredName;
+    pSellingPrice = Number(document.getElementById('pur-newProdSellingPrice')?.value || 0);
+    pExpiryDate = document.getElementById('pur-newProdExpiry')?.value || '';
+  }
+
+  if (!pName && !pBarcode) {
     alert('يرجى اختيار مادة من المخزن أو كتابة اسمها والباركود أولاً!');
     document.getElementById('pur-barcodeSearch')?.focus();
     return;
   }
 
-  const pName = purCurrentProduct ? purCurrentProduct.name : searchVal;
-  const pBarcode = purCurrentProduct ? (purCurrentProduct.barcode || '') : '';
   const qty = Number(document.getElementById('pur-itemQty')?.value || 1);
   const newCost = Number(document.getElementById('pur-newCost')?.value || 0);
-  const oldCost = purCurrentProduct ? Number(purCurrentProduct.cost || purCurrentProduct.Cost || 0) : 0;
+  const oldCost = (purCurrentProduct && !purCurrentProduct.isNew) ? Number(purCurrentProduct.cost || purCurrentProduct.Cost || 0) : 0;
 
   if (qty <= 0) {
     alert('الكمية يجب أن تكون أكبر من 0!');
@@ -4039,7 +4096,7 @@ function addPurchaseItemToInvoice() {
   }
 
   purInvoiceItems.push({
-    productId: purCurrentProduct ? (purCurrentProduct.id || purCurrentProduct.Id) : undefined,
+    productId: (purCurrentProduct && !purCurrentProduct.isNew) ? (purCurrentProduct.id || purCurrentProduct.Id) : undefined,
     name: pName,
     barcode: pBarcode,
     packagingText: packagingText,
@@ -4052,11 +4109,13 @@ function addPurchaseItemToInvoice() {
     displayNewCost: newCost,
     oldCost: oldCost,
     totalPrice: totalRowAmount,
+    sellingPrice: pSellingPrice,
+    expiryDate: pExpiryDate,
     unit: 'قطعة'
   });
 
   // Clear current item inputs for next product
-  purCurrentProduct = null;
+  cancelPurchaseNewProductMode();
   document.getElementById('pur-barcodeSearch').value = '';
   document.getElementById('pur-itemQty').value = '1';
   document.getElementById('pur-newCost').value = '';
@@ -5167,7 +5226,7 @@ async function loadSettingsInfo() {
   const res = await callBackend('get_app_info');
   if (res && res.success) {
     const verEl = document.getElementById('settingsAppVersion');
-    if (verEl) verEl.innerText = res.version || 'v1.7.3 Pro';
+    if (verEl) verEl.innerText = res.version || 'v1.7.4 Pro';
 
     const stEl = document.getElementById('settingsStoreId');
     if (stEl) stEl.innerText = res.storeId || 'MARKET-DEFAULT-01';

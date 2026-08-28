@@ -2037,6 +2037,31 @@
               </div>
             </div>
 
+            <!-- New Product Direct Inputs (If scanned item is new to warehouse) -->
+            <div id="pur-newProductDetailsBox" class="hidden p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-300 dark:border-amber-700/60 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-black text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                  <span>⚡</span>
+                  <span>مادة جديدة غير مسجلة بالمخزن - أدخل الاسم وسعر البيع لحفظها تلقائياً بالمخزن مع الوصل:</span>
+                </span>
+                <button type="button" onclick="cancelPurchaseNewProductMode()" class="text-slate-400 hover:text-rose-500 text-xs font-bold">إلغاء ✕</button>
+              </div>
+              <div class="grid grid-cols-12 gap-3">
+                <div class="col-span-5">
+                  <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">اسم المادة الجديدة *</label>
+                  <input id="pur-newProdName" type="text" placeholder="اكتب اسم المادة هنا..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:border-sky-500">
+                </div>
+                <div class="col-span-4">
+                  <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">سعر البيع للمفرد (د.ع) *</label>
+                  <input id="pur-newProdSellingPrice" type="number" placeholder="مثال: 500 أو 1000" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:border-sky-500 font-mono">
+                </div>
+                <div class="col-span-3">
+                  <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">تاريخ انتهاء الصلاحية</label>
+                  <input id="pur-newProdExpiry" type="date" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                </div>
+              </div>
+            </div>
+
             <!-- Current Selected Product Info Strip -->
             <div id="pur-selectedProdStrip" class="hidden p-2.5 bg-sky-50 dark:bg-sky-950/40 rounded-xl border border-sky-200 dark:border-sky-800 flex items-center justify-between text-xs">
               <div class="flex items-center gap-2">
@@ -3635,7 +3660,7 @@
                 <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl space-y-2 text-xs">
                   <div class="flex justify-between items-center">
                     <span class="text-slate-400 font-bold">الإصدار المثبت حالياً:</span>
-                    <span id="settingsAppVersion" class="font-mono font-black text-sky-500">v1.7.3 Pro</span>
+                    <span id="settingsAppVersion" class="font-mono font-black text-sky-500">v1.7.4 Pro</span>
                   </div>
                   <div class="flex justify-between items-center">
                     <span class="text-slate-400 font-bold">حالة خادم التحديثات:</span>

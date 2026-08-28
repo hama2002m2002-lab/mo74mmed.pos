@@ -1545,6 +1545,13 @@ public class PosBridgeService
                             }
                             else
                             {
+                                decimal sellingPrice = item.TryGetProperty("sellingPrice", out var spp) ? spp.GetDecimal() : 0m;
+                                DateTime? expDate = null;
+                                if (item.TryGetProperty("expiryDate", out var edp) && !string.IsNullOrWhiteSpace(edp.GetString()))
+                                {
+                                    if (DateTime.TryParse(edp.GetString(), out var parsedExp)) expDate = parsedExp;
+                                }
+
                                 // Create new product if it doesn't exist
                                 var newP = new Product
                                 {
@@ -1552,11 +1559,12 @@ public class PosBridgeService
                                     Name = pName,
                                     Barcode = string.IsNullOrWhiteSpace(barcode) ? DateTime.Now.Ticks.ToString() : barcode,
                                     Cost = Math.Round(newPieceCost, 2),
-                                    Price = Math.Round(newPieceCost * 1.25m, 2),
+                                    Price = sellingPrice > 0 ? sellingPrice : Math.Round(newPieceCost * 1.25m, 2),
                                     StockQuantity = qty,
                                     CartonsCount = cartonsCount,
                                     CartonPurchasePrice = cartonPurchasePrice,
                                     ItemsPerCarton = itemsPerCarton,
+                                    ExpiryDate = expDate,
                                     Unit = unit,
                                     SupplierId = sup.Id,
                                     SupplierName = sup.Name,
