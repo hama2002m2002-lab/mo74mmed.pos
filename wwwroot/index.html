@@ -62,49 +62,14 @@
               <span>شاشة الكاشير والبيع</span>
             </button>
 
-            <!-- 3. Warehouse Group (زر المخزن الرئيسي وقائمته المنسدلة) -->
-            <div class="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden bg-slate-50/60 dark:bg-slate-900/40">
-              <!-- Warehouse Parent Header Button -->
-              <button type="button" onclick="toggleWarehouseSubmenu()" id="sidebar-warehouse-parent" class="w-full flex items-center justify-between px-3 py-2.5 rounded-2xl text-xs font-black text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40 transition">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-6 h-6 rounded-lg bg-sky-500/20 text-sky-500 flex items-center justify-center">
-                    <i data-lucide="boxes" class="w-3.5 h-3.5"></i>
-                  </div>
-                  <span class="text-xs">المخزن</span>
-                </div>
-                <i id="warehouseChevron" data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200"></i>
-              </button>
-
-              <!-- Warehouse Sub-items (4 أزرار مخصصة للمخزن) -->
-              <div id="sidebarWarehouseSubmenu" class="px-2 pb-2 pt-0.5 space-y-1">
-                <!-- a. Inventory Stock (زر مخزن ورصيد المواد) -->
-                <button onclick="switchTab('inventory')" id="sidebar-inventory" class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition">
-                  <i data-lucide="package" class="w-3.5 h-3.5 text-emerald-500"></i>
-                  <span>المخزن ورصيد المواد</span>
-                </button>
-
-                <!-- b. Expiry Dates (زر صلاحية المواد) -->
-                <button onclick="switchTab('expiringProducts')" id="sidebar-expiringProducts" class="sidebar-item w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
-                  <div class="flex items-center gap-2.5">
-                    <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-rose-500"></i>
-                    <span>صلاحية المواد (كم يوم باقي)</span>
-                  </div>
-                  <span id="sidebar-expiringCountBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-500 text-white">0</span>
-                </button>
-
-                <!-- c. Shelves & Stock Audit (زر جرد ومطابقة الرفوف) -->
-                <button onclick="switchTab('stockAudit')" id="sidebar-stockAudit" class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition">
-                  <i data-lucide="clipboard-check" class="w-3.5 h-3.5 text-amber-500"></i>
-                  <span>الجرد ومطابقة الرفوف</span>
-                </button>
-
-                <!-- d. Add & Edit Product (زر إضافة وتعديل مواد) -->
-                <button onclick="switchTab('addProduct')" id="sidebar-addProduct" class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40 transition">
-                  <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-sky-500"></i>
-                  <span>إضافة وتعديل مواد</span>
-                </button>
+            <!-- 3. Warehouse Hub (زر المخزن الرئيسي - يفتح واجهة المخزن الكاملة) -->
+            <button onclick="switchTab('warehouseHub')" id="sidebar-warehouseHub" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50/90 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/50 border border-sky-200/80 dark:border-sky-800/60 transition shadow-xs">
+              <div class="flex items-center gap-3">
+                <i data-lucide="boxes" class="w-4.5 h-4.5 text-sky-500"></i>
+                <span class="font-black text-xs">المخزن (إدارة المواد)</span>
               </div>
-            </div>
+              <i data-lucide="chevron-left" class="w-4 h-4 text-sky-400"></i>
+            </button>
 
             <!-- 4. Purchase & Invoices (فواتير الشراء وتوريد البضائع) -->
             <button onclick="switchTab('purchase')" id="sidebar-purchase" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 transition">
@@ -1173,8 +1138,176 @@
         </div>
 
         <!-- ======================================================== -->
-        <!-- VIEW 4: INVENTORY & WAREHOUSE (FULL DETAILED VIEW) -->
+        <!-- VIEW: WAREHOUSE HUB (بوابة إدارة المخزن الشاملة) -->
         <!-- ======================================================== -->
+        <div id="tab-warehouseHub" class="tab-content hidden space-y-5">
+
+          <!-- Top Header Bar -->
+          <div class="sh-card p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <button onclick="switchTab('dashboard')" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 transition">
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                <span>العودة للرئيسية</span>
+              </button>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center text-xl shadow-md shadow-sky-500/20">
+                  📦
+                </div>
+                <div>
+                  <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>بوابة إدارة المخزن والبضائع</span>
+                    <span class="text-[10px] bg-sky-100 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 font-mono px-2 py-0.5 rounded-full">Warehouse Hub</span>
+                  </h2>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">تحكم فوري بكافة عمليات المخزون، تواريخ الصلاحية، الجرد الفعلي، وإضافة وتعديل المواد</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Action: Fast Search -->
+            <div class="relative w-72">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute right-3.5 top-2.5"></i>
+              <input id="warehouseHubSearchInput" onkeydown="if(event.key==='Enter'){handleWarehouseHubSearch(this.value);}" type="text" placeholder="بحث سريع في المخزن (Enter)..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pr-10 pl-3 py-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-sky-500">
+            </div>
+          </div>
+
+          <!-- Quick Statistics Strip (مؤشرات المخزن الحية) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+            <div class="sh-card p-3.5 rounded-2xl flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center text-lg font-bold">
+                🏷️
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block">إجمالي أصناف المواد</span>
+                <span id="whHubTotalProducts" class="text-sm font-black text-slate-800 dark:text-white font-mono">0 مادة</span>
+              </div>
+            </div>
+
+            <div class="sh-card p-3.5 rounded-2xl flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg font-bold">
+                📦
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block">إجمالي القطع بالمخزن</span>
+                <span id="whHubTotalPieces" class="text-sm font-black text-emerald-500 font-mono">0 قطعة</span>
+              </div>
+            </div>
+
+            <div class="sh-card p-3.5 rounded-2xl flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-lg font-bold">
+                ⚠️
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block">نواقص بحاجة لطلب</span>
+                <span id="whHubLowStockCount" class="text-sm font-black text-amber-500 font-mono">0 مادة</span>
+              </div>
+            </div>
+
+            <div class="sh-card p-3.5 rounded-2xl flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-lg font-bold">
+                ⏰
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 font-bold block">قريبة من انتهاء الصلاحية</span>
+                <span id="whHubExpiringCount" class="text-sm font-black text-rose-500 font-mono">0 مادة</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE 4 MAIN WAREHOUSE ACTION BUTTONS / CARDS (الأزرار الأربعة الرئيسية) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- 1. زر المخزن ورصيد المواد -->
+            <div onclick="switchTab('inventory')" class="sh-card p-5 rounded-2xl border-2 border-emerald-500/30 hover:border-emerald-500 cursor-pointer group transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br from-slate-900/40 via-slate-900/20 to-emerald-950/20">
+              <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-slate-950 transition duration-300 shadow-md">
+                  📦
+                </div>
+                <span class="px-3 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  الرصيد الفعلي والأسعار
+                </span>
+              </div>
+              <h3 class="text-base font-black text-slate-900 dark:text-white group-hover:text-emerald-400 transition mb-1">
+                1. المخزن ورصيد المواد
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                عرض كامل تفاصيل رصيد كافة المواد، أسعار البيع، أسعار الجملة، تفاصيل الكراتين، والأرباح المتوقعة لكل مادة.
+              </p>
+              <div class="flex items-center justify-between text-xs font-bold text-emerald-500 border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
+                <span>فتح جدول المخزن الشامل</span>
+                <i data-lucide="arrow-left" class="w-4 h-4 transform group-hover:-translate-x-1.5 transition"></i>
+              </div>
+            </div>
+
+            <!-- 2. زر صلاحية المواد (كم يوم باقي) -->
+            <div onclick="switchTab('expiringProducts')" class="sh-card p-5 rounded-2xl border-2 border-rose-500/30 hover:border-rose-500 cursor-pointer group transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br from-slate-900/40 via-slate-900/20 to-rose-950/20">
+              <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-rose-500 group-hover:text-white transition duration-300 shadow-md">
+                  ⏰
+                </div>
+                <span class="px-3 py-1 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                  تنبيهات وتواريخ الصلاحية
+                </span>
+              </div>
+              <h3 class="text-base font-black text-slate-900 dark:text-white group-hover:text-rose-400 transition mb-1">
+                2. صلاحية المواد (كم يوم باقي)
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                متابعة تواريخ انتهاء صلاحية المواد بدقة، تقويم الصلاحية الذكي، ومعرفة عدد الأيام المتبقية لتفادي التوالف.
+              </p>
+              <div class="flex items-center justify-between text-xs font-bold text-rose-500 border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
+                <span>عرض تنبيهات ومواعيد الصلاحية</span>
+                <i data-lucide="arrow-left" class="w-4 h-4 transform group-hover:-translate-x-1.5 transition"></i>
+              </div>
+            </div>
+
+            <!-- 3. زر الجرد ومطابقة الرفوف -->
+            <div onclick="switchTab('stockAudit')" class="sh-card p-5 rounded-2xl border-2 border-amber-500/30 hover:border-amber-500 cursor-pointer group transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br from-slate-900/40 via-slate-900/20 to-amber-950/20">
+              <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-slate-950 transition duration-300 shadow-md">
+                  📋
+                </div>
+                <span class="px-3 py-1 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  الجرد الدوري ومطابقة الرفوف
+                </span>
+              </div>
+              <h3 class="text-base font-black text-slate-900 dark:text-white group-hover:text-amber-400 transition mb-1">
+                3. الجرد ومطابقة الرفوف
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                مطابقة رصيد النظام الآلي مع البضاعة الفعلية على رفوف الماركت وتسجيل الفروقات، نسب العجز والزيادة.
+              </p>
+              <div class="flex items-center justify-between text-xs font-bold text-amber-500 border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
+                <span>بدء عملية الجرد والمطابقة</span>
+                <i data-lucide="arrow-left" class="w-4 h-4 transform group-hover:-translate-x-1.5 transition"></i>
+              </div>
+            </div>
+
+            <!-- 4. زر إضافة وتعديل مواد -->
+            <div onclick="switchTab('addProduct')" class="sh-card p-5 rounded-2xl border-2 border-sky-500/30 hover:border-sky-500 cursor-pointer group transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br from-slate-900/40 via-slate-900/20 to-sky-950/20">
+              <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-sky-500 group-hover:text-white transition duration-300 shadow-md">
+                  ➕
+                </div>
+                <span class="px-3 py-1 rounded-full text-[10px] font-black bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                  إدخال وتحديث البضاعة ⚡
+                </span>
+              </div>
+              <h3 class="text-base font-black text-slate-900 dark:text-white group-hover:text-sky-400 transition mb-1">
+                4. إضافة وتعديل مواد
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                تسجيل مادة جديدة بنظام الباركود الذكي، تحديد سعر التكلفة وسعر البيع وسعة الكرتون، أو تعديل المواد الحالية.
+              </p>
+              <div class="flex items-center justify-between text-xs font-bold text-sky-500 border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
+                <span>فتح شاشة إضافة وتعديل المواد</span>
+                <i data-lucide="arrow-left" class="w-4 h-4 transform group-hover:-translate-x-1.5 transition"></i>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
         <!-- ======================================================== -->
         <!-- VIEW 4: INVENTORY & WAREHOUSE (FULL DETAILED VIEW) -->
         <!-- ======================================================== -->
@@ -3340,7 +3473,7 @@
                 <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl space-y-2 text-xs">
                   <div class="flex justify-between items-center">
                     <span class="text-slate-400 font-bold">الإصدار المثبت حالياً:</span>
-                    <span id="settingsAppVersion" class="font-mono font-black text-sky-500">v1.7.1 Pro</span>
+                    <span id="settingsAppVersion" class="font-mono font-black text-sky-500">v1.7.2 Pro</span>
                   </div>
                   <div class="flex justify-between items-center">
                     <span class="text-slate-400 font-bold">حالة خادم التحديثات:</span>

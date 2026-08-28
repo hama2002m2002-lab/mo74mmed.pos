@@ -628,23 +628,8 @@ const i18n = {
 };
 
 // ========================================================
-// TAB NAVIGATION & SIDEBAR SUBMENU
+// TAB NAVIGATION
 // ========================================================
-function toggleWarehouseSubmenu(forceState = null) {
-  const submenu = document.getElementById('sidebarWarehouseSubmenu');
-  const chevron = document.getElementById('warehouseChevron');
-  if (!submenu) return;
-
-  const isHidden = (forceState !== null) ? !forceState : !submenu.classList.contains('hidden');
-  if (isHidden) {
-    submenu.classList.add('hidden');
-    if (chevron) chevron.style.transform = 'rotate(0deg)';
-  } else {
-    submenu.classList.remove('hidden');
-    if (chevron) chevron.style.transform = 'rotate(180deg)';
-  }
-}
-
 function switchTab(tabId) {
   state.activeTab = tabId;
 
@@ -676,24 +661,14 @@ function switchTab(tabId) {
     }
   }
 
-  // 5. Manage Warehouse Submenu Expand State
-  const isWarehouseItem = (tabId === 'inventory' || tabId === 'expiringProducts' || tabId === 'stockAudit' || tabId === 'addProduct');
-  const warehouseParentBtn = document.getElementById('sidebar-warehouse-parent');
-  if (warehouseParentBtn) {
-    if (isWarehouseItem) {
-      warehouseParentBtn.classList.add('bg-sky-100', 'dark:bg-sky-950/60', 'text-sky-600', 'dark:text-sky-300');
-    } else {
-      warehouseParentBtn.classList.remove('bg-sky-100', 'dark:bg-sky-950/60', 'text-sky-600', 'dark:text-sky-300');
-    }
-  }
-
-  // 6. Activate selected tab
+  // 5. Activate selected tab
   const tabEl = document.getElementById(`tab-${tabId}`);
   if (tabEl) tabEl.classList.remove('hidden');
 
   const sideBtn = document.getElementById(`sidebar-${tabId}`);
   if (sideBtn) sideBtn.classList.add('sidebar-item-active');
 
+  if (tabId === 'warehouseHub') loadWarehouseHub();
   if (tabId === 'cashier') {
     loadProducts();
     setTimeout(() => {
@@ -720,6 +695,45 @@ function switchTab(tabId) {
   if (tabId === 'settings') loadSettingsInfo();
 
   lucide.createIcons();
+}
+
+async function loadWarehouseHub() {
+  await loadProducts();
+  const prods = state.products || [];
+  const totalCount = prods.length;
+  const totalPieces = prods.reduce((sum, p) => sum + (Number(p.stockQuantity) || 0), 0);
+  const lowStockCount = prods.filter(p => (Number(p.stockQuantity) || 0) <= (Number(p.minStockLimit) || 5)).length;
+
+  const countEl = document.getElementById('whHubTotalProducts');
+  if (countEl) countEl.innerText = `${totalCount.toLocaleString()} مادة`;
+
+  const piecesEl = document.getElementById('whHubTotalPieces');
+  if (piecesEl) piecesEl.innerText = `${totalPieces.toLocaleString()} قطعة`;
+
+  const lowEl = document.getElementById('whHubLowStockCount');
+  if (lowEl) lowEl.innerText = `${lowStockCount.toLocaleString()} مادة`;
+
+  // Expiring count
+  const expiringRes = await callBackend('get_expiring_products', { thresholdDays: 30 });
+  if (expiringRes && expiringRes.success) {
+    const expEl = document.getElementById('whHubExpiringCount');
+    if (expEl) expEl.innerText = `${(expiringRes.items?.length || 0).toLocaleString()} مادة`;
+  }
+
+  lucide.createIcons();
+}
+
+function handleWarehouseHubSearch(query) {
+  if (!query || !query.trim()) return;
+  switchTab('inventory');
+  setTimeout(() => {
+    const invInput = document.getElementById('invSearchInput');
+    if (invInput) {
+      invInput.value = query.trim();
+      filterInventory();
+      invInput.focus();
+    }
+  }, 200);
 }
 
 // ========================================================
@@ -5116,7 +5130,7 @@ async function loadSettingsInfo() {
   const res = await callBackend('get_app_info');
   if (res && res.success) {
     const verEl = document.getElementById('settingsAppVersion');
-    if (verEl) verEl.innerText = res.version || 'v1.7.1 Pro';
+    if (verEl) verEl.innerText = res.version || 'v1.7.2 Pro';
 
     const stEl = document.getElementById('settingsStoreId');
     if (stEl) stEl.innerText = res.storeId || 'MARKET-DEFAULT-01';
