@@ -1135,9 +1135,9 @@
                 <span>الثيم</span>
               </button>
 
-              <button onclick="openReceiptPhotoModal()" class="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 transition">
+              <button onclick="openReceiptPhotoModal('file')" class="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 transition" title="رفع صورة وصل محفوظة في الجهاز أو التقاطها بالكاميرا">
                 <span>📸</span>
-                <span>إضافة مواد بالصورة</span>
+                <span>إضافة مواد بالصورة (من الجهاز / كاميرا)</span>
               </button>
               <button onclick="loadInventory()" class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1 transition">
                 <span>🔄</span>
@@ -1516,9 +1516,9 @@
 
             <!-- Quick Actions -->
             <div class="flex items-center gap-2">
-              <button onclick="openReceiptPhotoModal()" class="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 transition">
+              <button onclick="openReceiptPhotoModal('file')" class="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 transition" title="رفع صورة وصل محفوظة في الجهاز أو التقاطها بالكاميرا">
                 <span>📸</span>
-                <span>مسح صورة الوصل (OCR)</span>
+                <span>قراءة صورة الوصل (من الجهاز / كاميرا)</span>
               </button>
               <button onclick="resetPurchaseForm()" class="px-4 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
                 <span>🔄</span>
@@ -2960,11 +2960,15 @@
           </div>
 
           <!-- File Upload Container -->
-          <div id="rpm-fileContainer" class="hidden relative bg-slate-50 dark:bg-slate-800/60 rounded-2xl aspect-[4/3] border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-purple-400 transition" onclick="document.getElementById('rpm-fileInput').click()">
+          <div id="rpm-fileContainer" class="relative bg-slate-50 dark:bg-slate-800/60 rounded-2xl aspect-[4/3] border-2 border-dashed border-purple-300 dark:border-purple-800 flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-purple-500 transition" onclick="document.getElementById('rpm-fileInput').click()">
             <input type="file" id="rpm-fileInput" accept="image/*" class="hidden" onchange="handleOcrFileUpload(event)">
-            <span class="text-3xl block mb-1">🖼️</span>
-            <span class="text-xs font-black text-slate-800 dark:text-white block">انقر لرفع صورة الوصل أو اسحبها هنا</span>
-            <span class="text-[10px] text-slate-400 block mt-1">يدعم صور JPG, PNG, WEBP بدقة عالية</span>
+            <span class="text-4xl block mb-2">📁</span>
+            <span class="text-xs font-black text-slate-800 dark:text-white block">انقر لاختيار صورة الوصل من جهازك أو اسحبها هنا</span>
+            <span class="text-[10px] text-slate-400 block mt-1">أو يمكنك نسخ أي صورة ولصقها مباشرة عبر (Ctrl + V)</span>
+            <button type="button" onclick="event.stopPropagation(); document.getElementById('rpm-fileInput').click()" class="px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white font-black text-xs rounded-xl shadow-md mt-3 flex items-center gap-1.5 transition">
+              <span>📂</span>
+              <span>تصفح واختيار صورة من الجهاز</span>
+            </button>
           </div>
 
           <!-- Image Preview Thumbnail (After capture/upload) -->

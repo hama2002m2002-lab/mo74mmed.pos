@@ -3483,11 +3483,39 @@ async function finalizePurchaseInvoice() {
 let ocrMediaStream = null;
 let ocrDetectedItems = [];
 
-async function openReceiptPhotoModal() {
+async function openReceiptPhotoModal(defaultSource = 'file') {
   document.getElementById('receiptPhotoModal')?.classList.remove('hidden');
+  document.getElementById('rpm-previewContainer')?.classList.add('hidden');
+  document.getElementById('rpm-statusContainer')?.classList.add('hidden');
   ocrDetectedItems = [];
   renderOcrItemsTable();
-  switchOcrInputSource('camera');
+  switchOcrInputSource(defaultSource || 'file');
+
+  // Setup clipboard paste listener (Ctrl + V)
+  if (!window._ocrPasteBound) {
+    window._ocrPasteBound = true;
+    window.addEventListener('paste', (e) => {
+      const modal = document.getElementById('receiptPhotoModal');
+      if (modal && !modal.classList.contains('hidden')) {
+        const items = e.clipboardData?.items;
+        if (items) {
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+              const blob = items[i].getAsFile();
+              const reader = new FileReader();
+              reader.onload = (ev) => {
+                const dataUrl = ev.target.result;
+                showOcrPreviewThumbnail(dataUrl);
+                processReceiptImage(dataUrl);
+              };
+              reader.readAsDataURL(blob);
+              break;
+            }
+          }
+        }
+      }
+    });
+  }
 }
 
 function closeReceiptPhotoModal() {
