@@ -628,8 +628,23 @@ const i18n = {
 };
 
 // ========================================================
-// TAB NAVIGATION
+// TAB NAVIGATION & SIDEBAR SUBMENU
 // ========================================================
+function toggleWarehouseSubmenu(forceState = null) {
+  const submenu = document.getElementById('sidebarWarehouseSubmenu');
+  const chevron = document.getElementById('warehouseChevron');
+  if (!submenu) return;
+
+  const isHidden = (forceState !== null) ? !forceState : !submenu.classList.contains('hidden');
+  if (isHidden) {
+    submenu.classList.add('hidden');
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+  } else {
+    submenu.classList.remove('hidden');
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
+  }
+}
+
 function switchTab(tabId) {
   state.activeTab = tabId;
 
@@ -661,7 +676,18 @@ function switchTab(tabId) {
     }
   }
 
-  // 5. Activate selected tab
+  // 5. Manage Warehouse Submenu Expand State
+  const isWarehouseItem = (tabId === 'inventory' || tabId === 'expiringProducts' || tabId === 'stockAudit' || tabId === 'addProduct');
+  const warehouseParentBtn = document.getElementById('sidebar-warehouse-parent');
+  if (warehouseParentBtn) {
+    if (isWarehouseItem) {
+      warehouseParentBtn.classList.add('bg-sky-100', 'dark:bg-sky-950/60', 'text-sky-600', 'dark:text-sky-300');
+    } else {
+      warehouseParentBtn.classList.remove('bg-sky-100', 'dark:bg-sky-950/60', 'text-sky-600', 'dark:text-sky-300');
+    }
+  }
+
+  // 6. Activate selected tab
   const tabEl = document.getElementById(`tab-${tabId}`);
   if (tabEl) tabEl.classList.remove('hidden');
 
@@ -5090,7 +5116,7 @@ async function loadSettingsInfo() {
   const res = await callBackend('get_app_info');
   if (res && res.success) {
     const verEl = document.getElementById('settingsAppVersion');
-    if (verEl) verEl.innerText = res.version || 'v1.7.0 Pro';
+    if (verEl) verEl.innerText = res.version || 'v1.7.1 Pro';
 
     const stEl = document.getElementById('settingsStoreId');
     if (stEl) stEl.innerText = res.storeId || 'MARKET-DEFAULT-01';

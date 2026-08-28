@@ -49,7 +49,7 @@
         <!-- Section: MENU (القائمة الرئيسية للماركت) -->
         <div>
           <div class="text-[10px] font-black tracking-wider text-slate-400 dark:text-slate-500 px-3 mb-1 uppercase">إدارة الماركت</div>
-          <nav class="space-y-1">
+          <nav class="space-y-1.5">
             <!-- 1. Dashboard -->
             <button onclick="switchTab('dashboard')" id="sidebar-dashboard" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition sidebar-item-active">
               <i data-lucide="layout-dashboard" class="w-4 h-4 text-sky-500"></i>
@@ -62,64 +62,81 @@
               <span>شاشة الكاشير والبيع</span>
             </button>
 
-            <!-- 3. Add Product -->
-            <button onclick="switchTab('addProduct')" id="sidebar-addProduct" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-              <i data-lucide="plus-circle" class="w-4 h-4 text-slate-400"></i>
-              <span>إضافة وتعديل مادة</span>
-            </button>
+            <!-- 3. Warehouse Group (زر المخزن الرئيسي وقائمته المنسدلة) -->
+            <div class="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden bg-slate-50/60 dark:bg-slate-900/40">
+              <!-- Warehouse Parent Header Button -->
+              <button type="button" onclick="toggleWarehouseSubmenu()" id="sidebar-warehouse-parent" class="w-full flex items-center justify-between px-3 py-2.5 rounded-2xl text-xs font-black text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40 transition">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-6 h-6 rounded-lg bg-sky-500/20 text-sky-500 flex items-center justify-center">
+                    <i data-lucide="boxes" class="w-3.5 h-3.5"></i>
+                  </div>
+                  <span class="text-xs">المخزن</span>
+                </div>
+                <i id="warehouseChevron" data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200"></i>
+              </button>
 
-            <!-- 4. Inventory / Warehouse -->
-            <button onclick="switchTab('inventory')" id="sidebar-inventory" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-              <i data-lucide="boxes" class="w-4 h-4 text-slate-400"></i>
-              <span>المخزن ورصيد المواد</span>
-            </button>
+              <!-- Warehouse Sub-items (4 أزرار مخصصة للمخزن) -->
+              <div id="sidebarWarehouseSubmenu" class="px-2 pb-2 pt-0.5 space-y-1">
+                <!-- a. Inventory Stock (زر مخزن ورصيد المواد) -->
+                <button onclick="switchTab('inventory')" id="sidebar-inventory" class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition">
+                  <i data-lucide="package" class="w-3.5 h-3.5 text-emerald-500"></i>
+                  <span>المخزن ورصيد المواد</span>
+                </button>
 
-            <!-- 5. Expiring Soon Products (كم يوم باقي لانتهاء الصلاحية) -->
-            <button onclick="switchTab('expiringProducts')" id="sidebar-expiringProducts" class="sidebar-item w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50/90 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200/80 dark:border-rose-800/50 transition">
-              <div class="flex items-center gap-3">
-                <i data-lucide="calendar-clock" class="w-4 h-4 text-rose-500"></i>
-                <span>صلاحية المواد (كم يوم باقي)</span>
+                <!-- b. Expiry Dates (زر صلاحية المواد) -->
+                <button onclick="switchTab('expiringProducts')" id="sidebar-expiringProducts" class="sidebar-item w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
+                  <div class="flex items-center gap-2.5">
+                    <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-rose-500"></i>
+                    <span>صلاحية المواد (كم يوم باقي)</span>
+                  </div>
+                  <span id="sidebar-expiringCountBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-500 text-white">0</span>
+                </button>
+
+                <!-- c. Shelves & Stock Audit (زر جرد ومطابقة الرفوف) -->
+                <button onclick="switchTab('stockAudit')" id="sidebar-stockAudit" class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition">
+                  <i data-lucide="clipboard-check" class="w-3.5 h-3.5 text-amber-500"></i>
+                  <span>الجرد ومطابقة الرفوف</span>
+                </button>
+
+                <!-- d. Add & Edit Product (زر إضافة وتعديل مواد) -->
+                <button onclick="switchTab('addProduct')" id="sidebar-addProduct" class="sidebar-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40 transition">
+                  <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-sky-500"></i>
+                  <span>إضافة وتعديل مواد</span>
+                </button>
               </div>
-              <span id="sidebar-expiringCountBadge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white">0</span>
-            </button>
+            </div>
 
-            <!-- 6. Purchase & Invoices (فواتير الشراء وتوريد البضائع) -->
+            <!-- 4. Purchase & Invoices (فواتير الشراء وتوريد البضائع) -->
             <button onclick="switchTab('purchase')" id="sidebar-purchase" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 transition">
               <i data-lucide="truck" class="w-4 h-4 text-sky-500"></i>
               <span>فواتير الشراء وتوريد البضائع</span>
             </button>
 
-            <!-- 7. Return items to supplier (إرجاع مواد إلى مندوب / مورد) -->
+            <!-- 5. Return items to supplier (إرجاع مواد إلى مندوب / مورد) -->
             <button onclick="openSupplierReturnModal()" id="sidebar-returnSupplier" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50/80 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/60 dark:border-amber-800/40 transition">
               <i data-lucide="rotate-ccw" class="w-4 h-4 text-amber-500"></i>
               <span>إرجاع مواد إلى مندوب / مورد</span>
             </button>
 
-            <!-- 8. Suppliers / Reps -->
+            <!-- 6. Suppliers / Reps -->
             <button onclick="switchTab('suppliers')" id="sidebar-suppliers" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="handshake" class="w-4 h-4 text-slate-400"></i>
               <span>المناديب والشركات</span>
             </button>
 
-            <!-- 9. Customers / Debts -->
+            <!-- 7. Customers / Debts -->
             <button onclick="switchTab('customers')" id="sidebar-customers" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
               <span>الزبائن وحسابات الآجل</span>
             </button>
 
-            <!-- 10. Stock Audit -->
-            <button onclick="switchTab('stockAudit')" id="sidebar-stockAudit" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-              <i data-lucide="clipboard-check" class="w-4 h-4 text-slate-400"></i>
-              <span>الجرد ومطابقة الرفوف</span>
-            </button>
-
-            <!-- 11. Damaged / Expired Items -->
+            <!-- 8. Damaged / Expired Items -->
             <button onclick="switchTab('damagedItems')" id="sidebar-damagedItems" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400"></i>
               <span>المواد التالفة والمنتهية</span>
             </button>
 
-            <!-- 12. Reports & Profits -->
+            <!-- 9. Reports & Profits -->
             <button onclick="switchTab('reports')" id="sidebar-reports" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <i data-lucide="bar-chart-3" class="w-4 h-4 text-slate-400"></i>
               <span>التقارير والأرباح</span>
@@ -3323,7 +3340,7 @@
                 <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl space-y-2 text-xs">
                   <div class="flex justify-between items-center">
                     <span class="text-slate-400 font-bold">الإصدار المثبت حالياً:</span>
-                    <span id="settingsAppVersion" class="font-mono font-black text-sky-500">v1.7.0 Pro</span>
+                    <span id="settingsAppVersion" class="font-mono font-black text-sky-500">v1.7.1 Pro</span>
                   </div>
                   <div class="flex justify-between items-center">
                     <span class="text-slate-400 font-bold">حالة خادم التحديثات:</span>
