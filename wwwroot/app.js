@@ -3840,6 +3840,29 @@ function updateOcrRow(idx, field, value) {
   renderOcrGrandTotal();
 }
 
+function generateOcrBarcodeForRow(idx) {
+  if (!ocrDetectedItems[idx]) return;
+  const newBarcode = '2026' + Math.floor(10000000 + Math.random() * 90000000);
+  ocrDetectedItems[idx].barcode = newBarcode;
+  renderOcrItemsTable();
+}
+
+function generateAllMissingOcrBarcodes() {
+  let count = 0;
+  ocrDetectedItems.forEach((item) => {
+    if (!item.barcode || item.barcode.trim() === '') {
+      item.barcode = '2026' + Math.floor(10000000 + Math.random() * 90000000);
+      count++;
+    }
+  });
+  renderOcrItemsTable();
+  if (count > 0) {
+    alert(`✔ تم إنشاء ${count} باركود فريد بنجاح للمواد التي لم يكن لها باركود!`);
+  } else {
+    alert('جميع المواد لديها باركودات بالفعل ✔');
+  }
+}
+
 function renderOcrItemsTable() {
   const tbody = document.getElementById('rpm-itemsTableBody');
   const countBadge = document.getElementById('rpm-detectedCount');
@@ -3848,9 +3871,10 @@ function renderOcrItemsTable() {
   if (ocrDetectedItems.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center py-12 text-slate-400 space-y-1">
-          <span class="block text-2xl">📸</span>
-          <span>التقط صورة للوصل أو ارفع صورة ليتم استخراج المواد هنا تلقائياً</span>
+        <td colspan="6" class="text-center py-16 text-slate-400 space-y-2">
+          <span class="block text-3xl">📸</span>
+          <span class="font-bold text-sm block">التقط صورة للوصل أو ارفع صورة ليتم استخراج المواد وتوليد الباركودات هنا تلقائياً</span>
+          <span class="text-xs text-slate-500">يمكنك تعديل أي مادة أو توليد باركود لها بنقرة زر واحدة</span>
         </td>
       </tr>
     `;
@@ -3862,26 +3886,40 @@ function renderOcrItemsTable() {
   tbody.innerHTML = '';
   ocrDetectedItems.forEach((item, idx) => {
     const rowTotal = item.quantity * item.unitCost;
+    const hasBarcode = Boolean(item.barcode && item.barcode.trim().length > 0);
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition';
     tr.innerHTML = `
-      <td class="p-2">
-        <input type="text" value="${item.name}" oninput="updateOcrRow(${idx}, 'name', this.value)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-bold text-slate-900 dark:text-white">
+      <td class="p-3">
+        <input type="text" value="${item.name}" oninput="updateOcrRow(${idx}, 'name', this.value)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:border-purple-500">
       </td>
-      <td class="p-2">
-        <input type="text" value="${item.barcode || ''}" placeholder="تلقائي" oninput="updateOcrRow(${idx}, 'barcode', this.value)" class="w-24 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-mono text-slate-500">
+      <td class="p-3">
+        <div class="space-y-1">
+          <input type="text" value="${item.barcode || ''}" placeholder="أدخل باركود المادة..." oninput="updateOcrRow(${idx}, 'barcode', this.value)" class="w-full bg-slate-50 dark:bg-slate-900 border ${hasBarcode ? 'border-slate-200 dark:border-slate-800' : 'border-amber-400/60 dark:border-amber-500/40'} rounded-xl px-3 py-1.5 text-xs font-mono font-bold text-slate-800 dark:text-white">
+          ${!hasBarcode ? `
+            <button type="button" onclick="generateOcrBarcodeForRow(${idx})" class="w-full py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-lg text-[10px] font-black flex items-center justify-center gap-1 transition">
+              <span>⚡</span>
+              <span>توليد باركود تلقائي</span>
+            </button>
+          ` : `
+            <div class="flex items-center justify-between px-1">
+              <span class="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5">✔ باركود جاهز</span>
+              <button type="button" onclick="generateOcrBarcodeForRow(${idx})" class="text-[10px] text-slate-400 hover:text-amber-500 font-semibold underline">توليد جديد ⚡</button>
+            </div>
+          `}
+        </div>
       </td>
-      <td class="p-2 text-center">
-        <input type="number" min="1" value="${item.quantity}" oninput="updateOcrRow(${idx}, 'quantity', this.value)" class="w-16 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-bold text-center text-sky-600">
+      <td class="p-3 text-center">
+        <input type="number" min="1" value="${item.quantity}" oninput="updateOcrRow(${idx}, 'quantity', this.value)" class="w-20 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-2 text-xs font-black text-center text-sky-600 font-mono">
       </td>
-      <td class="p-2 text-center">
-        <input type="number" min="0" value="${item.unitCost}" oninput="updateOcrRow(${idx}, 'unitCost', this.value)" class="w-24 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-bold text-center text-emerald-600 font-mono">
+      <td class="p-3 text-center">
+        <input type="number" min="0" value="${item.unitCost}" oninput="updateOcrRow(${idx}, 'unitCost', this.value)" class="w-28 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-2 text-xs font-black text-center text-emerald-600 font-mono">
       </td>
-      <td class="p-2 text-center font-mono font-black text-slate-900 dark:text-white" id="rpm-rowTotal-${idx}">
+      <td class="p-3 text-center font-mono font-black text-slate-900 dark:text-white text-sm" id="rpm-rowTotal-${idx}">
         ${rowTotal.toLocaleString()} د.ع
       </td>
-      <td class="p-2 text-center">
-        <button onclick="removeOcrRow(${idx})" class="w-6 h-6 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold">✕</button>
+      <td class="p-3 text-center">
+        <button onclick="removeOcrRow(${idx})" class="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-black flex items-center justify-center transition" title="حذف السطر">✕</button>
       </td>
     `;
     tbody.appendChild(tr);
