@@ -17,6 +17,8 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- SheetJS Excel Library -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <!-- Tesseract OCR for smart receipt scanning -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="flex flex-col h-screen overflow-hidden select-none">
@@ -1133,6 +1135,10 @@
                 <span>الثيم</span>
               </button>
 
+              <button onclick="openReceiptPhotoModal()" class="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 transition">
+                <span>📸</span>
+                <span>إضافة مواد بالصورة</span>
+              </button>
               <button onclick="loadInventory()" class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1 transition">
                 <span>🔄</span>
                 <span data-i18n="inv_refresh_btn">تحديث القائمة</span>
@@ -1508,11 +1514,17 @@
               </div>
             </div>
 
-            <!-- Quick Action: New Invoice -->
-            <button onclick="resetPurchaseForm()" class="px-4 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
-              <span>🔄</span>
-              <span>فاتورة شراء جديدة</span>
-            </button>
+            <!-- Quick Actions -->
+            <div class="flex items-center gap-2">
+              <button onclick="openReceiptPhotoModal()" class="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 transition">
+                <span>📸</span>
+                <span>مسح صورة الوصل (OCR)</span>
+              </button>
+              <button onclick="resetPurchaseForm()" class="px-4 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
+                <span>🔄</span>
+                <span>فاتورة شراء جديدة</span>
+              </button>
+            </div>
           </div>
 
           <!-- Section 1: Supplier & Invoice Settings -->
@@ -2895,7 +2907,146 @@
             إلغاء
           </button>
         </div>
+  <!-- MODAL: Scan Receipt from Photo / Camera (إضافة مواد بالصورة) -->
+  <div id="receiptPhotoModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 w-full max-w-4xl space-y-4 shadow-2xl animate-scale-up flex flex-col max-h-[92vh]">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-lg">
+            📸
+          </div>
+          <div>
+            <h3 class="font-black text-sm text-slate-900 dark:text-white">إضافة وتوريد مواد من صورة الوصل (التقاط بالكاميرا أو رفع صورة)</h3>
+            <p class="text-[11px] text-slate-400">التقط صورة لوصل المندوب أو ارفعها، ليقوم النظام بقراءة المواد والكميات والأسعار وإضافتها للمخزن فورياً</p>
+          </div>
+        </div>
+        <button onclick="closeReceiptPhotoModal()" class="text-slate-400 hover:text-rose-500 text-lg font-bold">✕</button>
       </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-12 gap-4 flex-1 overflow-y-auto min-h-[300px]">
+        
+        <!-- Left / Capture Controls Area -->
+        <div class="col-span-5 space-y-3 flex flex-col">
+          <!-- Method Tabs: Camera vs Upload -->
+          <div class="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+            <button type="button" id="rpm-tab-camera" onclick="switchOcrInputSource('camera')" class="flex-1 py-1.5 text-center text-xs font-black rounded-lg transition bg-white dark:bg-slate-900 text-purple-600 shadow-sm flex items-center justify-center gap-1">
+              <span>📷</span>
+              <span>كاميرا مباشرة</span>
+            </button>
+            <button type="button" id="rpm-tab-file" onclick="switchOcrInputSource('file')" class="flex-1 py-1.5 text-center text-xs font-black rounded-lg transition text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-1">
+              <span>📁</span>
+              <span>رفع صورة</span>
+            </button>
+          </div>
+
+          <!-- Camera Stream Container -->
+          <div id="rpm-cameraContainer" class="relative bg-slate-950 rounded-2xl overflow-hidden aspect-[4/3] flex items-center justify-center border border-slate-800">
+            <video id="rpm-video" autoplay playsinline class="w-full h-full object-cover"></video>
+            <div id="rpm-cameraPlaceholder" class="hidden text-center p-4 space-y-2">
+              <span class="text-3xl block">📷</span>
+              <span class="text-xs text-slate-400 block font-bold">الكاميرا متوقفة</span>
+              <button onclick="startOcrCamera()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl shadow-md">
+                تشغيل الكاميرا
+              </button>
+            </div>
+            <!-- Snapshot Button -->
+            <button id="rpm-captureBtn" onclick="captureOcrSnapshot()" class="absolute bottom-3 left-1/2 -translate-x-1/2 px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white font-black text-xs rounded-full shadow-lg flex items-center gap-1.5 transition">
+              <span>📸</span>
+              <span>التقاط وقراءة صورة الوصل</span>
+            </button>
+          </div>
+
+          <!-- File Upload Container -->
+          <div id="rpm-fileContainer" class="hidden relative bg-slate-50 dark:bg-slate-800/60 rounded-2xl aspect-[4/3] border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-purple-400 transition" onclick="document.getElementById('rpm-fileInput').click()">
+            <input type="file" id="rpm-fileInput" accept="image/*" class="hidden" onchange="handleOcrFileUpload(event)">
+            <span class="text-3xl block mb-1">🖼️</span>
+            <span class="text-xs font-black text-slate-800 dark:text-white block">انقر لرفع صورة الوصل أو اسحبها هنا</span>
+            <span class="text-[10px] text-slate-400 block mt-1">يدعم صور JPG, PNG, WEBP بدقة عالية</span>
+          </div>
+
+          <!-- Image Preview Thumbnail (After capture/upload) -->
+          <div id="rpm-previewContainer" class="hidden relative bg-slate-900 rounded-xl overflow-hidden max-h-28 border border-purple-500/40 flex items-center justify-center">
+            <img id="rpm-previewImg" class="max-h-28 object-contain" alt="Receipt Preview">
+            <button onclick="reCaptureOcrPhoto()" class="absolute top-1 left-1 bg-black/60 hover:bg-black text-white text-[10px] px-2 py-0.5 rounded-lg">إعادة التقاط 🔄</button>
+          </div>
+
+          <!-- Scanning Status / Progress -->
+          <div id="rpm-statusContainer" class="hidden p-3 bg-purple-50 dark:bg-purple-950/40 rounded-2xl border border-purple-200 dark:border-purple-800 text-center space-y-1.5">
+            <div class="flex items-center justify-center gap-2">
+              <span class="animate-spin text-sm">⚡</span>
+              <span id="rpm-statusText" class="text-xs font-black text-purple-700 dark:text-purple-300">جاري قراءة بنود الوصل واستخراج المواد...</span>
+            </div>
+            <div class="w-full bg-purple-200 dark:bg-purple-900 h-1.5 rounded-full overflow-hidden">
+              <div id="rpm-progressBar" class="bg-purple-600 h-full w-0 transition-all duration-300"></div>
+            </div>
+          </div>
+
+          <canvas id="rpm-canvas" class="hidden"></canvas>
+        </div>
+
+        <!-- Right / Detected Items Table Area -->
+        <div class="col-span-7 space-y-3 flex flex-col">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-black text-slate-900 dark:text-white">المواد المكتشفة في الوصل:</span>
+              <span id="rpm-detectedCount" class="text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-400 px-2 py-0.5 rounded-full font-bold">0 مادة</span>
+            </div>
+            <button onclick="addManualOcrRow()" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold rounded-xl flex items-center gap-1 transition">
+              <span>➕</span>
+              <span>إضافة سطر يدوي</span>
+            </button>
+          </div>
+
+          <!-- Detected Items Table -->
+          <div class="overflow-y-auto flex-1 border border-slate-100 dark:border-slate-800 rounded-2xl max-h-[360px]">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold sticky top-0 border-b border-slate-100 dark:border-slate-800">
+                <tr>
+                  <th class="p-2.5">المادة</th>
+                  <th class="p-2.5">الباركود</th>
+                  <th class="p-2.5 text-center">الكمية</th>
+                  <th class="p-2.5 text-center">سعر الشراء</th>
+                  <th class="p-2.5 text-center">المجموع</th>
+                  <th class="p-2.5 text-center">حذف</th>
+                </tr>
+              </thead>
+              <tbody id="rpm-itemsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr>
+                  <td colspan="6" class="text-center py-12 text-slate-400 space-y-1">
+                    <span class="block text-2xl">📸</span>
+                    <span>التقط صورة للوصل أو ارفع صورة ليتم استخراج المواد هنا تلقائياً</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Total Summary Bar -->
+          <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">المجموع الكلي للمواد الممسوحة:</span>
+            <span id="rpm-grandTotal" class="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono">0 د.ع</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
+        <span class="text-xs text-slate-400">يمكنك تعديل أي سطر ممسوح قبل النقل للمخزن.</span>
+        <div class="flex gap-2">
+          <button onclick="closeReceiptPhotoModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl">
+            إلغاء
+          </button>
+          <button onclick="transferOcrItemsToPurchase()" class="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs rounded-xl shadow-md flex items-center gap-2">
+            <span>📥</span>
+            <span>نقل المواد إلى فاتورة الشراء وتحديث المخزن</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 

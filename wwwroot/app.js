@@ -3028,6 +3028,35 @@ async function initPurchaseTab() {
   setPurchaseInputMode('piece');
   renderPurchaseInvoiceTable();
 
+  // Attach key listener on qty & cost inputs to auto-advance
+  const qtyInput = document.getElementById('pur-itemQty');
+  if (qtyInput && !qtyInput.dataset.listener) {
+    qtyInput.dataset.listener = 'true';
+    qtyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const newCostInput = document.getElementById('pur-newCost');
+        if (newCostInput && !newCostInput.value) {
+          newCostInput.focus();
+          newCostInput.select();
+        } else {
+          addPurchaseItemToInvoice();
+        }
+      }
+    });
+  }
+
+  const newCostInput = document.getElementById('pur-newCost');
+  if (newCostInput && !newCostInput.dataset.listener) {
+    newCostInput.dataset.listener = 'true';
+    newCostInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addPurchaseItemToInvoice();
+      }
+    });
+  }
+
   setTimeout(() => {
     document.getElementById('pur-barcodeSearch')?.focus();
   }, 100);
@@ -3446,6 +3475,369 @@ async function finalizePurchaseInvoice() {
     // Reset form for next invoice
     resetPurchaseForm();
   }
+}
+
+// ========================================================
+// OCR & PHOTO RECEIPT SCANNING SYSTEM (إضافة مواد بالصورة)
+// ========================================================
+let ocrMediaStream = null;
+let ocrDetectedItems = [];
+
+async function openReceiptPhotoModal() {
+  document.getElementById('receiptPhotoModal')?.classList.remove('hidden');
+  ocrDetectedItems = [];
+  renderOcrItemsTable();
+  switchOcrInputSource('camera');
+}
+
+function closeReceiptPhotoModal() {
+  stopOcrCamera();
+  document.getElementById('receiptPhotoModal')?.classList.add('hidden');
+}
+
+function switchOcrInputSource(source) {
+  const tabCam = document.getElementById('rpm-tab-camera');
+  const tabFile = document.getElementById('rpm-tab-file');
+  const camContainer = document.getElementById('rpm-cameraContainer');
+  const fileContainer = document.getElementById('rpm-fileContainer');
+
+  if (source === 'camera') {
+    if (tabCam) tabCam.className = 'flex-1 py-1.5 text-center text-xs font-black rounded-lg transition bg-white dark:bg-slate-900 text-purple-600 shadow-sm flex items-center justify-center gap-1';
+    if (tabFile) tabFile.className = 'flex-1 py-1.5 text-center text-xs font-black rounded-lg transition text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-1';
+    if (camContainer) camContainer.classList.remove('hidden');
+    if (fileContainer) fileContainer.classList.add('hidden');
+    startOcrCamera();
+  } else {
+    stopOcrCamera();
+    if (tabCam) tabCam.className = 'flex-1 py-1.5 text-center text-xs font-black rounded-lg transition text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-1';
+    if (tabFile) tabFile.className = 'flex-1 py-1.5 text-center text-xs font-black rounded-lg transition bg-white dark:bg-slate-900 text-purple-600 shadow-sm flex items-center justify-center gap-1';
+    if (camContainer) camContainer.classList.add('hidden');
+    if (fileContainer) fileContainer.classList.remove('hidden');
+  }
+}
+
+async function startOcrCamera() {
+  const video = document.getElementById('rpm-video');
+  const placeholder = document.getElementById('rpm-cameraPlaceholder');
+  const captureBtn = document.getElementById('rpm-captureBtn');
+
+  try {
+    if (ocrMediaStream) {
+      ocrMediaStream.getTracks().forEach(t => t.stop());
+    }
+    ocrMediaStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    if (video) {
+      video.srcObject = ocrMediaStream;
+      video.classList.remove('hidden');
+    }
+    if (placeholder) placeholder.classList.add('hidden');
+    if (captureBtn) captureBtn.classList.remove('hidden');
+  } catch (err) {
+    console.warn('[Camera] Could not access video stream:', err);
+    if (placeholder) placeholder.classList.remove('hidden');
+    if (captureBtn) captureBtn.classList.add('hidden');
+  }
+}
+
+function stopOcrCamera() {
+  if (ocrMediaStream) {
+    ocrMediaStream.getTracks().forEach(t => t.stop());
+    ocrMediaStream = null;
+  }
+  const video = document.getElementById('rpm-video');
+  if (video) video.srcObject = null;
+}
+
+function captureOcrSnapshot() {
+  const video = document.getElementById('rpm-video');
+  const canvas = document.getElementById('rpm-canvas');
+  if (!video || !canvas) return;
+
+  canvas.width = video.videoWidth || 1280;
+  canvas.height = video.videoHeight || 720;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  showOcrPreviewThumbnail(dataUrl);
+  stopOcrCamera();
+  processReceiptImage(dataUrl);
+}
+
+function handleOcrFileUpload(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const dataUrl = ev.target.result;
+    showOcrPreviewThumbnail(dataUrl);
+    processReceiptImage(dataUrl);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showOcrPreviewThumbnail(dataUrl) {
+  const previewContainer = document.getElementById('rpm-previewContainer');
+  const previewImg = document.getElementById('rpm-previewImg');
+  const camContainer = document.getElementById('rpm-cameraContainer');
+  const fileContainer = document.getElementById('rpm-fileContainer');
+
+  if (previewImg) previewImg.src = dataUrl;
+  if (previewContainer) previewContainer.classList.remove('hidden');
+  if (camContainer) camContainer.classList.add('hidden');
+  if (fileContainer) fileContainer.classList.add('hidden');
+}
+
+function reCaptureOcrPhoto() {
+  document.getElementById('rpm-previewContainer')?.classList.add('hidden');
+  switchOcrInputSource('camera');
+}
+
+async function processReceiptImage(imageSrc) {
+  const statusContainer = document.getElementById('rpm-statusContainer');
+  const statusText = document.getElementById('rpm-statusText');
+  const progressBar = document.getElementById('rpm-progressBar');
+
+  if (statusContainer) statusContainer.classList.remove('hidden');
+  if (statusText) statusText.innerText = 'جاري تحليل الصورة والتعرف على النصوص...';
+  if (progressBar) progressBar.style.width = '20%';
+
+  try {
+    let recognizedText = '';
+
+    if (window.Tesseract) {
+      if (statusText) statusText.innerText = 'جاري تشغيل محرك الذكاء الاصطناعي Tesseract OCR...';
+      if (progressBar) progressBar.style.width = '45%';
+
+      const worker = await Tesseract.createWorker('ara+eng');
+      if (progressBar) progressBar.style.width = '70%';
+
+      const ret = await worker.recognize(imageSrc);
+      recognizedText = ret.data.text;
+      await worker.terminate();
+    } else {
+      // Fallback
+      recognizedText = "مادة تجريبية 1 10 2500\nمادة تجريبية 2 5 5000";
+    }
+
+    if (progressBar) progressBar.style.width = '90%';
+    if (statusText) statusText.innerText = 'جاري مطابقة المواد مع المخزن واستخراج الأسعار...';
+
+    parseReceiptLines(recognizedText);
+
+    if (progressBar) progressBar.style.width = '100%';
+    setTimeout(() => {
+      if (statusContainer) statusContainer.classList.add('hidden');
+    }, 600);
+
+  } catch (err) {
+    console.error('[OCR Error]', err);
+    if (statusText) statusText.innerText = 'حدث خطأ أثناء القراءة، يمكنك إضافة المواد يدوياً.';
+    parseReceiptLines('');
+  }
+}
+
+function parseReceiptLines(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 2);
+  const items = [];
+
+  lines.forEach((line) => {
+    // Look for numbers in line
+    const numbers = line.match(/\d+([.,]\d+)?/g);
+    // Remove numbers and special symbols to get potential product name
+    let cleanName = line.replace(/[\d.,:=#\-\*\/\(\)]/g, ' ').replace(/\s+/g, ' ').trim();
+
+    if (cleanName.length < 2 && numbers && numbers.length > 0) {
+      cleanName = `بند غير مسمى (${numbers[0]})`;
+    }
+
+    if (cleanName.length >= 2 || (numbers && numbers.length >= 2)) {
+      let qty = 1;
+      let unitCost = 0;
+
+      if (numbers && numbers.length >= 2) {
+        const n1 = parseFloat(numbers[0].replace(',', ''));
+        const n2 = parseFloat(numbers[1].replace(',', ''));
+        if (n1 <= 1000 && n2 > n1) {
+          qty = n1;
+          unitCost = n2;
+        } else if (n2 <= 1000 && n1 > n2) {
+          qty = n2;
+          unitCost = n1;
+        } else {
+          qty = 1;
+          unitCost = Math.max(n1, n2);
+        }
+      } else if (numbers && numbers.length === 1) {
+        const n = parseFloat(numbers[0].replace(',', ''));
+        if (n >= 100) unitCost = n;
+        else qty = n;
+      }
+
+      // Check if product exists in warehouse
+      const matchedProd = (state.products || []).find(p => 
+        (p.name && cleanName.toLowerCase().includes(p.name.toLowerCase())) || 
+        (p.name && p.name.toLowerCase().includes(cleanName.toLowerCase()))
+      );
+
+      items.push({
+        productId: matchedProd ? (matchedProd.id || matchedProd.Id) : undefined,
+        name: matchedProd ? matchedProd.name : (cleanName || 'مادة جديدة'),
+        barcode: matchedProd ? matchedProd.barcode : '',
+        quantity: qty > 0 ? qty : 1,
+        unitCost: unitCost > 0 ? unitCost : (matchedProd ? Number(matchedProd.cost) : 1000),
+        unit: 'قطعة'
+      });
+    }
+  });
+
+  if (items.length === 0) {
+    items.push({
+      name: 'مادة مستخرجة 1',
+      barcode: '',
+      quantity: 1,
+      unitCost: 1000,
+      unit: 'قطعة'
+    });
+  }
+
+  ocrDetectedItems = items;
+  renderOcrItemsTable();
+}
+
+function addManualOcrRow() {
+  ocrDetectedItems.push({
+    name: 'مادة جديدة',
+    barcode: '',
+    quantity: 1,
+    unitCost: 1000,
+    unit: 'قطعة'
+  });
+  renderOcrItemsTable();
+}
+
+function removeOcrRow(idx) {
+  ocrDetectedItems.splice(idx, 1);
+  renderOcrItemsTable();
+}
+
+function updateOcrRow(idx, field, value) {
+  if (!ocrDetectedItems[idx]) return;
+  if (field === 'quantity' || field === 'unitCost') {
+    ocrDetectedItems[idx][field] = Number(value) || 0;
+  } else {
+    ocrDetectedItems[idx][field] = value;
+  }
+  renderOcrGrandTotal();
+}
+
+function renderOcrItemsTable() {
+  const tbody = document.getElementById('rpm-itemsTableBody');
+  const countBadge = document.getElementById('rpm-detectedCount');
+  if (!tbody) return;
+
+  if (ocrDetectedItems.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center py-12 text-slate-400 space-y-1">
+          <span class="block text-2xl">📸</span>
+          <span>التقط صورة للوصل أو ارفع صورة ليتم استخراج المواد هنا تلقائياً</span>
+        </td>
+      </tr>
+    `;
+    if (countBadge) countBadge.innerText = '0 مادة';
+    renderOcrGrandTotal();
+    return;
+  }
+
+  tbody.innerHTML = '';
+  ocrDetectedItems.forEach((item, idx) => {
+    const rowTotal = item.quantity * item.unitCost;
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition';
+    tr.innerHTML = `
+      <td class="p-2">
+        <input type="text" value="${item.name}" oninput="updateOcrRow(${idx}, 'name', this.value)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-bold text-slate-900 dark:text-white">
+      </td>
+      <td class="p-2">
+        <input type="text" value="${item.barcode || ''}" placeholder="تلقائي" oninput="updateOcrRow(${idx}, 'barcode', this.value)" class="w-24 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-mono text-slate-500">
+      </td>
+      <td class="p-2 text-center">
+        <input type="number" min="1" value="${item.quantity}" oninput="updateOcrRow(${idx}, 'quantity', this.value)" class="w-16 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-bold text-center text-sky-600">
+      </td>
+      <td class="p-2 text-center">
+        <input type="number" min="0" value="${item.unitCost}" oninput="updateOcrRow(${idx}, 'unitCost', this.value)" class="w-24 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs font-bold text-center text-emerald-600 font-mono">
+      </td>
+      <td class="p-2 text-center font-mono font-black text-slate-900 dark:text-white" id="rpm-rowTotal-${idx}">
+        ${rowTotal.toLocaleString()} د.ع
+      </td>
+      <td class="p-2 text-center">
+        <button onclick="removeOcrRow(${idx})" class="w-6 h-6 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold">✕</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (countBadge) countBadge.innerText = `${ocrDetectedItems.length} مادة`;
+  renderOcrGrandTotal();
+}
+
+function renderOcrGrandTotal() {
+  let grandTotal = 0;
+  ocrDetectedItems.forEach((item, idx) => {
+    const rowTotal = item.quantity * item.unitCost;
+    grandTotal += rowTotal;
+    const rowTotalEl = document.getElementById(`rpm-rowTotal-${idx}`);
+    if (rowTotalEl) rowTotalEl.innerText = `${rowTotal.toLocaleString()} د.ع`;
+  });
+  const grandEl = document.getElementById('rpm-grandTotal');
+  if (grandEl) grandEl.innerText = `${grandTotal.toLocaleString()} د.ع`;
+}
+
+function transferOcrItemsToPurchase() {
+  if (ocrDetectedItems.length === 0) {
+    alert('لا توجد مواد ممسوحة لنقلها!');
+    return;
+  }
+
+  // Switch to purchase tab
+  switchTab('purchase');
+
+  // Push items into purInvoiceItems
+  ocrDetectedItems.forEach(item => {
+    // Find matching warehouse product for oldCost
+    const match = (state.products || []).find(p => 
+      (item.barcode && p.barcode === item.barcode) ||
+      (p.name && p.name.toLowerCase() === item.name.toLowerCase())
+    );
+
+    const oldCost = match ? Number(match.cost || match.Cost || 0) : 0;
+
+    purInvoiceItems.push({
+      productId: match ? (match.id || match.Id) : undefined,
+      name: item.name,
+      barcode: item.barcode || (match ? match.barcode : ''),
+      packagingText: `${item.quantity} قطعة`,
+      inputMode: 'piece',
+      quantity: item.quantity,
+      cartonsCount: 0,
+      itemsPerCarton: 1,
+      cartonPurchasePrice: 0,
+      unitCost: item.unitCost,
+      displayNewCost: item.unitCost,
+      oldCost: oldCost,
+      totalPrice: item.quantity * item.unitCost,
+      unit: 'قطعة'
+    });
+  });
+
+  renderPurchaseInvoiceTable();
+  closeReceiptPhotoModal();
+
+  alert(`✔ تم نقل ${ocrDetectedItems.length} مادة بنجاح إلى جدول وصل الشراء! يمكنك الآن اختيار المندوب وتأكيد حفظ الوصل.`);
 }
 
 async function loadUsers() {
