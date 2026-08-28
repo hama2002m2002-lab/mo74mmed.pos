@@ -12,8 +12,11 @@ public class UpdateService
     private static readonly Lazy<UpdateService> _instance = new(() => new UpdateService());
     public static UpdateService Instance => _instance.Value;
 
+    private bool _isCurrentCheckManual = false;
+
     public void CheckForUpdates(bool isManual = true)
     {
+        _isCurrentCheckManual = isManual;
         _ = CheckForUpdatesAsync(isManual);
     }
 
@@ -27,18 +30,37 @@ public class UpdateService
                 updateUrl = "https://raw.githubusercontent.com/hama2002m2002-lab/mo74mmed.pos/main/update.xml";
             }
 
-            // 2. Check URL or Local File availability
+            // 2. Check URL availability
             if (updateUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
                 updateUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             {
-                using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-                var response = await httpClient.GetAsync(updateUrl);
-                if (!response.IsSuccessStatusCode)
+                using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(4) };
+                try
+                {
+                    var response = await httpClient.GetAsync(updateUrl);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        if (isManual)
+                        {
+                            var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                            string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.5.0";
+                            MessageBox.Show(
+                                $"✔ أنت تستخدم أحدث إصدار من البرنامج (v{installedVer}).\nلا توجد تحديثات جديدة منشورة حالياً على السحابة.",
+                                "فحص التحديثات",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+                        }
+                        return;
+                    }
+                }
+                catch
                 {
                     if (isManual)
                     {
+                        var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                        string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.5.0";
                         MessageBox.Show(
-                            $"✔ لا توجد تحديثات جديدة منشورة على الخادم حالياً.\nأنت تستخدم أحدث نسخة من البرنامج.",
+                            $"✔ أنت تستخدم أحدث إصدار من البرنامج (v{installedVer}).",
                             "فحص التحديثات",
                             MessageBoxButton.OK,
                             MessageBoxImage.Information);
@@ -46,20 +68,9 @@ public class UpdateService
                     return;
                 }
             }
-            else if (!File.Exists(updateUrl))
-            {
-                if (isManual)
-                {
-                    MessageBox.Show(
-                        "✔ أنت تستخدم أحدث إصدار من البرنامج (v1.0.0).\nلا توجد تحديثات جديدة حالياً.",
-                        "فحص التحديثات",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
-                return;
-            }
 
-            // 3. Start AutoUpdater if valid feed exists
+            // 3. Configure AutoUpdater
+            AutoUpdater.ReportErrors = false;
             AutoUpdater.ShowSkipButton = false;
             AutoUpdater.ShowRemindLaterButton = true;
             AutoUpdater.Mandatory = false;
@@ -68,19 +79,19 @@ public class UpdateService
             AutoUpdater.OpenDownloadPage = false;
             AutoUpdater.Synchronous = false;
 
-            if (isManual)
-            {
-                AutoUpdater.CheckForUpdateEvent += AutoUpdaterOnCheckForUpdateEvent;
-            }
+            AutoUpdater.CheckForUpdateEvent -= AutoUpdaterOnCheckForUpdateEvent;
+            AutoUpdater.CheckForUpdateEvent += AutoUpdaterOnCheckForUpdateEvent;
 
             AutoUpdater.Start(updateUrl);
         }
-        catch (Exception ex)
+        catch
         {
             if (isManual)
             {
+                var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.5.0";
                 MessageBox.Show(
-                    "✔ أنت تستخدم أحدث إصدار من البرنامج (v1.0.0).\nلا توجد تحديثات جديدة حالياً.",
+                    $"✔ أنت تستخدم أحدث إصدار من البرنامج (v{installedVer}).",
                     "فحص التحديثات",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -93,7 +104,7 @@ public class UpdateService
         AutoUpdater.CheckForUpdateEvent -= AutoUpdaterOnCheckForUpdateEvent;
 
         var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-        string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.0.2";
+        string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.5.0";
         bool isKu = LocalizationManager.Instance.IsKurdish;
 
         if (args.Error == null)
@@ -123,7 +134,7 @@ public class UpdateService
                     }
                 }
             }
-            else
+            else if (_isCurrentCheckManual)
             {
                 string msg = isKu
                     ? $"تۆ نوێترین وەشانی فەرمیی بەرنامەت بەکارهێناوە (v{installedVer}) ✔"
@@ -132,7 +143,7 @@ public class UpdateService
                 MessageBox.Show(msg, isKu ? "پشکنینی نوێکردنەوە" : "فحص التحديثات", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
-        else
+        else if (_isCurrentCheckManual)
         {
             string msg = isKu
                 ? $"تۆ نوێترین وەشانی بەرنامەت بەکارهێناوە (v{installedVer}) ✔"

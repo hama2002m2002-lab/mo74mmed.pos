@@ -32,13 +32,12 @@ public partial class MainWindow : Window
                 // Start Cloud background sync (every 5 seconds)
                 CloudSyncService.Instance.StartBackgroundSync(5);
 
-                // Auto update check
+                // Auto update check (silent background check)
                 _ = Task.Run(() =>
                 {
                     try
                     {
-                        var updateService = new UpdateService();
-                        updateService.CheckForUpdates();
+                        UpdateService.Instance.CheckForUpdates(false);
                     }
                     catch { }
                 });
