@@ -3312,177 +3312,91 @@
         <!-- ======================================================== -->
         <!-- VIEW 10: COMPREHENSIVE REPORTS & ANALYTICS (مركز التقارير الشاملة والذكية) -->
         <!-- ======================================================== -->
-        <div id="tab-reports" class="tab-content hidden space-y-4">
+        <div id="tab-reports" class="tab-content hidden space-y-5">
           
-          <!-- Header Bar -->
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
-                <span>📊</span>
-                <span>مركز التقارير الشاملة والتحليلات المالية والمخزنية</span>
-              </h2>
-              <p class="text-xs text-slate-400">تقارير فورية ودقيقة مرتبطة بالمبيعات، المخزن، التوالف، الكاشيرية، المشتريات، والديون</p>
+          <!-- Top Header Bar -->
+          <div class="sh-card p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-2xl shadow-md shadow-indigo-500/20">
+                📊
+              </div>
+              <div>
+                <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>مركز التقارير الشاملة والتحليلات</span>
+                  <span class="text-[10px] bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 font-mono px-2 py-0.5 rounded-full">Reports Hub</span>
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">انقر على أي تقرير لفتح بياناته التفصيلية، المخططات البيانية، وخيارات الطباعة وتصدير الإكسل</p>
+              </div>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="loadReportsDashboard()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+              <button onclick="loadReportsDashboard()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center gap-2 transition shadow-xs">
                 <span>🔄</span>
                 <span>تحديث البيانات</span>
               </button>
             </div>
           </div>
 
-          <!-- Top Quick KPI Summary Cards -->
-          <div class="grid grid-cols-6 gap-3">
-            <div class="sh-card p-3.5 border-r-4 border-emerald-500">
-              <span class="text-[11px] text-slate-400 font-bold block">مبيعات اليوم الإجمالية</span>
-              <span id="rep-todaySales" class="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono">0 د.ع</span>
-              <span id="rep-todayInvoices" class="text-[10px] text-slate-400 font-bold block mt-0.5">0 فواتير</span>
-            </div>
-            <div class="sh-card p-3.5 border-r-4 border-teal-500">
-              <span class="text-[11px] text-slate-400 font-bold block">أرباح اليوم الصافية</span>
-              <span id="rep-todayProfit" class="text-base font-black text-teal-600 dark:text-teal-400 font-mono">+0 د.ع</span>
-              <span class="text-[10px] text-emerald-500 font-bold block mt-0.5">صافي بعد التكلفة</span>
-            </div>
-            <div class="sh-card p-3.5 border-r-4 border-sky-500">
-              <span class="text-[11px] text-slate-400 font-bold block">مبيعات هذا الشهر</span>
-              <span id="rep-monthSales" class="text-base font-black text-sky-600 dark:text-sky-400 font-mono">0 د.ع</span>
-              <span id="rep-monthGrowth" class="text-[10px] text-sky-500 font-bold block mt-0.5">0% نمو</span>
-            </div>
-            <div class="sh-card p-3.5 border-r-4 border-indigo-500">
-              <span class="text-[11px] text-slate-400 font-bold block">أرباح هذا الشهر الصافية</span>
-              <span id="rep-monthProfit" class="text-base font-black text-indigo-600 dark:text-indigo-400 font-mono">+0 د.ع</span>
-              <span class="text-[10px] text-indigo-400 font-bold block mt-0.5">صافي الربح التراكمي</span>
-            </div>
-            <div class="sh-card p-3.5 border-r-4 border-amber-500">
-              <span class="text-[11px] text-slate-400 font-bold block">قيمة المخزن (بسعر التكلفة)</span>
-              <span id="rep-stockCost" class="text-base font-black text-amber-600 dark:text-amber-400 font-mono">0 د.ع</span>
-              <span id="rep-stockRetail" class="text-[10px] text-amber-500 font-bold block mt-0.5">بسعر البيع: 0 د.ع</span>
-            </div>
-            <div class="sh-card p-3.5 border-r-4 border-rose-500">
-              <span class="text-[11px] text-slate-400 font-bold block">الديون المتبقية للزبائن</span>
-              <span id="rep-customersDebtsTotal" class="text-base font-black text-rose-500 font-mono">0 د.ع</span>
-              <span id="rep-suppliersDebtsTotal" class="text-[10px] text-slate-400 font-bold block mt-0.5">ديون الموردين: 0 د.ع</span>
-            </div>
-          </div>
-
-          <!-- Profit Breakdown by Sale Mode (حساب الأرباح حسب نوع البيع: كرتون / مفرد / جملة) -->
-          <div class="sh-card p-4 space-y-3 bg-gradient-to-r from-slate-900/50 via-slate-800/40 to-slate-900/50 border border-sky-500/30">
-            <div class="flex items-center justify-between border-b border-slate-700/50 pb-2">
-              <div class="flex items-center gap-2">
-                <span class="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-base">💰</span>
-                <div>
-                  <h3 class="text-sm font-black text-white">تفصيل وحساب الأرباح حسب نوعية البيع (مفرد / كرتون / جملة)</h3>
-                  <p class="text-[11px] text-slate-400">حساب دقيق للأرباح المحققة والأرباح المتوقعة في المخزن لكل نمط بيع</p>
-                </div>
-              </div>
-              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-black text-xs">مباشر ودقيق</span>
-            </div>
-
-            <div class="grid grid-cols-4 gap-3">
-              <!-- 1. Retail Profit -->
-              <div class="p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 space-y-1">
-                <div class="flex items-center justify-between text-xs font-bold text-emerald-400">
-                  <span>🟢 أرباح بيع المفرد (قطعة)</span>
-                  <span>Retail</span>
-                </div>
-                <div id="rep-retailProfit" class="text-lg font-black text-emerald-300 font-mono">+0 د.ع</div>
-                <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold pt-1 border-t border-emerald-900/40">
-                  <span>المبيعات: <span id="rep-retailSalesTotal" class="font-mono text-emerald-200">0</span></span>
-                  <span>المتوقع: <span id="rep-projRetailProfit" class="font-mono text-emerald-200">0</span></span>
-                </div>
-              </div>
-
-              <!-- 2. Carton Profit -->
-              <div class="p-3.5 rounded-2xl bg-purple-950/30 border border-purple-500/40 space-y-1">
-                <div class="flex items-center justify-between text-xs font-bold text-purple-400">
-                  <span>🟣 أرباح بيع الكرتون (جملة كراتين)</span>
-                  <span>Carton</span>
-                </div>
-                <div id="rep-cartonProfit" class="text-lg font-black text-purple-300 font-mono">+0 د.ع</div>
-                <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold pt-1 border-t border-purple-900/40">
-                  <span>المبيعات: <span id="rep-cartonSalesTotal" class="font-mono text-purple-200">0</span></span>
-                  <span>المتوقع: <span id="rep-projCartonProfit" class="font-mono text-purple-200">0</span></span>
-                </div>
-              </div>
-
-              <!-- 3. Wholesale Profit -->
-              <div class="p-3.5 rounded-2xl bg-sky-950/30 border border-sky-500/40 space-y-1">
-                <div class="flex items-center justify-between text-xs font-bold text-sky-400">
-                  <span>🔵 أرباح بيع الجملة</span>
-                  <span>Wholesale</span>
-                </div>
-                <div id="rep-wholesaleProfit" class="text-lg font-black text-sky-300 font-mono">+0 د.ع</div>
-                <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold pt-1 border-t border-sky-900/40">
-                  <span>المبيعات: <span id="rep-wholesaleSalesTotal" class="font-mono text-sky-200">0</span></span>
-                  <span>المتوقع: <span id="rep-projWholesaleProfit" class="font-mono text-sky-200">0</span></span>
-                </div>
-              </div>
-
-              <!-- 4. Combined Total Profit -->
-              <div class="p-3.5 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-1">
-                <div class="flex items-center justify-between text-xs font-bold text-amber-400">
-                  <span>⭐ إجمالي صافي الأرباح المحققة</span>
-                  <span>Total Profit</span>
-                </div>
-                <div id="rep-totalProfitCombined" class="text-lg font-black text-amber-300 font-mono">+0 د.ع</div>
-                <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold pt-1 border-t border-amber-900/40">
-                  <span>إجمالي الإيرادات: <span id="rep-totalRevenueAllCombined" class="font-mono text-amber-200">0</span></span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- 6 Comprehensive Master Report Sections (3x2 Grid) -->
-          <div class="grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             
-            <!-- 1. الحركة المالية والمبيعات والمرجوعات (6 تقارير) -->
-            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-emerald-500">
+            <!-- 1. الحركة المالية والمبيعات والأرباح (7 تقارير) -->
+            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-emerald-500 rounded-2xl shadow-xs">
               <div class="space-y-2.5">
                 <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                   <div class="flex items-center gap-2">
-                    <span class="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-sm">💲</span>
-                    <h3 class="font-black text-xs text-slate-900 dark:text-white">1. الحركة المالية والمبيعات والمرجوعات</h3>
+                    <span class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-base">💰</span>
+                    <div>
+                      <h3 class="font-black text-xs text-slate-900 dark:text-white">1. المالية والأرباح والمبيعات</h3>
+                      <span class="text-[10px] text-slate-400">الأرباح الصافية، المبيعات، والسيولة</span>
+                    </div>
                   </div>
-                  <span class="text-[10px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold">6 تقارير</span>
+                  <span class="text-[10px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold">7 تقارير</span>
                 </div>
 
-                <div class="space-y-1 text-xs">
-                  <button onclick="openDetailedReport('pnl_statement')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                <div class="space-y-1.5 text-xs">
+                  <button onclick="openDetailedReport('pnl_statement')" class="w-full p-2.5 rounded-xl hover:bg-emerald-50/60 dark:hover:bg-emerald-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-emerald-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-emerald-600">
                       <span>📈</span>
                       <span>التقرير المالي الشامل (P&L والأرباح الصافية)</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-emerald-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('sales_detailed')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('profit_breakdown')" class="w-full p-2.5 rounded-xl hover:bg-emerald-50/60 dark:hover:bg-emerald-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-emerald-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-emerald-600">
-                      <span>🛒</span>
-                      <span>تقارير المبيعات التفصيلية (يومي / أسبوعي / شهري)</span>
+                      <span>💵</span>
+                      <span>تفصيل الأرباح حسب نوع البيع (مفرد / كرتون / جملة)</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-emerald-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('returns_refunds')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('sales_detailed')" class="w-full p-2.5 rounded-xl hover:bg-emerald-50/60 dark:hover:bg-emerald-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-emerald-300 flex items-center justify-between text-right transition group">
+                    <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-emerald-600">
+                      <span>🛒</span>
+                      <span>تقارير المبيعات التفصيلية وفواتير الكاشير</span>
+                    </span>
+                    <span class="text-slate-400 group-hover:text-emerald-500 text-xs">↗</span>
+                  </button>
+                  <button onclick="openDetailedReport('returns_refunds')" class="w-full p-2.5 rounded-xl hover:bg-rose-50/60 dark:hover:bg-rose-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-rose-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-rose-500">
                       <span>🔄</span>
                       <span>تقارير المرجوعات والمسترجعات وقيمتها</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-rose-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('cashier_sales')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('cashier_sales')" class="w-full p-2.5 rounded-xl hover:bg-emerald-50/60 dark:hover:bg-emerald-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-emerald-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-emerald-600">
                       <span>👤</span>
                       <span>تقارير حسابات ومبيعات الكاشيرية</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-emerald-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('payment_liquidity')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('payment_liquidity')" class="w-full p-2.5 rounded-xl hover:bg-emerald-50/60 dark:hover:bg-emerald-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-emerald-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-emerald-600">
                       <span>💳</span>
                       <span>تفصيل وسائل الدفع والسيولة (نقد / آجل / بطاقة)</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-emerald-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('period_comparison')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('period_comparison')" class="w-full p-2.5 rounded-xl hover:bg-emerald-50/60 dark:hover:bg-emerald-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-emerald-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-emerald-600">
                       <span>📅</span>
                       <span>مقارنة الفترات والاتجاهات ومعدل النمو</span>
@@ -3494,52 +3408,55 @@
 
               <button onclick="openDetailedReport('pnl_statement')" class="w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition">
                 <span>📊</span>
-                <span>فتح جميع تقارير هذا القسم</span>
+                <span>فتح التقرير المالي الشامل</span>
                 <span>↗</span>
               </button>
             </div>
 
             <!-- 2. المخزون والمواد التالفة والهالك (5 تقارير) -->
-            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-cyan-500">
+            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-cyan-500 rounded-2xl shadow-xs">
               <div class="space-y-2.5">
                 <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                   <div class="flex items-center gap-2">
-                    <span class="w-7 h-7 rounded-xl bg-cyan-500/10 text-cyan-600 flex items-center justify-center font-bold text-sm">📦</span>
-                    <h3 class="font-black text-xs text-slate-900 dark:text-white">2. المخزون والمواد التالفة والهالك</h3>
+                    <span class="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-600 flex items-center justify-center font-bold text-base">📦</span>
+                    <div>
+                      <h3 class="font-black text-xs text-slate-900 dark:text-white">2. المخزون والجرد والتوالف</h3>
+                      <span class="text-[10px] text-slate-400">تقييم البضاعة، الجرد، والتلفيات</span>
+                    </div>
                   </div>
                   <span class="text-[10px] bg-cyan-50 text-cyan-600 dark:bg-cyan-950/40 dark:text-cyan-400 px-2 py-0.5 rounded-full font-bold">5 تقارير</span>
                 </div>
 
-                <div class="space-y-1 text-xs">
-                  <button onclick="openDetailedReport('inventory_audit')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                <div class="space-y-1.5 text-xs">
+                  <button onclick="openDetailedReport('inventory_audit')" class="w-full p-2.5 rounded-xl hover:bg-cyan-50/60 dark:hover:bg-cyan-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-cyan-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-cyan-600">
                       <span>📋</span>
                       <span>تقارير وسجلات جرد المخزون الفعلي والفروقات</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-cyan-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('inventory_valuation')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('inventory_valuation')" class="w-full p-2.5 rounded-xl hover:bg-cyan-50/60 dark:hover:bg-cyan-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-cyan-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-cyan-600">
                       <span>💰</span>
                       <span>جرد وتقييم المخزون (بسعر البيع والشراء)</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-cyan-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('item_turnover')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('item_turnover')" class="w-full p-2.5 rounded-xl hover:bg-cyan-50/60 dark:hover:bg-cyan-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-cyan-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-cyan-600">
                       <span>🔁</span>
                       <span>حركة ودوران البضائع (الأكثر / الأقل / الراكد)</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-cyan-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('damaged_waste')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('damaged_waste')" class="w-full p-2.5 rounded-xl hover:bg-rose-50/60 dark:hover:bg-rose-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-rose-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-rose-500">
                       <span>⚠️</span>
                       <span>تقارير المواد التالفة والهالك والتسويات</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-rose-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('stock_alerts_expiry')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('stock_alerts_expiry')" class="w-full p-2.5 rounded-xl hover:bg-amber-50/60 dark:hover:bg-amber-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-amber-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-amber-500">
                       <span>⏰</span>
                       <span>التنبيهات المتقدمة وحد إعادة الطلب والصلاحية</span>
@@ -3551,41 +3468,44 @@
 
               <button onclick="openDetailedReport('inventory_valuation')" class="w-full py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition">
                 <span>📦</span>
-                <span>فتح جميع تقارير هذا القسم</span>
+                <span>فتح تقرير تقييم المخزون</span>
                 <span>↗</span>
               </button>
             </div>
 
             <!-- 3. تقارير الشراء والموردين (3 تقارير) -->
-            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-sky-500">
+            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-sky-500 rounded-2xl shadow-xs">
               <div class="space-y-2.5">
                 <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                   <div class="flex items-center gap-2">
-                    <span class="w-7 h-7 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center font-bold text-sm">🚚</span>
-                    <h3 class="font-black text-xs text-slate-900 dark:text-white">3. تقارير الشراء والموردين</h3>
+                    <span class="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center font-bold text-base">🚚</span>
+                    <div>
+                      <h3 class="font-black text-xs text-slate-900 dark:text-white">3. تقارير الشراء والموردين</h3>
+                      <span class="text-[10px] text-slate-400">فواتير التوريد وكشوفات الحساب</span>
+                    </div>
                   </div>
                   <span class="text-[10px] bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400 px-2 py-0.5 rounded-full font-bold">3 تقارير</span>
                 </div>
 
-                <div class="space-y-1 text-xs">
-                  <button onclick="openDetailedReport('purchases_invoices')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                <div class="space-y-1.5 text-xs">
+                  <button onclick="openDetailedReport('purchases_invoices')" class="w-full p-2.5 rounded-xl hover:bg-sky-50/60 dark:hover:bg-sky-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-sky-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-sky-600">
                       <span>📑</span>
                       <span>تقارير الشراء وفواتير المشتريات والتوريد</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-sky-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('suppliers_statement')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('suppliers_statement')" class="w-full p-2.5 rounded-xl hover:bg-sky-50/60 dark:hover:bg-sky-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-sky-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-sky-600">
                       <span>📖</span>
                       <span>كشف حساب وحركة الموردين والشركات</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-sky-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('purchase_price_history')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('purchase_price_history')" class="w-full p-2.5 rounded-xl hover:bg-sky-50/60 dark:hover:bg-sky-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-sky-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-sky-600">
                       <span>⏳</span>
-                      <span>تاريخ وتغير أسعار الشراء والتكلفة المخفية</span>
+                      <span>تاريخ وتغير أسعار الشراء والتكلفة</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-sky-500 text-xs">↗</span>
                   </button>
@@ -3594,34 +3514,37 @@
 
               <button onclick="openDetailedReport('purchases_invoices')" class="w-full py-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/20 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition">
                 <span>🚚</span>
-                <span>فتح جميع تقارير هذا القسم</span>
+                <span>فتح تقرير فواتير الشراء</span>
                 <span>↗</span>
               </button>
             </div>
 
             <!-- 4. العملاء والديون والولاء (2 تقارير) -->
-            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-purple-500">
+            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-purple-500 rounded-2xl shadow-xs">
               <div class="space-y-2.5">
                 <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                   <div class="flex items-center gap-2">
-                    <span class="w-7 h-7 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center font-bold text-sm">👥</span>
-                    <h3 class="font-black text-xs text-slate-900 dark:text-white">4. العملاء والديون والولاء</h3>
+                    <span class="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center font-bold text-base">👥</span>
+                    <div>
+                      <h3 class="font-black text-xs text-slate-900 dark:text-white">4. العملاء والديون والولاء</h3>
+                      <span class="text-[10px] text-slate-400">الذمم المدينة وسجلات الآجل</span>
+                    </div>
                   </div>
                   <span class="text-[10px] bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 px-2 py-0.5 rounded-full font-bold">2 تقارير</span>
                 </div>
 
-                <div class="space-y-1 text-xs">
-                  <button onclick="openDetailedReport('customers_debts_aging')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                <div class="space-y-1.5 text-xs">
+                  <button onclick="openDetailedReport('customers_debts_aging')" class="w-full p-2.5 rounded-xl hover:bg-purple-50/60 dark:hover:bg-purple-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-purple-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-purple-600">
                       <span>📉</span>
-                      <span>الذمم المدينة وأعمار وسجلات الديون</span>
+                      <span>الذمم المدينة وأعمار وسجلات ديون الزبائن</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-purple-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('loyalty_top_customers')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('loyalty_top_customers')" class="w-full p-2.5 rounded-xl hover:bg-amber-50/60 dark:hover:bg-amber-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-amber-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-amber-500">
                       <span>⭐</span>
-                      <span>نقاط الولاء وقائمة الزبائن المميزين</span>
+                      <span>نقاط الولاء وقائمة الزبائن الأكثر شراءً</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-amber-500 text-xs">↗</span>
                   </button>
@@ -3630,31 +3553,34 @@
 
               <button onclick="openDetailedReport('customers_debts_aging')" class="w-full py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition">
                 <span>👥</span>
-                <span>فتح جميع تقارير هذا القسم</span>
+                <span>فتح تقرير ديون الزبائن</span>
                 <span>↗</span>
               </button>
             </div>
 
             <!-- 5. التدقيق الأمني ومنع الاختلاس (2 تقارير) -->
-            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-rose-500">
+            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-rose-500 rounded-2xl shadow-xs">
               <div class="space-y-2.5">
                 <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                   <div class="flex items-center gap-2">
-                    <span class="w-7 h-7 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center font-bold text-sm">🛡️</span>
-                    <h3 class="font-black text-xs text-slate-900 dark:text-white">5. التدقيق الأمني ومنع الاختلاس</h3>
+                    <span class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center font-bold text-base">🛡️</span>
+                    <div>
+                      <h3 class="font-black text-xs text-slate-900 dark:text-white">5. التدقيق الأمني والصندوق</h3>
+                      <span class="text-[10px] text-slate-400">إغلاق الوردية والعمليات المعدلة</span>
+                    </div>
                   </div>
                   <span class="text-[10px] bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 px-2 py-0.5 rounded-full font-bold">2 تقارير</span>
                 </div>
 
-                <div class="space-y-1 text-xs">
-                  <button onclick="openDetailedReport('shift_zreport')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                <div class="space-y-1.5 text-xs">
+                  <button onclick="openDetailedReport('shift_zreport')" class="w-full p-2.5 rounded-xl hover:bg-rose-50/60 dark:hover:bg-rose-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-rose-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-rose-600">
                       <span>🔒</span>
-                      <span>إغلاق الورديات اليومية (Z-Report)</span>
+                      <span>إغلاق الورديات اليومية ومطابقة الصندوق (Z-Report)</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-rose-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('security_void_logs')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('security_void_logs')" class="w-full p-2.5 rounded-xl hover:bg-rose-50/60 dark:hover:bg-rose-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-rose-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-rose-600">
                       <span>🚨</span>
                       <span>سجل العمليات المشبوهة والإلغاءات والتعديلات</span>
@@ -3666,45 +3592,48 @@
 
               <button onclick="openDetailedReport('shift_zreport')" class="w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition">
                 <span>🛡️</span>
-                <span>فتح جميع تقارير هذا القسم</span>
+                <span>فتح تقرير إغلاق الوردية (Z-Report)</span>
                 <span>↗</span>
               </button>
             </div>
 
             <!-- 6. التحليلات السلوكية والتشغيلية (4 تقارير) -->
-            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-indigo-500">
+            <div class="sh-card p-4 space-y-3 flex flex-col justify-between border-t-4 border-indigo-500 rounded-2xl shadow-xs">
               <div class="space-y-2.5">
                 <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                   <div class="flex items-center gap-2">
-                    <span class="w-7 h-7 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center font-bold text-sm">📊</span>
-                    <h3 class="font-black text-xs text-slate-900 dark:text-white">6. التحليلات السلوكية والتشغيلية</h3>
+                    <span class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center font-bold text-base">📊</span>
+                    <div>
+                      <h3 class="font-black text-xs text-slate-900 dark:text-white">6. التحليلات التشغيلية وساعات الذروة</h3>
+                      <span class="text-[10px] text-slate-400">ساعات الازدحام وسلة الشراء</span>
+                    </div>
                   </div>
                   <span class="text-[10px] bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 px-2 py-0.5 rounded-full font-bold">4 تقارير</span>
                 </div>
 
-                <div class="space-y-1 text-xs">
-                  <button onclick="openDetailedReport('cashier_hourly')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                <div class="space-y-1.5 text-xs">
+                  <button onclick="openDetailedReport('cashier_hourly')" class="w-full p-2.5 rounded-xl hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-indigo-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-indigo-600">
                       <span>👥</span>
-                      <span>حسابات ومبيعات الكاشيرية (مع الوقت)</span>
+                      <span>حسابات ومبيعات الكاشيرية خلال ساعات اليوم</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-indigo-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('peak_hours')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('peak_hours')" class="w-full p-2.5 rounded-xl hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-indigo-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-indigo-600">
                       <span>🔥</span>
-                      <span>تحليل ساعات الذروة (24 ساعة)</span>
+                      <span>تحليل ساعات الذروة والازدحام (24 ساعة)</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-indigo-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('basket_size')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('basket_size')" class="w-full p-2.5 rounded-xl hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-indigo-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-indigo-600">
                       <span>🛍️</span>
                       <span>تحليل حجم وسلة الشراء ومتوسط الفاتورة</span>
                     </span>
                     <span class="text-slate-400 group-hover:text-indigo-500 text-xs">↗</span>
                   </button>
-                  <button onclick="openDetailedReport('cashier_efficiency')" class="w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-between text-right transition group">
+                  <button onclick="openDetailedReport('cashier_efficiency')" class="w-full p-2.5 rounded-xl hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 border border-slate-100 dark:border-slate-800/80 hover:border-indigo-300 flex items-center justify-between text-right transition group">
                     <span class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300 group-hover:text-indigo-600">
                       <span>⚡</span>
                       <span>تقرير أداء وسرعة الكاشيرية</span>
@@ -3716,7 +3645,7 @@
 
               <button onclick="openDetailedReport('peak_hours')" class="w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition">
                 <span>📊</span>
-                <span>فتح جميع تقارير هذا القسم</span>
+                <span>فتح تحليل ساعات الذروة</span>
                 <span>↗</span>
               </button>
             </div>

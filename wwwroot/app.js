@@ -7301,6 +7301,7 @@ async function openDetailedReport(reportKey, period = 'all') {
   const reportConfigs = {
     // 1. Financial & Sales
     pnl_statement: { title: 'التقرير المالي الشامل والأرباح الصافية (P&L)', icon: '📈', badge: 'الحركة المالية', sub: 'ملخص شامل للمبيعات، تكلفة البضاعة المباعة (COGS)، إجمالي الخصومات، وصافي الأرباح' },
+    profit_breakdown: { title: 'تفصيل وحساب الأرباح حسب نوعية البيع (مفرد / كرتون / جملة)', icon: '💵', badge: 'تحليل الأرباح', sub: 'حساب دقيق للأرباح المحققة وتفصيل الأرباح لكل نمط بيع على حدة' },
     sales_detailed: { title: 'تقارير المبيعات وفواتير الكاشير التفصيلية', icon: '🛒', badge: 'المبيعات', sub: 'سجل تفصيلي لكافة فواتير المبيعات الصادرة، الكاشير، طريقة الدفع، والربح المحقق' },
     returns_refunds: { title: 'تقارير المرجوعات والمسترجعات وقيمتها', icon: '🔄', badge: 'المرتجعات', sub: 'كشف فواتير وبنود المواد المرتجعة للزبائن مع أسباب الإرجاع' },
     cashier_sales: { title: 'تقارير حسابات ومبيعات الكاشيرية', icon: '👤', badge: 'أداء الكاشير', sub: 'إجمالي المبيعات، الفواتير المنجزة، وصافي الأرباح لكل موظف كاشير' },
@@ -7404,6 +7405,75 @@ function renderActiveReportContent() {
 
   // Render Based on currentReportKey
   switch (currentReportKey) {
+    case 'profit_breakdown': {
+      const retailProf = d.retailProfit || 0;
+      const cartonProf = d.cartonProfit || 0;
+      const wholesaleProf = d.wholesaleProfit || 0;
+      const totalProf = d.totalProfit || (retailProf + cartonProf + wholesaleProf);
+      const totalRev = (d.retailSalesTotal || 0) + (d.cartonSalesTotal || 0) + (d.wholesaleSalesTotal || 0);
+
+      kpiHtml = `
+        <div class="sh-card p-3 border-r-4 border-emerald-500">
+          <span class="text-[10px] text-slate-400 font-bold block">🟢 أرباح المفرد (قطعة)</span>
+          <span class="text-sm font-black text-emerald-500 font-mono">+${retailProf.toLocaleString()} د.ع</span>
+          <span class="text-[9px] text-slate-400 block mt-0.5">المبيعات: ${(d.retailSalesTotal || 0).toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-purple-500">
+          <span class="text-[10px] text-slate-400 font-bold block">🟣 أرباح الكرتون (جملة كراتين)</span>
+          <span class="text-sm font-black text-purple-400 font-mono">+${cartonProf.toLocaleString()} د.ع</span>
+          <span class="text-[9px] text-slate-400 block mt-0.5">المبيعات: ${(d.cartonSalesTotal || 0).toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-sky-500">
+          <span class="text-[10px] text-slate-400 font-bold block">🔵 أرباح بيع الجملة</span>
+          <span class="text-sm font-black text-sky-400 font-mono">+${wholesaleProf.toLocaleString()} د.ع</span>
+          <span class="text-[9px] text-slate-400 block mt-0.5">المبيعات: ${(d.wholesaleSalesTotal || 0).toLocaleString()} د.ع</span>
+        </div>
+        <div class="sh-card p-3 border-r-4 border-amber-500">
+          <span class="text-[10px] text-slate-400 font-bold block">⭐ إجمالي صافي الأرباح</span>
+          <span class="text-sm font-black text-amber-400 font-mono">+${totalProf.toLocaleString()} د.ع</span>
+          <span class="text-[9px] text-slate-400 block mt-0.5">إجمالي الإيرادات: ${totalRev.toLocaleString()} د.ع</span>
+        </div>
+      `;
+
+      // Use sales list items or profit summary items
+      const sales = filterByPeriod(d.salesList || []);
+      currentFilteredRows = sales;
+      rowCount = sales.length;
+
+      tableHtml = `
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold sticky top-0 border-b border-slate-100 dark:border-slate-800">
+            <tr>
+              <th class="p-3">رقم الفاتورة</th>
+              <th class="p-3">التاريخ والوقت</th>
+              <th class="p-3">الكاشير</th>
+              <th class="p-3 text-center">نوع البيع</th>
+              <th class="p-3 text-center">طريقة الدفع</th>
+              <th class="p-3 text-center">إجمالي الفاتورة</th>
+              <th class="p-3 text-center">صافي الربح المحقق</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+            ${sales.length === 0 ? `<tr><td colspan="7" class="text-center py-8 text-slate-400">لا توجد مبيعات مسجلة في هذه الفترة</td></tr>` : sales.map(s => {
+              const saleMode = s.saleMode || s.SaleMode || 'retail';
+              const modeBadge = saleMode === 'carton' ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-400">كرتون</span>' : (saleMode === 'wholesale' ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-400">جملة</span>' : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">مفرد</span>');
+              return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <td class="p-3 font-bold text-slate-800 dark:text-white font-sans">${s.invoiceNumber || s.InvoiceNumber || '--'}</td>
+                  <td class="p-3 text-slate-400 text-[11px]">${s.date || '--'}</td>
+                  <td class="p-3 font-sans text-slate-700 dark:text-slate-300">${s.cashierName || s.CashierName || 'الرئيسي'}</td>
+                  <td class="p-3 text-center font-sans">${modeBadge}</td>
+                  <td class="p-3 text-center font-sans"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.paymentMethod === 'debt' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}">${s.paymentMethod === 'debt' ? 'آجل' : 'نقداً'}</span></td>
+                  <td class="p-3 text-center font-bold text-slate-900 dark:text-white">${(s.totalAmount || s.TotalAmount || 0).toLocaleString()} د.ع</td>
+                  <td class="p-3 text-center font-black text-emerald-500">+${(s.profit || 0).toLocaleString()} د.ع</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+      break;
+    }
     case 'pnl_statement':
     case 'sales_detailed': {
       const sales = filterByPeriod(d.salesList || []);
