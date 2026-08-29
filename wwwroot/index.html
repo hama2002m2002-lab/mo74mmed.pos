@@ -26,6 +26,146 @@
 <body class="flex flex-col h-screen overflow-hidden select-none">
 
   <!-- ======================================================== -->
+  <!-- FULLSCREEN LOGIN & LOCK SCREEN OVERLAY (تسجيل الدخول وقفل الشاشة) -->
+  <!-- ======================================================== -->
+  <div id="appLoginOverlay" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/95 backdrop-blur-xl transition-all duration-300">
+    <div class="w-full max-w-4xl p-6 flex flex-col items-center justify-center space-y-6 animate-fade-in">
+      
+      <!-- Top Brand Header & Live Clock -->
+      <div class="text-center space-y-2">
+        <div class="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-slate-900/80 border border-slate-800 shadow-xl">
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center text-white text-lg font-black shadow-lg shadow-sky-500/30">
+            🛒
+          </div>
+          <div class="text-right">
+            <span class="font-black text-lg tracking-tight text-white block leading-none">7amo.pos <span class="text-sky-400">PRO</span></span>
+            <span class="text-[10px] font-bold text-slate-400">نظام إدارة نقاط البيع والمخازن فائق السرعة</span>
+          </div>
+          <div class="h-6 w-px bg-slate-800 mx-1"></div>
+          <div class="text-left font-mono">
+            <div id="loginLiveClock" class="text-xs font-black text-emerald-400">--:--:--</div>
+            <div id="loginLiveDate" class="text-[10px] text-slate-400">----/--/--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Login Container Card -->
+      <div class="w-full max-w-3xl bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
+
+        <!-- Alert / Error Message -->
+        <div id="loginErrorMsg" class="hidden p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold text-center flex items-center justify-center gap-2">
+          <span>⚠️</span>
+          <span id="loginErrorText">رمز PIN غير صحيح</span>
+        </div>
+
+        <!-- MODE 1: QUICK CASHIER CARDS & PIN PAD -->
+        <div id="loginModePinContainer" class="space-y-6">
+          
+          <!-- Cashier Cards View (عند بدء الدخول واختيار الحساب) -->
+          <div id="loginCashierCardsSection" class="space-y-3">
+            <div class="flex items-center justify-between text-xs px-1">
+              <span class="text-slate-400 font-bold">اختر حساب الكاشير للدخول الفوري:</span>
+            </div>
+            <div id="loginUsersCardsList" class="grid grid-cols-4 gap-3 max-h-64 overflow-y-auto pr-1">
+              <!-- Rendered dynamically by JS -->
+            </div>
+          </div>
+
+          <!-- Active Selected User PIN Input & Numeric Keypad -->
+          <div id="loginPinPadSection" class="hidden flex flex-col items-center space-y-4 max-w-sm mx-auto">
+            
+            <!-- Selected User Info Header -->
+            <div class="flex items-center justify-between w-full p-2.5 bg-slate-950/60 border border-slate-800 rounded-2xl">
+              <div class="flex items-center gap-3">
+                <div id="loginSelectedUserAvatar" class="w-10 h-10 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-xl font-bold border border-sky-500/30">
+                  👤
+                </div>
+                <div class="text-right">
+                  <h4 id="loginSelectedUserName" class="font-black text-sm text-white">محمد الكاشير</h4>
+                  <span id="loginSelectedUserRole" class="text-[10px] text-emerald-400 font-bold">كاشير مبيعات</span>
+                </div>
+              </div>
+              <button onclick="backToCashierCards()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition">
+                <span>🔄 تبديل</span>
+              </button>
+            </div>
+
+            <!-- PIN Display Dots -->
+            <div class="space-y-1 text-center w-full">
+              <span class="text-xs text-slate-400 font-bold block">أدخل رمز PIN المكون من 4 أرقام:</span>
+              <div id="pinDotsContainer" class="flex items-center justify-center gap-3 py-2">
+                <span class="pin-dot w-4 h-4 rounded-full border-2 border-slate-700 bg-slate-800/80 transition-all"></span>
+                <span class="pin-dot w-4 h-4 rounded-full border-2 border-slate-700 bg-slate-800/80 transition-all"></span>
+                <span class="pin-dot w-4 h-4 rounded-full border-2 border-slate-700 bg-slate-800/80 transition-all"></span>
+                <span class="pin-dot w-4 h-4 rounded-full border-2 border-slate-700 bg-slate-800/80 transition-all"></span>
+              </div>
+            </div>
+
+            <!-- Numeric Touch Keypad (0-9, Backspace, Clear) -->
+            <div class="grid grid-cols-3 gap-2.5 w-full">
+              <button onclick="handlePinKeyPress('1')" class="pin-btn h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-lg shadow-sm border border-slate-700/60 active:scale-95 transition">1</button>
+              <button onclick="handlePinKeyPress('2')" class="pin-btn h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-lg shadow-sm border border-slate-700/60 active:scale-95 transition">2</button>
+              <button onclick="handlePinKeyPress('3')" class="pin-btn h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-lg shadow-sm border border-slate-700/60 active:scale-95 transition">3</button>
+
+              <button onclick="handlePinKeyPress('4')" class="pin-btn h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-lg shadow-sm border border-slate-700/60 active:scale-95 transition">4</button>
+              <button onclick="handlePinKeyPress('5')" class="pin-btn h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-lg shadow-sm border border-slate-700/60 active:scale-95 transition">5</button>
+              <button onclick="handlePinKeyPress('6')" class="pin-btn h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-lg shadow-sm border border-slate-700/60 active:scale-95 transition">6</button>
+
+              <button onclick="handlePinKeyPress('7')" class="pin-btn h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-lg shadow-sm border border-slate-700/60 active:scale-95 transition">7</button>
+              <button onclick="handlePinKeyPress('8')" class="pin-btn h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-lg shadow-sm border border-slate-700/60 active:scale-95 transition">8</button>
+              <button onclick="handlePinKeyPress('9')" class="pin-btn h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-lg shadow-sm border border-slate-700/60 active:scale-95 transition">9</button>
+
+              <button onclick="handlePinKeyPress('C')" class="pin-btn h-12 rounded-2xl bg-slate-800/60 hover:bg-rose-500/20 hover:text-rose-400 text-slate-400 font-bold text-xs shadow-sm border border-slate-700/40 active:scale-95 transition">مسح C</button>
+              <button onclick="handlePinKeyPress('0')" class="pin-btn h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-lg shadow-sm border border-slate-700/60 active:scale-95 transition">0</button>
+              <button onclick="handlePinKeyPress('BACK')" class="pin-btn h-12 rounded-2xl bg-slate-800/60 hover:bg-slate-700 text-slate-300 font-black text-base shadow-sm border border-slate-700/40 active:scale-95 transition">⌫</button>
+            </div>
+
+            <!-- Direct Quick Login button (if no pin or optional) -->
+            <button id="loginQuickDirectBtn" onclick="submitQuickLogin()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-2xl shadow-lg transition flex items-center justify-center gap-2">
+              <span>🚀</span>
+              <span>دخول فوري مباشر</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- MODE 2: CLASSIC USERNAME & PASSWORD -->
+        <div id="loginModeCredentialsContainer" class="hidden space-y-4 max-w-sm mx-auto">
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-slate-300">اسم المستخدم:</label>
+            <div class="relative">
+              <input id="loginUsernameInput" type="text" placeholder="مثال: admin" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-sky-500">
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-slate-300">كلمة المرور أو رمز PIN:</label>
+            <div class="relative">
+              <input id="loginPasswordInput" onkeydown="if(event.key==='Enter')submitCredentialsLogin();" type="password" placeholder="أدخل كلمة المرور..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-sky-500">
+            </div>
+          </div>
+
+          <button onclick="submitCredentialsLogin()" class="w-full py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-black text-xs rounded-2xl shadow-lg transition flex items-center justify-center gap-2">
+            <span>🔓</span>
+            <span>تسجيل الدخول للنظام</span>
+          </button>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>قاعدة البيانات متصلة وجاهزة للعمل Offline</span>
+          </div>
+          <span>💡 يدعم لوحة المفاتيح والأرقام اللمسية وقارئ الباركود</span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
   <!-- MAIN APP CONTAINER -->
   <!-- ======================================================== -->
   <div class="flex h-screen w-screen p-3.5 gap-3.5 overflow-hidden">
@@ -121,6 +261,14 @@
           </nav>
         </div>
       </div>
+
+      <!-- Sidebar Bottom Logout / Switch User -->
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1">
+        <button onclick="logoutUser()" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-black text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-500/20 transition active:scale-95">
+          <span class="text-base">🚪</span>
+          <span>تسجيل الخروج / تبديل الكاشير</span>
+        </button>
+      </div>
     </aside>
 
     <!-- ======================================================== -->
@@ -159,14 +307,57 @@
             <span id="langBtnText">العربية</span>
           </button>
 
-          <!-- User Avatar Profile -->
-          <div class="flex items-center gap-2.5 pl-1 border-r border-slate-200 dark:border-slate-800 pr-3">
-            <div class="text-left">
-              <div class="text-xs font-bold text-slate-800 dark:text-white leading-tight">المدير العام</div>
-              <div class="text-[10px] text-slate-400">إدارة الماركت</div>
-            </div>
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-cyan-400 flex items-center justify-center text-white font-bold text-xs shadow-md">
-              👤
+          <!-- User Profile & Quick Actions Menu -->
+          <div class="relative flex items-center gap-2">
+            <button id="headerUserProfileBtn" onclick="toggleUserProfileDropdown()" class="flex items-center gap-2.5 pl-1 border-r border-slate-200 dark:border-slate-800 pr-3 hover:bg-slate-100 dark:hover:bg-slate-800/60 p-1 rounded-2xl transition">
+              <div class="text-left">
+                <div id="currentUserNameText" class="text-xs font-bold text-slate-800 dark:text-white leading-tight">مدير النظام</div>
+                <div id="currentUserRoleBadge" class="text-[10px] text-sky-500 font-bold">Admin</div>
+              </div>
+              <div id="currentUserAvatarCircle" class="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                👑
+              </div>
+            </button>
+
+            <!-- Direct Quick Logout / Switch Account Button -->
+            <button onclick="logoutUser()" class="px-3 py-1.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 text-xs font-black flex items-center gap-1.5 transition active:scale-95 shadow-sm" title="تسجيل الخروج وتبديل المستخدم">
+              <span>🚪</span>
+              <span class="hidden md:inline text-[11px]">تسجيل خروج</span>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="userProfileDropdown" class="hidden absolute left-0 top-full mt-2 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 z-50 space-y-1 animate-scale-up">
+              <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                  <span id="dropdownAvatarIcon" class="text-lg">👑</span>
+                  <div>
+                    <span class="block text-xs font-black text-slate-800 dark:text-white" id="dropdownUserName">مدير النظام</span>
+                    <span class="text-[10px] text-slate-400 font-mono" id="dropdownUserRole">@admin</span>
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="lockScreen()" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-right">
+                <span class="text-amber-500">🔒</span>
+                <span>قفل الشاشة السريع (Lock)</span>
+              </button>
+
+              <button onclick="switchCashier()" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-right">
+                <span class="text-sky-500">🔄</span>
+                <span>تبديل الكاشير</span>
+              </button>
+
+              <button onclick="switchTab('users'); toggleUserProfileDropdown();" id="dropdownUsersManageBtn" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-right">
+                <span class="text-purple-500">👥</span>
+                <span>إدارة حسابات الكاشير والصلاحيات</span>
+              </button>
+
+              <div class="border-t border-slate-100 dark:border-slate-800 my-1"></div>
+
+              <button onclick="logoutUser()" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition text-right">
+                <span>🚪</span>
+                <span>تسجيل الخروج</span>
+              </button>
             </div>
           </div>
         </div>
@@ -3618,9 +3809,100 @@
           </div>
         </div>
 
+        <!-- ======================================================== -->
+        <!-- VIEW 9: ADVANCED CASHIER & USER ACCOUNTS (إدارة حسابات الكاشير والصلاحيات) -->
+        <!-- ======================================================== -->
         <div id="tab-users" class="tab-content hidden space-y-4">
-          <h2 class="text-xl font-black">حسابات الكاشير والموظفين</h2>
-          <div id="usersGrid" class="grid grid-cols-3 gap-4"></div>
+          
+          <!-- Top Control Header -->
+          <div class="sh-card p-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-sky-500/20">
+                👥
+              </div>
+              <div>
+                <h2 class="text-base font-black text-slate-800 dark:text-white">إدارة حسابات الكاشير والموظفين والصلاحيات</h2>
+                <p class="text-xs text-slate-400">إنشاء وتعديل الحسابات، تعيين رموز PIN السريعة، وتحديد صلاحيات البيع والمخزن والتقارير</p>
+              </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex items-center gap-2">
+              <button onclick="loadUsers()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
+                <span>🔄</span>
+                <span>تحديث القائمة</span>
+              </button>
+              <button onclick="openCreateUserModal()" class="px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white text-xs font-black rounded-xl shadow-lg shadow-sky-500/25 flex items-center gap-2 transition transform active:scale-95">
+                <span>➕</span>
+                <span>إنشاء حساب كاشير جديد</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Stats Overview -->
+          <div class="grid grid-cols-4 gap-4">
+            <div class="sh-card p-4 flex items-center justify-between border-b-2 border-sky-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">إجمالي الحسابات</span>
+                <span id="statTotalUsers" class="text-xl font-black text-slate-800 dark:text-white font-mono">0</span>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center text-lg font-bold">
+                👥
+              </div>
+            </div>
+
+            <div class="sh-card p-4 flex items-center justify-between border-b-2 border-emerald-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">الكاشير النشطين</span>
+                <span id="statActiveCashiers" class="text-xl font-black text-emerald-500 font-mono">0</span>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg font-bold">
+                🧑‍💼
+              </div>
+            </div>
+
+            <div class="sh-card p-4 flex items-center justify-between border-b-2 border-purple-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">المدراء والمشرفين</span>
+                <span id="statAdminsCount" class="text-xl font-black text-purple-500 font-mono">0</span>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center text-lg font-bold">
+                👑
+              </div>
+            </div>
+
+            <div class="sh-card p-4 flex items-center justify-between border-b-2 border-amber-500">
+              <div>
+                <span class="text-xs text-slate-400 font-bold block">حسابات محمية بـ PIN</span>
+                <span id="statPinProtectedCount" class="text-xl font-black text-amber-500 font-mono">0</span>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-lg font-bold">
+                🔒
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters & Search Bar -->
+          <div class="sh-card p-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-1.5" id="userRoleFilterBtns">
+              <button onclick="filterUsersByRole('all')" class="user-role-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-black transition bg-sky-600 text-white shadow-sm" data-role="all">الكل (All)</button>
+              <button onclick="filterUsersByRole('Cashier')" class="user-role-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200" data-role="Cashier">الكاشير</button>
+              <button onclick="filterUsersByRole('Supervisor')" class="user-role-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200" data-role="Supervisor">المشرفين</button>
+              <button onclick="filterUsersByRole('Admin')" class="user-role-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200" data-role="Admin">المدراء</button>
+              <button onclick="filterUsersByRole('Accountant')" class="user-role-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200" data-role="Accountant">المحاسبين</button>
+            </div>
+
+            <div class="relative w-72">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute right-3 top-2.5"></i>
+              <input id="usersSearchInput" oninput="filterUsersListLive()" type="text" placeholder="بحث باسم الموظف أو المعرف..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pr-9 pl-4 py-1.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-sky-500">
+            </div>
+          </div>
+
+          <!-- Main Users Grid -->
+          <div id="usersGrid" class="grid grid-cols-3 gap-4">
+            <!-- Rendered dynamically by JS -->
+          </div>
+
         </div>
 
         <div id="tab-settings" class="tab-content hidden space-y-4">
@@ -4196,6 +4478,287 @@
         </button>
       </div>
 
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT USER & PERMISSIONS MATRIX (نافذة إنشاء وتعديل المستخدم والصلاحيات) -->
+  <div id="userFormModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 w-[95vw] max-w-3xl max-h-[92vh] space-y-4 shadow-2xl animate-scale-up flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="flex items-center gap-3">
+          <div id="userModalHeaderIcon" class="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center text-xl font-bold">
+            👤
+          </div>
+          <div>
+            <h3 id="userModalTitle" class="font-black text-base text-slate-900 dark:text-white">إنشاء حساب كاشير جديد</h3>
+            <p class="text-xs text-slate-400">تحديد بيانات الدخول، رمز PIN السريع، ومصفوفة الصلاحيات الدقيقة</p>
+          </div>
+        </div>
+        <button onclick="closeUserFormModal()" class="text-slate-400 hover:text-rose-500 text-xl font-bold p-1 rounded-xl">✕</button>
+      </div>
+
+      <!-- Scrollable Form Body -->
+      <div class="flex-1 overflow-y-auto space-y-5 pr-1 text-xs">
+        <input type="hidden" id="userFormId" value="">
+
+        <!-- SECTION 1: BASIC INFO -->
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-black text-slate-800 dark:text-white flex items-center gap-1.5">
+              <span>📋</span>
+              <span>البيانات الأساسية للحساب</span>
+            </span>
+            <div class="flex items-center gap-2">
+              <label class="text-slate-400 font-bold">حالة الحساب:</label>
+              <select id="userFormIsActive" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-800 dark:text-white">
+                <option value="true">نشط ومفعل ✔</option>
+                <option value="false">معطل وموقوف ✕</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="font-bold text-slate-600 dark:text-slate-300">الاسم الكامل (الموظف/الكاشير): <span class="text-rose-500">*</span></label>
+              <input id="userFormFullName" type="text" placeholder="مثال: أحمد محمد" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white focus:border-sky-500">
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-bold text-slate-600 dark:text-slate-300">اسم المستخدم (للدخول): <span class="text-rose-500">*</span></label>
+              <input id="userFormUsername" type="text" placeholder="مثال: ahmed" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white focus:border-sky-500 font-mono">
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-bold text-slate-600 dark:text-slate-300">الرتبة / الدور:</label>
+              <select id="userFormRole" onchange="applyRolePermissionsPreset(this.value)" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white">
+                <option value="Cashier">كاشير مبيعات (Cashier)</option>
+                <option value="Supervisor">مشرف وردية (Supervisor)</option>
+                <option value="Admin">مدير عام (Admin)</option>
+                <option value="Accountant">محاسب ومسؤول مخزن (Accountant)</option>
+              </select>
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-bold text-slate-600 dark:text-slate-300">رمز PIN السريع (4 أرقام): <span class="text-amber-500">⚡</span></label>
+              <input id="userFormPinCode" type="text" maxlength="6" placeholder="مثال: 1234" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white focus:border-sky-500 font-mono font-bold tracking-widest text-center">
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-bold text-slate-600 dark:text-slate-300">كلمة المرور:</label>
+              <input id="userFormPassword" type="password" placeholder="اتركها فارغة للإبقاء على الحالية عند التعديل" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white focus:border-sky-500">
+            </div>
+
+            <!-- Avatar & Color Selectors -->
+            <div class="space-y-1">
+              <label class="font-bold text-slate-600 dark:text-slate-300">الأيقونة واللون المميز:</label>
+              <div class="flex items-center gap-2">
+                <select id="userFormAvatar" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-white">
+                  <option value="🧑‍💼">🧑‍💼 كاشير</option>
+                  <option value="👑">👑 مدير</option>
+                  <option value="🛡️">🛡️ مشرف</option>
+                  <option value="👨‍💼">👨‍💼 موظف</option>
+                  <option value="👩‍💼">👩‍💼 كاشيرة</option>
+                  <option value="🧑‍💻">🧑‍💻 مبرمج</option>
+                  <option value="💎">💎 في آي بي</option>
+                  <option value="🛒">🛒 مبيعات</option>
+                </select>
+
+                <select id="userFormColor" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white flex-1">
+                  <option value="#3B82F6">🔵 أزرق قياسي</option>
+                  <option value="#10B981">🟢 أخضر زمردي</option>
+                  <option value="#8B5CF6">🟣 بنفسجي ملكي</option>
+                  <option value="#F59E0B">🟡 كهرماني دافئ</option>
+                  <option value="#EC4899">🌸 وردي</option>
+                  <option value="#06B6D4">🌊 سماوي تيركواز</option>
+                  <option value="#EF4444">🔴 قرمزي</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: ADVANCED PERMISSION MATRIX -->
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-700 pb-2.5">
+            <div>
+              <span class="font-black text-slate-800 dark:text-white flex items-center gap-1.5">
+                <span>🔐</span>
+                <span>مصفوفة الصلاحيات الدقيقة (Permissions Matrix)</span>
+              </span>
+              <span class="text-[11px] text-slate-400">حدد ما يمكن لهذا الكاشير/المستخدم الوصول إليه والتحكم به في النظام</span>
+            </div>
+
+            <!-- Preset Action Buttons -->
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="setAllPermissions(true)" class="px-2.5 py-1 bg-sky-100 hover:bg-sky-200 text-sky-700 dark:bg-sky-950 dark:text-sky-300 rounded-lg text-[11px] font-bold">
+                تحديد الكل ✔
+              </button>
+              <button type="button" onclick="setAllPermissions(false)" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-300 rounded-lg text-[11px] font-bold">
+                إلغاء الكل ✕
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            
+            <!-- Group 1: POS & Cashier -->
+            <div class="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
+              <span class="font-black text-sky-600 dark:text-sky-400 block pb-1 border-b border-slate-100 dark:border-slate-800">
+                🛒 1. المبيعات ونقاط البيع (POS)
+              </span>
+              <div class="space-y-1.5">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_pos_sales" class="user-perm-check rounded text-sky-600">
+                  <span class="text-slate-700 dark:text-slate-300">إجراء عمليات البيع وإنشاء فواتير</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_pos_discount" class="user-perm-check rounded text-sky-600">
+                  <span class="text-slate-700 dark:text-slate-300">منح خصومات على الفواتير</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_pos_price_edit" class="user-perm-check rounded text-sky-600">
+                  <span class="text-slate-700 dark:text-slate-300">تعديل سعر البيع أثناء الفاتورة</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_cash_drawer" class="user-perm-check rounded text-sky-600">
+                  <span class="text-slate-700 dark:text-slate-300">فتح درج النقود اليدوي وسحب المصاريف</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_invoices_view" class="user-perm-check rounded text-sky-600">
+                  <span class="text-slate-700 dark:text-slate-300">استعراض سجل الفواتير والمبيعات السابقة</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_invoices_return" class="user-perm-check rounded text-sky-600">
+                  <span class="text-slate-700 dark:text-slate-300 font-bold text-rose-500">استرجاع وإلغاء فواتير المبيعات</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Group 2: Inventory & Warehouse -->
+            <div class="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
+              <span class="font-black text-emerald-600 dark:text-emerald-400 block pb-1 border-b border-slate-100 dark:border-slate-800">
+                📦 2. المخزن والمنتجات
+              </span>
+              <div class="space-y-1.5">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_inventory_view" class="user-perm-check rounded text-emerald-600">
+                  <span class="text-slate-700 dark:text-slate-300">عرض رصيد ومواد المخزن</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_inventory_manage" class="user-perm-check rounded text-emerald-600">
+                  <span class="text-slate-700 dark:text-slate-300">إضافة وتعديل وحذف المنتجات والأسعار</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_inventory_damaged" class="user-perm-check rounded text-emerald-600">
+                  <span class="text-slate-700 dark:text-slate-300">تسجيل وشطب المواد التالفة والمنتهية</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_stock_audit" class="user-perm-check rounded text-emerald-600">
+                  <span class="text-slate-700 dark:text-slate-300">إجراء جرد وتعديل الكميات الفعلية</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_excel_import" class="user-perm-check rounded text-emerald-600">
+                  <span class="text-slate-700 dark:text-slate-300">استيراد وتصدير المواد عبر إكسل</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Group 3: Financial Reports & Profits -->
+            <div class="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
+              <span class="font-black text-purple-600 dark:text-purple-400 block pb-1 border-b border-slate-100 dark:border-slate-800">
+                📊 3. التقارير والأرباح
+              </span>
+              <div class="space-y-1.5">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_reports_view" class="user-perm-check rounded text-purple-600">
+                  <span class="text-slate-700 dark:text-slate-300 font-bold">عرض تقارير الأرباح والمبيعات والتكاليف</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_reports_export" class="user-perm-check rounded text-purple-600">
+                  <span class="text-slate-700 dark:text-slate-300">تصدير وطباعة التقارير المالية</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Group 4: Suppliers, Customers & System Settings -->
+            <div class="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
+              <span class="font-black text-amber-600 dark:text-amber-400 block pb-1 border-b border-slate-100 dark:border-slate-800">
+                🤝 4. الموردين، الزبائن، وإعدادات النظام
+              </span>
+              <div class="space-y-1.5">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_suppliers_manage" class="user-perm-check rounded text-amber-600">
+                  <span class="text-slate-700 dark:text-slate-300">إدارة الموردين وفواتير الشراء وسداد الحسابات</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_supplier_orders" class="user-perm-check rounded text-amber-600">
+                  <span class="text-slate-700 dark:text-slate-300">استلام وموافقة طلبيات المناديب</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_customers_manage" class="user-perm-check rounded text-amber-600">
+                  <span class="text-slate-700 dark:text-slate-300">إدارة الزبائن وحسابات ديون الآجل</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_users_manage" class="user-perm-check rounded text-amber-600">
+                  <span class="text-slate-700 dark:text-slate-300 font-bold text-sky-500">إدارة حسابات الكاشير والصلاحيات</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perm_settings_manage" class="user-perm-check rounded text-amber-600">
+                  <span class="text-slate-700 dark:text-slate-300 font-bold text-rose-500">إعدادات النظام والنسخ الاحتياطي</span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800">
+        <span class="text-xs text-slate-400">💡 يمكنك تعديل وتخصيص صلاحيات أي مستخدم في أي وقت دون التأثير على بيانات المبيعات.</span>
+        <div class="flex gap-2">
+          <button onclick="closeUserFormModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition">
+            إلغاء
+          </button>
+          <button onclick="saveUserForm()" class="px-7 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-black text-xs rounded-xl shadow-lg flex items-center gap-2 transition transform active:scale-95">
+            <span>💾</span>
+            <span>حفظ بيانات الحساب والصلاحيات</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: SUPERVISOR PIN OVERRIDE (نافذة تصريح وموافقة المشرف) -->
+  <div id="supervisorPinModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md space-y-4 shadow-2xl animate-scale-up text-center">
+      <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-2xl font-bold mx-auto border border-amber-500/20">
+        🛡️
+      </div>
+      <div>
+        <h3 class="font-black text-base text-white">مطلوب موافقة المشرف أو المدير</h3>
+        <p id="supervisorModalReason" class="text-xs text-slate-400 mt-1">تتطلب هذه العملية صلاحية إدارية خاصة، يرجى إدخال رمز PIN المشرف</p>
+      </div>
+
+      <div class="space-y-3">
+        <div class="relative">
+          <input id="supervisorPinInput" onkeydown="if(event.key==='Enter')submitSupervisorPin();" type="password" maxlength="8" placeholder="رمز PIN المشرف..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-center text-white text-lg font-mono tracking-widest focus:outline-none focus:border-amber-500">
+        </div>
+        <div id="supervisorPinError" class="hidden text-xs text-rose-400 font-bold"></div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeSupervisorPinModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition">
+          إلغاء
+        </button>
+        <button onclick="submitSupervisorPin()" class="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white font-black text-xs rounded-xl shadow-lg transition">
+          تأكيد الموافقة
+        </button>
+      </div>
     </div>
   </div>
 

@@ -8,6 +8,7 @@ installer_project/bin/
 installer_project/obj/
 *.zip
 !payload.zip
+Setup_7amo_POS.exe
 
 ## Visual Studio & IDE
 .vs/
@@ -22,3 +23,4 @@ installer_project/obj/
 *.db-wal
 Backups/
 logs/
+*_wpftmp.csproj

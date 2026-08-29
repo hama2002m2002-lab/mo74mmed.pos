@@ -2,6 +2,16 @@
 // 7amo Market - Modern Supermarket & POS Core Logic
 // ========================================================
 
+let currentUser = null;
+let allSystemUsers = [];
+let currentLoginMode = 'pin'; // 'pin' or 'credentials'
+let selectedLoginUser = null;
+let enteredPin = '';
+let userRoleFilter = 'all';
+let userSearchQuery = '';
+let pendingSupervisorAction = null;
+let loginClockInterval = null;
+
 const state = {
   activeTab: 'dashboard',
   theme: localStorage.getItem('pos_theme') || 'light',
@@ -51,7 +61,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   applyTheme(state.theme);
   lucide.createIcons();
   setupGlobalKeyboardShortcuts();
+  setupLoginKeypadKeyboardListener();
   
+  // Show and initialize Login Screen on application start
+  await initLoginScreen();
+
   await loadProducts();
   await loadSuppliersList();
   await loadCategoriesList();
@@ -631,6 +645,34 @@ const i18n = {
 // TAB NAVIGATION
 // ========================================================
 function switchTab(tabId) {
+  // 0. Permissions Validation
+  if (currentUser) {
+    if (tabId === 'users' && !hasPermission('users_manage')) {
+      alert('⚠️ عذراً، الوصول إلى إدارة حسابات الكاشير والصلاحيات مقتصر على المدير العام.');
+      return;
+    }
+    if (tabId === 'reports' && !hasPermission('reports_view')) {
+      alert('⚠️ عذراً، حسابك لا يملك صلاحية الاطلاع على التقارير المالية والأرباح.');
+      return;
+    }
+    if (tabId === 'settings' && !hasPermission('settings_manage')) {
+      alert('⚠️ عذراً، لا تملك صلاحية الوصول إلى إعدادات النظام والنسخ الاحتياطي.');
+      return;
+    }
+    if ((tabId === 'suppliers' || tabId === 'purchase') && !hasPermission('suppliers_manage')) {
+      alert('⚠️ عذراً، لا تملك صلاحية إدارة الموردين وفواتير الشراء.');
+      return;
+    }
+    if (tabId === 'customers' && !hasPermission('customers_manage')) {
+      alert('⚠️ عذراً، لا تملك صلاحية إدارة حسابات الزبائن وديون الآجل.');
+      return;
+    }
+    if (tabId === 'cashier' && !hasPermission('pos_sales')) {
+      alert('⚠️ عذراً، لا تملك صلاحية إجراء عمليات البيع في الكاشير.');
+      return;
+    }
+  }
+
   state.activeTab = tabId;
 
   // 1. Hide all tabs
@@ -1816,7 +1858,8 @@ async function submitCashierSale(printReceipt = false) {
   const payload = {
     paymentMethod: currentTab.paymentMethod || 'Cash',
     discount: discount,
-    items: currentTab.items
+    items: currentTab.items,
+    userId: currentUser?.id || null
   };
 
   const res = await callBackend('complete_sale', payload);
@@ -4765,32 +4808,875 @@ function transferOcrItemsToPurchase() {
   alert(`✔ تم نقل ${ocrDetectedItems.length} مادة بنجاح إلى جدول وصل الشراء! يمكنك الآن اختيار المندوب وتأكيد حفظ الوصل.`);
 }
 
+// ========================================================
+// AUTHENTICATION, LOGIN & PIN PAD SYSTEM
+// ========================================================
+
+function normalizeUserData(u) {
+  if (!u) return null;
+  return {
+    id: String(u.id || u.Id || ''),
+    fullName: u.fullName || u.FullName || '',
+    username: u.username || u.Username || '',
+    role: u.role || u.Role || 'Cashier',
+    isActive: u.isActive !== undefined ? Boolean(u.isActive) : (u.IsActive !== undefined ? Boolean(u.IsActive) : true),
+    permissions: u.permissions || u.Permissions || '[]',
+    avatarIcon: u.avatarIcon || u.AvatarIcon || '👤',
+    colorHex: u.colorHex || u.ColorHex || '#3B82F6',
+    pinCode: u.pinCode || u.PinCode || '',
+    hasPin: u.hasPin !== undefined ? Boolean(u.hasPin) : (u.HasPin !== undefined ? Boolean(u.HasPin) : Boolean(u.pinCode || u.PinCode)),
+    lastLogin: u.lastLogin || u.LastLogin || 'لم يسجل بعد'
+  };
+}
+
+async function initLoginScreen() {
+  // Start live clock
+  if (loginClockInterval) clearInterval(loginClockInterval);
+  updateLoginClock();
+  loginClockInterval = setInterval(updateLoginClock, 1000);
+
+  // Reset user session so that all accounts are shown for login
+  currentUser = null;
+
+  // Fetch users list from backend
+  const res = await callBackend('get_users');
+  if (res && res.success) {
+    allSystemUsers = (res.users || []).map(normalizeUserData);
+  }
+
+  // Show login overlay
+  const overlay = document.getElementById('appLoginOverlay');
+  if (overlay) overlay.classList.remove('hidden');
+
+  switchLoginMode('pin');
+  backToCashierCards();
+  renderLoginCashierCards();
+}
+
+function updateLoginClock() {
+  const clockEl = document.getElementById('loginLiveClock');
+  const dateEl = document.getElementById('loginLiveDate');
+  if (!clockEl || !dateEl) return;
+
+  const now = new Date();
+  clockEl.innerText = now.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  dateEl.innerText = now.toLocaleDateString('ar-IQ', { year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
+function switchLoginMode(mode) {
+  currentLoginMode = mode;
+  const pinBtn = document.getElementById('loginModePinBtn');
+  const passBtn = document.getElementById('loginModePassBtn');
+  const pinContainer = document.getElementById('loginModePinContainer');
+  const credContainer = document.getElementById('loginModeCredentialsContainer');
+  const errorEl = document.getElementById('loginErrorMsg');
+  if (errorEl) errorEl.classList.add('hidden');
+
+  if (mode === 'pin') {
+    pinBtn?.classList.add('bg-gradient-to-r', 'from-sky-500', 'to-blue-600', 'text-white', 'shadow-md');
+    pinBtn?.classList.remove('text-slate-400');
+    passBtn?.classList.remove('bg-gradient-to-r', 'from-sky-500', 'to-blue-600', 'text-white', 'shadow-md');
+    passBtn?.classList.add('text-slate-400');
+
+    pinContainer?.classList.remove('hidden');
+    credContainer?.classList.add('hidden');
+    renderLoginCashierCards();
+  } else {
+    passBtn?.classList.add('bg-gradient-to-r', 'from-sky-500', 'to-blue-600', 'text-white', 'shadow-md');
+    passBtn?.classList.remove('text-slate-400');
+    pinBtn?.classList.remove('bg-gradient-to-r', 'from-sky-500', 'to-blue-600', 'text-white', 'shadow-md');
+    pinBtn?.classList.add('text-slate-400');
+
+    credContainer?.classList.remove('hidden');
+    pinContainer?.classList.add('hidden');
+    setTimeout(() => {
+      document.getElementById('loginUsernameInput')?.focus();
+    }, 50);
+  }
+}
+
+function renderLoginCashierCards() {
+  const container = document.getElementById('loginUsersCardsList');
+  if (!container) return;
+
+  container.innerHTML = '';
+  const activeUsers = allSystemUsers.filter(u => u.isActive);
+
+  if (activeUsers.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-4 text-center py-6 text-slate-500 text-xs">
+        <span>لا يوجد حسابات مسجلة بعد. استخدم تسجيل الدخول الكلاسيكي باسم admin.</span>
+      </div>
+    `;
+    return;
+  }
+
+  activeUsers.forEach(u => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'cashier-login-card p-4 rounded-2xl bg-slate-950/70 border border-slate-800/90 text-right flex flex-col items-center justify-between text-center space-y-2 cursor-pointer shadow-sm group';
+    card.onclick = () => selectCashierForPin(u);
+
+    const roleBadge = u.role === 'Admin' ? 'مدير عام 👑' : (u.role === 'Supervisor' ? 'مشرف 🛡️' : 'كاشير 🛒');
+    const color = u.colorHex || '#3B82F6';
+    const avatar = u.avatarIcon || '👤';
+
+    card.innerHTML = `
+      <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-md transition-transform group-hover:scale-110" style="background-color: ${color}20; color: ${color}; border: 1.5px solid ${color}40;">
+        ${avatar}
+      </div>
+      <div>
+        <h4 class="font-black text-xs text-white group-hover:text-sky-400 transition-colors">${u.fullName}</h4>
+        <span class="text-[10px] text-slate-400 font-mono">@${u.username}</span>
+      </div>
+      <div class="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${u.hasPin ? 'bg-slate-800 text-slate-300' : 'bg-emerald-950/60 text-emerald-400'}">
+        <span>${u.hasPin ? '🔒 PIN' : '⚡ دخول مباشر'}</span>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function selectCashierForPin(user) {
+  selectedLoginUser = user;
+  enteredPin = '';
+  updatePinDots();
+
+  const cardsSection = document.getElementById('loginCashierCardsSection');
+  const pinSection = document.getElementById('loginPinPadSection');
+  const errorEl = document.getElementById('loginErrorMsg');
+  if (errorEl) errorEl.classList.add('hidden');
+
+  if (cardsSection) cardsSection.classList.add('hidden');
+  if (pinSection) pinSection.classList.remove('hidden');
+
+  // Update user header info
+  const avatarEl = document.getElementById('loginSelectedUserAvatar');
+  const nameEl = document.getElementById('loginSelectedUserName');
+  const roleEl = document.getElementById('loginSelectedUserRole');
+  const quickBtn = document.getElementById('loginQuickDirectBtn');
+
+  if (avatarEl) {
+    avatarEl.innerText = user.avatarIcon || '👤';
+    const col = user.colorHex || '#3B82F6';
+    avatarEl.style.backgroundColor = `${col}25`;
+    avatarEl.style.color = col;
+    avatarEl.style.borderColor = `${col}50`;
+  }
+  if (nameEl) nameEl.innerText = user.fullName;
+  if (roleEl) {
+    roleEl.innerText = user.role === 'Admin' ? 'مدير عام النظام 👑' : (user.role === 'Supervisor' ? 'مشرف وردية 🛡️' : 'كاشير مبيعات 🛒');
+  }
+
+  // If user has no PIN configured, show direct quick login button
+  if (quickBtn) {
+    if (!user.hasPin || user.pinCode === '0000') {
+      quickBtn.classList.remove('hidden');
+    } else {
+      quickBtn.classList.add('hidden');
+    }
+  }
+}
+
+function backToCashierCards() {
+  selectedLoginUser = null;
+  enteredPin = '';
+  updatePinDots();
+
+  const cardsSection = document.getElementById('loginCashierCardsSection');
+  const pinSection = document.getElementById('loginPinPadSection');
+  const errorEl = document.getElementById('loginErrorMsg');
+  if (errorEl) errorEl.classList.add('hidden');
+
+  if (cardsSection) cardsSection.classList.remove('hidden');
+  if (pinSection) pinSection.classList.add('hidden');
+}
+
+function handlePinKeyPress(key) {
+  const overlay = document.getElementById('appLoginOverlay');
+  if (overlay && overlay.classList.contains('hidden')) return;
+
+  if (key === 'C') {
+    enteredPin = '';
+  } else if (key === 'BACK') {
+    enteredPin = enteredPin.slice(0, -1);
+  } else if (key >= '0' && key <= '9') {
+    if (enteredPin.length < 6) {
+      enteredPin += key;
+    }
+  }
+
+  updatePinDots();
+
+  // Auto-submit when 4 digits are entered
+  if (enteredPin.length === 4) {
+    setTimeout(() => {
+      submitPinLogin();
+    }, 80);
+  }
+}
+
+function updatePinDots() {
+  const dots = document.querySelectorAll('#pinDotsContainer .pin-dot');
+  dots.forEach((dot, index) => {
+    if (index < enteredPin.length) {
+      dot.classList.add('filled');
+    } else {
+      dot.classList.remove('filled');
+    }
+  });
+}
+
+async function submitPinLogin() {
+  if (!enteredPin) {
+    showLoginError('يرجى إدخال رمز PIN المكون من 4 أرقام');
+    return;
+  }
+
+  const payload = {
+    mode: 'pin',
+    pin: enteredPin,
+    userId: selectedLoginUser ? selectedLoginUser.id : null
+  };
+
+  const res = await callBackend('login', payload);
+  if (res && res.success && res.user) {
+    onLoginSuccess(res.user);
+  } else {
+    showLoginError(res?.message || 'رمز PIN غير صحيح، حاول مجدداً');
+    enteredPin = '';
+    updatePinDots();
+  }
+}
+
+async function submitQuickLogin() {
+  if (!selectedLoginUser) return;
+  const res = await callBackend('login', { mode: 'quick', userId: selectedLoginUser.id });
+  if (res && res.success && res.user) {
+    onLoginSuccess(res.user);
+  } else {
+    showLoginError(res?.message || 'فشل الدخول السريع، يرجى استخدام رمز PIN');
+  }
+}
+
+async function submitCredentialsLogin() {
+  const usernameInput = document.getElementById('loginUsernameInput');
+  const passwordInput = document.getElementById('loginPasswordInput');
+
+  const username = usernameInput?.value.trim() || '';
+  const password = passwordInput?.value.trim() || '';
+
+  if (!username || !password) {
+    showLoginError('يرجى إدخال اسم المستخدم وكلمة المرور');
+    return;
+  }
+
+  const res = await callBackend('login', { mode: 'credentials', username, password });
+  if (res && res.success && res.user) {
+    onLoginSuccess(res.user);
+    if (usernameInput) usernameInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+  } else {
+    showLoginError(res?.message || 'اسم المستخدم أو كلمة المرور غير صحيحة');
+  }
+}
+
+function onLoginSuccess(user) {
+  currentUser = normalizeUserData(user);
+  user = currentUser;
+
+  // Update top header profile
+  const nameEl = document.getElementById('currentUserNameText');
+  const roleEl = document.getElementById('currentUserRoleBadge');
+  const avatarCircle = document.getElementById('currentUserAvatarCircle');
+
+  if (nameEl) nameEl.innerText = user.fullName;
+  if (roleEl) {
+    roleEl.innerText = user.role === 'Admin' ? 'Admin 👑' : (user.role === 'Supervisor' ? 'Supervisor 🛡️' : 'Cashier 🛒');
+  }
+  if (avatarCircle) {
+    avatarCircle.innerText = user.avatarIcon || '👤';
+    if (user.colorHex) avatarCircle.style.backgroundColor = user.colorHex;
+  }
+
+  // Update dropdown user info
+  const dropName = document.getElementById('dropdownUserName');
+  const dropRole = document.getElementById('dropdownUserRole');
+  const dropAvatar = document.getElementById('dropdownAvatarIcon');
+
+  if (dropName) dropName.innerText = user.fullName;
+  if (dropRole) dropRole.innerText = `@${user.username} (${user.role})`;
+  if (dropAvatar) dropAvatar.innerText = user.avatarIcon || '👤';
+
+  // Apply UI permissions
+  applyUiPermissions();
+
+  // Hide login overlay
+  const overlay = document.getElementById('appLoginOverlay');
+  if (overlay) overlay.classList.add('hidden');
+
+  // Reset PIN inputs
+  enteredPin = '';
+  selectedLoginUser = null;
+  updatePinDots();
+  backToCashierCards();
+
+  // Switch to default dashboard or cashier
+  if (hasPermission('pos_sales') && !hasPermission('reports_view')) {
+    switchTab('cashier');
+  } else {
+    switchTab('dashboard');
+  }
+}
+
+function showLoginError(msg) {
+  const errorEl = document.getElementById('loginErrorMsg');
+  const errorText = document.getElementById('loginErrorText');
+  if (errorEl && errorText) {
+    errorText.innerText = msg;
+    errorEl.classList.remove('hidden');
+    errorEl.classList.remove('animate-shake');
+    void errorEl.offsetWidth; // trigger reflow
+    errorEl.classList.add('animate-shake');
+  }
+}
+
+function lockScreen() {
+  const dropdown = document.getElementById('userProfileDropdown');
+  if (dropdown) dropdown.classList.add('hidden');
+
+  const overlay = document.getElementById('appLoginOverlay');
+  if (overlay) overlay.classList.remove('hidden');
+
+  switchLoginMode('pin');
+  if (currentUser) {
+    selectCashierForPin(currentUser);
+  } else {
+    backToCashierCards();
+  }
+}
+
+function switchCashier() {
+  const dropdown = document.getElementById('userProfileDropdown');
+  if (dropdown) dropdown.classList.add('hidden');
+
+  const overlay = document.getElementById('appLoginOverlay');
+  if (overlay) overlay.classList.remove('hidden');
+
+  switchLoginMode('pin');
+  backToCashierCards();
+  renderLoginCashierCards();
+}
+
+function logoutUser() {
+  const dropdown = document.getElementById('userProfileDropdown');
+  if (dropdown) dropdown.classList.add('hidden');
+
+  currentUser = null;
+  const overlay = document.getElementById('appLoginOverlay');
+  if (overlay) overlay.classList.remove('hidden');
+
+  switchLoginMode('pin');
+  backToCashierCards();
+  renderLoginCashierCards();
+}
+
+function toggleUserProfileDropdown() {
+  const dropdown = document.getElementById('userProfileDropdown');
+  if (dropdown) dropdown.classList.toggle('hidden');
+}
+
+// Close user dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const btn = document.getElementById('headerUserProfileBtn');
+  const dropdown = document.getElementById('userProfileDropdown');
+  if (dropdown && !dropdown.classList.contains('hidden') && btn && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.classList.add('hidden');
+  }
+});
+
+function setupLoginKeypadKeyboardListener() {
+  window.addEventListener('keydown', (e) => {
+    const overlay = document.getElementById('appLoginOverlay');
+    if (!overlay || overlay.classList.contains('hidden')) return;
+
+    if (currentLoginMode === 'pin') {
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        handlePinKeyPress(e.key);
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        handlePinKeyPress('BACK');
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        backToCashierCards();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (enteredPin.length > 0) submitPinLogin();
+      }
+    } else if (currentLoginMode === 'credentials') {
+      if (e.key === 'Enter') {
+        submitCredentialsLogin();
+      }
+    }
+  });
+}
+
+// ========================================================
+// PERMISSIONS ENGINE & ENFORCEMENT
+// ========================================================
+
+function hasPermission(permissionKey) {
+  if (!currentUser) return false;
+  if (currentUser.role === 'Admin' || currentUser.username === 'admin') return true;
+
+  let perms = currentUser.permissions;
+  if (typeof perms === 'string') {
+    try {
+      perms = JSON.parse(perms);
+    } catch (e) {
+      perms = [];
+    }
+  }
+
+  if (!Array.isArray(perms)) return false;
+  if (perms.includes('*') || perms.includes('all')) return true;
+  return perms.includes(permissionKey);
+}
+
+function applyUiPermissions() {
+  const sideUsers = document.getElementById('sidebar-users');
+  const sideReports = document.getElementById('sidebar-reports');
+  const sideSettings = document.getElementById('sidebar-settings');
+  const sideSuppliers = document.getElementById('sidebar-suppliers');
+  const sideCustomers = document.getElementById('sidebar-customers');
+  const dropUsersBtn = document.getElementById('dropdownUsersManageBtn');
+
+  if (sideUsers) sideUsers.style.display = hasPermission('users_manage') ? '' : 'none';
+  if (dropUsersBtn) dropUsersBtn.style.display = hasPermission('users_manage') ? '' : 'none';
+  if (sideReports) sideReports.style.display = hasPermission('reports_view') ? '' : 'none';
+  if (sideSettings) sideSettings.style.display = hasPermission('settings_manage') ? '' : 'none';
+  if (sideSuppliers) sideSuppliers.style.display = hasPermission('suppliers_manage') ? '' : 'none';
+  if (sideCustomers) sideCustomers.style.display = hasPermission('customers_manage') ? '' : 'none';
+}
+
+function requirePermission(permissionKey, onAuthorized, reasonText = 'تتطلب هذه العملية صلاحية إدارية خاصة') {
+  if (hasPermission(permissionKey)) {
+    onAuthorized();
+  } else {
+    openSupervisorPinModal(reasonText, onAuthorized);
+  }
+}
+
+// ========================================================
+// SUPERVISOR PIN OVERRIDE MODAL
+// ========================================================
+
+function openSupervisorPinModal(reason, callback) {
+  pendingSupervisorAction = callback;
+  const modal = document.getElementById('supervisorPinModal');
+  const reasonEl = document.getElementById('supervisorModalReason');
+  const pinInput = document.getElementById('supervisorPinInput');
+  const errorEl = document.getElementById('supervisorPinError');
+
+  if (reasonEl) reasonEl.innerText = reason;
+  if (pinInput) pinInput.value = '';
+  if (errorEl) errorEl.classList.add('hidden');
+  if (modal) modal.classList.remove('hidden');
+
+  setTimeout(() => {
+    pinInput?.focus();
+  }, 50);
+}
+
+function closeSupervisorPinModal() {
+  pendingSupervisorAction = null;
+  const modal = document.getElementById('supervisorPinModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function submitSupervisorPin() {
+  const pinInput = document.getElementById('supervisorPinInput');
+  const errorEl = document.getElementById('supervisorPinError');
+  const pin = pinInput?.value.trim() || '';
+
+  if (!pin) {
+    if (errorEl) {
+      errorEl.innerText = 'يرجى إدخال رمز PIN المشرف';
+      errorEl.classList.remove('hidden');
+    }
+    return;
+  }
+
+  const res = await callBackend('verify_supervisor_pin', { pin });
+  if (res && res.success) {
+    const action = pendingSupervisorAction;
+    closeSupervisorPinModal();
+    if (typeof action === 'function') {
+      action();
+    }
+  } else {
+    if (errorEl) {
+      errorEl.innerText = res?.message || 'رمز PIN المشرف غير صحيح!';
+      errorEl.classList.remove('hidden');
+    }
+  }
+}
+
+// ========================================================
+// ADVANCED CASHIER & USER MANAGEMENT (إدارة حسابات الكاشير والصلاحيات)
+// ========================================================
+
 async function loadUsers() {
   const res = await callBackend('get_users');
   if (!res || !res.success) return;
 
+  allSystemUsers = (res.users || []).map(normalizeUserData);
+
+  // Update Stats
+  const statTotal = document.getElementById('statTotalUsers');
+  const statActive = document.getElementById('statActiveCashiers');
+  const statAdmins = document.getElementById('statAdminsCount');
+  const statPin = document.getElementById('statPinProtectedCount');
+
+  if (statTotal) statTotal.innerText = allSystemUsers.length;
+  if (statActive) statActive.innerText = allSystemUsers.filter(u => u.isActive && u.role === 'Cashier').length;
+  if (statAdmins) statAdmins.innerText = allSystemUsers.filter(u => u.role === 'Admin' || u.role === 'Supervisor').length;
+  if (statPin) statPin.innerText = allSystemUsers.filter(u => u.hasPin).length;
+
+  renderUsersGrid();
+}
+
+function filterUsersByRole(role) {
+  userRoleFilter = role;
+  document.querySelectorAll('.user-role-filter-btn').forEach(btn => {
+    if (btn.getAttribute('data-role') === role) {
+      btn.className = 'user-role-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-black transition bg-sky-600 text-white shadow-sm';
+    } else {
+      btn.className = 'user-role-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200';
+    }
+  });
+  renderUsersGrid();
+}
+
+function filterUsersListLive() {
+  userSearchQuery = document.getElementById('usersSearchInput')?.value.trim().toLowerCase() || '';
+  renderUsersGrid();
+}
+
+function renderUsersGrid() {
   const grid = document.getElementById('usersGrid');
   if (!grid) return;
 
   grid.innerHTML = '';
-  (res.users || []).forEach(u => {
-    const card = document.createElement('div');
-    card.className = 'sh-card p-5';
-    card.innerHTML = `
-      <div class="flex items-center gap-3 mb-2">
-        <div class="w-10 h-10 rounded-2xl bg-sky-100 dark:bg-sky-950/60 text-sky-600 flex items-center justify-center font-bold text-lg">👤</div>
-        <div>
-          <h4 class="font-black text-sm">${u.fullName}</h4>
-          <span class="text-[10px] text-slate-400 font-mono">@${u.username} (${u.role})</span>
-        </div>
-      </div>
-      <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800">
-        <span class="text-slate-400">الحالة:</span>
-        <span class="font-bold ${u.isActive ? 'text-emerald-600' : 'text-rose-500'}">${u.isActive ? 'نشط ومفعل ✔' : 'معطل ✕'}</span>
+
+  let filtered = allSystemUsers;
+  if (userRoleFilter !== 'all') {
+    filtered = filtered.filter(u => u.role === userRoleFilter);
+  }
+  if (userSearchQuery) {
+    filtered = filtered.filter(u => 
+      u.fullName.toLowerCase().includes(userSearchQuery) || 
+      u.username.toLowerCase().includes(userSearchQuery)
+    );
+  }
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-3 text-center py-12 sh-card">
+        <span class="text-3xl block mb-2">🔍</span>
+        <h4 class="font-bold text-slate-700 dark:text-slate-300 text-sm">لا توجد حسابات تطابق معايير البحث</h4>
       </div>
     `;
+    return;
+  }
+
+  filtered.forEach(u => {
+    let perms = u.permissions;
+    if (typeof perms === 'string') {
+      try { perms = JSON.parse(perms); } catch (e) { perms = []; }
+    }
+    if (!Array.isArray(perms)) perms = [];
+
+    const isFullAdmin = u.role === 'Admin' || perms.includes('*') || perms.includes('all');
+    const color = u.colorHex || '#3B82F6';
+    const avatar = u.avatarIcon || '👤';
+
+    // Build permission badges
+    let permBadgesHtml = '';
+    if (isFullAdmin) {
+      permBadgesHtml = '<span class="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 font-bold text-[10px]">👑 كافة الصلاحيات الكاملة</span>';
+    } else {
+      const tags = [];
+      if (perms.includes('pos_sales')) tags.push('🛒 مبيعات');
+      if (perms.includes('pos_discount')) tags.push('🏷️ خصومات');
+      if (perms.includes('invoices_return')) tags.push('↩️ استرجاع');
+      if (perms.includes('inventory_manage') || perms.includes('inventory_view')) tags.push('📦 مخزن');
+      if (perms.includes('reports_view')) tags.push('📊 تقارير');
+      if (perms.includes('customers_manage')) tags.push('👥 ديون');
+      if (perms.includes('suppliers_manage')) tags.push('🤝 موردين');
+      if (perms.includes('settings_manage')) tags.push('⚙️ إعدادات');
+
+      if (tags.length === 0) {
+        permBadgesHtml = '<span class="text-[10px] text-slate-400">لا توجد صلاحيات مخصصة</span>';
+      } else {
+        permBadgesHtml = tags.map(t => `<span class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[10px]">${t}</span>`).join(' ');
+      }
+    }
+
+    const card = document.createElement('div');
+    card.className = 'sh-card p-5 space-y-4 flex flex-col justify-between border-t-4 transition-transform hover:-translate-y-1';
+    card.style.borderTopColor = color;
+
+    card.innerHTML = `
+      <div class="space-y-3">
+        <!-- Top Info Header -->
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-md" style="background-color: ${color}20; color: ${color}; border: 1.5px solid ${color}40;">
+              ${avatar}
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="font-black text-sm text-slate-800 dark:text-white">${u.fullName}</h4>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'}">
+                  ${u.isActive ? 'نشط ✔' : 'معطل ✕'}
+                </span>
+              </div>
+              <span class="text-xs text-slate-400 font-mono">@${u.username}</span>
+            </div>
+          </div>
+
+          <span class="px-2.5 py-1 rounded-xl text-xs font-black" style="background-color: ${color}15; color: ${color};">
+            ${u.role === 'Admin' ? 'مدير عام' : (u.role === 'Supervisor' ? 'مشرف' : (u.role === 'Accountant' ? 'محاسب' : 'كاشير'))}
+          </span>
+        </div>
+
+        <!-- Security & PIN Info -->
+        <div class="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl flex items-center justify-between text-xs">
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400 font-bold">رمز PIN السريع:</span>
+            <span class="font-mono font-black text-slate-700 dark:text-slate-200">${u.hasPin ? '🔒 ' + (u.pinCode || '••••') : '⚡ بدون رمز'}</span>
+          </div>
+          <button onclick="quickChangePin('${u.id}', '${u.fullName}', '${u.pinCode || ''}')" class="text-sky-600 hover:text-sky-500 font-bold text-[11px]">
+            تغيير PIN
+          </button>
+        </div>
+
+        <!-- Permissions List -->
+        <div class="space-y-1.5">
+          <span class="text-[11px] text-slate-400 font-bold block">الصلاحيات الممنوحة:</span>
+          <div class="flex flex-wrap gap-1.5">
+            ${permBadgesHtml}
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Footer Actions -->
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <span class="text-[10px] text-slate-400 font-mono">آخر دخول: ${u.lastLogin || 'لم يسجل بعد'}</span>
+        <div class="flex items-center gap-1.5">
+          <button onclick='openEditUserModal(${JSON.stringify(u).replace(/'/g, "&#39;")})' class="px-3 py-1.5 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 text-sky-600 dark:text-sky-400 text-xs font-bold rounded-xl transition flex items-center gap-1">
+            <span>✏️</span>
+            <span>تعديل</span>
+          </button>
+          ${u.role !== 'Admin' || allSystemUsers.filter(x => x.role === 'Admin').length > 1 ? `
+            <button onclick="deleteUser('${u.id}', '${u.fullName}')" class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition" title="حذف الحساب">
+              <span>🗑️</span>
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+
     grid.appendChild(card);
   });
+}
+
+function openCreateUserModal() {
+  const modal = document.getElementById('userFormModal');
+  const title = document.getElementById('userModalTitle');
+
+  document.getElementById('userFormId').value = '';
+  document.getElementById('userFormFullName').value = '';
+  document.getElementById('userFormUsername').value = '';
+  document.getElementById('userFormRole').value = 'Cashier';
+  document.getElementById('userFormPinCode').value = '1234';
+  document.getElementById('userFormPassword').value = '';
+  document.getElementById('userFormAvatar').value = '🧑‍💼';
+  document.getElementById('userFormColor').value = '#10B981';
+  document.getElementById('userFormIsActive').value = 'true';
+
+  if (title) title.innerText = 'إنشاء حساب كاشير جديد';
+
+  applyRolePermissionsPreset('Cashier');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function openEditUserModal(user) {
+  const modal = document.getElementById('userFormModal');
+  const title = document.getElementById('userModalTitle');
+
+  document.getElementById('userFormId').value = user.id || '';
+  document.getElementById('userFormFullName').value = user.fullName || '';
+  document.getElementById('userFormUsername').value = user.username || '';
+  document.getElementById('userFormRole').value = user.role || 'Cashier';
+  document.getElementById('userFormPinCode').value = user.pinCode || '1234';
+  document.getElementById('userFormPassword').value = '';
+  document.getElementById('userFormAvatar').value = user.avatarIcon || '🧑‍💼';
+  document.getElementById('userFormColor').value = user.colorHex || '#3B82F6';
+  document.getElementById('userFormIsActive').value = user.isActive ? 'true' : 'false';
+
+  if (title) title.innerText = `تعديل حساب: ${user.fullName}`;
+
+  // Parse permissions
+  let perms = user.permissions;
+  if (typeof perms === 'string') {
+    try { perms = JSON.parse(perms); } catch (e) { perms = []; }
+  }
+  if (!Array.isArray(perms)) perms = [];
+
+  const isFullAdmin = user.role === 'Admin' || perms.includes('*') || perms.includes('all');
+
+  document.querySelectorAll('.user-perm-check').forEach(chk => {
+    const permKey = chk.id.replace('perm_', '');
+    chk.checked = isFullAdmin || perms.includes(permKey);
+  });
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeUserFormModal() {
+  const modal = document.getElementById('userFormModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function applyRolePermissionsPreset(role) {
+  setAllPermissions(false);
+
+  if (role === 'Admin') {
+    setAllPermissions(true);
+  } else if (role === 'Supervisor') {
+    const supervisorPerms = [
+      'pos_sales', 'pos_discount', 'pos_price_edit', 'cash_drawer', 'invoices_view', 'invoices_return',
+      'inventory_view', 'stock_audit', 'reports_view', 'reports_export', 'customers_manage',
+      'suppliers_manage', 'supplier_orders'
+    ];
+    supervisorPerms.forEach(p => {
+      const el = document.getElementById(`perm_${p}`);
+      if (el) el.checked = true;
+    });
+  } else if (role === 'Cashier') {
+    const cashierPerms = [
+      'pos_sales', 'pos_discount', 'cash_drawer', 'invoices_view', 'invoices_return',
+      'inventory_view', 'customers_manage'
+    ];
+    cashierPerms.forEach(p => {
+      const el = document.getElementById(`perm_${p}`);
+      if (el) el.checked = true;
+    });
+  } else if (role === 'Accountant') {
+    const accountantPerms = [
+      'inventory_view', 'inventory_manage', 'inventory_damaged', 'stock_audit', 'excel_import',
+      'reports_view', 'reports_export', 'suppliers_manage', 'supplier_orders', 'customers_manage'
+    ];
+    accountantPerms.forEach(p => {
+      const el = document.getElementById(`perm_${p}`);
+      if (el) el.checked = true;
+    });
+  }
+}
+
+function setAllPermissions(check) {
+  document.querySelectorAll('.user-perm-check').forEach(chk => {
+    chk.checked = check;
+  });
+}
+
+async function saveUserForm() {
+  const id = document.getElementById('userFormId')?.value || '';
+  const fullName = document.getElementById('userFormFullName')?.value.trim() || '';
+  const username = document.getElementById('userFormUsername')?.value.trim() || '';
+  const role = document.getElementById('userFormRole')?.value || 'Cashier';
+  const pinCode = document.getElementById('userFormPinCode')?.value.trim() || '1234';
+  const password = document.getElementById('userFormPassword')?.value.trim() || '';
+  const avatarIcon = document.getElementById('userFormAvatar')?.value || '🧑‍💼';
+  const colorHex = document.getElementById('userFormColor')?.value || '#3B82F6';
+  const isActive = document.getElementById('userFormIsActive')?.value === 'true';
+
+  if (!fullName || !username) {
+    alert('⚠️ يرجى إدخال الاسم الكامل واسم المستخدم.');
+    return;
+  }
+
+  // Gather checked permissions
+  const perms = [];
+  if (role === 'Admin') {
+    perms.push('*');
+  } else {
+    document.querySelectorAll('.user-perm-check').forEach(chk => {
+      if (chk.checked) {
+        perms.push(chk.id.replace('perm_', ''));
+      }
+    });
+  }
+
+  const payload = {
+    id: id || undefined,
+    fullName,
+    username,
+    role,
+    pinCode,
+    password: password || undefined,
+    permissions: JSON.stringify(perms),
+    avatarIcon,
+    colorHex,
+    isActive
+  };
+
+  const res = await callBackend('save_user', payload);
+  if (res && res.success) {
+    alert('🎉 تم حفظ بيانات الحساب والصلاحيات بنجاح!');
+    closeUserFormModal();
+    await loadUsers();
+  } else {
+    alert('❌ فشل حفظ المستخدم: ' + (res?.message || ''));
+  }
+}
+
+async function deleteUser(userId, name) {
+  if (!confirm(`هل أنت متأكد من رغبتك في حذف حساب الكاشير: (${name})؟`)) return;
+
+  const res = await callBackend('delete_user', { id: userId });
+  if (res && res.success) {
+    alert('✔ تم حذف الحساب بنجاح.');
+    await loadUsers();
+  } else {
+    alert('❌ ' + (res?.message || 'فشل حذف الحساب'));
+  }
+}
+
+async function quickChangePin(userId, name, currentPin) {
+  const newPin = prompt(`أدخل رمز PIN الجديد لـ (${name}) [4 إلى 6 أرقام]:`, currentPin || '1234');
+  if (newPin === null) return;
+  if (!newPin.trim()) {
+    alert('⚠️ رمز PIN لا يمكن أن يكون فارغاً.');
+    return;
+  }
+
+  const res = await callBackend('save_user', {
+    id: userId,
+    fullName: name,
+    username: allSystemUsers.find(u => u.id === userId)?.username || name,
+    pinCode: newPin.trim()
+  });
+
+  if (res && res.success) {
+    alert(`✔ تم تحديث رمز PIN لـ (${name}) إلى [${newPin.trim()}] بنجاح!`);
+    await loadUsers();
+  } else {
+    alert('❌ فشل تغيير رمز PIN: ' + (res?.message || ''));
+  }
 }
 
 // ========================================================

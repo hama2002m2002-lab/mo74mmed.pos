@@ -174,4 +174,48 @@ html.dark textarea {
   color: var(--text-secondary) !important;
 }
 
+/* ======================================================== */
+/* LOGIN & PIN PAD STYLING */
+/* ======================================================== */
+.pin-dot.filled {
+  background-color: #38bdf8 !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.7) !important;
+  transform: scale(1.15);
+}
+
+.pin-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.cashier-login-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cashier-login-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: #38bdf8 !important;
+  box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.25);
+}
+
+@keyframes shake-x {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+.animate-shake {
+  animation: shake-x 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
 

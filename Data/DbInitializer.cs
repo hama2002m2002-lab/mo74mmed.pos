@@ -23,7 +23,7 @@ public static class DbInitializer
         // 2. فحص وتحديث Schema لكافة الجداول لضمان عدم حدوث أي خطأ no such column
         await EnsureAllTablesAndColumnsUpToDateAsync(context);
 
-        // 3. إضافة المستخدمين الافتراضيين
+        // 3. إضافة المستخدمين الافتراضيين أو تحديث بياناتهم
         if (!await context.Users.AnyAsync())
         {
             var defaultAdmin = new User
@@ -31,8 +31,12 @@ public static class DbInitializer
                 Id = Guid.NewGuid(),
                 Username = "admin",
                 FullName = "مدير النظام",
-                PasswordHash = "admin123",
+                PasswordHash = "admin",
+                PinCode = "1111",
                 Role = "Admin",
+                Permissions = "[\"*\"]",
+                AvatarIcon = "👑",
+                ColorHex = "#8B5CF6",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
@@ -42,13 +46,42 @@ public static class DbInitializer
                 Id = Guid.NewGuid(),
                 Username = "cashier",
                 FullName = "محمد الكاشير",
-                PasswordHash = "123456",
+                PasswordHash = "123",
+                PinCode = "1234",
                 Role = "Cashier",
+                Permissions = "[\"pos_sales\",\"pos_discount\",\"invoices_view\",\"invoices_return\",\"customers_view\",\"customers_manage\",\"cash_drawer\"]",
+                AvatarIcon = "🧑‍💼",
+                ColorHex = "#10B981",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
 
             await context.Users.AddRangeAsync(defaultAdmin, defaultCashier);
+        }
+        else
+        {
+            // تحديث المستخدمين الحاليين الذين ليس لديهم رمز PIN
+            var existingUsers = await context.Users.ToListAsync();
+            foreach (var u in existingUsers)
+            {
+                if (string.IsNullOrEmpty(u.PinCode))
+                {
+                    u.PinCode = (u.Role == "Admin" || u.Username == "admin") ? "1111" : "1234";
+                }
+                if (string.IsNullOrEmpty(u.Permissions) || u.Permissions == "[]")
+                {
+                    u.Permissions = (u.Role == "Admin" || u.Username == "admin") ? "[\"*\"]" : "[\"pos_sales\",\"pos_discount\",\"invoices_view\",\"invoices_return\",\"customers_view\",\"customers_manage\",\"cash_drawer\"]";
+                }
+                if (string.IsNullOrEmpty(u.AvatarIcon))
+                {
+                    u.AvatarIcon = (u.Role == "Admin") ? "👑" : "🧑‍💼";
+                }
+                if (string.IsNullOrEmpty(u.ColorHex))
+                {
+                    u.ColorHex = (u.Role == "Admin") ? "#8B5CF6" : "#10B981";
+                }
+            }
+            await context.SaveChangesAsync();
         }
 
         // 4. إضافة التصنيفات الأساسية النظيفة
@@ -263,6 +296,13 @@ public static class DbInitializer
 
             // 11. تحديث أعمدة جدول PurchaseInvoices
             await AddColumnIfNotExistsAsync(conn, "PurchaseInvoices", "ReceiptImagePath", "TEXT NULL");
+
+            // 12. تحديث أعمدة جدول Users (رمز PIN، الصلاحيات، الأيقونة واللون)
+            await AddColumnIfNotExistsAsync(conn, "Users", "PinCode", "TEXT NOT NULL DEFAULT '1234'");
+            await AddColumnIfNotExistsAsync(conn, "Users", "Permissions", "TEXT NOT NULL DEFAULT '[]'");
+            await AddColumnIfNotExistsAsync(conn, "Users", "AvatarIcon", "TEXT NOT NULL DEFAULT '👤'");
+            await AddColumnIfNotExistsAsync(conn, "Users", "ColorHex", "TEXT NOT NULL DEFAULT '#3B82F6'");
+            await AddColumnIfNotExistsAsync(conn, "Users", "LastLoginAt", "TEXT NULL");
         }
         catch (Exception ex)
         {

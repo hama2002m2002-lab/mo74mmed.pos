@@ -235,9 +235,17 @@ public class PosBridgeService
 
                     decimal finalAmount = Math.Max(0, totalAmount - discount);
 
+                    Guid? userId = null;
+                    if (root.TryGetProperty("userId", out var uidProp) && !string.IsNullOrEmpty(uidProp.GetString()))
+                    {
+                        if (Guid.TryParse(uidProp.GetString(), out var parsedUid))
+                            userId = parsedUid;
+                    }
+
                     var sale = new Sale
                     {
                         Id = Guid.NewGuid(),
+                        UserId = userId,
                         InvoiceNumber = invoiceNumber,
                         SubTotal = totalAmount,
                         TotalAmount = finalAmount,
@@ -1479,7 +1487,7 @@ public class PosBridgeService
 
                     var isPaid = root.TryGetProperty("isPaid", out var ipProp) && ipProp.GetBoolean();
                     var notes = root.TryGetProperty("notes", out var np) ? np.GetString() : "";
-                    var invoiceNumber = root.TryGetProperty("invoiceNumber", out var inp) ? inp.GetString() : $"PUR-{DateTime.Now:yyyyMMddHHmmss}";
+                    var invoiceNumber = (root.TryGetProperty("invoiceNumber", out var inp) ? inp.GetString() : null) ?? $"PUR-{DateTime.Now:yyyyMMddHHmmss}";
 
                     Supplier? sup = null;
                     if (supId.HasValue)
@@ -1874,23 +1882,276 @@ public class PosBridgeService
                 }
 
                 // ==========================================
-                // 6. CASHIER USERS & SHIFTS
+                // 6. CASHIER USERS, AUTHENTICATION & PERMISSIONS
                 // ==========================================
+                case "login":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var root = doc.RootElement;
+                    string mode = root.TryGetProperty("mode", out var mProp) ? mProp.GetString() ?? "pin" : "pin";
+
+                    User? matchedUser = null;
+
+                    if (mode == "pin")
+                    {
+                        string pin = root.TryGetProperty("pin", out var pProp) ? pProp.GetString()?.Trim() ?? "" : "";
+                        string userIdStr = root.TryGetProperty("userId", out var uProp) ? uProp.GetString() ?? "" : "";
+
+                        if (Guid.TryParse(userIdStr, out var targetUid))
+                        {
+                            var user = await db.Users.FirstOrDefaultAsync(u => u.Id == targetUid && !u.IsDeleted);
+                            if (user != null && (user.PinCode == pin || user.PasswordHash == pin || (string.IsNullOrEmpty(user.PinCode) && pin == "0000")))
+                            {
+                                matchedUser = user;
+                            }
+                        }
+                        else if (!string.IsNullOrEmpty(pin))
+                        {
+                            // Find any active user matching this PIN
+                            matchedUser = await db.Users.FirstOrDefaultAsync(u => !u.IsDeleted && u.IsActive && (u.PinCode == pin || u.PasswordHash == pin));
+                        }
+                    }
+                    else if (mode == "credentials")
+                    {
+                        string username = root.TryGetProperty("username", out var uProp) ? uProp.GetString()?.Trim() ?? "" : "";
+                        string password = root.TryGetProperty("password", out var pProp) ? pProp.GetString()?.Trim() ?? "" : "";
+
+                        matchedUser = await db.Users.FirstOrDefaultAsync(u => !u.IsDeleted && u.IsActive && 
+                            u.Username.ToLower() == username.ToLower() && 
+                            (u.PasswordHash == password || u.PinCode == password));
+                    }
+                    else if (mode == "quick")
+                    {
+                        string userIdStr = root.TryGetProperty("userId", out var uProp) ? uProp.GetString() ?? "" : "";
+                        if (Guid.TryParse(userIdStr, out var targetUid))
+                        {
+                            var user = await db.Users.FirstOrDefaultAsync(u => u.Id == targetUid && !u.IsDeleted && u.IsActive);
+                            if (user != null)
+                            {
+                                // If user has no PIN or empty, allow instant quick login
+                                if (string.IsNullOrEmpty(user.PinCode) || user.PinCode == "0000")
+                                {
+                                    matchedUser = user;
+                                }
+                            }
+                        }
+                    }
+
+                    if (matchedUser == null)
+                    {
+                        return JsonSerializer.Serialize(new { success = false, message = "رمز PIN أو بيانات الدخول غير صحيحة" });
+                    }
+
+                    if (!matchedUser.IsActive)
+                    {
+                        return JsonSerializer.Serialize(new { success = false, message = "هذا الحساب معطل حالياً من قبل الإدارة" });
+                    }
+
+                    matchedUser.LastLoginAt = DateTime.UtcNow;
+                    await db.SaveChangesAsync();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        user = new
+                        {
+                            id = matchedUser.Id.ToString(),
+                            fullName = matchedUser.FullName,
+                            username = matchedUser.Username,
+                            role = matchedUser.Role,
+                            isActive = matchedUser.IsActive,
+                            permissions = matchedUser.Permissions,
+                            avatarIcon = matchedUser.AvatarIcon,
+                            colorHex = matchedUser.ColorHex,
+                            pinCode = matchedUser.PinCode,
+                            hasPin = !string.IsNullOrEmpty(matchedUser.PinCode) && matchedUser.PinCode != "0000",
+                            lastLogin = matchedUser.LastLoginAt?.ToString("yyyy/MM/dd hh:mm tt")
+                        }
+                    });
+                }
+
                 case "get_users":
                 {
-                    var users = await db.Users.OrderBy(u => u.FullName).ToListAsync();
+                    var users = await db.Users
+                        .Where(u => !u.IsDeleted)
+                        .OrderBy(u => u.Role == "Admin" ? 0 : 1)
+                        .ThenBy(u => u.FullName)
+                        .ToListAsync();
+
                     return JsonSerializer.Serialize(new
                     {
                         success = true,
                         users = users.Select(u => new
                         {
-                            u.Id,
-                            u.FullName,
-                            u.Username,
-                            u.Role,
-                            u.IsActive
+                            id = u.Id.ToString(),
+                            fullName = u.FullName,
+                            username = u.Username,
+                            role = u.Role,
+                            isActive = u.IsActive,
+                            permissions = u.Permissions,
+                            avatarIcon = u.AvatarIcon,
+                            colorHex = u.ColorHex,
+                            hasPin = !string.IsNullOrEmpty(u.PinCode) && u.PinCode != "0000",
+                            pinCode = u.PinCode,
+                            lastLogin = u.LastLoginAt?.ToString("yyyy/MM/dd hh:mm tt") ?? "لم يسجل بعد"
                         })
                     });
+                }
+
+                case "save_user":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var root = doc.RootElement;
+
+                    string idStr = root.TryGetProperty("id", out var idProp) ? idProp.GetString() ?? "" : "";
+                    string fullName = root.TryGetProperty("fullName", out var fnProp) ? fnProp.GetString()?.Trim() ?? "" : "";
+                    string username = root.TryGetProperty("username", out var unProp) ? unProp.GetString()?.Trim() ?? "" : "";
+                    string password = root.TryGetProperty("password", out var pwProp) ? pwProp.GetString()?.Trim() ?? "" : "";
+                    string pinCode = root.TryGetProperty("pinCode", out var pinProp) ? pinProp.GetString()?.Trim() ?? "1234" : "1234";
+                    string role = root.TryGetProperty("role", out var rProp) ? rProp.GetString() ?? "Cashier" : "Cashier";
+                    string permissions = root.TryGetProperty("permissions", out var prmProp) ? prmProp.GetString() ?? "[]" : "[]";
+                    string avatarIcon = root.TryGetProperty("avatarIcon", out var avProp) ? avProp.GetString() ?? "👤" : "👤";
+                    string colorHex = root.TryGetProperty("colorHex", out var colProp) ? colProp.GetString() ?? "#3B82F6" : "#3B82F6";
+                    bool isActive = !root.TryGetProperty("isActive", out var actProp) || actProp.GetBoolean();
+
+                    if (string.IsNullOrEmpty(fullName) || string.IsNullOrEmpty(username))
+                    {
+                        return JsonSerializer.Serialize(new { success = false, message = "الاسم واسم المستخدم مطلوبان" });
+                    }
+
+                    User? user = null;
+                    if (Guid.TryParse(idStr, out var uid))
+                    {
+                        user = await db.Users.FirstOrDefaultAsync(u => u.Id == uid && !u.IsDeleted);
+                    }
+
+                    // Check username uniqueness
+                    var duplicate = await db.Users.FirstOrDefaultAsync(u => !u.IsDeleted && 
+                        u.Username.ToLower() == username.ToLower() && 
+                        (user == null || u.Id != user.Id));
+
+                    if (duplicate != null)
+                    {
+                        return JsonSerializer.Serialize(new { success = false, message = "اسم المستخدم هذا مسجل مسبقاً، يرجى اختيار اسم آخر" });
+                    }
+
+                    if (user == null)
+                    {
+                        user = new User
+                        {
+                            Id = Guid.NewGuid(),
+                            FullName = fullName,
+                            Username = username,
+                            PasswordHash = !string.IsNullOrEmpty(password) ? password : "123",
+                            PinCode = string.IsNullOrEmpty(pinCode) ? "1234" : pinCode,
+                            Role = string.IsNullOrEmpty(role) ? "Cashier" : role,
+                            Permissions = string.IsNullOrEmpty(permissions) ? "[]" : permissions,
+                            AvatarIcon = string.IsNullOrEmpty(avatarIcon) ? "👤" : avatarIcon,
+                            ColorHex = string.IsNullOrEmpty(colorHex) ? "#3B82F6" : colorHex,
+                            IsActive = isActive,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await db.Users.AddAsync(user);
+                    }
+                    else
+                    {
+                        user.FullName = fullName;
+                        user.Username = username;
+                        if (!string.IsNullOrEmpty(password))
+                        {
+                            user.PasswordHash = password;
+                        }
+                        if (root.TryGetProperty("pinCode", out _)) user.PinCode = pinCode;
+                        if (root.TryGetProperty("role", out _)) user.Role = role;
+                        if (root.TryGetProperty("permissions", out _)) user.Permissions = permissions;
+                        if (root.TryGetProperty("avatarIcon", out _)) user.AvatarIcon = string.IsNullOrEmpty(avatarIcon) ? user.AvatarIcon : avatarIcon;
+                        if (root.TryGetProperty("colorHex", out _)) user.ColorHex = string.IsNullOrEmpty(colorHex) ? user.ColorHex : colorHex;
+                        if (root.TryGetProperty("isActive", out _)) user.IsActive = isActive;
+                        user.UpdatedAt = DateTime.UtcNow;
+                    }
+
+                    await db.SaveChangesAsync();
+
+                    return JsonSerializer.Serialize(new
+                    {
+                        success = true,
+                        message = "تم حفظ بيانات الحساب والصلاحيات بنجاح",
+                        user = new
+                        {
+                            id = user.Id.ToString(),
+                            fullName = user.FullName,
+                            username = user.Username,
+                            role = user.Role,
+                            isActive = user.IsActive,
+                            permissions = user.Permissions,
+                            avatarIcon = user.AvatarIcon,
+                            colorHex = user.ColorHex,
+                            pinCode = user.PinCode
+                        }
+                    });
+                }
+
+                case "delete_user":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var root = doc.RootElement;
+                    string idStr = root.TryGetProperty("id", out var idProp) ? idProp.GetString() ?? "" : "";
+
+                    if (!Guid.TryParse(idStr, out var uid))
+                    {
+                        return JsonSerializer.Serialize(new { success = false, message = "معرف المستخدم غير صالح" });
+                    }
+
+                    var user = await db.Users.FirstOrDefaultAsync(u => u.Id == uid && !u.IsDeleted);
+                    if (user == null)
+                    {
+                        return JsonSerializer.Serialize(new { success = false, message = "المستخدم غير موجود" });
+                    }
+
+                    if (user.Role == "Admin")
+                    {
+                        int activeAdmins = await db.Users.CountAsync(u => !u.IsDeleted && u.IsActive && u.Role == "Admin");
+                        if (activeAdmins <= 1)
+                        {
+                            return JsonSerializer.Serialize(new { success = false, message = "لا يمكن حذف هذا الحساب لأنه المدير الوحيد في النظام!" });
+                        }
+                    }
+
+                    user.IsDeleted = true;
+                    user.IsActive = false;
+                    user.UpdatedAt = DateTime.UtcNow;
+
+                    await db.SaveChangesAsync();
+
+                    return JsonSerializer.Serialize(new { success = true, message = "تم حذف الحساب بنجاح" });
+                }
+
+                case "verify_supervisor_pin":
+                {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var root = doc.RootElement;
+                    string pin = root.TryGetProperty("pin", out var pinProp) ? pinProp.GetString()?.Trim() ?? "" : "";
+
+                    if (string.IsNullOrEmpty(pin))
+                    {
+                        return JsonSerializer.Serialize(new { success = false, message = "يرجى إدخال رمز PIN" });
+                    }
+
+                    var supervisor = await db.Users.FirstOrDefaultAsync(u => !u.IsDeleted && u.IsActive &&
+                        (u.Role == "Admin" || u.Role == "Supervisor" || u.Permissions.Contains("all") || u.Permissions.Contains("*")) &&
+                        (u.PinCode == pin || u.PasswordHash == pin));
+
+                    if (supervisor != null)
+                    {
+                        return JsonSerializer.Serialize(new
+                        {
+                            success = true,
+                            supervisorName = supervisor.FullName,
+                            supervisorRole = supervisor.Role
+                        });
+                    }
+
+                    return JsonSerializer.Serialize(new { success = false, message = "رمز PIN المشرف أو المدير غير صحيح" });
                 }
 
                 // ==========================================

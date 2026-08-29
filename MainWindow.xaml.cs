@@ -64,19 +64,21 @@ public partial class MainWindow : Window
                 posWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 posWebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
 
-                // Load Web UI from wwwroot
+                // Load Web UI from wwwroot (Ensure the latest version is loaded)
+                string devPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "index.html");
                 string htmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "index.html");
-                if (File.Exists(htmlPath))
+
+                if (File.Exists(devPath) && (!File.Exists(htmlPath) || File.GetLastWriteTimeUtc(devPath) > File.GetLastWriteTimeUtc(htmlPath)))
+                {
+                    posWebView.Source = new Uri(devPath);
+                }
+                else if (File.Exists(htmlPath))
                 {
                     posWebView.Source = new Uri(htmlPath);
                 }
-                else
+                else if (File.Exists(devPath))
                 {
-                    string devPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "index.html");
-                    if (File.Exists(devPath))
-                    {
-                        posWebView.Source = new Uri(devPath);
-                    }
+                    posWebView.Source = new Uri(devPath);
                 }
 
                 // Setup Bi-directional C# Native Bridge
