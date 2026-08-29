@@ -1462,6 +1462,8 @@ public class PosBridgeService
 
                 case "create_purchase_invoice":
                 {
+                    using var doc = JsonDocument.Parse(payloadJson);
+                    var root = doc.RootElement;
                     Guid? supId = null;
                     if (root.TryGetProperty("supplierId", out var sidElem))
                     {
