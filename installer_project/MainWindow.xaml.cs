@@ -76,6 +76,17 @@ public partial class MainWindow : Window
     {
         try
         {
+            // 0. Automatically close running instances of 7amo.pos to release file locks
+            try
+            {
+                foreach (var proc in Process.GetProcessesByName("7amo.pos"))
+                {
+                    proc.Kill();
+                    proc.WaitForExit(3000);
+                }
+            }
+            catch { }
+
             // 1. Create target directory
             if (!Directory.Exists(targetDir))
             {
