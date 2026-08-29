@@ -43,7 +43,7 @@ public class UpdateService
                         if (isManual)
                         {
                             var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                            string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.7.4";
+                            string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.7.5";
                             MessageBox.Show(
                                 $"✔ أنت تستخدم أحدث إصدار من البرنامج (v{installedVer}).\nلا توجد تحديثات جديدة منشورة حالياً على السحابة.",
                                 "فحص التحديثات",
@@ -58,7 +58,7 @@ public class UpdateService
                     if (isManual)
                     {
                         var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                        string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.7.4";
+                        string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.7.5";
                         MessageBox.Show(
                             $"✔ أنت تستخدم أحدث إصدار من البرنامج (v{installedVer}).",
                             "فحص التحديثات",
@@ -89,7 +89,7 @@ public class UpdateService
             if (isManual)
             {
                 var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.7.4";
+                string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.7.5";
                 MessageBox.Show(
                     $"✔ أنت تستخدم أحدث إصدار من البرنامج (v{installedVer}).",
                     "فحص التحديثات",
@@ -110,7 +110,7 @@ public class UpdateService
             try
             {
                 var currentAsmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.7.4";
+                string installedVer = currentAsmVer != null ? $"{currentAsmVer.Major}.{currentAsmVer.Minor}.{currentAsmVer.Build}" : "1.7.5";
                 bool isKu = LocalizationManager.Instance.IsKurdish;
 
                 if (args.Error == null)

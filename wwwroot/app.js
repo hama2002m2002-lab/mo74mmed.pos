@@ -2952,6 +2952,7 @@ async function saveSupplierAccount() {
     alert(`✔ تم حفظ حساب المندوب (${name}) بنجاح!`);
     closeSupplierModal();
     await loadSuppliers();
+    await loadPurchaseSuppliersDropdown(res.supplierId);
   }
 }
 
@@ -3693,35 +3694,51 @@ function closeSupplierStatementModal() {
   document.getElementById('supplierStatementModal')?.classList.add('hidden');
 }
 
-// ========================================================
-// VIEW 5: PURCHASE & RECEIVING (شراء وتوريد مواد للمخزن)
-// ========================================================
 let purInvoiceItems = [];
 let purCurrentProduct = null;
 let purInputMode = 'piece'; // 'piece' or 'carton'
+
+async function loadPurchaseSuppliersDropdown(selectedId = null) {
+  const supSelect = document.getElementById('pur-supplierSelect');
+  if (!supSelect) return;
+
+  const currentVal = selectedId || supSelect.value;
+  supSelect.innerHTML = '';
+
+  // 1. Default Cash Supplier Option (دائماً متوفر للشراء النقدي المباشر)
+  const defaultCash = document.createElement('option');
+  defaultCash.value = 'general_cash';
+  defaultCash.innerText = '📦 مورد عام / شراء نقدي مباشر (بدون حساب مندوب)';
+  supSelect.appendChild(defaultCash);
+
+  // 2. Load registered suppliers
+  const res = await callBackend('get_suppliers');
+  if (res && res.success && res.suppliers && res.suppliers.length > 0) {
+    suppliersData = res.suppliers;
+    res.suppliers.forEach(s => {
+      const sId = s.id || s.Id;
+      const sName = s.name || s.Name;
+      const sCompany = s.company || s.Company || 'عام';
+      const opt = document.createElement('option');
+      opt.value = sId;
+      opt.innerText = `👤 ${sName} (${sCompany}) - الرصيد: ${Math.round(Number(s.balance ?? s.Balance ?? 0)).toLocaleString()} د.ع`;
+      supSelect.appendChild(opt);
+    });
+  }
+
+  if (currentVal && supSelect.querySelector(`option[value="${currentVal}"]`)) {
+    supSelect.value = currentVal;
+  } else {
+    supSelect.value = 'general_cash';
+  }
+}
 
 async function initPurchaseTab() {
   // Always load latest products for instant barcode match
   await loadProducts();
 
-  // Load suppliers dropdown
-  const supSelect = document.getElementById('pur-supplierSelect');
-  if (supSelect) {
-    supSelect.innerHTML = '<option value="">-- اختر المندوب أو الشركة الموردة --</option>';
-    const res = await callBackend('get_suppliers');
-    if (res && res.success && res.suppliers) {
-      suppliersData = res.suppliers;
-      res.suppliers.forEach(s => {
-        const sId = s.id || s.Id;
-        const sName = s.name || s.Name;
-        const sCompany = s.company || s.Company || 'عام';
-        const opt = document.createElement('option');
-        opt.value = sId;
-        opt.innerText = `${sName} (${sCompany}) - الرصيد: ${Math.round(Number(s.balance ?? s.Balance ?? 0)).toLocaleString()} د.ع`;
-        supSelect.appendChild(opt);
-      });
-    }
-  }
+  // Load suppliers dropdown with default Cash option
+  await loadPurchaseSuppliersDropdown();
 
   // Generate clean invoice number if empty
   const invNoEl = document.getElementById('pur-invoiceNumber');
@@ -4207,15 +4224,13 @@ async function finalizePurchaseInvoice() {
     return;
   }
 
-  const supId = document.getElementById('pur-supplierSelect')?.value;
-  if (!supId) {
-    alert('يرجى اختيار المندوب أو الشركة الموردة قبل تأكيد الشراء!');
-    document.getElementById('pur-supplierSelect')?.focus();
-    return;
+  let supId = document.getElementById('pur-supplierSelect')?.value;
+  if (!supId || supId === 'general_cash') {
+    supId = '00000000-0000-0000-0000-000000000000';
   }
 
   const payMethod = document.querySelector('input[name="pur-payMethod"]:checked')?.value || 'credit';
-  const isPaid = (payMethod === 'cash');
+  const isPaid = (payMethod === 'cash') || (supId === '00000000-0000-0000-0000-000000000000');
   const notes = document.getElementById('pur-invoiceNotes')?.value.trim();
   const invoiceNumber = document.getElementById('pur-invoiceNumber')?.value || `PUR-${Date.now()}`;
 
@@ -5226,7 +5241,7 @@ async function loadSettingsInfo() {
   const res = await callBackend('get_app_info');
   if (res && res.success) {
     const verEl = document.getElementById('settingsAppVersion');
-    if (verEl) verEl.innerText = res.version || 'v1.7.4 Pro';
+    if (verEl) verEl.innerText = res.version || 'v1.7.5 Pro';
 
     const stEl = document.getElementById('settingsStoreId');
     if (stEl) stEl.innerText = res.storeId || 'MARKET-DEFAULT-01';

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <item>
-    <version>1.7.4</version>
+    <version>1.7.5</version>
     <url>https://github.com/hama2002m2002-lab/mo74mmed.pos/raw/main/payload.zip</url>
     <changelog>https://raw.githubusercontent.com/hama2002m2002-lab/mo74mmed.pos/main/changelog.html</changelog>
     <mandatory>false</mandatory>

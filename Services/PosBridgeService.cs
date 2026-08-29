@@ -1462,15 +1462,47 @@ public class PosBridgeService
 
                 case "create_purchase_invoice":
                 {
-                    using var doc = JsonDocument.Parse(payloadJson);
-                    var root = doc.RootElement;
-                    var supId = root.GetProperty("supplierId").GetGuid();
+                    Guid? supId = null;
+                    if (root.TryGetProperty("supplierId", out var sidElem))
+                    {
+                        if (sidElem.ValueKind == JsonValueKind.String)
+                        {
+                            string sidStr = sidElem.GetString() ?? "";
+                            if (Guid.TryParse(sidStr, out var parsedGuid) && parsedGuid != Guid.Empty)
+                            {
+                                supId = parsedGuid;
+                            }
+                        }
+                    }
+
                     var isPaid = root.TryGetProperty("isPaid", out var ipProp) && ipProp.GetBoolean();
                     var notes = root.TryGetProperty("notes", out var np) ? np.GetString() : "";
                     var invoiceNumber = root.TryGetProperty("invoiceNumber", out var inp) ? inp.GetString() : $"PUR-{DateTime.Now:yyyyMMddHHmmss}";
 
-                    var sup = await db.Suppliers.FindAsync(supId);
-                    if (sup == null) return JsonSerializer.Serialize(new { success = false, message = "المندوب غير موجود" });
+                    Supplier? sup = null;
+                    if (supId.HasValue)
+                    {
+                        sup = await db.Suppliers.FindAsync(supId.Value);
+                    }
+
+                    if (sup == null)
+                    {
+                        sup = await db.Suppliers.FirstOrDefaultAsync(s => (s.Name == "مورد عام / مشتريات نقدية" || s.Company == "مشتريات نقدية عامة") && !s.IsDeleted);
+                        if (sup == null)
+                        {
+                            sup = new Supplier
+                            {
+                                Id = Guid.NewGuid(),
+                                Name = "مورد عام / مشتريات نقدية",
+                                Company = "مشتريات نقدية عامة",
+                                Phone = "07000000000",
+                                Balance = 0m,
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            await db.Suppliers.AddAsync(sup);
+                            await db.SaveChangesAsync();
+                        }
+                    }
 
                     decimal totalAmount = 0m;
                     var itemsList = new List<SupplierOrderItem>();
